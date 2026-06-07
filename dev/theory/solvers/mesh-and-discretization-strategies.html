@@ -1,0 +1,1235 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Mesh And Discretization Strategies" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://hydromodpy.github.io/theory/solvers/mesh-and-discretization-strategies.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Purpose: This page documents one of the strongest scientific choices in HydroModPy: the separation between the physical problem, the planar support, the vertical layering, and the solver-specific i..." />
+<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="Purpose: This page documents one of the strongest scientific choices in HydroModPy: the separation between the physical problem, the planar support, the vertical layering, and the solver-specific i..." />
+
+    <title>Mesh And Discretization Strategies &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/solvers/mesh-and-discretization-strategies';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://hydromodpy.github.io/theory/solvers/mesh-and-discretization-strategies.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Regular And Irregular Mesh Cell Budgets" href="../mesh/regular-vs-irregular-meshes.html" />
+    <link rel="prev" title="Mesh And Spatial Support" href="../mesh/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/workflows/index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/workspace-layout.html">Workspace Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Theory</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../foundations/index.html">Foundations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/system-scope-and-assumptions.html">System Scope And Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/groundwater-flow-problem-definition.html">Groundwater Flow Problem Definition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../hydrology/index.html">Hydrology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/hydrological-forcing-chain.html">Hydrological Forcing Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/forcing-time-aggregation-and-first-clim.html">Forcing Time Aggregation And First_Clim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/recharge-and-surface-exchange-semantics.html">Recharge And Surface-Exchange Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Stream, Ocean, And Drainage Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated Active Network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../mesh/index.html">Mesh</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Mesh and discretization strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/regular-vs-irregular-meshes.html">Regular and irregular mesh cell budgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="field-to-cell-parameter-transfer.html">Field-to-cell parameter transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh-quality-and-acceptance-criteria.html">Mesh quality and acceptance criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vertical-representation-and-storage-assumptions.html">Vertical representation and storage assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html">XT3D on irregular DISV meshes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Solvers</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="flow/index.html">Flow Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="flow/modflow-family.html">MODFLOW Flow Family</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Mesh And Discretization Strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="field-to-cell-parameter-transfer.html">Field-To-Cell Parameter Transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vertical-representation-and-storage-assumptions.html">Vertical Representation And Storage Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh-quality-and-acceptance-criteria.html">Mesh Quality And Acceptance Criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modflow-governing-equation-and-cvfd-formulation.html">MODFLOW Governing Equation And CVFD Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modflow6-vs-modflownwt-scientific-comparison.html">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modflow-package-semantics-and-boundary-conditions.html">MODFLOW Package Semantics And Option Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html">XT3D On Irregular DISV Meshes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-dupuit-fixed-head-1d.html">Worked MODFLOW Case: Dupuit Fixed Head 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-linearized-unconfined-recharge-periodic-1d.html">Worked MODFLOW Case: Linearized Unconfined Periodic Recharge 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-nancon-transient-nwt-etp-evt.html">Worked MODFLOW Case: Nancon Transient NWT With ETP To EVT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solver-capability-matrix.html">Solver Capability Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boussinesq-petsc-validation-results.html">Boussinesq PETSc Validation Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../boussinesq.html">Boussinesq</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../streams_and_seepage/index.html">Streams and seepage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/conceptual-model.html">Conceptual Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/worked-examples.html">Worked examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/inverse-problem-formulation.html">Calibration Inverse Problem Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-methods.html">Calibration Methods Implemented In HydroModPy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cli-reference.html">CLI Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/results-and-exports.html">Results and Exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/project-api.html">Project API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide/index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../mesh/index.html" class="nav-link">Mesh And Spatial Support</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Mesh And Discretization Strategies</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="mesh-and-discretization-strategies">
+<h1>Mesh And Discretization Strategies<a class="headerlink" href="#mesh-and-discretization-strategies" title="Link to this heading">#</a></h1>
+<section id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading">#</a></h2>
+<p>This page documents one of the strongest scientific choices in HydroModPy:
+the separation between the physical problem, the planar support, the vertical
+layering, and the solver-specific interpretation of that discretization.</p>
+<p>That separation is not only a software concern. It determines:</p>
+<ul class="simple">
+<li><p>which geometric constraints the model honours,</p></li>
+<li><p>how heterogeneous properties are projected to cells,</p></li>
+<li><p>which comparisons between solvers are scientifically meaningful,</p></li>
+<li><p>and which numerical errors are likely to dominate.</p></li>
+</ul>
+</section>
+<section id="common-discretization-chain">
+<h2>Common Discretization Chain<a class="headerlink" href="#common-discretization-chain" title="Link to this heading">#</a></h2>
+<p>At a high level, HydroModPy turns one catchment description into one solver
+mesh through the following chain:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>domain surfaces (topography + substratum)
+-&gt; planar support or runtime mesh
+-&gt; vertical layering
+-&gt; SolverMesh
+-&gt; property / forcing discretization
+-&gt; solver packages or finite-volume operators
+</pre></div>
+</div>
+<p>The key point is that the planar support and the solver backend are not the
+same thing.</p>
+</section>
+<section id="conceptual-diagram">
+<h2>Conceptual Diagram<a class="headerlink" href="#conceptual-diagram" title="Link to this heading">#</a></h2>
+<p>Two planar supports are derived from the domain surfaces (topography +
+substratum) and the support constraints (stream, ocean, zones,
+catchment outline):</p>
+<ul class="simple">
+<li><p>a <strong>structured sgrid</strong> of raster-aligned quads that approximates the
+support constraints,</p></li>
+<li><p>a <strong>catchment-conformal planar mesh</strong> of triangles or polygons that
+follows them more explicitly.</p></li>
+</ul>
+<p>Both planar supports are then repeated vertically and assembled into a
+<strong>layered SolverMesh</strong> (cell centers, neighbors, layer ids, support
+labels). The catchment-conformal mesh also reduces to a <strong>2D
+shallow-flow mesh</strong> that exposes a natural planar support without
+vertical repetition.</p>
+<p>Backend wiring:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 38.0%" />
+<col style="width: 32.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Backend</p></th>
+<th class="head"><p>Mesh consumed</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MODFLOW-NWT</p></td>
+<td><p>Structured sgrid (<code class="docutils literal notranslate"><span class="pre">DIS</span></code>)</p></td>
+<td><p>No layered SolverMesh; the structured raster is fed directly.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MODFLOW 6</p></td>
+<td><p>Layered SolverMesh (<code class="docutils literal notranslate"><span class="pre">DISV</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">XT3D</span></code> activated when needed.</p></td>
+</tr>
+<tr class="row-even"><td><p>Boussinesq</p></td>
+<td><p>2D shallow-flow mesh</p></td>
+<td><p>Finite-volume operators on the natural planar support.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The figure above shows why HydroModPy keeps mesh choice visible. The same
+catchment description can feed several backend families, but the numerical
+contract changes depending on whether the support is raster-aligned, layered,
+or reduced to one shallow-flow planar mesh.</p>
+</section>
+<section id="result-illustration-nancon-basin-support-to-solver-result">
+<h2>Result Illustration: Nancon Basin Support To Solver Result<a class="headerlink" href="#result-illustration-nancon-basin-support-to-solver-result" title="Link to this heading">#</a></h2>
+<p>The Nancon pages are the best first example here because they stay close to one
+observed basin. They show the practical order in which discretization should
+be read: basin support first, hydrography and geology second, solver result
+only after that.</p>
+<figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_dem.webp" type="image/webp"><img src="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_dem.png" alt="Nancon DEM and basin support" style="width: 100%;" loading="lazy"></picture><figcaption>Start with the terrain and basin support. This is the physical surface that
+later has to be sampled by a grid or mesh; it is not yet a solver result.</figcaption></figure><figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_hydrography.webp" type="image/webp"><img src="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_hydrography.png" alt="Nancon hydrography rendered on the basin support" style="width: 100%;" loading="lazy"></picture><figcaption>Then inspect the hydrography on the same basin support. This is where
+discretization choices become visible: a structured grid can approximate
+the hydrographic geometry, while a catchment-conformal mesh can try to
+honour it more explicitly.</figcaption></figure><figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_geology.webp" type="image/webp"><img src="../../_static/capability_gallery/geographic/geographic_nancon_identity_card_map_geology.png" alt="Nancon geology rendered on the basin support" style="width: 100%;" loading="lazy"></picture><figcaption>Geology is a second support constraint. If the solver cells do not align
+with geological boundaries, the field-to-cell transfer becomes a
+parameterization choice rather than exact geometry preservation.</figcaption></figure><figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/simulation/nancon_transient_nwt_piezometric_map.webp" type="image/webp"><img src="../../_static/capability_gallery/simulation/nancon_transient_nwt_piezometric_map.png" alt="Piezometric map from the Nancon transient MODFLOW-NWT run" style="width: 100%;" loading="lazy"></picture><figcaption>Only after the support and mapped constraints are understood should the
+solver field be interpreted. This Nancon result comes from the public
+transient MODFLOW-NWT path, so it is best read as a structured legacy-style
+basin example, not as a runtime Gmsh mesh example.</figcaption></figure></section>
+<section id="what-nancon-shows-and-what-it-does-not">
+<h2>What Nancon Shows, And What It Does Not<a class="headerlink" href="#what-nancon-shows-and-what-it-does-not" title="Link to this heading">#</a></h2>
+<p>The Nancon example is useful because it connects real input layers with a real
+basin result:</p>
+<ul class="simple">
+<li><p>DEM and basin mask;</p></li>
+<li><p>hydrography on the basin support;</p></li>
+<li><p>geology on the same support;</p></li>
+<li><p>transient MODFLOW-NWT output;</p></li>
+<li><p>hydrographic-network comparison and active-network diagnostics on top of the
+simulated state.</p></li>
+</ul>
+<p>It should not be over-read as a demonstration that one discretization is always
+better than another. In the current committed Nancon NWT case, the key lesson
+is simpler:</p>
+<ul class="simple">
+<li><p>inspect the observed support before the solver result;</p></li>
+<li><p>report whether the run is structured-grid or runtime-mesh based;</p></li>
+<li><p>avoid interpreting a map discrepancy as “physics” before checking whether it
+is partly a support/discretization effect.</p></li>
+</ul>
+</section>
+<section id="runtime-mesh-contrast">
+<h2>Runtime Mesh Contrast<a class="headerlink" href="#runtime-mesh-contrast" title="Link to this heading">#</a></h2>
+<p>The committed MODFLOW 6 Gmsh case illustrates a different situation: the
+support itself is generated as a runtime catchment mesh. It is a useful
+contrast to Nancon because the mesh is the first-order object to inspect before
+reading the flow state.</p>
+<figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/simulation/modflow6_gmsh_support_overview.webp" type="image/webp"><img src="../../_static/capability_gallery/simulation/modflow6_gmsh_support_overview.png" alt="Runtime Gmsh support overview for a MODFLOW 6 basin run" style="width: 100%;" loading="lazy"></picture><figcaption>Runtime support overview for a MODFLOW 6 basin run. This figure answers
+"what geometry did the solver consume?"</figcaption></figure><figure class="hmp-gallery-figure"><picture><source srcset="../../_static/capability_gallery/simulation/modflow6_gmsh_flow_state_triptych.webp" type="image/webp"><img src="../../_static/capability_gallery/simulation/modflow6_gmsh_flow_state_triptych.png" alt="MODFLOW 6 runtime mesh flow-state triptych" style="width: 100%;" loading="lazy"></picture><figcaption>The flow-state triptych then answers "what did the solver compute on that
+support?"</figcaption></figure></section>
+<section id="planar-support-families">
+<h2>Planar Support Families<a class="headerlink" href="#planar-support-families" title="Link to this heading">#</a></h2>
+<p>HydroModPy currently exposes two main planar support families.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 24.0%" />
+<col style="width: 30.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Family</p></th>
+<th class="head"><p>Typical geometry</p></th>
+<th class="head"><p>Main strength</p></th>
+<th class="head"><p>Main scientific trade-off</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Structured <code class="docutils literal notranslate"><span class="pre">sgrid</span></code></p></td>
+<td><p>Raster-aligned quadrilateral grid</p></td>
+<td><p>Simple, predictable, easy to connect to raster inputs and legacy
+MODFLOW workflows</p></td>
+<td><p>Interfaces such as rivers or geology boundaries are only approximated
+by the Cartesian grid</p></td>
+</tr>
+<tr class="row-odd"><td><p>Runtime catchment-conformal mesh</p></td>
+<td><p>Irregular planar mesh, typically triangular, generated from catchment,
+hydrography, and zone constraints</p></td>
+<td><p>Better geometric fidelity for rivers, support boundaries, and
+heterogeneous zones</p></td>
+<td><p>Higher numerical sensitivity to cell shape, non-orthogonality, and
+discretization choices such as XT3D</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="solver-side-interpretations">
+<h2>Solver-Side Interpretations<a class="headerlink" href="#solver-side-interpretations" title="Link to this heading">#</a></h2>
+<p>The same scientific case can then be interpreted differently by each solver
+family.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 20.0%" />
+<col style="width: 30.0%" />
+<col style="width: 32.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Backend</p></th>
+<th class="head"><p>Geometry contract</p></th>
+<th class="head"><p>What it solves on that geometry</p></th>
+<th class="head"><p>Practical consequence</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modflownwt</span></code></p></td>
+<td><p>Structured <code class="docutils literal notranslate"><span class="pre">DIS</span></code></p></td>
+<td><p>Layered groundwater flow on a structured grid</p></td>
+<td><p>Best continuity with historical MODFLOW-NWT, MODPATH, and MT3DMS paths</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DISV</span></code> built from a unified <code class="docutils literal notranslate"><span class="pre">SolverMesh</span></code></p></td>
+<td><p>Layered groundwater flow on either structured or irregular planar
+meshes</p></td>
+<td><p>Preferred backend when one runtime catchment mesh must be honoured</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">boussinesq</span></code></p></td>
+<td><p>Triangular planar mesh</p></td>
+<td><p>Shallow-groundwater finite-volume balance with explicit
+groundwater/surface-interaction closures</p></td>
+<td><p>Strong for simulation comparison on a shared natural mesh, but not identical
+in physical scope to a full layered MODFLOW model</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="why-mesh-choice-matters-scientifically">
+<h2>Why Mesh Choice Matters Scientifically<a class="headerlink" href="#why-mesh-choice-matters-scientifically" title="Link to this heading">#</a></h2>
+<p>The mesh does not only affect speed or aesthetics. It changes how the physical
+system is represented.</p>
+<p>On a structured grid:</p>
+<ul class="simple">
+<li><p>boundary placement is stair-stepped,</p></li>
+<li><p>narrow hydrographic features are approximated cell by cell,</p></li>
+<li><p>heterogeneous zones are often mixed within the same cell,</p></li>
+<li><p>raster exports and diagnostics are straightforward.</p></li>
+</ul>
+<p>On a catchment-conformal mesh:</p>
+<ul class="simple">
+<li><p>rivers and polygon boundaries can be followed more closely,</p></li>
+<li><p>geological interfaces can be honoured more explicitly,</p></li>
+<li><p>support cells can be reused across solver-comparison workflows,</p></li>
+<li><p>but cell orientation and shape quality become first-order numerical issues.</p></li>
+</ul>
+</section>
+<section id="field-to-cell-transfer">
+<h2>Field-To-Cell Transfer<a class="headerlink" href="#field-to-cell-transfer" title="Link to this heading">#</a></h2>
+<p>HydroModPy separates:</p>
+<ul class="simple">
+<li><p>the spatial support that says where a field exists,</p></li>
+<li><p>the parameter law that says which value the field takes,</p></li>
+<li><p>the solver mesh that needs one value per cell.</p></li>
+</ul>
+<p>This is why the repository distinguishes:</p>
+<ul class="simple">
+<li><p>spatial fields and support objects,</p></li>
+<li><p>parameter objects such as hydraulic conductivity or storage,</p></li>
+<li><p>mesh-level discretization steps.</p></li>
+</ul>
+<p>Scientifically, this matters because two very different situations must be
+distinguished:</p>
+<ol class="arabic simple">
+<li><p>a cell is homogeneous because the geology and the mesh align well;</p></li>
+<li><p>a cell is numerically assigned one value even though several materials or
+support classes intersect it.</p></li>
+</ol>
+<p>The second case is not wrong by itself, but it must be understood as a
+parameterization choice rather than as exact geometry preservation.</p>
+</section>
+<section id="why-dedicated-mesh-execution-exists">
+<h2>Why Dedicated Mesh Execution Exists<a class="headerlink" href="#why-dedicated-mesh-execution-exists" title="Link to this heading">#</a></h2>
+<p>Dedicated mesh execution is justified scientifically, not only operationally.</p>
+<p>Its main roles are:</p>
+<ul class="simple">
+<li><p>to make discretization choices visible before a solve,</p></li>
+<li><p>to export a reusable support for later solver runs,</p></li>
+<li><p>to compare two solvers on the same support rather than on two different
+discretizations,</p></li>
+<li><p>to perform mesh QA before mixing numerical and physical interpretation.</p></li>
+</ul>
+<p>This is why mesh execution should not be described as mere preprocessing. It is
+where one of the most consequential modelling choices becomes explicit.</p>
+</section>
+<section id="what-to-check-before-solving">
+<h2>What To Check Before Solving<a class="headerlink" href="#what-to-check-before-solving" title="Link to this heading">#</a></h2>
+<p>Before interpreting any result, the mesh or grid should be checked against at
+least the following questions.</p>
+<ul class="simple">
+<li><p>Do topography and substratum define a physically valid thickness everywhere?</p></li>
+<li><p>Does the mesh actually follow the intended river and zone constraints?</p></li>
+<li><p>Are there sliver or highly distorted cells that are likely to dominate the
+numerical error?</p></li>
+<li><p>Is the resolution transition too abrupt between refined and coarse zones?</p></li>
+<li><p>Are key boundaries represented by explicit support labels rather than only by
+geometric coincidence?</p></li>
+<li><p>Is the proportion of mixed geology cells acceptable for the intended study?</p></li>
+<li><p>Is the support reusable across solver-comparison runs?</p></li>
+</ul>
+<p>Structured grids and irregular meshes fail these checks in different ways, so
+the QA criteria should not be reduced to one generic “mesh quality” number.</p>
+</section>
+<section id="practical-choice-guide">
+<h2>Practical Choice Guide<a class="headerlink" href="#practical-choice-guide" title="Link to this heading">#</a></h2>
+<p>The choice below is not absolute, but it reflects the current project logic.</p>
+<p>On Nancon today, the public NWT case is the natural structured-grid reference.
+Use it when the question is “how do observed support layers, MODFLOW-NWT
+package assembly, and basin diagnostics connect?” Use a runtime
+catchment-conformal mesh when the question is explicitly about support fidelity
+or solver comparison on a shared irregular support.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 22.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>If the main goal is to…</p></th>
+<th class="head"><p>Prefer</p></th>
+<th class="head"><p>Because</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Keep a legacy MODFLOW-NWT or transport workflow stable</p></td>
+<td><p>Structured <code class="docutils literal notranslate"><span class="pre">sgrid</span></code></p></td>
+<td><p>It preserves the historical structured-grid contracts expected by NWT,
+MODPATH, and MT3DMS tooling</p></td>
+</tr>
+<tr class="row-odd"><td><p>Compare MODFLOW 6 and Boussinesq on the same natural support</p></td>
+<td><p>Runtime catchment-conformal mesh</p></td>
+<td><p>The support becomes a shared reference instead of a hidden source of
+discrepancy</p></td>
+</tr>
+<tr class="row-even"><td><p>Preserve rivers and polygon boundaries more faithfully</p></td>
+<td><p>Runtime catchment-conformal mesh</p></td>
+<td><p>The geometry can follow those constraints explicitly</p></td>
+</tr>
+<tr class="row-odd"><td><p>Stay close to raster-based inputs and outputs</p></td>
+<td><p>Structured <code class="docutils literal notranslate"><span class="pre">sgrid</span></code></p></td>
+<td><p>Resampling, plotting, and GeoTIFF exports are simpler and more direct</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li></li>
+<li><p><a class="reference internal" href="../mesh/regular-vs-irregular-meshes.html"><span class="doc">Regular And Irregular Mesh Cell Budgets</span></a></p></li>
+<li><p><a class="reference internal" href="field-to-cell-parameter-transfer.html"><span class="doc">Field-To-Cell Parameter Transfer</span></a></p></li>
+<li><p><a class="reference internal" href="vertical-representation-and-storage-assumptions.html"><span class="doc">Vertical Representation And Storage Assumptions</span></a></p></li>
+<li><p><a class="reference internal" href="mesh-quality-and-acceptance-criteria.html"><span class="doc">Mesh Quality And Acceptance Criteria</span></a></p></li>
+<li><p><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D On Irregular DISV Meshes</span></a></p></li>
+<li><p><a class="reference internal" href="../../architecture/mesh/index.html"><span class="doc">Mesh Architecture</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../mesh/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Mesh And Spatial Support</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../mesh/regular-vs-irregular-meshes.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Regular And Irregular Mesh Cell Budgets</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purpose">Purpose</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-discretization-chain">Common Discretization Chain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conceptual-diagram">Conceptual Diagram</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#result-illustration-nancon-basin-support-to-solver-result">Result Illustration: Nancon Basin Support To Solver Result</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-nancon-shows-and-what-it-does-not">What Nancon Shows, And What It Does Not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-mesh-contrast">Runtime Mesh Contrast</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#planar-support-families">Planar Support Families</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-side-interpretations">Solver-Side Interpretations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-mesh-choice-matters-scientifically">Why Mesh Choice Matters Scientifically</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#field-to-cell-transfer">Field-To-Cell Transfer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-dedicated-mesh-execution-exists">Why Dedicated Mesh Execution Exists</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-check-before-solving">What To Check Before Solving</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-choice-guide">Practical Choice Guide</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-pages">Related Pages</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

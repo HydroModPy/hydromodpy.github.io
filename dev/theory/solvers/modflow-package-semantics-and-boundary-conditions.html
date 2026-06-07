@@ -1,0 +1,1437 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="MODFLOW Package Semantics And Option Selection" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://hydromodpy.github.io/theory/solvers/modflow-package-semantics-and-boundary-conditions.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Purpose: This page explains how HydroModPy currently uses MODFLOW-family packages in practice. Its goal is narrower than a full MODFLOW manual and more concrete than a high-level backend overview: ..." />
+<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="Purpose: This page explains how HydroModPy currently uses MODFLOW-family packages in practice. Its goal is narrower than a full MODFLOW manual and more concrete than a high-level backend overview: ..." />
+
+    <title>MODFLOW Package Semantics And Option Selection &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/solvers/modflow-package-semantics-and-boundary-conditions';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://hydromodpy.github.io/theory/solvers/modflow-package-semantics-and-boundary-conditions.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Worked MODFLOW Case: Dupuit Fixed Head 1D" href="worked-modflow-case-dupuit-fixed-head-1d.html" />
+    <link rel="prev" title="MODFLOW Governing Equation And CVFD Formulation" href="modflow-governing-equation-and-cvfd-formulation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/workflows/index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/workspace-layout.html">Workspace Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Theory</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../foundations/index.html">Foundations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/system-scope-and-assumptions.html">System Scope And Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/groundwater-flow-problem-definition.html">Groundwater Flow Problem Definition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../hydrology/index.html">Hydrology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/hydrological-forcing-chain.html">Hydrological Forcing Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/forcing-time-aggregation-and-first-clim.html">Forcing Time Aggregation And First_Clim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/recharge-and-surface-exchange-semantics.html">Recharge And Surface-Exchange Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Stream, Ocean, And Drainage Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated Active Network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="mesh-and-discretization-strategies.html">Mesh and discretization strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/regular-vs-irregular-meshes.html">Regular and irregular mesh cell budgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="field-to-cell-parameter-transfer.html">Field-to-cell parameter transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh-quality-and-acceptance-criteria.html">Mesh quality and acceptance criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vertical-representation-and-storage-assumptions.html">Vertical representation and storage assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html">XT3D on irregular DISV meshes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Solvers</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="flow/index.html">Flow Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="flow/modflow-family.html">MODFLOW Flow Family</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh-and-discretization-strategies.html">Mesh And Discretization Strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="field-to-cell-parameter-transfer.html">Field-To-Cell Parameter Transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vertical-representation-and-storage-assumptions.html">Vertical Representation And Storage Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh-quality-and-acceptance-criteria.html">Mesh Quality And Acceptance Criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modflow-governing-equation-and-cvfd-formulation.html">MODFLOW Governing Equation And CVFD Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modflow6-vs-modflownwt-scientific-comparison.html">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">MODFLOW Package Semantics And Option Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html">XT3D On Irregular DISV Meshes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-dupuit-fixed-head-1d.html">Worked MODFLOW Case: Dupuit Fixed Head 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-linearized-unconfined-recharge-periodic-1d.html">Worked MODFLOW Case: Linearized Unconfined Periodic Recharge 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-modflow-case-nancon-transient-nwt-etp-evt.html">Worked MODFLOW Case: Nancon Transient NWT With ETP To EVT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solver-capability-matrix.html">Solver Capability Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boussinesq-petsc-validation-results.html">Boussinesq PETSc Validation Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../boussinesq.html">Boussinesq</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../streams_and_seepage/index.html">Streams and seepage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/conceptual-model.html">Conceptual Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/worked-examples.html">Worked examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/inverse-problem-formulation.html">Calibration Inverse Problem Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-methods.html">Calibration Methods Implemented In HydroModPy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cli-reference.html">CLI Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/results-and-exports.html">Results and Exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/project-api.html">Project API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide/index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Solvers</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">MODFLOW Package Semantics And Option Selection</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="modflow-package-semantics-and-option-selection">
+<h1>MODFLOW Package Semantics And Option Selection<a class="headerlink" href="#modflow-package-semantics-and-option-selection" title="Link to this heading">#</a></h1>
+<section id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading">#</a></h2>
+<p>This page explains how HydroModPy currently uses MODFLOW-family packages in
+practice.</p>
+<p>Its goal is narrower than a full MODFLOW manual and more concrete than a
+high-level backend overview:</p>
+<ul class="simple">
+<li><p>identify which MF6 and NWT packages HydroModPy actually assembles,</p></li>
+<li><p>explain why those package families are used,</p></li>
+<li><p>justify the main project-level option choices against the official MODFLOW
+documentation and the current HydroModPy code path,</p></li>
+<li><p>make clear which simplifications belong to HydroModPy rather than to
+MODFLOW itself.</p></li>
+</ul>
+</section>
+<section id="primary-official-anchors">
+<h2>Primary Official Anchors<a class="headerlink" href="#primary-official-anchors" title="Link to this heading">#</a></h2>
+<p>The scientific statements on this page should stay aligned with these primary
+references:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://pubs.usgs.gov/publication/tm6A55">USGS TM 6-A55, Documentation for the MODFLOW 6 Groundwater Flow Model</a></p></li>
+<li><p><a class="reference external" href="https://pubs.usgs.gov/publication/tm6A56">USGS TM 6-A56, Documentation for the XT3D Option in the Node Property Flow Package of MODFLOW 6</a></p></li>
+<li><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/mf6io.html">MODFLOW 6 Input Guide</a></p></li>
+<li><p><a class="reference external" href="https://pubs.usgs.gov/tm/tm6a37/">USGS TM 6-A37, MODFLOW-NWT, A Newton Formulation for MODFLOW-2005</a></p></li>
+<li><p><a class="reference external" href="https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/index.html">Online Guide to MODFLOW-NWT</a></p></li>
+</ul>
+<p>The HydroModPy documentation should synthesize these sources at project level,
+not restate them package by package without context.</p>
+</section>
+<section id="current-code-anchors">
+<h2>Current Code Anchors<a class="headerlink" href="#current-code-anchors" title="Link to this heading">#</a></h2>
+<p>The current public package choices are mainly assembled in the following code
+locations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/modflow6.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/flow_to_modflow_adapter.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/modflow6_config.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/nwt_solver.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/flow_to_modflow_adapter.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/nwt_config.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/flow/time_forcing.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/forcing/time_alignment.py</span></code></p></li>
+</ul>
+<p>These are the code anchors a contributor should read when checking whether the
+public scientific page still matches the real package assembly.</p>
+</section>
+<section id="current-public-package-subset">
+<h2>Current Public Package Subset<a class="headerlink" href="#current-public-package-subset" title="Link to this heading">#</a></h2>
+<p>HydroModPy intentionally uses a compact MODFLOW subset in its public flow path.</p>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="../../_images/modflow_package_stack.svg"><img alt="Diagram from HydroModPy flow contract to MODFLOW package families" src="../../_images/modflow_package_stack.svg" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 75 </span><span class="caption-text">The important documentation boundary is the adapter. Upstream of it,
+HydroModPy stores solver-agnostic scientific intent. Downstream of it, each
+MODFLOW backend receives package-specific payloads and output-control
+requests.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 22.0%" />
+<col style="width: 28.0%" />
+<col style="width: 32.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>HydroModPy concern</p></th>
+<th class="head"><p>MODFLOW 6 public path</p></th>
+<th class="head"><p>MODFLOW-NWT public path</p></th>
+<th class="head"><p>Current project reading</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Time discretization</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TDIS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DIS</span></code> time fields</p></td>
+<td><p>Driven from <code class="docutils literal notranslate"><span class="pre">[simulation.time]</span></code> through the shared launcher contract</p></td>
+</tr>
+<tr class="row-odd"><td><p>Nonlinear / linear solve</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IMS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NWT</span></code></p></td>
+<td><p>Expert knobs are exposed, but HydroModPy still chooses defaults and
+safety rules</p></td>
+</tr>
+<tr class="row-even"><td><p>Geometry</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DISV</span></code></p></td>
+<td><p>structured <code class="docutils literal notranslate"><span class="pre">DIS</span></code></p></td>
+<td><p>MF6 keeps one unified solver-mesh export path; NWT stays structured</p></td>
+</tr>
+<tr class="row-odd"><td><p>Initial heads</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IC</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BAS</span></code> <code class="docutils literal notranslate"><span class="pre">strt</span></code></p></td>
+<td><p>Built from process-level initial-condition policy</p></td>
+</tr>
+<tr class="row-even"><td><p>Internal flow properties</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NPF</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UPW</span></code></p></td>
+<td><p>This is one of the major scientific differences between the backends</p></td>
+</tr>
+<tr class="row-odd"><td><p>Storage</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">STO</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UPW</span></code> storage arrays plus <code class="docutils literal notranslate"><span class="pre">DIS</span></code> steady/transient flags</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sy</span></code> and <code class="docutils literal notranslate"><span class="pre">Ss</span></code> stay canonical HydroModPy quantities upstream</p></td>
+</tr>
+<tr class="row-even"><td><p>Diffuse recharge</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RCHA</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RCH</span></code></p></td>
+<td><p>MF6 uses array-style recharge; NWT accepts scalar/series/grid payloads</p></td>
+</tr>
+<tr class="row-odd"><td><p>Evapotranspiration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">EVT</span></code> when required</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">EVT</span></code> when required</p></td>
+<td><p>Mainly explicit ETP or negative-recharge routing</p></td>
+</tr>
+<tr class="row-even"><td><p>Imposed heads</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CHD</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CHD</span></code></p></td>
+<td><p>Used for side, stream, and ocean stage-style supports in the current
+public path</p></td>
+</tr>
+<tr class="row-odd"><td><p>Drainage</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DRN</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DRN</span></code></p></td>
+<td><p>Head-dependent outflow in both MODFLOW branches</p></td>
+</tr>
+<tr class="row-even"><td><p>Wells</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WEL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WEL</span></code></p></td>
+<td><p>Process-level wells are resolved to solver cells late</p></td>
+</tr>
+<tr class="row-odd"><td><p>Output control</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OC</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OC</span></code></p></td>
+<td><p>Head and budget outputs are always requested in the current path</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="what-hydromodpy-is-deliberately-not-claiming">
+<h2>What HydroModPy Is Deliberately Not Claiming<a class="headerlink" href="#what-hydromodpy-is-deliberately-not-claiming" title="Link to this heading">#</a></h2>
+<p>The public path should not be described as if every MODFLOW package family were
+already a maintained modelling route.</p>
+<p>Today the main public groundwater-flow subset is centred on:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DISV</span></code> / <code class="docutils literal notranslate"><span class="pre">DIS</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NPF</span></code> / <code class="docutils literal notranslate"><span class="pre">UPW</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">STO</span></code> or equivalent storage arrays,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCHA</span></code> / <code class="docutils literal notranslate"><span class="pre">RCH</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EVT</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CHD</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DRN</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WEL</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OC</span></code>.</p></li>
+</ul>
+<p>That means the public scientific docs should stay careful about packages such
+as <code class="docutils literal notranslate"><span class="pre">RIV</span></code>, <code class="docutils literal notranslate"><span class="pre">GHB</span></code>, <code class="docutils literal notranslate"><span class="pre">SFR</span></code>, <code class="docutils literal notranslate"><span class="pre">UZF</span></code>, <code class="docutils literal notranslate"><span class="pre">LAK</span></code>, or <code class="docutils literal notranslate"><span class="pre">DISU</span></code>. They may exist in
+the MODFLOW family, and some may exist in code discussions or future plans,
+but they are not yet the stable public HydroModPy flow narrative.</p>
+</section>
+<section id="modflow-6-option-selection-rationale">
+<h2>MODFLOW 6: Option Selection Rationale<a class="headerlink" href="#modflow-6-option-selection-rationale" title="Link to this heading">#</a></h2>
+<section id="tdis">
+<h3>TDIS<a class="headerlink" href="#tdis" title="Link to this heading">#</a></h3>
+<p>HydroModPy builds <code class="docutils literal notranslate"><span class="pre">ModflowTdis</span></code> from the canonical launcher time grid rather
+than from one backend-private chronology.</p>
+<p>Current project choice:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nper</span></code> comes from <code class="docutils literal notranslate"><span class="pre">[simulation.time]</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">perioddata</span></code> is built from the resolved period lengths and time-step
+counts,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tsmult</span></code> is currently fixed to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> in the MF6 wrapper.</p></li>
+</ul>
+<p>The last point is a HydroModPy simplification, not an MF6 requirement. The
+MF6 <code class="docutils literal notranslate"><span class="pre">TDIS</span></code> contract allows <code class="docutils literal notranslate"><span class="pre">(perlen,</span> <span class="pre">nstp,</span> <span class="pre">tsmult)</span></code> per period; the
+current wrapper simply does not yet expose variable <code class="docutils literal notranslate"><span class="pre">tsmult</span></code> in the public
+MF6 path.</p>
+</section>
+<section id="ims">
+<h3>IMS<a class="headerlink" href="#ims" title="Link to this heading">#</a></h3>
+<p>HydroModPy exposes the following main IMS knobs in
+<code class="docutils literal notranslate"><span class="pre">modflow6.runtime</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mf6_ims_complexity</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mf6_outer_dvclose</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mf6_inner_dvclose</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mf6_outer_maximum</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mf6_inner_maximum</span></code></p></li>
+</ul>
+<p>The code path uses them in <code class="docutils literal notranslate"><span class="pre">ModflowIms(...)</span></code> almost directly.</p>
+<p>The main project-specific rule is this:</p>
+<ul class="simple">
+<li><p>if XT3D is active and the user requested <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code>, HydroModPy upgrades the
+effective complexity to <code class="docutils literal notranslate"><span class="pre">COMPLEX</span></code>.</p></li>
+</ul>
+<p>This is an inference from the current code and the MF6/XT3D documentation, not
+an explicit MF6 mandate. The rationale is that XT3D adds extra coupling terms
+and can increase numerical difficulty, so HydroModPy chooses a conservative
+solver preset instead of leaving an obviously weak one in place.</p>
+</section>
+<section id="disv">
+<h3>DISV<a class="headerlink" href="#disv" title="Link to this heading">#</a></h3>
+<p>HydroModPy currently builds <code class="docutils literal notranslate"><span class="pre">ModflowGwfdisv</span></code> even for the structured MF6
+path.</p>
+<p>That is a HydroModPy architecture choice, not an MF6 constraint. The reason is
+to keep one unified <code class="docutils literal notranslate"><span class="pre">SolverMesh</span> <span class="pre">-&gt;</span> <span class="pre">to_disv_kwargs()</span></code> export contract for:</p>
+<ul class="simple">
+<li><p>structured supports,</p></li>
+<li><p>runtime irregular supports,</p></li>
+<li><p>shared-support comparison workflows.</p></li>
+</ul>
+<p>Scientifically, this keeps the MF6 branch more uniform, but it also means the
+project should document clearly when a comparison is:</p>
+<ul class="simple">
+<li><p>backend-only,</p></li>
+<li><p>or backend plus discretization-contract change.</p></li>
+</ul>
+</section>
+<section id="ic">
+<h3>IC<a class="headerlink" href="#ic" title="Link to this heading">#</a></h3>
+<p>Starting heads are built from the process-level initial-condition policy:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">top</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bottom</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code></p></li>
+</ul>
+<p>This stays intentionally simple. HydroModPy does not currently expose one
+advanced public MF6 initial-condition narrative beyond those three policies.</p>
+</section>
+<section id="npf">
+<h3>NPF<a class="headerlink" href="#npf" title="Link to this heading">#</a></h3>
+<p>The current MF6 <code class="docutils literal notranslate"><span class="pre">NPF</span></code> assembly is one of the most important scientific
+choices in the project.</p>
+<p>HydroModPy currently sets:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">icelltype</span> <span class="pre">=</span> <span class="pre">1</span></code> for all layers,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k</span></code> from the mapped conductivity field,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k33</span> <span class="pre">=</span> <span class="pre">k</span> <span class="pre">/</span> <span class="pre">vka</span></code>,</p></li>
+<li><p>optional <code class="docutils literal notranslate"><span class="pre">rewet_record</span></code> and <code class="docutils literal notranslate"><span class="pre">wetdry</span></code>,</p></li>
+<li><p>optional <code class="docutils literal notranslate"><span class="pre">xt3doptions</span> <span class="pre">=</span> <span class="pre">[&quot;XT3D&quot;]</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save_specific_discharge</span> <span class="pre">=</span> <span class="pre">True</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save_saturation</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p></li>
+</ul>
+<p>Why these choices make sense:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">icelltype</span></code>:
+the MF6 documentation says this flag controls whether saturated thickness is
+held constant or varies with head. HydroModPy uses the convertible path
+because its public MF6 use is mainly unconfined or water-table style
+groundwater modelling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k33</span> <span class="pre">=</span> <span class="pre">k</span> <span class="pre">/</span> <span class="pre">vka</span></code>:
+the project exposes one simple vertical-anisotropy control in
+<code class="docutils literal notranslate"><span class="pre">modflow6.process_specific.vka</span></code> instead of requiring the user to manage an
+independent full <code class="docutils literal notranslate"><span class="pre">k33</span></code> field in the common path.</p></li>
+<li><p>rewetting:
+MF6 <code class="docutils literal notranslate"><span class="pre">REWET</span></code> is off by default in the official package, and HydroModPy keeps
+it disabled unless explicitly enabled through <code class="docutils literal notranslate"><span class="pre">mf6_enable_rewet</span></code>. That is a
+deliberate conservative choice: rewetting changes the nonlinear behaviour and
+should remain visible.</p></li>
+<li><p>XT3D:
+the official docs present XT3D as more expensive but more accurate for
+anisotropic conductivity and irregular grids. HydroModPy therefore auto-
+enables XT3D on unstructured meshes unless the user overrides the choice.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save_specific_discharge</span></code> and <code class="docutils literal notranslate"><span class="pre">save_saturation</span></code>:
+these are project-facing diagnostics choices. HydroModPy uses them because
+postprocessing, interpretation, and comparison artifacts benefit directly
+from those outputs.</p></li>
+</ul>
+<p>HydroModPy does not currently activate many other available <code class="docutils literal notranslate"><span class="pre">NPF</span></code> options
+such as <code class="docutils literal notranslate"><span class="pre">VARIABLECV</span></code>, <code class="docutils literal notranslate"><span class="pre">PERCHED</span></code>, or alternative cell averaging in the
+public path. That absence should be documented honestly rather than left
+implicit.</p>
+</section>
+<section id="sto">
+<h3>STO<a class="headerlink" href="#sto" title="Link to this heading">#</a></h3>
+<p>HydroModPy currently builds <code class="docutils literal notranslate"><span class="pre">STO</span></code> with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ss</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iconvert</span> <span class="pre">=</span> <span class="pre">1</span></code> for all layers</p></li>
+<li><p>one per-period steady/transient map derived from the time grid</p></li>
+</ul>
+<p>The official <code class="docutils literal notranslate"><span class="pre">STO</span></code> documentation distinguishes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ICONVERT</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SY</span></code></p></li>
+<li><p>period <code class="docutils literal notranslate"><span class="pre">STEADY-STATE</span></code> / <code class="docutils literal notranslate"><span class="pre">TRANSIENT</span></code> flags</p></li>
+</ul>
+<p>HydroModPy keeps the interpretation simple:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SS</span></code> is treated as specific storage, not storage coefficient,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SY</span></code> is retained as the unconfined drainable storage term,</p></li>
+<li><p>every layer is treated through the convertible path,</p></li>
+<li><p>the stress-period flags are driven from the launcher-level time definition.</p></li>
+</ul>
+<p>That means HydroModPy does not currently expose <code class="docutils literal notranslate"><span class="pre">STORAGECOEFFICIENT</span></code> or
+<code class="docutils literal notranslate"><span class="pre">SS_CONFINED_ONLY</span></code> as part of its public MF6 contract.</p>
+</section>
+<section id="rcha">
+<h3>RCHA<a class="headerlink" href="#rcha" title="Link to this heading">#</a></h3>
+<p>HydroModPy currently uses <code class="docutils literal notranslate"><span class="pre">ModflowGwfrcha</span></code> instead of the list-style <code class="docutils literal notranslate"><span class="pre">RCH</span></code>
+package.</p>
+<p>This choice is well aligned with the way the code works:</p>
+<ul class="simple">
+<li><p>forcing is resolved to one value per stress period,</p></li>
+<li><p>heterogeneous forcing is discretized to one value per cell,</p></li>
+<li><p>the resulting natural internal representation is an array, not a sparse list
+of recharge cells.</p></li>
+</ul>
+<p>The official <code class="docutils literal notranslate"><span class="pre">RCHA</span></code> documentation explicitly defines the array-based
+<code class="docutils literal notranslate"><span class="pre">READASARRAYS</span></code> path, which matches HydroModPy well.</p>
+<p>HydroModPy also adds an auxiliary <code class="docutils literal notranslate"><span class="pre">CONCENTRATION</span></code> slot on <code class="docutils literal notranslate"><span class="pre">RCHA</span></code>. That is a
+project choice made for the current MF6-GWT coupling path, not a groundwater-
+flow necessity.</p>
+</section>
+<section id="evt">
+<h3>EVT<a class="headerlink" href="#evt" title="Link to this heading">#</a></h3>
+<p>HydroModPy builds <code class="docutils literal notranslate"><span class="pre">EVT</span></code> only when one of these is true:</p>
+<ul class="simple">
+<li><p>explicit ETP forcing exists,</p></li>
+<li><p>negative recharge is rerouted to evapotranspiration.</p></li>
+</ul>
+<p>The project currently feeds the package with the simple
+<code class="docutils literal notranslate"><span class="pre">cellid,</span> <span class="pre">surface,</span> <span class="pre">rate,</span> <span class="pre">depth</span></code> structure rather than with more advanced
+piecewise extinction options.</p>
+<p>The important HydroModPy choices are:</p>
+<ul class="simple">
+<li><p>surface elevation is taken from topography minus one configured offset,</p></li>
+<li><p>extinction depth is one explicit runtime parameter,</p></li>
+<li><p>stream and ocean support cells are excluded from the current public EVT path.</p></li>
+</ul>
+<p>This is a reasonable compact contract, but it is not yet a full public theory
+of land-surface evapotranspiration.</p>
+</section>
+<section id="chd-drn-wel-and-oc">
+<h3>CHD, DRN, WEL, and OC<a class="headerlink" href="#chd-drn-wel-and-oc" title="Link to this heading">#</a></h3>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="../../_images/modflow_boundary_semantics.svg"><img alt="MODFLOW boundary and forcing semantics for RCH EVT DRN CHD and WEL" src="../../_images/modflow_boundary_semantics.svg" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 76 </span><span class="caption-text">The current public path deliberately separates diffuse forcing, atmospheric
+extraction, imposed-head supports, head-dependent drainage, and localized
+wells. This matters when comparing basin studies because equal-looking
+map overlays may come from different physical boundary semantics.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>HydroModPy currently makes the following public choices:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CHD</span></code>:
+used for side, stream, and ocean stage-style boundaries.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DRN</span></code>:
+used for head-dependent drainage or seepage-style release.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WEL</span></code>:
+used for wells resolved late from process-level declarations to solver-cell
+addresses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OC</span></code>:
+configured to save heads and budgets systematically.</p></li>
+</ul>
+<p>The strongest scientific caveat is on <code class="docutils literal notranslate"><span class="pre">CHD</span></code>:</p>
+<ul class="simple">
+<li><p>using <code class="docutils literal notranslate"><span class="pre">CHD</span></code> for stream or ocean means the public path is stage-controlled
+and imposed-head based,</p></li>
+<li><p>not a full <code class="docutils literal notranslate"><span class="pre">RIV</span></code> or <code class="docutils literal notranslate"><span class="pre">GHB</span></code> conductance law.</p></li>
+</ul>
+<p>That simplification is currently part of HydroModPy’s public scientific
+contract and should be reported explicitly in comparison or basin-study pages.</p>
+</section>
+</section>
+<section id="modflow-nwt-option-selection-rationale">
+<h2>MODFLOW-NWT: Option Selection Rationale<a class="headerlink" href="#modflow-nwt-option-selection-rationale" title="Link to this heading">#</a></h2>
+<section id="nwt-solver-package">
+<h3>NWT solver package<a class="headerlink" href="#nwt-solver-package" title="Link to this heading">#</a></h3>
+<p>HydroModPy exposes the main Newton-solver fields under
+<code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.nwt</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">headtol</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fluxtol</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxiterout</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thickfact</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linmeth</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ibotav</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">continue_run</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backflag</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stoptol</span></code></p></li>
+</ul>
+<p>The official NWT guide explains that <code class="docutils literal notranslate"><span class="pre">OPTIONS</span></code> may be <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MODERATE</span></code>, <code class="docutils literal notranslate"><span class="pre">COMPLEX</span></code>, or <code class="docutils literal notranslate"><span class="pre">SPECIFIED</span></code>. HydroModPy currently defaults to
+<code class="docutils literal notranslate"><span class="pre">COMPLEX</span></code> in the validated config, which is a conservative project choice
+suited to the fact that the public NWT path is mainly kept for structured,
+unconfined, and comparison-oriented cases rather than only for nearly linear
+confined benchmarks.</p>
+<p>HydroModPy should not overclaim these defaults as universally optimal. Several
+NWT parameters, especially <code class="docutils literal notranslate"><span class="pre">IBOTAV</span></code> and the nonlinear-control family, remain
+problem-specific and are correctly exposed as expert settings rather than hard
+scientific truths.</p>
+</section>
+<section id="dis-and-bas">
+<h3>DIS and BAS<a class="headerlink" href="#dis-and-bas" title="Link to this heading">#</a></h3>
+<p>The NWT branch stays on the structured grid path:</p>
+<ul class="simple">
+<li><p>structured solver mesh only,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModflowDis</span></code> for geometry and time metadata,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ModflowBas</span></code> for <code class="docutils literal notranslate"><span class="pre">ibound</span></code> and starting heads.</p></li>
+</ul>
+<p>This is a deliberate HydroModPy split:</p>
+<ul class="simple">
+<li><p>MF6 carries the modern unified mesh route,</p></li>
+<li><p>NWT remains the historical structured baseline.</p></li>
+</ul>
+</section>
+<section id="upw">
+<h3>UPW<a class="headerlink" href="#upw" title="Link to this heading">#</a></h3>
+<p>The official NWT report states that MODFLOW-NWT must be used with the
+Upstream-Weighting package.</p>
+<p>That is why HydroModPy does not present <code class="docutils literal notranslate"><span class="pre">LPF</span></code> or <code class="docutils literal notranslate"><span class="pre">HUF</span></code> as alternate public
+NWT flow paths. The NWT branch is intentionally a <code class="docutils literal notranslate"><span class="pre">UPW</span></code> branch.</p>
+<p>HydroModPy currently sets:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">laytype</span> <span class="pre">=</span> <span class="pre">1</span></code> for all layers,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">laywet</span> <span class="pre">=</span> <span class="pre">0</span></code> for all layers,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hk</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ss</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vka</span></code> from <code class="docutils literal notranslate"><span class="pre">modflownwt.process_specific.vka</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iphdry</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hdry</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">layvka</span></code></p></li>
+</ul>
+<p>The official UPW guide explains that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LAYVKA</span></code> controls whether <code class="docutils literal notranslate"><span class="pre">VKA</span></code> is interpreted as vertical hydraulic
+conductivity or as the horizontal-to-vertical ratio,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IPHDRY</span></code> controls whether dry-cell heads are written as <code class="docutils literal notranslate"><span class="pre">HDRY</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HDRY</span></code> is mainly an output indicator rather than a governing parameter.</p></li>
+</ul>
+<p>This aligns well with the HydroModPy contract:</p>
+<ul class="simple">
+<li><p>one compact anisotropy control <code class="docutils literal notranslate"><span class="pre">vka</span></code>,</p></li>
+<li><p>one explicit <code class="docutils literal notranslate"><span class="pre">layvka</span></code> interpretation flag,</p></li>
+<li><p>one explicit dry-cell output policy through <code class="docutils literal notranslate"><span class="pre">iphdry</span></code> and <code class="docutils literal notranslate"><span class="pre">hdry</span></code>.</p></li>
+</ul>
+</section>
+<section id="recharge-evt-drn-wel-and-oc">
+<h3>Recharge, EVT, DRN, WEL, and OC<a class="headerlink" href="#recharge-evt-drn-wel-and-oc" title="Link to this heading">#</a></h3>
+<p>The current NWT branch mirrors the same broad semantic logic as MF6:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RCH</span></code> for diffuse recharge,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EVT</span></code> for explicit ETP or negative-recharge rerouting,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DRN</span></code> for head-dependent drainage,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WEL</span></code> for pumping or injection,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CHD</span></code> for imposed-head boundaries,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OC</span></code> for systematic head and budget outputs.</p></li>
+</ul>
+<p>Two extra points matter scientifically:</p>
+<ul class="simple">
+<li><p>rate payloads are converted from SI to solver time units using <code class="docutils literal notranslate"><span class="pre">ITMUNI</span></code>,
+so the unit bridge should remain explicit in the docs;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RCH</span></code> and <code class="docutils literal notranslate"><span class="pre">EVT</span></code> are still fed from the same upstream forcing semantics as
+MF6, even though the package syntax differs.</p></li>
+</ul>
+</section>
+</section>
+<section id="hydromodpy-specific-simplifications-to-keep-explicit">
+<h2>HydroModPy-Specific Simplifications To Keep Explicit<a class="headerlink" href="#hydromodpy-specific-simplifications-to-keep-explicit" title="Link to this heading">#</a></h2>
+<p>The following are project-level simplifications and should not be mistaken for
+generic MODFLOW truths:</p>
+<ul class="simple">
+<li><p>stream and ocean are currently mostly public <code class="docutils literal notranslate"><span class="pre">CHD</span></code> paths, not full
+<code class="docutils literal notranslate"><span class="pre">RIV</span></code> or <code class="docutils literal notranslate"><span class="pre">GHB</span></code> laws;</p></li>
+<li><p>MF6 uses <code class="docutils literal notranslate"><span class="pre">DISV</span></code> as the unified geometry export path, even for structured
+supports;</p></li>
+<li><p>MF6 currently keeps <code class="docutils literal notranslate"><span class="pre">tsmult</span> <span class="pre">=</span> <span class="pre">1.0</span></code> in <code class="docutils literal notranslate"><span class="pre">TDIS</span></code> in the public wrapper;</p></li>
+<li><p>the common MF6 path uses one simple <code class="docutils literal notranslate"><span class="pre">k33</span> <span class="pre">=</span> <span class="pre">k</span> <span class="pre">/</span> <span class="pre">vka</span></code> rule rather than a
+fully independent 3D conductivity tensor description;</p></li>
+<li><p>NWT remains intentionally tied to <code class="docutils literal notranslate"><span class="pre">UPW</span></code> and the structured-grid branch.</p></li>
+</ul>
+</section>
+<section id="what-should-be-reported-in-a-methods-section">
+<h2>What Should Be Reported In A Methods Section<a class="headerlink" href="#what-should-be-reported-in-a-methods-section" title="Link to this heading">#</a></h2>
+<p>If one HydroModPy study relies on a MODFLOW backend, its methods section should
+normally state:</p>
+<ul class="simple">
+<li><p>backend family: <code class="docutils literal notranslate"><span class="pre">modflow6</span></code> or <code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code>,</p></li>
+<li><p>geometry contract: structured <code class="docutils literal notranslate"><span class="pre">DIS</span></code> or unified <code class="docutils literal notranslate"><span class="pre">DISV</span></code> path,</p></li>
+<li><p>whether XT3D is active,</p></li>
+<li><p>whether rewetting is active,</p></li>
+<li><p>whether stream or ocean boundaries are currently represented as imposed-head
+supports,</p></li>
+<li><p>how recharge and ETP were aggregated to stress periods,</p></li>
+<li><p>whether <code class="docutils literal notranslate"><span class="pre">first_clim</span></code> overrides period 0,</p></li>
+<li><p>whether <code class="docutils literal notranslate"><span class="pre">vka</span></code> is used as an anisotropy ratio or direct vertical
+conductivity control.</p></li>
+</ul>
+<p>Without that information, many apparent solver differences remain ambiguous.</p>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="modflow-governing-equation-and-cvfd-formulation.html"><span class="doc">MODFLOW Governing Equation And CVFD Formulation</span></a></p></li>
+<li><p><a class="reference internal" href="modflow6-vs-modflownwt-scientific-comparison.html"><span class="doc">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</span></a></p></li>
+<li><p><a class="reference internal" href="field-to-cell-parameter-transfer.html"><span class="doc">Field-To-Cell Parameter Transfer</span></a></p></li>
+<li><p><a class="reference internal" href="vertical-representation-and-storage-assumptions.html"><span class="doc">Vertical Representation And Storage Assumptions</span></a></p></li>
+<li><p><a class="reference internal" href="../hydrology/forcing-time-aggregation-and-first-clim.html"><span class="doc">Forcing Time Aggregation And First_Clim</span></a></p></li>
+<li><p><a class="reference internal" href="../hydrology/recharge-and-surface-exchange-semantics.html"><span class="doc">Recharge And Surface-Exchange Semantics</span></a></p></li>
+<li><p><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html"><span class="doc">Stream, Ocean, And Drainage Semantics</span></a></p></li>
+</ul>
+</section>
+<section id="current-limitation">
+<h2>Current Limitation<a class="headerlink" href="#current-limitation" title="Link to this heading">#</a></h2>
+<p>This page now explains the current public package subset and the main option
+choices, but it still does not replace:</p>
+<ul class="simple">
+<li><p>the full official MODFLOW package manuals,</p></li>
+<li><p>a future page on the exact MF6/NWT forcing-to-package payload examples,</p></li>
+<li><p>or one future worked example that follows a full HydroModPy case from TOML to
+final package files.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modflow-governing-equation-and-cvfd-formulation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">MODFLOW Governing Equation And CVFD Formulation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="worked-modflow-case-dupuit-fixed-head-1d.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Worked MODFLOW Case: Dupuit Fixed Head 1D</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purpose">Purpose</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#primary-official-anchors">Primary Official Anchors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-code-anchors">Current Code Anchors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-public-package-subset">Current Public Package Subset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-hydromodpy-is-deliberately-not-claiming">What HydroModPy Is Deliberately Not Claiming</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-6-option-selection-rationale">MODFLOW 6: Option Selection Rationale</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdis">TDIS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ims">IMS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disv">DISV</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ic">IC</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#npf">NPF</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sto">STO</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rcha">RCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evt">EVT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chd-drn-wel-and-oc">CHD, DRN, WEL, and OC</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-nwt-option-selection-rationale">MODFLOW-NWT: Option Selection Rationale</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nwt-solver-package">NWT solver package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dis-and-bas">DIS and BAS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#upw">UPW</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recharge-evt-drn-wel-and-oc">Recharge, EVT, DRN, WEL, and OC</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hydromodpy-specific-simplifications-to-keep-explicit">HydroModPy-Specific Simplifications To Keep Explicit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-should-be-reported-in-a-methods-section">What Should Be Reported In A Methods Section</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-pages">Related Pages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-limitation">Current Limitation</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

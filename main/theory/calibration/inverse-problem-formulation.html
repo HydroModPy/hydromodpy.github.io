@@ -1,0 +1,1146 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Calibration Inverse Problem Formulation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://hydromodpy.github.io/theory/calibration/inverse-problem-formulation.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Scope: This page explains how HydroModPy turns a calibration problem into one scalar objective that its optimizers can minimize. The goal here is practical rather than textbook-like: what enters th..." />
+<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="Scope: This page explains how HydroModPy turns a calibration problem into one scalar objective that its optimizers can minimize. The goal here is practical rather than textbook-like: what enters th..." />
+
+    <title>Calibration Inverse Problem Formulation &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/calibration/inverse-problem-formulation';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://hydromodpy.github.io/theory/calibration/inverse-problem-formulation.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Calibration Methods Implemented In HydroModPy" href="calibration-methods.html" />
+    <link rel="prev" title="Calibration" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/workflows/index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/workspace-layout.html">Workspace Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Theory</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../foundations/index.html">Foundations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/system-scope-and-assumptions.html">System Scope And Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/groundwater-flow-problem-definition.html">Groundwater Flow Problem Definition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../hydrology/index.html">Hydrology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/hydrological-forcing-chain.html">Hydrological Forcing Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/forcing-time-aggregation-and-first-clim.html">Forcing Time Aggregation And First_Clim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/recharge-and-surface-exchange-semantics.html">Recharge And Surface-Exchange Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Stream, Ocean, And Drainage Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated Active Network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-and-discretization-strategies.html">Mesh and discretization strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/regular-vs-irregular-meshes.html">Regular and irregular mesh cell budgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/field-to-cell-parameter-transfer.html">Field-to-cell parameter transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-quality-and-acceptance-criteria.html">Mesh quality and acceptance criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/vertical-representation-and-storage-assumptions.html">Vertical representation and storage assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular DISV meshes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../solvers/index.html">Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../solvers/flow/index.html">Flow Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../solvers/flow/modflow-family.html">MODFLOW Flow Family</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-and-discretization-strategies.html">Mesh And Discretization Strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/field-to-cell-parameter-transfer.html">Field-To-Cell Parameter Transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/vertical-representation-and-storage-assumptions.html">Vertical Representation And Storage Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-quality-and-acceptance-criteria.html">Mesh Quality And Acceptance Criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow-governing-equation-and-cvfd-formulation.html">MODFLOW Governing Equation And CVFD Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow6-vs-modflownwt-scientific-comparison.html">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow-package-semantics-and-boundary-conditions.html">MODFLOW Package Semantics And Option Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/xt3d-on-irregular-disv-meshes.html">XT3D On Irregular DISV Meshes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-dupuit-fixed-head-1d.html">Worked MODFLOW Case: Dupuit Fixed Head 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-linearized-unconfined-recharge-periodic-1d.html">Worked MODFLOW Case: Linearized Unconfined Periodic Recharge 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-nancon-transient-nwt-etp-evt.html">Worked MODFLOW Case: Nancon Transient NWT With ETP To EVT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/solver-capability-matrix.html">Solver Capability Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/boussinesq-petsc-validation-results.html">Boussinesq PETSc Validation Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../boussinesq.html">Boussinesq</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../streams_and_seepage/index.html">Streams and seepage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/conceptual-model.html">Conceptual Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/worked-examples.html">Worked examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Calibration</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Calibration Inverse Problem Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="calibration-methods.html">Calibration Methods Implemented In HydroModPy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cli-reference.html">CLI Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/results-and-exports.html">Results and Exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/project-api.html">Project API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide/index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Calibration</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Calibration Inverse Problem Formulation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="calibration-inverse-problem-formulation">
+<h1>Calibration Inverse Problem Formulation<a class="headerlink" href="#calibration-inverse-problem-formulation" title="Link to this heading">#</a></h1>
+<section id="scope">
+<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
+<p>This page explains how HydroModPy turns a calibration problem into one scalar
+objective that its optimizers can minimize. The goal here is practical rather
+than textbook-like: what enters the calibration engine, how several
+observations are combined, and what a returned result should mean to a modeller.</p>
+</section>
+<section id="a-practical-reading-of-the-inverse-problem">
+<h2>A Practical Reading Of The Inverse Problem<a class="headerlink" href="#a-practical-reading-of-the-inverse-problem" title="Link to this heading">#</a></h2>
+<p>HydroModPy calibration always starts from the same three ingredients:</p>
+<ul class="simple">
+<li><p>a parameter vector to test;</p></li>
+<li><p>a forward model that turns those parameters into simulated outputs;</p></li>
+<li><p>observed data used to score the simulation.</p></li>
+</ul>
+<p>In plain language, calibration is a repeated question:</p>
+<blockquote>
+<div><p>“If the model used these parameter values, would it reproduce the observed
+behavior better or worse than the previous try?”</p>
+</div></blockquote>
+<p>For example, suppose a user calibrates hydraulic conductivity <code class="docutils literal notranslate"><span class="pre">K</span></code> and
+specific yield <code class="docutils literal notranslate"><span class="pre">Sy</span></code> against:</p>
+<ul class="simple">
+<li><p>a piezometric time series,</p></li>
+<li><p>and an outlet discharge time series.</p></li>
+</ul>
+<p>One candidate parameter vector is first sent to the simulator. The simulator
+returns raw model outputs. HydroModPy then extracts the observation blocks of
+interest, compares each block to observations with a chosen metric, combines
+those scores into one scalar cost, and gives that cost to the calibration
+method.</p>
+</section>
+<section id="parameter-vector-and-feasible-domain">
+<h2>Parameter Vector And Feasible Domain<a class="headerlink" href="#parameter-vector-and-feasible-domain" title="Link to this heading">#</a></h2>
+<p>Internally, optimizers work on an ordered numeric vector. The simulator, on the
+other hand, usually expects named parameters. <code class="docutils literal notranslate"><span class="pre">CalibrationParameterSet</span></code> is
+the object that keeps those two views aligned.</p>
+<p>This detail matters scientifically because parameter order is not cosmetic. The
+same vector value means something different if the parameter order changes.</p>
+<p>Each parameter is also bounded. Those bounds define the physically admissible
+search box:</p>
+<ul class="simple">
+<li><p>they prevent obviously impossible values from being explored;</p></li>
+<li><p>they encode prior expert knowledge;</p></li>
+<li><p>they strongly influence which calibration methods are efficient.</p></li>
+</ul>
+<p>Wide bounds describe an exploratory problem. Narrow bounds describe a more
+local refinement problem.</p>
+</section>
+<section id="from-simulation-to-one-cost">
+<h2>From Simulation To One Cost<a class="headerlink" href="#from-simulation-to-one-cost" title="Link to this heading">#</a></h2>
+<p>HydroModPy supports two close variants of the same idea.</p>
+<section id="single-series-calibration">
+<h3>Single-series calibration<a class="headerlink" href="#single-series-calibration" title="Link to this heading">#</a></h3>
+<p>The simulator returns one series, for example one discharge or one head
+chronicle. That series is compared directly to the observed series.</p>
+</section>
+<section id="multi-observable-calibration">
+<h3>Multi-observable calibration<a class="headerlink" href="#multi-observable-calibration" title="Link to this heading">#</a></h3>
+<p>The simulator returns a richer payload. HydroModPy then extracts several
+observable blocks from it, for example:</p>
+<ul class="simple">
+<li><p>heads at a monitoring location,</p></li>
+<li><p>outlet discharge,</p></li>
+<li><p>seepage along a support,</p></li>
+<li><p>or any other block selected by the calibration TOML.</p></li>
+</ul>
+<p>Each block gets its own metric and weight before everything is merged into one
+final scalar objective.</p>
+</section>
+</section>
+<section id="built-in-metrics-and-when-they-help">
+<h2>Built-In Metrics And When They Help<a class="headerlink" href="#built-in-metrics-and-when-they-help" title="Link to this heading">#</a></h2>
+<p>HydroModPy currently exposes five main metrics. The important point is not the
+formula itself, but what kind of mismatch each metric emphasizes.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 28.0%" />
+<col style="width: 30.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Metric</p></th>
+<th class="head"><p>What it emphasizes</p></th>
+<th class="head"><p>Typical good fit</p></th>
+<th class="head"><p>Cost minimized by the engine</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RMSE</span></code></p></td>
+<td><p>Large deviations are penalized strongly.</p></td>
+<td><p>Use when big misses matter more than many small ones.</p></td>
+<td><p>The engine minimizes <code class="docutils literal notranslate"><span class="pre">RMSE</span></code> directly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAE</span></code></p></td>
+<td><p>Typical absolute mismatch, less dominated by outliers.</p></td>
+<td><p>Use when observations are noisy or spikes should not dominate.</p></td>
+<td><p>The engine minimizes <code class="docutils literal notranslate"><span class="pre">MAE</span></code> directly.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NSE</span></code></p></td>
+<td><p>Reproduction of time-series dynamics relative to the observed mean.</p></td>
+<td><p>Use for hydrograph or head-series shape matching.</p></td>
+<td><p>The engine minimizes <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">NSE</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NSElog</span></code></p></td>
+<td><p>Same idea as <code class="docutils literal notranslate"><span class="pre">NSE</span></code>, but with more sensitivity to lower values.</p></td>
+<td><p>Use for low-flow or recession behavior when data stay positive.</p></td>
+<td><p>The engine minimizes <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">NSElog</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KGE</span></code></p></td>
+<td><p>Balance between correlation, variability, and bias.</p></td>
+<td><p>Use when overall behavior matters more than one single error mode.</p></td>
+<td><p>The engine minimizes <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">KGE</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Two practical reminders are worth keeping in mind:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NSElog</span></code> only makes sense when the compared values are strictly positive;</p></li>
+<li><p>an apparently “good” score can still hide parameter non-identifiability if
+several parameter sets obtain similar values.</p></li>
+</ul>
+</section>
+<section id="combining-several-observation-blocks">
+<h2>Combining Several Observation Blocks<a class="headerlink" href="#combining-several-observation-blocks" title="Link to this heading">#</a></h2>
+<p>In the calibration workflow, HydroModPy can combine several
+observation blocks into one weighted objective:</p>
+<div class="math notranslate nohighlight">
+\[J(\theta) = \sum_{b=1}^{B} \tilde{w}_b \, \tilde{J}_b(\theta)\]</div>
+<p>The operational reading is simple:</p>
+<ul class="simple">
+<li><p>each block produces its own raw mismatch;</p></li>
+<li><p>that mismatch can be normalized so blocks with different units are
+comparable;</p></li>
+<li><p>the normalized blocks are weighted and summed.</p></li>
+</ul>
+<p>This is useful when one calibration should satisfy several kinds of evidence at
+once.</p>
+<section id="illustrative-example">
+<h3>Illustrative example<a class="headerlink" href="#illustrative-example" title="Link to this heading">#</a></h3>
+<p>Suppose a calibration uses:</p>
+<ul class="simple">
+<li><p>heads with weight <code class="docutils literal notranslate"><span class="pre">0.7</span></code>,</p></li>
+<li><p>outlet discharge with weight <code class="docutils literal notranslate"><span class="pre">0.3</span></code>.</p></li>
+</ul>
+<p>If cost normalization is enabled, HydroModPy first rescales the two blocks so
+that one block is not dominant only because it is measured in larger numerical
+units. The final objective then expresses a scientific compromise:</p>
+<blockquote>
+<div><p>“Find parameter values that explain heads well, while still preserving a
+reasonable match to outlet discharge.”</p>
+</div></blockquote>
+<p>For error metrics such as <code class="docutils literal notranslate"><span class="pre">RMSE</span></code> and <code class="docutils literal notranslate"><span class="pre">MAE</span></code>, HydroModPy uses an observed-data
+scale for normalization when possible. For efficiency metrics such as <code class="docutils literal notranslate"><span class="pre">NSE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">NSElog</span></code> and <code class="docutils literal notranslate"><span class="pre">KGE</span></code>, the natural scale is already of order one, so no extra
+rescaling is needed.</p>
+</section>
+</section>
+<section id="what-bounds-mean-in-practice">
+<h2>What Bounds Mean In Practice<a class="headerlink" href="#what-bounds-mean-in-practice" title="Link to this heading">#</a></h2>
+<p>At the engine level, any candidate outside the allowed bounds is rejected with
+an infinite cost. This is the generic safety rule.</p>
+<p>The two local simplex-based methods behave slightly differently internally:</p>
+<ul class="simple">
+<li><p>they clip the candidate back into the feasible box before calling the model;</p></li>
+<li><p>they add a quadratic penalty when the optimizer tries to move outside bounds.</p></li>
+</ul>
+<p>This distinction is numerical rather than scientific. In both cases, the model
+is evaluated only for admissible parameter values.</p>
+</section>
+<section id="best-fit-versus-distribution-valued-results">
+<h2>Best Fit Versus Distribution-Valued Results<a class="headerlink" href="#best-fit-versus-distribution-valued-results" title="Link to this heading">#</a></h2>
+<p>All calibration methods return at least:</p>
+<ul class="simple">
+<li><p>a best parameter vector;</p></li>
+<li><p>a best objective value;</p></li>
+<li><p>a number of expensive model evaluations.</p></li>
+</ul>
+<p>Some methods return more than a single optimum.</p>
+<section id="best-fit-methods">
+<h3>Best-fit methods<a class="headerlink" href="#best-fit-methods" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">grid_search</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">random_search</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cma_es</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nelder_mead</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simplex</span></code></p></li>
+</ul>
+<p>These methods answer:</p>
+<blockquote>
+<div><p>“Which tested parameter set looked best under the chosen objective?”</p>
+</div></blockquote>
+</section>
+<section id="distribution-valued-methods">
+<h3>Distribution-valued methods<a class="headerlink" href="#distribution-valued-methods" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gp_mapping</span></code> returns an approximate posterior-like cloud built from a
+surrogate model;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">da_mh_gp</span></code> returns MCMC samples from an explicit posterior target defined
+by its prior and RMSE-based likelihood.</p></li>
+</ul>
+<p>These methods answer a richer question:</p>
+<blockquote>
+<div><p>“Which ranges of parameter values remain plausible, and how strongly are
+they constrained?”</p>
+</div></blockquote>
+</section>
+</section>
+<section id="interpretation-checklist">
+<h2>Interpretation Checklist<a class="headerlink" href="#interpretation-checklist" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>A low cost is not enough on its own; always ask whether several different
+parameter combinations achieve similar scores.</p></li>
+<li><p>The chosen weights in a multi-observable objective define the scientific
+question being asked. Changing them changes the meaning of the “best” model.</p></li>
+<li><p>A sample cloud is often more informative than a single optimum when the goal
+is uncertainty analysis or identifiability assessment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">da_mh_gp</span></code> should only be interpreted as a Bayesian posterior sampler when
+its RMSE likelihood and <code class="docutils literal notranslate"><span class="pre">sigma_noise</span></code> setting are scientifically coherent
+for the data at hand. The delayed-acceptance MCMC scheme follows
+<span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id19" title="J. A. Christen and C. Fox. Markov chain Monte Carlo using an approximation. Journal of Computational and Graphical Statistics, 14(4):795–810, 2005. doi:10.1198/106186005X76983.">Christen and Fox, 2005</a>]</span>.</p></li>
+</ul>
+</section>
+<section id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="calibration-methods.html"><span class="doc">Calibration Methods Implemented In HydroModPy</span></a> for the per-method scientific and algorithmic
+references.</p></li>
+<li><p><span class="bibtex-citation" id="id2">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> for a HydroModPy-related calibration of catchment
+hydraulic properties against the spatial distribution of stream networks.</p></li>
+<li><p><a class="reference internal" href="../bibliography.html"><span class="doc">Bibliography</span></a> for the full list of cited references.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Calibration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="calibration-methods.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Calibration Methods Implemented In HydroModPy</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-practical-reading-of-the-inverse-problem">A Practical Reading Of The Inverse Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-vector-and-feasible-domain">Parameter Vector And Feasible Domain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-simulation-to-one-cost">From Simulation To One Cost</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-series-calibration">Single-series calibration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-observable-calibration">Multi-observable calibration</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-metrics-and-when-they-help">Built-In Metrics And When They Help</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-several-observation-blocks">Combining Several Observation Blocks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#illustrative-example">Illustrative example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-bounds-mean-in-practice">What Bounds Mean In Practice</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-fit-versus-distribution-valued-results">Best Fit Versus Distribution-Valued Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#best-fit-methods">Best-fit methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#distribution-valued-methods">Distribution-valued methods</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation-checklist">Interpretation Checklist</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

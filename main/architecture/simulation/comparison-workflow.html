@@ -1,0 +1,1173 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Comparison Workflow Architecture" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://hydromodpy.github.io/architecture/simulation/comparison-workflow.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="This page documents the contract of the[workflow].mode = &quot;comparison&quot; layer. The goal is to compare several HydroModPy simulations without adding logic to the simulation workflow itself. ..." />
+<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="This page documents the contract of the[workflow].mode = &quot;comparison&quot; layer. The goal is to compare several HydroModPy simulations without adding logic to the simulation workflow itself. ..." />
+
+    <title>Comparison Workflow Architecture &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/simulation/comparison-workflow';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://hydromodpy.github.io/architecture/simulation/comparison-workflow.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Testbed Workflow Architecture" href="testbed-workflow-architecture.html" />
+    <link rel="prev" title="Simulation Time Cycle Diagrams" href="simulation-time-cycle-diagrams.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../package-layout.html">Package Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../layered-architecture.html">Layered Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage-layout.html">Storage Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci-workflows.html">GitHub Actions workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../artifact-policy.html">Artifact Policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release-contract-v1.html">V1 Release Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artefacts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../overview/index.html">Architecture Overview</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/test-families-and-quality-roles.html">Test Families and Quality Roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/test-inventory.html">Test Inventory</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/index.html">How-to Recipes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-solver.html">Add a Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-process.html">Add a Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-config-field.html">Add a Config Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-variable.html">Add a Data Variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-source.html">Add a Data Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-figure.html">Add a Figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-block-html-report.html">Add a Block HTML Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-an-exporter.html">Add an Exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-test.html">Add a Test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-cli-command.html">Add a CLI Command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-calibration-method.html">Add a Calibration Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/build-a-frontend.html">Build a Frontend</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Per-package reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../packages/index.html">Per-Package Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../packages/core.html">core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/config.html">config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/spatial.html">spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/discretization.html">discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/solver.html">solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/simulation.html">simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/calibration.html">calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/results.html">results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/catalog.html">catalog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/display.html">display</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/analysis.html">analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/reporting.html">reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/workflow.html">workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/validity_frame.html">validity_frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/schema.html">schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/cli.html">cli</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Subsystem deep dives</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Simulation Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="toml-to-solver-walkthrough.html">TOML To Solver Walkthrough</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation-orchestration-class-diagram.html">Simulation Orchestration Class Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation-time-cycle-diagrams.html">Simulation Time Cycle Diagrams</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Comparison Workflow Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testbed-workflow-architecture.html">Testbed Workflow Architecture</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../solver/index.html">Solver Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-uml-diagrams.html">Boussinesq Solver UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflow6-architecture-notes.html">MODFLOW 6 Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflownwt-architecture-notes.html">MODFLOW-NWT Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflow-contracts.html">MODFLOW-NWT Contracts</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../mesh/index.html">Mesh Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/catchment-mesh-architecture.html">Catchment-Mesh Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/structured-grid-architecture.html">Structured Grid Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/gmsh-meshing.html">Conformal Gmsh Meshing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/mesh-pivot.html">Mesh Architecture Pivot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../calibration/index.html">Calibration Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../calibration/calibration-architecture.html">Calibration Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../calibration/calibration-guide.html">Calibration Guide</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../data_loading/index.html">Data Loading Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../data_loading/data-managers-and-external-dependencies.html">Data Managers And External Dependencies</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../spatial_support/index.html">Spatial Support and Hydrography</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/support-selection-guide.html">Choosing A Spatial Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/spatial-support-uml-diagrams.html">Spatial Support UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/hydrographic-network-uml-diagrams.html">Hydrographic Network UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/hydrographic-network-simulated-active-inventory.html">Hydrographic Network Simulated-Active Inventory</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../field/index.html">Field Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../process/process-architecture.html">Process Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../process/flow-boundary-conditions.html">Flow Boundary Conditions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contributing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing handbook</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Architecture and Developer Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Simulation Architecture</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Comparison Workflow Architecture</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="comparison-workflow-architecture">
+<h1>Comparison Workflow Architecture<a class="headerlink" href="#comparison-workflow-architecture" title="Link to this heading">#</a></h1>
+<p>This page documents the contract of the <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">&quot;comparison&quot;</span></code>
+layer. The goal is to compare several HydroModPy simulations without
+adding logic to the <code class="docutils literal notranslate"><span class="pre">simulation</span></code> workflow itself.</p>
+<p>For the user-facing entry point, see
+<a class="reference internal" href="../../user_guide/workflows/comparison.html"><span class="doc">Comparison Workflow</span></a>. For the operational walkthrough, see
+<a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html"><span class="doc">Simulation Comparison Workflow</span></a>.</p>
+<section id="positioning">
+<h2>Positioning<a class="headerlink" href="#positioning" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The comparison workflow is an external layer.</p></li>
+<li><p>Each candidate is still a real HydroModPy simulation launched through
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code>.</p></li>
+<li><p>The comparison layer generates child TOML files, runs the simulations,
+reads the persisted results, then produces audit, metrics, exports,
+and figures.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">simulation</span></code> core never shares an in-memory cache, a Python
+mesh, or forcing objects with the comparison layer.</p></li>
+</ul>
+<p>This split accepts a recompute or reload cost in exchange for a clean
+boundary: simulations remain self-contained and the comparison stays
+post-hoc.</p>
+</section>
+<section id="input-files">
+<h2>Input files<a class="headerlink" href="#input-files" title="Link to this heading">#</a></h2>
+<p>The recommended setup uses two TOML levels:</p>
+<ul class="simple">
+<li><p>a comparison TOML, with <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">&quot;comparison&quot;</span></code>;</p></li>
+<li><p>a base simulation TOML, referenced by
+<code class="docutils literal notranslate"><span class="pre">[comparison].base_simulation_config</span></code>.</p></li>
+</ul>
+<p>The comparison TOML declares the simulations to compare:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[workflow]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;comparison&quot;</span>
+
+<span class="k">[comparison]</span>
+<span class="n">comparison_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;dupuit_mf6_vs_bouss&quot;</span>
+<span class="n">base_simulation_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;base_dupuit_shared_mesh.toml&quot;</span>
+<span class="n">output_root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;outputs/dupuit_mf6_vs_bouss&quot;</span>
+<span class="n">reference_simulation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mf6_ref&quot;</span>
+
+<span class="k">[[comparison.simulation]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mf6_ref&quot;</span>
+<span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;modflow6&quot;</span>
+
+<span class="k">[[comparison.simulation]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;bouss_candidate&quot;</span>
+<span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;boussinesq&quot;</span>
+
+<span class="k">[[comparison.observable]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;head_map_last&quot;</span>
+<span class="n">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;watertable_elevation&quot;</span>
+<span class="n">support</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;map&quot;</span>
+<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;last&quot;</span>
+<span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;m&quot;</span>
+</pre></div>
+</div>
+<p>The layer then writes one child TOML per simulation under:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;output_root&gt;/_generated_configs/&lt;simulation_id&gt;.toml
+</pre></div>
+</div>
+<p>These child TOMLs are self-contained: relative paths from the base TOML
+are resolved before writing, so changing the output folder cannot shift
+the meaning of a path.</p>
+</section>
+<section id="allowed-overlays">
+<h2>Allowed overlays<a class="headerlink" href="#allowed-overlays" title="Link to this heading">#</a></h2>
+<p>V1 intentionally limits overlays so that the physics of the case
+cannot drift by accident. Allowed sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">simulation</span></code>: name, run id, collision policy, processes;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">solver</span></code>: generic solver parameters;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code>: MODFLOW 6 options;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modflownwt</span></code>: MODFLOW-NWT options;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flow</span></code>: <code class="docutils literal notranslate"><span class="pre">runtime_backend</span></code> and <code class="docutils literal notranslate"><span class="pre">param</span></code> for parameter sweeps;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">display</span></code>: graphical output.</p></li>
+</ul>
+<p>Physical sections such as domain, recharge, hydraulic properties, and
+boundary conditions cannot change between simulations in V1. If the
+physics must change, write a different base simulation TOML or extend
+the contract explicitly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">flow.param</span></code> is allowed for explicit sensitivity comparisons (for
+example a hydraulic-conductivity sweep). All other physical sections
+remain forbidden by default.</p>
+</section>
+<section id="v1-guard-rails">
+<h2>V1 guard rails<a class="headerlink" href="#v1-guard-rails" title="Link to this heading">#</a></h2>
+<p>The comparison TOML loader rejects ambiguous setups before launching
+any simulation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_simulation_config</span></code> must exist;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_id</span></code> must not contain a path separator;</p></li>
+<li><p>each <code class="docutils literal notranslate"><span class="pre">comparison.simulation.id</span></code> must be unique and filename-safe;</p></li>
+<li><p>at least one simulation must be enabled;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reference_simulation</span></code>, when present, must point to an enabled
+simulation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">observable.simulations</span></code>, when present, can only reference enabled
+simulations.</p></li>
+</ul>
+<p>These checks live entirely in the comparison layer. They add no
+constraint on the <code class="docutils literal notranslate"><span class="pre">simulation</span></code> workflow.</p>
+</section>
+<section id="execution-cycle">
+<h2>Execution cycle<a class="headerlink" href="#execution-cycle" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Load the comparison TOML.</p></li>
+<li><p>Load the base simulation TOML.</p></li>
+<li><p>Generate child TOMLs with the solver overlays.</p></li>
+<li><p>Run each child via the public entry point:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>hydromodpy<span class="w"> </span>run<span class="w"> </span>&lt;child.toml&gt;
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Resolve the resulting <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> and read the result catalog.</p></li>
+<li><p>Extract the declared observables.</p></li>
+<li><p>Compare the observables against the reference simulation.</p></li>
+<li><p>Write exports and figures.</p></li>
+<li><p>Audit the persisted metadata after the fact.</p></li>
+</ol>
+</section>
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">#</a></h2>
+<p>A comparison run produces, among others:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_manifest.json</span></code>: full output index;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_report.md</span></code>: readable report;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_audit.json</span></code> and <code class="docutils literal notranslate"><span class="pre">comparison_audit.md</span></code>: consistency
+check;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">observables.csv</span></code>: extracted values;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_metrics.csv</span></code>: bias, MAE, RMSE, max error;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_differences.csv</span></code>: element-wise differences;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_metrics.csv</span></code>: geometric <code class="docutils literal notranslate"><span class="pre">reference</span></code> vs
+<code class="docutils literal notranslate"><span class="pre">generated</span></code> comparison when both canonical hydrographic networks
+are persisted;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_metrics_skipped.json</span></code>: diagnostic for
+simulations skipped because a required hydrographic role is missing;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_metrics.csv</span></code>: occupancy metrics of the
+simulated active network, computed from <code class="docutils literal notranslate"><span class="pre">accumulation_flux</span></code> when
+the field exists;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_metrics_skipped.json</span></code>: diagnostic for
+simulations skipped because the simulated field is missing;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_overlap_metrics.csv</span></code>: cell-by-cell
+comparison between the simulated active network and the vector
+<code class="docutils literal notranslate"><span class="pre">reference</span></code> role when both supports exist;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_overlap_metrics_skipped.json</span></code>:
+diagnostic for that observation-vs-simulation comparison;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_distance_metrics.csv</span></code>: planar
+bidirectional distances between simulated active cell centroids and
+the <code class="docutils literal notranslate"><span class="pre">reference</span></code> vector role;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_distance_metrics_skipped.json</span></code>:
+diagnostic for that distance comparison;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_figures/case_configuration.png</span></code>: orientation figure for
+the compared case, with spatial support, detected boundary
+conditions, observable points, and the recharge chronicle when
+available;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison_figures/*.png</span></code>: maps, differences, triptychs, budgets,
+computation time.</p></li>
+</ul>
+<p>Default <code class="docutils literal notranslate"><span class="pre">hydrographic_network_metrics.csv</span></code> uses a 50 m tolerance and
+exports:</p>
+<ul class="simple">
+<li><p>total reference and candidate lengths;</p></li>
+<li><p>missing and extra lengths;</p></li>
+<li><p>coverage / precision / F1 ratios on length;</p></li>
+<li><p>Hausdorff distance.</p></li>
+</ul>
+<p>Canonical names used by the code:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_reference</span></code> for the network loaded from
+<code class="docutils literal notranslate"><span class="pre">data.hydrography</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_generated</span></code> for the network derived from the
+DEM through <code class="docutils literal notranslate"><span class="pre">geographic.river_network</span></code>.</p></li>
+</ul>
+<p>The feature-store contract uses those canonical names only. Historical
+filenames may still exist on disk, but they are not feature aliases:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">river_network.shp</span></code> for the generated network vector file;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">river_network_summary.json</span></code> for generated-network metrics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">streams.shp</span></code> for the reference vector filename emitted by the
+manager;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrography_streams</span></code> for the reference forcing-raster name.</p></li>
+</ul>
+<p>If a run only exposes one of the two canonical networks:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_metrics.csv</span></code> is not produced for that run;</p></li>
+<li><p>hydrographic comparison figures should not be requested;</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">Run</span></code> API exposes <code class="docutils literal notranslate"><span class="pre">available_hydrographic_network_roles()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">has_hydrographic_network(...)</span></code> to detect the case.</p></li>
+</ul>
+<p>The canonical role <code class="docutils literal notranslate"><span class="pre">simulated_active</span></code> is not yet persisted as a
+vector feature. The <code class="docutils literal notranslate"><span class="pre">Run</span></code> API does expose
+<code class="docutils literal notranslate"><span class="pre">cell_field_active_mask()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cell_field_active_metrics()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cell_field_network_overlap_metrics()</span></code> (cell-by-cell against
+<code class="docutils literal notranslate"><span class="pre">reference</span></code>), and <code class="docutils literal notranslate"><span class="pre">cell_field_network_distance_metrics()</span></code>.
+The primary target is <code class="docutils literal notranslate"><span class="pre">reference</span></code>, because the comparison is between
+simulation and observation. <code class="docutils literal notranslate"><span class="pre">generated</span></code> remains useful as a
+secondary diagnostic against the DEM-derived network, but it is not an
+observation. When the run carries a usable mesh, the
+<code class="docutils literal notranslate"><span class="pre">simulated_active_network</span></code> figure renders that view, and
+<code class="docutils literal notranslate"><span class="pre">simulated_active_network_reference_overlay</span></code> overlays it with the
+observed <code class="docutils literal notranslate"><span class="pre">reference</span></code> network.</p>
+<p>Terminology to respect for these views:</p>
+<ul class="simple">
+<li><p>without an explicit <code class="docutils literal notranslate"><span class="pre">mode</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_regime</span> <span class="pre">=</span> <span class="pre">&quot;steady&quot;</span></code> uses the
+steady-state active field, while <code class="docutils literal notranslate"><span class="pre">flow_regime</span> <span class="pre">=</span> <span class="pre">&quot;transient&quot;</span></code> uses
+<code class="docutils literal notranslate"><span class="pre">persistent</span></code> for compatibility;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">persistent</span></code> means active during at least a declared fraction of
+transient timesteps;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">always_active</span></code> means active at every timestep of the analysed
+transient window;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">steady</span></code> is the concept to use for a permanent reference state in
+the solver sense;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">perennial</span></code> remains a legacy alias of <code class="docutils literal notranslate"><span class="pre">always_active</span></code> in the
+computed API;</p></li>
+<li><p>a simulated steady network should ideally come from a representative
+<code class="docutils literal notranslate"><span class="pre">flow_regime</span> <span class="pre">=</span> <span class="pre">&quot;steady&quot;</span></code> run, then be compared to <code class="docutils literal notranslate"><span class="pre">reference</span></code>;</p></li>
+<li><p>the contract leaves room for several named simulated networks
+(<code class="docutils literal notranslate"><span class="pre">steady</span></code>, <code class="docutils literal notranslate"><span class="pre">transient_persistent_50</span></code>, <code class="docutils literal notranslate"><span class="pre">event_snapshot</span></code>).</p></li>
+</ul>
+<p>Read <code class="docutils literal notranslate"><span class="pre">case_configuration.png</span></code> first to understand the case under
+test, then the <code class="docutils literal notranslate"><span class="pre">*triptych*.png</span></code> figures to validate the fields:
+reference field, candidate field, then candidate-minus-reference
+difference.</p>
+</section>
+<section id="disk-cleanup">
+<h2>Disk cleanup<a class="headerlink" href="#disk-cleanup" title="Link to this heading">#</a></h2>
+<p>Child simulations persist their own outputs like any HydroModPy run.
+The comparison layer can only clean up the generated TOMLs:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[comparison.execution]</span>
+<span class="n">keep_generated_configs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</pre></div>
+</div>
+<p>By default they are kept to ease debugging and reproducibility. Heavy
+results stay in the simulations’ own run folders; the comparison layer
+must not delete simulation outputs.</p>
+</section>
+<section id="available-examples">
+<h2>Available examples<a class="headerlink" href="#available-examples" title="Link to this heading">#</a></h2>
+<p>The folder <code class="docutils literal notranslate"><span class="pre">examples/projects/09_comparison_workflow/</span></code> provides:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_dupuit_mf6_bouss.toml</span></code>: synthetic case, MODFLOW 6 vs
+Boussinesq, shared triangular mesh;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_vire_natural_mf6_nwt.toml</span></code>: natural Vire basin, MODFLOW 6
+vs MODFLOW-NWT, structured 40 x 40 grid;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_10km2_natural_mesh_mf6_bouss.toml</span></code>: pre-computed natural
+10 km2 mesh, simplified steady physics, MODFLOW 6 vs Boussinesq on
+the same triangular mesh;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_10km2_natural_mesh_recharge_mf6_bouss.toml</span></code>: same natural
+10 km2 mesh with uniform low synthetic recharge;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_10km2_natural_mesh_transient_pulse_mf6_bouss.toml</span></code>: same
+natural 10 km2 mesh, daily impulse recharge with Sy/Ss storage;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compare_nancon_transient_seasonal_mf6_bouss.toml</span></code>: Nancon basin,
+support regenerated from the same base TOML, weekly synthetic
+recharge with seasonality and wet/dry episodes.</p></li>
+</ul>
+<p>Run them through the helper script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>examples/projects/09_comparison_workflow/run_comparison_example.py<span class="w"> </span>--case<span class="w"> </span>synthetic<span class="w"> </span>--show
+python<span class="w"> </span>examples/projects/09_comparison_workflow/run_comparison_example.py<span class="w"> </span>--case<span class="w"> </span>all<span class="w"> </span>--show
+</pre></div>
+</div>
+</section>
+<section id="current-limitations">
+<h2>Current limitations<a class="headerlink" href="#current-limitations" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Sequential execution only: <code class="docutils literal notranslate"><span class="pre">max_parallel_runs</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
+<li><p>Strict audit based on persisted metadata, not on shared in-memory
+objects.</p></li>
+<li><p>Comparisons across different meshes go through observables and fine
+rasters, not a general cell-to-cell mapping.</p></li>
+<li><p>The reduced natural Boussinesq case keeps a natural mesh but uses an
+analytical topography and lateral fixed heads. The recharge case
+adds a synthetic diffuse forcing but not yet a complete basin
+physics with drainage and hydrographic network. The transient case
+adds Sy/Ss and a recharge pulse but stays short and controlled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nancon-seasonal</span></code> raises the difficulty: natural basin topography,
+surface drainage, support regenerated per run, and non-trivial
+transient recharge. It serves as a robustness test rather than an
+analytical benchmark.</p></li>
+</ul>
+</section>
+<section id="next-development-direction">
+<h2>Next development direction<a class="headerlink" href="#next-development-direction" title="Link to this heading">#</a></h2>
+<p>The natural reduced MODFLOW 6 vs Boussinesq case can be extended
+toward basin-scale physics:</p>
+<ul class="simple">
+<li><p>compare boundary fluxes and budgets explicitly when both solvers
+expose them in compatible form;</p></li>
+<li><p>add a multi-month or multi-year seasonal simulation on the same
+mesh;</p></li>
+<li><p>test a full natural basin case with drainage and hydrographic
+network;</p></li>
+<li><p>document convergence criteria and expected differences per case
+family.</p></li>
+</ul>
+<p>This work should stay in
+<code class="docutils literal notranslate"><span class="pre">examples/projects/09_comparison_workflow/</span></code> or
+<code class="docutils literal notranslate"><span class="pre">validation_cases/</span></code> and must not modify <code class="docutils literal notranslate"><span class="pre">simulation</span></code>.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../user_guide/workflows/comparison.html"><span class="doc">Comparison Workflow</span></a> for the user-facing hub.</p></li>
+<li><p><a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html"><span class="doc">Simulation Comparison Workflow</span></a> for the
+operational walkthrough.</p></li>
+<li><p><a class="reference internal" href="../../user_guide/concepts/comparison-output-reading-order.html"><span class="doc">Comparison Output Reading Order</span></a> for
+the output reading order.</p></li>
+<li><p><a class="reference internal" href="index.html"><span class="doc">Simulation Architecture</span></a> for the simulation architecture root.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="simulation-time-cycle-diagrams.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Simulation Time Cycle Diagrams</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="testbed-workflow-architecture.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Testbed Workflow Architecture</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#positioning">Positioning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-files">Input files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#allowed-overlays">Allowed overlays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v1-guard-rails">V1 guard rails</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-cycle">Execution cycle</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disk-cleanup">Disk cleanup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-examples">Available examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-limitations">Current limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-development-direction">Next development direction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

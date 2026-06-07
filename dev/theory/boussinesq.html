@@ -1,0 +1,2679 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Boussinesq Theory" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://hydromodpy.github.io/theory/boussinesq.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="This page consolidates the scientific notes for the in-house flow/boussinesq solver family. It covers the equation, the finite-volume method, surface interaction and lower-obstacle drying, the runt..." />
+<meta property="og:image" content="https://hydromodpy.github.io/_images/lower_obstacle_drying_rewetting.png" />
+<meta property="og:image:alt" content="Boussinesq lower-obstacle drying and rewetting diagnostic" />
+<meta name="description" content="This page consolidates the scientific notes for the in-house flow/boussinesq solver family. It covers the equation, the finite-volume method, surface interaction and lower-obstacle drying, the runt..." />
+
+    <title>Boussinesq Theory &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/boussinesq';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://hydromodpy.github.io/theory/boussinesq.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Streams And Seepage" href="streams_and_seepage/index.html" />
+    <link rel="prev" title="Boussinesq PETSc Validation Results" href="solvers/boussinesq-petsc-validation-results.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/workflows/index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/concepts/workspace-layout.html">Workspace Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Theory</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="foundations/index.html">Foundations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="foundations/system-scope-and-assumptions.html">System Scope And Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="foundations/groundwater-flow-problem-definition.html">Groundwater Flow Problem Definition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="hydrology/index.html">Hydrology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/hydrological-forcing-chain.html">Hydrological Forcing Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/forcing-time-aggregation-and-first-clim.html">Forcing Time Aggregation And First_Clim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/recharge-and-surface-exchange-semantics.html">Recharge And Surface-Exchange Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/stream-ocean-and-drainage-semantics.html">Stream, Ocean, And Drainage Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/simulated-active-network.html">Simulated Active Network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="mesh/index.html">Mesh</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="solvers/mesh-and-discretization-strategies.html">Mesh and discretization strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh/regular-vs-irregular-meshes.html">Regular and irregular mesh cell budgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">Field-to-cell parameter transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/mesh-quality-and-acceptance-criteria.html">Mesh quality and acceptance criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/vertical-representation-and-storage-assumptions.html">Vertical representation and storage assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular DISV meshes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="solvers/index.html">Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="solvers/flow/index.html">Flow Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="solvers/flow/modflow-family.html">MODFLOW Flow Family</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/mesh-and-discretization-strategies.html">Mesh And Discretization Strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">Field-To-Cell Parameter Transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/vertical-representation-and-storage-assumptions.html">Vertical Representation And Storage Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/mesh-quality-and-acceptance-criteria.html">Mesh Quality And Acceptance Criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/modflow-governing-equation-and-cvfd-formulation.html">MODFLOW Governing Equation And CVFD Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/modflow6-vs-modflownwt-scientific-comparison.html">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/modflow-package-semantics-and-boundary-conditions.html">MODFLOW Package Semantics And Option Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D On Irregular DISV Meshes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/worked-modflow-case-dupuit-fixed-head-1d.html">Worked MODFLOW Case: Dupuit Fixed Head 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/worked-modflow-case-linearized-unconfined-recharge-periodic-1d.html">Worked MODFLOW Case: Linearized Unconfined Periodic Recharge 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/worked-modflow-case-nancon-transient-nwt-etp-evt.html">Worked MODFLOW Case: Nancon Transient NWT With ETP To EVT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/solver-capability-matrix.html">Solver Capability Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solvers/boussinesq-petsc-validation-results.html">Boussinesq PETSc Validation Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Boussinesq</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="streams_and_seepage/index.html">Streams and seepage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/conceptual-model.html">Conceptual Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/worked-examples.html">Worked examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hydrology/simulated-active-network.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="calibration/inverse-problem-formulation.html">Calibration Inverse Problem Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="calibration/calibration-methods.html">Calibration Methods Implemented In HydroModPy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/cli-reference.html">CLI Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user_guide/data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/results-and-exports.html">Results and Exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/project-api.html">Project API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../user_guide/index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Boussinesq Theory</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="boussinesq-theory">
+<h1>Boussinesq Theory<a class="headerlink" href="#boussinesq-theory" title="Link to this heading">#</a></h1>
+<p>This page consolidates the scientific notes for the in-house <code class="docutils literal notranslate"><span class="pre">flow/boussinesq</span></code>
+solver family. It covers the equation, the finite-volume method, surface
+interaction and lower-obstacle drying, the runtime engines, formulation
+comparison, and a possibility map.</p>
+<p>The Boussinesq route is not a MODFLOW wrapper. It is a HydroModPy-native
+finite-volume shallow-groundwater formulation on triangular runtime meshes.</p>
+<p>The shallow-groundwater equation solved here descends from the seminal works
+of <span class="bibtex-citation" id="id1">[<a class="reference internal" href="bibliography.html#id2" title="J. Boussinesq. Essai sur la théorie des eaux courantes. Mémoires présentés par divers savants à l'Académie des Sciences, 23:1–680, 1877.">Boussinesq, 1877</a>]</span> and <span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id3" title="J. Boussinesq. Recherches théoriques sur l'écoulement des nappes d'eau infiltrées dans le sol. Journal de Mathématiques Pures et Appliquées, 10:5–78, 1904.">Boussinesq, 1904</a>]</span>, which build on the
+Dupuit assumptions <span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id4" title="J. Dupuit. Études théoriques et pratiques sur le mouvement des eaux dans les canaux découverts et à travers les terrains perméables. Dunod, Paris, 2nd edition, 1863.">Dupuit, 1863</a>]</span>. A modern textbook treatment can be
+found in <span class="bibtex-citation" id="id4">[<a class="reference internal" href="bibliography.html#id7" title="W. Brutsaert. Hydrology: An Introduction. Cambridge University Press, Cambridge, 2005. doi:10.1017/CBO9780511808470.">Brutsaert, 2005</a>]</span>. See <a class="reference internal" href="bibliography.html"><span class="doc">Bibliography</span></a> for the full list of
+cited references.</p>
+<section id="current-scope">
+<h2>Current Scope<a class="headerlink" href="#current-scope" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 72.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Topic</p></th>
+<th class="head"><p>Current interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Process pair</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">flow/boussinesq</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Mesh support</p></td>
+<td><p>Triangular runtime meshes.</p></td>
+</tr>
+<tr class="row-even"><td><p>Regimes</p></td>
+<td><p>Steady and transient paths exist.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Main outputs</p></td>
+<td><p>Hydraulic head and groundwater/surface-interaction terms.</p></td>
+</tr>
+<tr class="row-even"><td><p>Maturity</p></td>
+<td><p>Active validation path; use comparison and validation pages before
+making production claims.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="result-anchors-for-the-equations">
+<h2>Result Anchors For The Equations<a class="headerlink" href="#result-anchors-for-the-equations" title="Link to this heading">#</a></h2>
+<p>Before reading the residual terms, it helps to keep two committed validation
+figures in mind. They are not decorative examples; they show what the
+mathematical terms below are meant to explain.</p>
+<figure class="hmp-gallery-figure"><picture><source srcset="../_static/capability_gallery/validation/boussinesq_hillslope_recharge_step_interception_1d__boussinesq.webp" type="image/webp"><img src="../_static/capability_gallery/validation/boussinesq_hillslope_recharge_step_interception_1d__boussinesq.png" alt="Boussinesq hillslope recharge-step interception validation result" style="width: 100%;" loading="lazy"></picture><figcaption>This validation result connects recharge, internal flow, interception, and
+surface-interaction terms on a controlled hillslope problem.</figcaption></figure><figure class="align-default" id="id6">
+<a class="reference internal image-reference" href="../_images/lower_obstacle_drying_rewetting.png"><img alt="Boussinesq lower-obstacle drying and rewetting diagnostic" src="../_images/lower_obstacle_drying_rewetting.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 82 </span><span class="caption-text">The lower-obstacle diagnostic is a visual companion for the bounded
+saturated-thickness interpretation and the drying/rewetting behaviour
+discussed later in this page.</span><a class="headerlink" href="#id6" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="equation-and-unknowns">
+<h2>Equation And Unknowns<a class="headerlink" href="#equation-and-unknowns" title="Link to this heading">#</a></h2>
+<section id="primary-unknown">
+<h3>Primary Unknown<a class="headerlink" href="#primary-unknown" title="Link to this heading">#</a></h3>
+<p>The primary solved variable is the cell-centered hydraulic head:</p>
+<div class="math notranslate nohighlight">
+\[h_i\]</div>
+<p>for each triangular aquifer cell <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p>From <span class="math notranslate nohighlight">\(h_i\)</span>, the backend reconstructs the saturated thickness:</p>
+<div class="math notranslate nohighlight">
+\[b_i(h) =
+\min\left(
+   \max\left(h_i - z_i^{bot}, 0\right),
+   z_i^{top} - z_i^{bot}
+\right)\]</div>
+<p>and the transmissivity:</p>
+<div class="math notranslate nohighlight">
+\[T_i(h) = K_i b_i(h)\]</div>
+<p>The clipping is important. The nonlinear solver may test intermediate head
+states, but the physical residual always interprets them through an admissible
+saturated thickness.</p>
+</section>
+<section id="cell-balance">
+<h3>Cell Balance<a class="headerlink" href="#cell-balance" title="Link to this heading">#</a></h3>
+<p>The Boussinesq backend solves a cellwise mass balance. In words, each residual
+balances:</p>
+<ul class="simple">
+<li><p>lateral exchange between neighboring triangular cells;</p></li>
+<li><p>imposed-head exchanges on side, stream, or ocean supports;</p></li>
+<li><p>recharge;</p></li>
+<li><p>wells;</p></li>
+<li><p>top drainage or surface-excess terms;</p></li>
+<li><p>storage in transient mode.</p></li>
+</ul>
+<p>With HydroModPy’s residual sign convention, positive residual contributions
+tend to remove water from the cell. Recharge and injection therefore enter
+with a negative sign.</p>
+</section>
+<section id="steady-equation">
+<h3>Steady Equation<a class="headerlink" href="#steady-equation" title="Link to this heading">#</a></h3>
+<p>The steady problem searches for:</p>
+<div class="math notranslate nohighlight">
+\[R_i^{steady}(h) = 0\]</div>
+<p>for every active cell <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p>The head-only regularized formulation uses the residual shape:</p>
+<div class="math notranslate nohighlight">
+\[R_i^{steady}(h)
+=
+R_i^{int}(h)
++
+R_i^{D}(h)
++
+q_i^{drain}(h)
++
+A_i s_i(h)
+-
+A_i r_i
+-
+Q_i^{well}\]</div>
+<p>where <span class="math notranslate nohighlight">\(s_i(h)\)</span> is the selected surface-interaction contribution.</p>
+</section>
+<section id="transient-equation">
+<h3>Transient Equation<a class="headerlink" href="#transient-equation" title="Link to this heading">#</a></h3>
+<p>Transient runs add a backward-Euler storage term based on a lower-bounded
+saturated thickness:</p>
+<div class="math notranslate nohighlight">
+\[M_i(h) = A_i S_i \max(h_i - z_i^{bot}, 0)\]</div>
+<p>The transient storage contribution is therefore:</p>
+<div class="math notranslate nohighlight">
+\[\frac{M_i(h^{n+1}) - M_i(h^n)}{\Delta t}\]</div>
+<p>so the transient residual is:</p>
+<div class="math notranslate nohighlight">
+\[R_i^{transient}(h^{n+1}) = 0\]</div>
+<p>with the same exchange, forcing, and surface terms evaluated at the new time
+level.</p>
+<p>This matters during drying. A head update below the substratum must not create
+a negative saturated thickness or a negative storage volume. The head remains
+the primary unknown. Transmissivity uses the capped admissible thickness, while
+storage is only lower-bounded so head-only transient formulations do not lose
+their time-step memory when they temporarily carry heads above the top surface.</p>
+</section>
+<section id="what-this-equation-does-not-claim">
+<h3>What This Equation Does Not Claim<a class="headerlink" href="#what-this-equation-does-not-claim" title="Link to this heading">#</a></h3>
+<p>The Boussinesq backend is not a full 3D groundwater model and not a full
+overland-flow model. It is a shallow-groundwater reduction where the water
+table, transmissivity, and surface-interaction behavior are represented inside
+one cell-centered finite-volume balance.</p>
+</section>
+</section>
+<section id="geometric-setting-and-cell-quantities">
+<h2>Geometric Setting And Cell Quantities<a class="headerlink" href="#geometric-setting-and-cell-quantities" title="Link to this heading">#</a></h2>
+<p>The solver works on a 2D triangular mesh of aquifer cells. Each cell
+<span class="math notranslate nohighlight">\(i\)</span> has:</p>
+<ul class="simple">
+<li><p>area <span class="math notranslate nohighlight">\(A_i\)</span>,</p></li>
+<li><p>top elevation <span class="math notranslate nohighlight">\(z^{\text{top}}_i\)</span>,</p></li>
+<li><p>bottom elevation <span class="math notranslate nohighlight">\(z^{\text{bot}}_i\)</span>,</p></li>
+<li><p>hydraulic conductivity <span class="math notranslate nohighlight">\(K_i\)</span>,</p></li>
+<li><p>storage coefficient <span class="math notranslate nohighlight">\(S_i\)</span>.</p></li>
+</ul>
+<section id="cell-balance-and-sign-convention">
+<h3>Cell Balance And Sign Convention<a class="headerlink" href="#cell-balance-and-sign-convention" title="Link to this heading">#</a></h3>
+<p>The solver is built around a residual balance written per cell. The convention
+used by the code is:</p>
+<ul class="simple">
+<li><p>positive residual contributions tend to remove water from the cell,</p></li>
+<li><p>recharge and positive well injection add water and therefore appear with a
+minus sign in the residual,</p></li>
+<li><p>a converged solution satisfies <span class="math notranslate nohighlight">\(R_i \approx 0\)</span> for every cell
+<span class="math notranslate nohighlight">\(i\)</span>.</p></li>
+</ul>
+<p>This convention is the one implemented in <code class="docutils literal notranslate"><span class="pre">assemble_steady_residual()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">assemble_transient_residual()</span></code>.</p>
+</section>
+<section id="internal-edge-fluxes">
+<h3>Internal Edge Fluxes<a class="headerlink" href="#internal-edge-fluxes" title="Link to this heading">#</a></h3>
+<p>Consider an internal edge <span class="math notranslate nohighlight">\(e\)</span> shared by cells <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span>.
+The code defines one oriented flux <span class="math notranslate nohighlight">\(q^{\text{int}}_e\)</span> that is positive
+when water leaves cell <span class="math notranslate nohighlight">\(a\)</span> and enters cell <span class="math notranslate nohighlight">\(b\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[q^{\text{int}}_e = -\tau_e(h_b - h_a)\]</div>
+<p>The edge transmissive factor is</p>
+<div class="math notranslate nohighlight">
+\[\tau_e
+=
+K^{H}_e\,\bar{b}_e\,\frac{L_e}{d_e}\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(K^{H}_e\)</span> is the harmonic mean of <span class="math notranslate nohighlight">\(K_a\)</span> and <span class="math notranslate nohighlight">\(K_b\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\bar{b}_e = \frac{1}{2}(b_a + b_b)\)</span> is the averaged saturated
+thickness,</p></li>
+<li><p><span class="math notranslate nohighlight">\(L_e\)</span> is the edge length,</p></li>
+<li><p><span class="math notranslate nohighlight">\(d_e\)</span> is the centroid-to-centroid distance between the two cells.</p></li>
+</ul>
+<p>The residual contribution of internal fluxes is conservative:</p>
+<div class="math notranslate nohighlight">
+\[R^{\text{int}}_a \mathrel{+}= q^{\text{int}}_e,
+\qquad
+R^{\text{int}}_b \mathrel{-}= q^{\text{int}}_e\]</div>
+<p>This part is implemented by:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">internal_edge_flux_from_head()</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">accumulate_internal_flux_residual()</span></code>.</p></li>
+</ul>
+</section>
+<section id="imposed-head-exchanges">
+<h3>Imposed-Head Exchanges<a class="headerlink" href="#imposed-head-exchanges" title="Link to this heading">#</a></h3>
+<p>Some edges carry an imposed stage <span class="math notranslate nohighlight">\(H_e\)</span>, for example:</p>
+<ul class="simple">
+<li><p>side Dirichlet conditions,</p></li>
+<li><p>stream supports,</p></li>
+<li><p>ocean supports.</p></li>
+</ul>
+<p>For such edges, the code builds cell-to-edge transmissive coefficients</p>
+<div class="math notranslate nohighlight">
+\[\tau_{a,e} = K_a\,b_a\,\frac{L_e}{d_{a,e}}\]</div>
+<p>and similarly for <span class="math notranslate nohighlight">\(\tau_{b,e}\)</span> when a second owner cell exists.</p>
+<p>The corresponding exchange fluxes are</p>
+<div class="math notranslate nohighlight">
+\[q^{D}_{a,e} = -\tau_{a,e}(H_e - h_a),
+\qquad
+q^{D}_{b,e} = -\tau_{b,e}(H_e - h_b)\]</div>
+<p>Those fluxes are accumulated directly into the owner-cell residuals. In the
+current mesh usage, imposed-head support is mainly used on boundary edges, but
+the implementation is slightly more general and can also account for an edge
+with two owner cells.</p>
+</section>
+</section>
+<section id="recharge-wells-drainage-and-surface-interaction">
+<h2>Recharge, Wells, Drainage And Surface Interaction<a class="headerlink" href="#recharge-wells-drainage-and-surface-interaction" title="Link to this heading">#</a></h2>
+<section id="recharge">
+<h3>Recharge<a class="headerlink" href="#recharge" title="Link to this heading">#</a></h3>
+<p>Recharge is represented as a surface rate <span class="math notranslate nohighlight">\(r_i\)</span> in <code class="docutils literal notranslate"><span class="pre">m/s</span></code>. In the
+current first slice of the backend, recharge is homogeneous in space for a
+given stress period. Its volumetric contribution in cell <span class="math notranslate nohighlight">\(i\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[A_i r_i\]</div>
+</section>
+<section id="wells">
+<h3>Wells<a class="headerlink" href="#wells" title="Link to this heading">#</a></h3>
+<p>Wells are converted to cell-based volumetric rates
+<span class="math notranslate nohighlight">\(Q^{\text{well}}_i\)</span> in <code class="docutils literal notranslate"><span class="pre">m^3/s</span></code>. The sign convention is:</p>
+<ul class="simple">
+<li><p>positive value: injection into the aquifer,</p></li>
+<li><p>negative value: pumping from the aquifer.</p></li>
+</ul>
+<p>Since injection adds water, the residual contains <span class="math notranslate nohighlight">\(-Q^{\text{well}}_i\)</span>.</p>
+</section>
+<section id="drainage">
+<h3>Drainage<a class="headerlink" href="#drainage" title="Link to this heading">#</a></h3>
+<p>Drainage is a simple top leakage law that activates only when the head exceeds
+the cell top elevation:</p>
+<div class="math notranslate nohighlight">
+\[q^{\text{drain}}_i = C_i^{\text{drain}}
+\max(h_i - z^{\text{top}}_i, 0)\]</div>
+<p>This term is always treated as an outflow from the aquifer and therefore
+enters the residual with a positive sign.</p>
+</section>
+<section id="regularized-saturation-excess-closure">
+<h3>Regularized Saturation Excess Closure<a class="headerlink" href="#regularized-saturation-excess-closure" title="Link to this heading">#</a></h3>
+<p>The current backend includes a regularized saturation-excess source term. Its
+goal is pragmatic: avoid a sharp on/off overflow law exactly at full saturation
+while still allowing near-surface water release when the cell is almost full.</p>
+<p>Define the saturation ratio</p>
+<div class="math notranslate nohighlight">
+\[\sigma_i(h) =
+\frac{b_i(h)}{z^{\text{top}}_i - z^{\text{bot}}_i}\]</div>
+<p>Let <span class="math notranslate nohighlight">\(R^{\text{lat}}_i\)</span> be the lateral balance rate converted back to a
+surface flux by division through <span class="math notranslate nohighlight">\(A_i\)</span>. The code forms</p>
+<div class="math notranslate nohighlight">
+\[\beta_i
+=
+\max\!\left(
+    -\frac{R^{\text{lat}}_i}{A_i} + \max(r_i, 0),
+    0
+\right)\]</div>
+<p>and then applies the regularization</p>
+<div class="math notranslate nohighlight">
+\[s_i(h)
+=
+\exp\!\left(
+    -\frac{1 - \sigma_i(h)}{\varepsilon}
+\right)
+\beta_i\]</div>
+<p>where <span class="math notranslate nohighlight">\(\varepsilon &gt; 0\)</span> is the regularization radius.</p>
+<p>This term is not meant to be a final physically complete overland-flow model.
+It is a smooth release mechanism used by the head-only formulation close to
+full saturation.</p>
+</section>
+<section id="mixed-complementarity-surface-closure">
+<h3>Mixed Complementarity Surface Closure<a class="headerlink" href="#mixed-complementarity-surface-closure" title="Link to this heading">#</a></h3>
+<p>The PETSc mixed formulation uses a different surface interaction model. It
+introduces one explicit cellwise surface-excess unknown
+<span class="math notranslate nohighlight">\(q_i^{\text{ex}} \ge 0\)</span> and replaces the regularized law by the
+complementarity condition</p>
+<div class="math notranslate nohighlight">
+\[0 \le q_i^{\text{ex}} \perp z_i^{\text{top}} - h_i \ge 0\]</div>
+<p>which reads:</p>
+<ul class="simple">
+<li><p>if <span class="math notranslate nohighlight">\(h_i &lt; z_i^{\text{top}}\)</span>, then <span class="math notranslate nohighlight">\(q_i^{\text{ex}} = 0\)</span>,</p></li>
+<li><p>if <span class="math notranslate nohighlight">\(q_i^{\text{ex}} &gt; 0\)</span>, then <span class="math notranslate nohighlight">\(h_i = z_i^{\text{top}}\)</span>.</p></li>
+</ul>
+<p>The implementation enforces this relation with a Fischer-Burmeister residual
+on scaled variables in <code class="docutils literal notranslate"><span class="pre">runtimes/petsc_mixed.py</span></code>. In that formulation the surface
+flux is not prescribed by a local partition law; it is solved together with
+the head field so that the finite-volume balance and the unilateral surface
+constraint are satisfied simultaneously.</p>
+</section>
+</section>
+<section id="surface-interaction-and-interception">
+<h2>Surface Interaction And Interception<a class="headerlink" href="#surface-interaction-and-interception" title="Link to this heading">#</a></h2>
+<p>This section separates the groundwater/surface-interaction choices from the
+rest of the Boussinesq equation.</p>
+<p>The important modelling point is that Boussinesq does not simply compute head.
+It also needs a rule for what happens when the groundwater state approaches or
+intercepts the topographic surface.</p>
+<section id="surface-terms">
+<h3>Surface Terms<a class="headerlink" href="#surface-terms" title="Link to this heading">#</a></h3>
+<p>The current documentation distinguishes three related mechanisms:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 34.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mechanism</p></th>
+<th class="head"><p>Role</p></th>
+<th class="head"><p>Current status</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Recharge</p></td>
+<td><p>Adds water as a surface rate projected to cells.</p></td>
+<td><p>Supported as homogeneous or resolved cellwise forcing depending on the
+workflow input.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Drainage</p></td>
+<td><p>Removes water when head exceeds the cell top elevation.</p></td>
+<td><p>Simple top leakage law.</p></td>
+</tr>
+<tr class="row-even"><td><p>Saturation excess</p></td>
+<td><p>Represents near-surface release when the aquifer reaches the surface
+constraint.</p></td>
+<td><p>Implemented through two alternative closures.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="regularized-partition-closure">
+<h3>Regularized Partition Closure<a class="headerlink" href="#regularized-partition-closure" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> closure keeps hydraulic head as the only
+unknown. The surface-excess term is reconstructed by a smooth law that becomes
+active near full saturation.</p>
+<p>This route is useful because it is:</p>
+<ul class="simple">
+<li><p>available with <code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code>, and <code class="docutils literal notranslate"><span class="pre">petsc</span></code>;</p></li>
+<li><p>smooth enough for dense and sparse Newton-style solves;</p></li>
+<li><p>the main cross-platform comparison baseline.</p></li>
+</ul>
+<p>Its limit is scientific rather than technical: it is a pragmatic release law,
+not a full coupled surface-flow model. It can keep a low-amplitude seepage set
+active where a stricter threshold model would turn surface excess off.</p>
+</section>
+<section id="mixed-complementarity-closure">
+<h3>Mixed Complementarity Closure<a class="headerlink" href="#mixed-complementarity-closure" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">complementarity</span></code> closure introduces explicit saturation excess:</p>
+<div class="math notranslate nohighlight">
+\[q_i^{ex} \ge 0\]</div>
+<p>and enforces:</p>
+<div class="math notranslate nohighlight">
+\[0 \le q_i^{ex} \perp z_i^{top} - h_i \ge 0\]</div>
+<p>This reads:</p>
+<ul class="simple">
+<li><p>if the head is below the topographic surface, surface excess is zero;</p></li>
+<li><p>if surface excess is positive, the head is on the surface threshold.</p></li>
+</ul>
+<p>The implementation uses a Fischer-Burmeister residual in the PETSc mixed
+runtime. This route is the most explicit way to represent surface interception
+as an on/off threshold constraint.</p>
+</section>
+<section id="lower-drying-obstacle-surface-view">
+<h3>Lower Drying Obstacle (Surface View)<a class="headerlink" href="#lower-drying-obstacle-surface-view" title="Link to this heading">#</a></h3>
+<p>The same PETSc mixed route also enforces the lower head obstacle:</p>
+<div class="math notranslate nohighlight">
+\[h_i - z_i^{bot} \ge 0\]</div>
+<p>through a dry-deficit unknown <span class="math notranslate nohighlight">\(q_i^{dry}\)</span>. This quantity is not a
+physical leakage through the substratum. It is a numerical unmet-demand term:
+when the cell is already dry, it prevents the balance from removing more water
+than the saturated storage can provide.</p>
+<p>The head-only <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> route does not solve this explicit
+lower complementarity constraint. It still uses bounded saturated thickness in
+transmissivity, lower-bounded saturated thickness in transient storage, and it
+reports diagnostics if the head itself drops below the lower obstacle.</p>
+</section>
+<section id="selection-rule">
+<h3>Selection Rule<a class="headerlink" href="#selection-rule" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 36.0%" />
+<col style="width: 32.0%" />
+<col style="width: 32.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Prefer <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code></p></th>
+<th class="head"><p>Prefer <code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Need cross-platform execution?</p></td>
+<td><p>Yes.</p></td>
+<td><p>No, PETSc/Linux route.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Need a smooth head-only residual?</p></td>
+<td><p>Yes.</p></td>
+<td><p>No.</p></td>
+</tr>
+<tr class="row-even"><td><p>Need explicit on/off surface-threshold behavior?</p></td>
+<td><p>Not primarily.</p></td>
+<td><p>Yes.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Comparing against existing head-only validation cases?</p></td>
+<td><p>Usually yes.</p></td>
+<td><p>Only if the comparison is about the closure itself.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="lower-obstacle-drying">
+<h2>Lower Obstacle Drying<a class="headerlink" href="#lower-obstacle-drying" title="Link to this heading">#</a></h2>
+<p>This section documents how the Boussinesq backend treats the physically required
+lower bound on hydraulic head:</p>
+<div class="math notranslate nohighlight">
+\[z_i^{bot} \le h_i \le z_i^{top}\]</div>
+<p>The implementation still solves for hydraulic head. It does not switch the
+primary unknown to water volume or saturated stock. The lower obstacle is
+handled by using non-negative saturated thickness in the physical operators,
+and by adding an explicit complementarity term in the PETSc mixed runtime.</p>
+<section id="bounded-saturated-thickness">
+<h3>Bounded Saturated Thickness<a class="headerlink" href="#bounded-saturated-thickness" title="Link to this heading">#</a></h3>
+<p>For every cell <span class="math notranslate nohighlight">\(i\)</span>, the raw saturated thickness would be:</p>
+<div class="math notranslate nohighlight">
+\[h_i - z_i^{bot}\]</div>
+<p>The solver does not use this raw value directly in transmissivity. It
+reconstructs the transmissive saturated thickness:</p>
+<div class="math notranslate nohighlight">
+\[H_i^T(h) =
+\min\left(
+   \max\left(h_i - z_i^{bot}, 0\right),
+   z_i^{top} - z_i^{bot}
+\right)\]</div>
+<p>The transmissivity is:</p>
+<div class="math notranslate nohighlight">
+\[T_i(h) = K_i H_i^T(h)\]</div>
+<p>The transient storage uses a lower-bounded drainable volume:</p>
+<div class="math notranslate nohighlight">
+\[H_i^M(h) = \max\left(h_i - z_i^{bot}, 0\right)\]</div>
+<div class="math notranslate nohighlight">
+\[M_i(h) = A_i S_i H_i^M(h)\]</div>
+<p>The backward-Euler storage contribution is:</p>
+<div class="math notranslate nohighlight">
+\[\frac{M_i(h^{n+1}) - M_i(h^n)}{\Delta t}\]</div>
+<p>This avoids negative transmissivity and negative storage even if a nonlinear
+iteration temporarily evaluates a head below the substratum. The upper surface
+is deliberately not used to cap transient storage in the head-only routes: if
+those routes allow a pressure-like head above <span class="math notranslate nohighlight">\(z^{top}\)</span>, the time-step
+history must still contain enough storage memory to avoid artificially frozen
+transients.</p>
+</section>
+<section id="regularized-partition-route">
+<h3>Regularized Partition Route<a class="headerlink" href="#regularized-partition-route" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> route is head-only. It uses the capped thickness
+above in transmissivity and lower-bounded storage in the transient term, but it
+does not solve an explicit lower complementarity constraint.</p>
+<p>In practice:</p>
+<ul class="simple">
+<li><p>transmissivity remains non-negative;</p></li>
+<li><p>storage remains non-negative and keeps transient memory above the top
+surface when this head-only route permits such heads;</p></li>
+<li><p>diagnostics report whether the accepted head field went below
+<span class="math notranslate nohighlight">\(z^{bot}\)</span>;</p></li>
+<li><p>no algebraic <code class="docutils literal notranslate"><span class="pre">dry</span> <span class="pre">deficit</span></code> unknown is solved in this route.</p></li>
+</ul>
+<p>Use this route when the goal is a smooth head-only baseline or cross-platform
+execution. Use the PETSc complementarity route when the lower obstacle itself
+must be enforced by the nonlinear solve.</p>
+</section>
+<section id="petsc-double-obstacle-route">
+<h3>PETSc Double Obstacle Route<a class="headerlink" href="#petsc-double-obstacle-route" title="Link to this heading">#</a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">runtime_backend</span> <span class="pre">=</span> <span class="pre">&quot;petsc&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">surface_interaction_model</span> <span class="pre">=</span> <span class="pre">&quot;complementarity&quot;</span></code>, the mixed unknown layout is:</p>
+<div class="math notranslate nohighlight">
+\[(h_i,\ q_i^{ex},\ q_i^{dry})\]</div>
+<p>The upper surface complementarity is:</p>
+<div class="math notranslate nohighlight">
+\[q_i^{ex} \ge 0,\quad z_i^{top} - h_i \ge 0,\quad
+q_i^{ex}(z_i^{top} - h_i) = 0\]</div>
+<p>The lower drying complementarity is:</p>
+<div class="math notranslate nohighlight">
+\[q_i^{dry} \ge 0,\quad h_i - z_i^{bot} \ge 0,\quad
+q_i^{dry}(h_i - z_i^{bot}) = 0\]</div>
+<p>The two algebraic rates have different interpretations:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(q_i^{ex}\)</span> is a saturation-excess release term at the upper surface;</p></li>
+<li><p><span class="math notranslate nohighlight">\(q_i^{dry}\)</span> is not a substratum leakage term. It is an unmet-demand
+correction that prevents the residual from removing more water than the
+available saturated storage.</p></li>
+</ul>
+<p>With the HydroModPy residual sign convention, positive residual terms remove
+water. The dry-deficit contribution therefore enters the balance with the
+opposite sign:</p>
+<div class="math notranslate nohighlight">
+\[R_i \leftarrow R_i - A_i q_i^{dry}\]</div>
+<p>This sign is essential. If a cell is already at <span class="math notranslate nohighlight">\(h_i=z_i^{bot}\)</span>, the
+dry-deficit term offsets any remaining removal demand instead of adding water
+through a physical boundary.</p>
+</section>
+<section id="diagnostics-and-exports">
+<h3>Diagnostics And Exports<a class="headerlink" href="#diagnostics-and-exports" title="Link to this heading">#</a></h3>
+<p>Boussinesq runtime summaries now include lower-obstacle diagnostics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 42.0%" />
+<col style="width: 58.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key family</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bottom_threshold_*</span></code></p></td>
+<td><p>Reports accepted-head violations below <span class="math notranslate nohighlight">\(z^{bot}\)</span> and the
+associated potential negative storage volume.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bottom_constraint_*</span></code></p></td>
+<td><p>Reports active dry-deficit cells, peak rates and integrated dry-deficit
+volume.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dry_deficit_history_m_s</span></code></p></td>
+<td><p>Exported state-history array for the cellwise <span class="math notranslate nohighlight">\(q^{dry}\)</span> rate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dry_deficit_total_m3_s</span></code></p></td>
+<td><p>Comparison-budget component reconstructed from
+<code class="docutils literal notranslate"><span class="pre">dry_deficit_history_m_s</span></code> and cell areas.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">boussinesq_obstacle_diagnostics.csv</span></code></p></td>
+<td><p>Comparison export containing per-snapshot <code class="docutils literal notranslate"><span class="pre">min(h-z_bot)</span></code>,
+potential negative storage volume, active dry-deficit cells, and
+surface-excess cells when Boussinesq state histories and mesh vertical
+bounds are available.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>These diagnostics should be read separately from physical discharge terms.
+They tell where the lower obstacle is active and how much extraction or
+drainage demand could not be satisfied by saturated storage.</p>
+<p>In budget closure diagnostics, <code class="docutils literal notranslate"><span class="pre">dry_deficit_total_m3_s</span></code> is treated with the
+same sign as available water because it offsets an otherwise unsatisfied
+removal demand. It is still not a physical recharge boundary.</p>
+</section>
+<section id="validation-case-steep-hillslope-drying-and-rewetting">
+<h3>Validation Case: Steep Hillslope Drying And Rewetting<a class="headerlink" href="#validation-case-steep-hillslope-drying-and-rewetting" title="Link to this heading">#</a></h3>
+<p>The committed PETSc validation test is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tests/validation/numerical/transient/test_boussinesq_drying_petsc.py
+</pre></div>
+</div>
+<p>It contains two checks:</p>
+<ul class="simple">
+<li><p>a single-cell pumping case that forces immediate lower-obstacle activation;</p></li>
+<li><p>a steep sloping hillslope that dries by natural lateral drainage under zero
+recharge, then rewets when recharge resumes.</p></li>
+</ul>
+<p>The hillslope case uses:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 34.0%" />
+<col style="width: 66.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Cells</p></td>
+<td><p>8 cell-centered finite-volume cells.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Substratum</p></td>
+<td><p>Linear drop from 20 m upstream to 0 m downstream.</p></td>
+</tr>
+<tr class="row-even"><td><p>Saturable thickness</p></td>
+<td><p>1.5 m.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Hydraulic conductivity</p></td>
+<td><p>1e-3 m/s.</p></td>
+</tr>
+<tr class="row-even"><td><p>Storage coefficient</p></td>
+<td><p>0.2.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Downstream boundary</p></td>
+<td><p>Prescribed head equal to downstream substratum elevation.</p></td>
+</tr>
+<tr class="row-even"><td><p>Drying phase</p></td>
+<td><p>Two 30-day periods with zero recharge.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Rewetting phase</p></td>
+<td><p>One 10-day period with recharge 2e-6 m/s.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Expected behavior:</p>
+<ul class="simple">
+<li><p>during zero recharge, lateral drainage lowers the water table naturally;</p></li>
+<li><p>several cells reach <span class="math notranslate nohighlight">\(h=z^{bot}\)</span> and activate <span class="math notranslate nohighlight">\(q^{dry}\)</span>;</p></li>
+<li><p>the accepted head field remains above the lower obstacle within tolerance;</p></li>
+<li><p>after recharge resumes, head rises and <span class="math notranslate nohighlight">\(q^{dry}\)</span> deactivates.</p></li>
+</ul>
+<figure class="align-default" id="id7">
+<a class="reference internal image-reference" href="../_images/lower_obstacle_drying_rewetting.png"><img alt="Boussinesq lower-obstacle drying and rewetting diagnostic" src="../_images/lower_obstacle_drying_rewetting.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 83 </span><span class="caption-text">The diagnostic figure shows the same validation setup as a visual sequence:
+the initial water table drains toward the sloping substratum, the lower
+complementarity constraint activates during the dry phase, and recharge
+reactivates storage without leaving a persistent dry-deficit term.</span><a class="headerlink" href="#id7" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>Run the validation from Windows through the WSL development environment:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">wsl</span><span class="p">.</span><span class="n">exe</span> <span class="n">bash</span> <span class="n">-lc</span> <span class="s2">&quot;bash install/enter_wsl_dev.sh --headless -- python -m pytest tests/validation/numerical/transient/test_boussinesq_drying_petsc.py -q&quot;</span>
+</pre></div>
+</div>
+<p>Regenerate the documentation asset from the same WSL environment:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">wsl</span><span class="p">.</span><span class="n">exe</span> <span class="n">bash</span> <span class="n">-lc</span> <span class="s2">&quot;cd /mnt/c/codes/HydroModPy &amp;&amp; bash install/enter_wsl_dev.sh --headless -- python -m tools.doc_gallery.generate_boussinesq_drying_assets&quot;</span>
+</pre></div>
+</div>
+<p>Or from an already activated Linux shell:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/validation/numerical/transient/test_boussinesq_drying_petsc.py<span class="w"> </span>-q
+python<span class="w"> </span>-m<span class="w"> </span>tools.doc_gallery.generate_boussinesq_drying_assets
+</pre></div>
+</div>
+</section>
+<section id="design-interpretation">
+<h3>Design Interpretation<a class="headerlink" href="#design-interpretation" title="Link to this heading">#</a></h3>
+<p>This is a pragmatic intermediate formulation:</p>
+<ul class="simple">
+<li><p>the solved differential unknown remains hydraulic head;</p></li>
+<li><p>transmissive operators use capped saturated thickness;</p></li>
+<li><p>transient storage uses lower-bounded saturated thickness;</p></li>
+<li><p>the PETSc mixed runtime adds a lower algebraic obstacle only where needed;</p></li>
+<li><p>dry deficit is exposed as a diagnostic, not as a physical flux.</p></li>
+</ul>
+<p>A future stock-based formulation could make stored water the primary unknown.
+That would be a larger modelling change. The current design keeps the existing
+head-based method while removing negative saturated thickness, negative
+storage, and unconstrained dry heads in the PETSc complementarity route.</p>
+</section>
+</section>
+<section id="boussinesq-method">
+<h2>Boussinesq Method<a class="headerlink" href="#boussinesq-method" title="Link to this heading">#</a></h2>
+<p>This section describes the method layer between the equation and the nonlinear
+solver engine.</p>
+<p>In the code, this layer is explicit: <code class="docutils literal notranslate"><span class="pre">formulations/</span></code> defines algebraic
+unknowns and surface closures, <code class="docutils literal notranslate"><span class="pre">discretization/</span></code> defines space/time schemes,
+and <code class="docutils literal notranslate"><span class="pre">methods/</span></code> combines them into named method families.</p>
+<section id="spatial-method">
+<h3>Spatial Method<a class="headerlink" href="#spatial-method" title="Link to this heading">#</a></h3>
+<p>The current space scheme is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>finite-volume triangular cell-centered method
+</pre></div>
+</div>
+<p>The solver works on a compact triangular mesh view. Internal edge fluxes use:</p>
+<ul class="simple">
+<li><p>owner cell pairs;</p></li>
+<li><p>edge length;</p></li>
+<li><p>centroid-to-centroid distance;</p></li>
+<li><p>harmonic conductivity;</p></li>
+<li><p>averaged saturated thickness.</p></li>
+</ul>
+<p>The method is conservative on internal edges: the flux leaving one cell enters
+the neighboring cell with the opposite sign.</p>
+</section>
+<section id="time-methods">
+<h3>Time Methods<a class="headerlink" href="#time-methods" title="Link to this heading">#</a></h3>
+<p>Two regimes are documented and implemented:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 32.0%" />
+<col style="width: 42.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Regime</p></th>
+<th class="head"><p>Scheme</p></th>
+<th class="head"><p>Interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Steady</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">steady_balance</span></code></p></td>
+<td><p>Solve one nonlinear balance with no storage term.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Transient</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">backward_euler</span></code></p></td>
+<td><p>Fully implicit time stepping with storage evaluated between accepted
+snapshots.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="current-method-families">
+<h3>Current Method Families<a class="headerlink" href="#current-method-families" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 32.0%" />
+<col style="width: 28.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method id</p></th>
+<th class="head"><p>Unknown layout</p></th>
+<th class="head"><p>Surface closure</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">head_only_regularized_partition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mixed_complementarity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_plus_qex_qdry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The method id is the physically meaningful combination. A runtime backend such
+as <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> or <code class="docutils literal notranslate"><span class="pre">petsc</span></code> only says how that method is solved.</p>
+</section>
+<section id="head-only-regularized-partition">
+<h3>Head-Only Regularized Partition<a class="headerlink" href="#head-only-regularized-partition" title="Link to this heading">#</a></h3>
+<p>This is the historical comparison baseline. The unknown vector only contains
+hydraulic head. Surface excess is reconstructed from the head and the lateral
+balance through a smooth regularized partition law.</p>
+<p>Use it when:</p>
+<ul class="simple">
+<li><p>the run must stay cross-platform;</p></li>
+<li><p>the goal is comparison with existing validation cases;</p></li>
+<li><p>the mesh is small enough for dense engines or large enough for
+<code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code>;</p></li>
+<li><p>a smooth head-only residual is preferred over an explicit complementarity
+constraint.</p></li>
+</ul>
+</section>
+<section id="mixed-complementarity">
+<h3>Mixed Complementarity<a class="headerlink" href="#mixed-complementarity" title="Link to this heading">#</a></h3>
+<p>This method adds two cellwise algebraic unknowns:</p>
+<div class="math notranslate nohighlight">
+\[q_i^{ex}\]</div>
+<p>for saturation excess at the surface, and:</p>
+<div class="math notranslate nohighlight">
+\[q_i^{dry}\]</div>
+<p>for the lower drying obstacle. The PETSc runtime solves head, surface excess
+and dry deficit together as a double-obstacle complementarity problem.</p>
+<p>Use it when:</p>
+<ul class="simple">
+<li><p>PETSc is available;</p></li>
+<li><p>the question is specifically about on/off surface-threshold behavior;</p></li>
+<li><p>dry-down and repeated activation/deactivation of the surface threshold are
+important diagnostics.</p></li>
+<li><p>lower-obstacle drying must be enforced explicitly.</p></li>
+</ul>
+</section>
+</section>
+<section id="head-only-steady-residual">
+<h2>Head-Only Steady Residual<a class="headerlink" href="#head-only-steady-residual" title="Link to this heading">#</a></h2>
+<p>The steady residual assembled by the code is</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{steady}}(h)
+=
+R_i^{\text{int}}(h)
++
+R_i^{D}(h)
++
+q_i^{\text{drain}}(h)
++
+A_i s_i(h)
+-
+A_i r_i
+-
+Q_i^{\text{well}}\]</div>
+<p>The steady solve therefore searches for</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{steady}}(h) = 0
+\qquad \text{for all cells } i\]</div>
+</section>
+<section id="head-only-transient-residual">
+<h2>Head-Only Transient Residual<a class="headerlink" href="#head-only-transient-residual" title="Link to this heading">#</a></h2>
+<p>For one fully implicit backward-Euler time step from <span class="math notranslate nohighlight">\(t^n\)</span> to
+<span class="math notranslate nohighlight">\(t^{n+1}\)</span>, the additional storage term is</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{storage}}
+=
+A_i S_i \frac{h_i^{n+1} - h_i^n}{\Delta t}\]</div>
+<p>The transient residual is then</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{transient}}(h^{n+1})
+=
+A_i S_i \frac{h_i^{n+1} - h_i^n}{\Delta t}
++
+R_i^{\text{int}}(h^{n+1})
++
+R_i^{D}(h^{n+1})
++
+q_i^{\text{drain}}(h^{n+1})
++
+A_i s_i(h^{n+1})
+-
+A_i r_i^{n+1}
+-
+Q_{i}^{\text{well},\,n+1}\]</div>
+<p>The backend solves</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{transient}}(h^{n+1}) = 0
+\qquad \text{for all cells } i\]</div>
+<p>This is the transient residual solved by the <code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> and PETSc regularized-partition runtimes.</p>
+</section>
+<section id="solver-engines">
+<h2>Solver Engines<a class="headerlink" href="#solver-engines" title="Link to this heading">#</a></h2>
+<p>This section distinguishes the physical method from the execution engine.</p>
+<p>The user-facing runtime backend names are:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>local
+scipy
+scipy_sparse
+petsc
+</pre></div>
+</div>
+<p>They are not separate hydrological models. They are numerical engines used to
+solve one resolved Boussinesq method.</p>
+<section id="engine-matrix">
+<h3>Engine Matrix<a class="headerlink" href="#engine-matrix" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 26.0%" />
+<col style="width: 26.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Runtime backend</p></th>
+<th class="head"><p>Linear layout</p></th>
+<th class="head"><p>Supported method</p></th>
+<th class="head"><p>Best use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">local</span></code></p></td>
+<td><p>Dense</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only_regularized_partition</span></code></p></td>
+<td><p>Small validation meshes and transparent debugging.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scipy</span></code></p></td>
+<td><p>Dense</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only_regularized_partition</span></code></p></td>
+<td><p>Dense SciPy reference route around the same residual.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code></p></td>
+<td><p>Sparse</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only_regularized_partition</span></code></p></td>
+<td><p>Cross-platform reference for larger triangular meshes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code></p></td>
+<td><p>Sparse</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only_regularized_partition</span></code> or <code class="docutils literal notranslate"><span class="pre">mixed_complementarity</span></code></p></td>
+<td><p>Linux/PETSc route for sparse SNES solves, surface complementarity and
+lower-obstacle drying tests.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="surface-model-resolution">
+<h3>Surface Model Resolution<a class="headerlink" href="#surface-model-resolution" title="Link to this heading">#</a></h3>
+<p>The process-to-runtime selection resolves two axes:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runtime_backend + surface_interaction_model -&gt; method + engine
+</pre></div>
+</div>
+<p>The surface-interaction token can be:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>auto
+regularized_partition
+complementarity
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">auto</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code> resolves to <code class="docutils literal notranslate"><span class="pre">complementarity</span></code>;</p></li>
+<li><p>non-PETSc backends resolve to <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code>.</p></li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">complementarity</span></code> is requested with a non-PETSc runtime, the code rejects
+the combination because that method is currently implemented only for
+<code class="docutils literal notranslate"><span class="pre">runtime_backend</span> <span class="pre">=</span> <span class="pre">&quot;petsc&quot;</span></code>.</p>
+</section>
+<section id="minimal-configuration-shape">
+<h3>Minimal Configuration Shape<a class="headerlink" href="#minimal-configuration-shape" title="Link to this heading">#</a></h3>
+<p>The exact surrounding TOML depends on the workflow, but the relevant flow
+choice is conceptually:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[simulation.process]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;flow_main&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;flow&quot;</span>
+<span class="n">solvers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;boussinesq&quot;</span><span class="p">]</span>
+
+<span class="k">[flow]</span>
+<span class="n">flow_regime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;transient&quot;</span>
+<span class="n">runtime_backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;scipy_sparse&quot;</span>
+<span class="n">surface_interaction_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;regularized_partition&quot;</span>
+</pre></div>
+</div>
+<p>For a PETSc complementarity experiment:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[simulation.process]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;flow_main&quot;</span>
+<span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;flow&quot;</span>
+<span class="n">solvers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;boussinesq&quot;</span><span class="p">]</span>
+
+<span class="k">[flow]</span>
+<span class="n">flow_regime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;transient&quot;</span>
+<span class="n">runtime_backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;petsc&quot;</span>
+<span class="n">surface_interaction_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;complementarity&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="interpretation-rule">
+<h3>Interpretation Rule<a class="headerlink" href="#interpretation-rule" title="Link to this heading">#</a></h3>
+<p>When comparing outputs, record both axes:</p>
+<ul class="simple">
+<li><p>the method: formulation, surface closure, space scheme, and time scheme;</p></li>
+<li><p>the engine: nonlinear solver, matrix layout, Jacobian strategy, and linear
+solver.</p></li>
+</ul>
+<p>Two runs can share the same method but differ by engine. Two PETSc runs can
+share the same engine name but differ by method if their surface closure is
+different.</p>
+</section>
+</section>
+<section id="nonlinear-solution-strategy">
+<h2>Nonlinear Solution Strategy<a class="headerlink" href="#nonlinear-solution-strategy" title="Link to this heading">#</a></h2>
+<section id="local-runtime">
+<h3>Local Runtime<a class="headerlink" href="#local-runtime" title="Link to this heading">#</a></h3>
+<p>The local runtime uses a dense damped Newton loop:</p>
+<ol class="arabic simple">
+<li><p>start from an initial head guess,</p></li>
+<li><p>assemble the residual,</p></li>
+<li><p>build a dense Jacobian by forward finite differences,</p></li>
+<li><p>solve the linearized Newton system,</p></li>
+<li><p>backtrack the Newton update until the residual decreases,</p></li>
+<li><p>stop when the infinity norm of the residual is below tolerance.</p></li>
+</ol>
+<p>This strategy is transparent and easy to debug, which is why it is useful in
+small validation slices, but it is not the preferred path for larger meshes.</p>
+</section>
+<section id="scipy-runtime">
+<h3>SciPy Runtime<a class="headerlink" href="#scipy-runtime" title="Link to this heading">#</a></h3>
+<p>The SciPy runtime keeps the same residual and the same finite-difference
+Jacobian, but delegates the nonlinear solve to <code class="docutils literal notranslate"><span class="pre">scipy.optimize.root</span></code>. The
+important point is that the physics does not change; only the nonlinear driver
+changes.</p>
+</section>
+<section id="scipy-sparse-runtime">
+<h3>SciPy Sparse Runtime<a class="headerlink" href="#scipy-sparse-runtime" title="Link to this heading">#</a></h3>
+<p>The SciPy sparse runtime still solves the head-only regularized-partition
+residual, but it changes the linear algebra and Jacobian assembly strategy:</p>
+<ol class="arabic simple">
+<li><p>smooth residual terms are differentiated analytically,</p></li>
+<li><p>the remaining nonlinear saturation terms are completed by sparse
+finite-difference corrections,</p></li>
+<li><p>the Newton step is solved with SciPy sparse matrices and <code class="docutils literal notranslate"><span class="pre">spsolve</span></code>.</p></li>
+</ol>
+<p>This is the current non-PETSc reference path for larger Boussinesq meshes on
+all platforms.</p>
+</section>
+<section id="petsc-regularized-partition-runtime">
+<h3>PETSc Regularized-Partition Runtime<a class="headerlink" href="#petsc-regularized-partition-runtime" title="Link to this heading">#</a></h3>
+<p>The Linux-only PETSc regularized-partition backend keeps the same head-only
+residual as above,</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{steady}}(h) = 0
+\qquad \text{or} \qquad
+R_i^{\text{transient}}(h^{n+1}) = 0,\]</div>
+<p>but solves it with PETSc SNES on a sparse Jacobian assembled from the same
+semi-analytic ingredients as the SciPy sparse runtime. This path is the PETSc
+counterpart of the historical head-only overflow regularization.</p>
+</section>
+<section id="petsc-mixed-complementarity-runtime">
+<h3>PETSc Mixed Complementarity Runtime<a class="headerlink" href="#petsc-mixed-complementarity-runtime" title="Link to this heading">#</a></h3>
+<p>The Linux-only PETSc backend introduces one algebraic saturation-excess
+unknown <span class="math notranslate nohighlight">\(q^{\text{ex}}_i\)</span> per cell and solves a mixed semi-explicit DAE
+at each backward-Euler step:</p>
+<div class="math notranslate nohighlight">
+\[R_i^{\text{flow}}(h, q^{\text{ex}}) = 0\]</div>
+<p>with the same finite-volume flow balance as above, except that the
+regularized overflow term is replaced by the explicit unknown
+<span class="math notranslate nohighlight">\(q^{\text{ex}}_i\)</span>, and one nonlinear complementarity relation:</p>
+<div class="math notranslate nohighlight">
+\[0 \le q^{\text{ex}}_i \perp z_i^{\text{top}} - h_i \ge 0\]</div>
+<p>The implementation encodes this complementarity through a
+Fischer-Burmeister residual on scaled variables and lets PETSc SNES solve the
+full mixed nonlinear system.</p>
+<p>In transient mode the current implementation uses a hybrid warm start for
+<span class="math notranslate nohighlight">\(q^{\text{ex}}\)</span>:</p>
+<ul class="simple">
+<li><p>under explicit positive loading (for example recharge or injection), the
+initial guess is taken from the historical regularized-partition predictor,</p></li>
+<li><p>during dry-down periods without positive loading, the initial guess is the
+dry state <span class="math notranslate nohighlight">\(q^{\text{ex}} = 0\)</span>.</p></li>
+</ul>
+<p>That choice is numerical rather than physical. It improves robustness when
+overflow turns off after a wet period without changing the converged zero set
+of the mixed complementarity system.</p>
+<p>On the committed <code class="docutils literal notranslate"><span class="pre">headwater_100km2_outlet_2</span></code> real-basin cycling case, this
+mixed closure also captures repeated activation/deactivation windows of the
+surface threshold, whereas the regularized-partition closures keep one
+low-amplitude seepage set active through the whole sequence under the same
+forcing. That difference is one practical reason to keep both surface
+interaction models explicit in the documentation. Complementarity diagnostics
+in the runtime summary are evaluated on accepted solver snapshots, excluding
+the raw transient initial condition.</p>
+<p>The same pattern remains visible on the stronger heterogeneous cycling variant
+where <span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(S_y\)</span> are mapped from generated concentric
+hydrofacies over the committed basin mesh. In that case the regularized
+partition path still keeps one persistent seepage window active, while the
+mixed complementarity path converges with repeated on/off threshold windows and
+returns to a dry terminal state.</p>
+</section>
+</section>
+<section id="possibility-map">
+<h2>Possibility Map<a class="headerlink" href="#possibility-map" title="Link to this heading">#</a></h2>
+<p>This section makes the current possibilities explicit.</p>
+<p>It is intentionally a map, not a promise that every combination is equally
+mature. Use the capability gallery and validation pages before treating a
+combination as production-ready.</p>
+<section id="main-possibilities">
+<h3>Main Possibilities<a class="headerlink" href="#main-possibilities" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 30.0%" />
+<col style="width: 22.0%" />
+<col style="width: 22.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Goal</p></th>
+<th class="head"><p>Recommended combination</p></th>
+<th class="head"><p>Surface closure</p></th>
+<th class="head"><p>Runtime</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Small analytical validation</p></td>
+<td><p>Head-only finite-volume Boussinesq.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">local</span></code> or <code class="docutils literal notranslate"><span class="pre">scipy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Larger cross-platform triangular mesh</p></td>
+<td><p>Head-only sparse Boussinesq.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PETSc sparse baseline</p></td>
+<td><p>Head-only PETSc partition route.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Surface-threshold activation study</p></td>
+<td><p>Mixed head-plus-saturation-excess-plus-dry-deficit route.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Drying and rewetting study</p></td>
+<td><p>PETSc mixed double-obstacle route.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>MODFLOW/Boussinesq simulation comparison</p></td>
+<td><p>Start from shared geometry and forcing, then document closure and mesh
+differences explicitly.</p></td>
+<td><p>Depends on comparison question.</p></td>
+<td><p>Usually <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> or <code class="docutils literal notranslate"><span class="pre">petsc</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="possibility-axes">
+<h3>Possibility Axes<a class="headerlink" href="#possibility-axes" title="Link to this heading">#</a></h3>
+<p>The Boussinesq route should be described along these axes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 36.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Values</p></th>
+<th class="head"><p>Why it matters</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Flow regime</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">steady</span></code> or <code class="docutils literal notranslate"><span class="pre">transient</span></code>.</p></td>
+<td><p>Adds or removes storage and time-step history.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Mesh</p></td>
+<td><p>Triangular runtime mesh.</p></td>
+<td><p>Controls internal-edge fluxes and cellwise top/bottom support.</p></td>
+</tr>
+<tr class="row-even"><td><p>Hydraulic properties</p></td>
+<td><p>Scalar or mapped <code class="docutils literal notranslate"><span class="pre">K</span></code> and storage values.</p></td>
+<td><p>Changes transmissivity and transient response.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Surface closure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> or <code class="docutils literal notranslate"><span class="pre">complementarity</span></code>.</p></td>
+<td><p>Changes how surface interception, saturation excess and lower-obstacle
+drying are represented.</p></td>
+</tr>
+<tr class="row-even"><td><p>Runtime engine</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code>, <code class="docutils literal notranslate"><span class="pre">petsc</span></code>.</p></td>
+<td><p>Changes nonlinear solve strategy and scalability.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="what-to-report-in-a-comparison">
+<h3>What To Report In A Comparison<a class="headerlink" href="#what-to-report-in-a-comparison" title="Link to this heading">#</a></h3>
+<p>Always report:</p>
+<ul class="simple">
+<li><p>mesh source and resolution;</p></li>
+<li><p>top and bottom surfaces;</p></li>
+<li><p>hydraulic conductivity and storage mapping;</p></li>
+<li><p>recharge and well forcing;</p></li>
+<li><p>boundary supports;</p></li>
+<li><p>flow regime and time stepping;</p></li>
+<li><p>surface-interaction closure;</p></li>
+<li><p>runtime backend.</p></li>
+</ul>
+<p>Without these fields, it is too easy to attribute differences to
+<code class="docutils literal notranslate"><span class="pre">boussinesq</span></code> as a solver name when the actual difference comes from the
+surface closure, mesh, property transfer, or runtime-specific convergence
+path.</p>
+</section>
+</section>
+<section id="formulation-comparison">
+<h2>Formulation Comparison<a class="headerlink" href="#formulation-comparison" title="Link to this heading">#</a></h2>
+<p>This section is the Boussinesq-local entry point for comparing alternative
+<code class="docutils literal notranslate"><span class="pre">flow/boussinesq</span></code> formulations.</p>
+<p>The comparison outputs should still be produced by the standard comparison
+workflow. What changes here is the reading location: Boussinesq formulation
+comparisons belong close to the Boussinesq equations, methods, and surface
+closures, not only in the transversal capability gallery.</p>
+<section id="what-is-being-compared">
+<h3>What Is Being Compared<a class="headerlink" href="#what-is-being-compared" title="Link to this heading">#</a></h3>
+<p>The current in-house Boussinesq backend has two distinct modelling axes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 24.0%" />
+<col style="width: 32.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Choices</p></th>
+<th class="head"><p>Interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Surface closure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> or <code class="docutils literal notranslate"><span class="pre">complementarity</span></code></p></td>
+<td><p>Changes how near-surface release and saturation excess are represented.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unknown layout</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_only</span></code> or <code class="docutils literal notranslate"><span class="pre">head_plus_qex_qdry</span></code></p></td>
+<td><p>Changes whether saturation excess is reconstructed from head or solved
+together with the lower drying obstacle as explicit cellwise unknowns.</p></td>
+</tr>
+<tr class="row-even"><td><p>Runtime backend</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code>, <code class="docutils literal notranslate"><span class="pre">petsc</span></code></p></td>
+<td><p>Changes nonlinear and linear algebra execution. This is not by itself a
+different hydrological formulation.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Flow regime</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">steady</span></code> or <code class="docutils literal notranslate"><span class="pre">transient</span></code></p></td>
+<td><p>Adds or removes storage and time-step history.</p></td>
+</tr>
+<tr class="row-even"><td><p>Support</p></td>
+<td><p>Shared triangular mesh, different mesh, or structured MODFLOW support</p></td>
+<td><p>Controls whether differences can be interpreted as formulation effects
+or as mixed formulation/support effects.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The cleanest formulation comparison keeps the runtime backend and support
+fixed as much as possible. For example, comparing:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code> + <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code> + <code class="docutils literal notranslate"><span class="pre">complementarity</span></code>;</p></li>
+</ul>
+<p>is a cleaner surface-closure comparison than comparing
+<code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code> against
+<code class="docutils literal notranslate"><span class="pre">petsc</span></code> + <code class="docutils literal notranslate"><span class="pre">complementarity</span></code>, because the latter changes the runtime engine
+and the surface closure at the same time.</p>
+</section>
+<section id="recommended-comparison-questions">
+<h3>Recommended Comparison Questions<a class="headerlink" href="#recommended-comparison-questions" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 32.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Recommended variants</p></th>
+<th class="head"><p>How to read the result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Does the surface closure matter?</p></td>
+<td><p>Same mesh, same forcing, <code class="docutils literal notranslate"><span class="pre">petsc</span></code> partition versus <code class="docutils literal notranslate"><span class="pre">petsc</span></code>
+complementarity.</p></td>
+<td><p>Read head maps together with saturation-excess and budget diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Does the sparse backend change the head-only result?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> versus <code class="docutils literal notranslate"><span class="pre">petsc</span></code> with
+<code class="docutils literal notranslate"><span class="pre">regularized_partition</span></code>.</p></td>
+<td><p>Runtime sensitivity, not a hydrological formulation comparison.</p></td>
+</tr>
+<tr class="row-even"><td><p>How far is Boussinesq from a MODFLOW representation?</p></td>
+<td><p>MODFLOW 6 versus Boussinesq on a shared support when possible.</p></td>
+<td><p>Solver-family comparison; document vertical representation, boundary
+semantics, property transfer, and surface closure explicitly.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Does a validation case still match its analytical reference?</p></td>
+<td><p>One solver variant against the committed validation reference.</p></td>
+<td><p>Validation evidence, not solver-to-solver comparison.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="implementation-pattern">
+<h3>Implementation Pattern<a class="headerlink" href="#implementation-pattern" title="Link to this heading">#</a></h3>
+<p>Use the external comparison workflow as the producer:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[workflow]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;comparison&quot;</span>
+
+<span class="k">[comparison]</span>
+<span class="n">comparison_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;boussinesq_surface_closure_comparison&quot;</span>
+<span class="n">base_simulation_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;base_boussinesq_shared_case.toml&quot;</span>
+<span class="n">output_root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;outputs/boussinesq_surface_closure_comparison&quot;</span>
+<span class="n">reference_simulation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;partition&quot;</span>
+
+<span class="k">[comparison.execution]</span>
+<span class="n">backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;subprocess_hmp_run&quot;</span>
+<span class="n">run_simulations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">keep_generated_configs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[comparison.audit]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;strict_same_case&quot;</span>
+<span class="n">on_mismatch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;warn&quot;</span>
+
+<span class="k">[[comparison.simulation]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;partition&quot;</span>
+<span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Head-only regularized partition&quot;</span>
+<span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;boussinesq&quot;</span>
+<span class="n">mesh_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mesh_input&quot;</span>
+
+<span class="k">[comparison.simulation.overlay.flow]</span>
+<span class="n">runtime_backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;petsc&quot;</span>
+<span class="n">surface_interaction_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;regularized_partition&quot;</span>
+
+<span class="k">[[comparison.simulation]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;complementarity&quot;</span>
+<span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Mixed complementarity&quot;</span>
+<span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;boussinesq&quot;</span>
+<span class="n">mesh_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;mesh_input&quot;</span>
+
+<span class="k">[comparison.simulation.overlay.flow]</span>
+<span class="n">runtime_backend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;petsc&quot;</span>
+<span class="n">surface_interaction_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;complementarity&quot;</span>
+
+<span class="k">[[comparison.observable]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;head_map_last&quot;</span>
+<span class="n">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;watertable_elevation&quot;</span>
+<span class="n">support</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;map&quot;</span>
+<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;last&quot;</span>
+<span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;m&quot;</span>
+
+<span class="k">[[comparison.observable]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;surface_excess_last&quot;</span>
+<span class="n">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;surface_excess_rate&quot;</span>
+<span class="n">support</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;map&quot;</span>
+<span class="n">time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;last&quot;</span>
+<span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;m/s&quot;</span>
+</pre></div>
+</div>
+<p>This keeps the implementation centralized:</p>
+<ul class="simple">
+<li><p>child simulations are normal <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> simulations;</p></li>
+<li><p>generated child TOMLs are kept for auditability;</p></li>
+<li><p>observables, metrics, reports, budgets, and figures are produced by one
+workflow instead of custom plotting scripts;</p></li>
+<li><p>the Boussinesq documentation only reads committed outputs and explains how
+to interpret them.</p></li>
+</ul>
+</section>
+<section id="where-to-store-the-evidence">
+<h3>Where To Store The Evidence<a class="headerlink" href="#where-to-store-the-evidence" title="Link to this heading">#</a></h3>
+<p>For a committed Boussinesq-local comparison page, use this layout:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>examples/projects/09_comparison_workflow/
+  compare_boussinesq_surface_closures.toml
+  base_boussinesq_surface_closure_case.toml
+
+docs/source/_static/solvers/boussinesq/formulation_comparison/
+  case_configuration.png
+  head_triptych.png
+  surface_excess_triptych.png
+  comparison_metrics.json
+  comparison_manifest.json
+
+docs/source/theory/
+  boussinesq.rst
+</pre></div>
+</div>
+<p>The important rule is that the page should not contain one-off code. If a
+figure or metric is needed repeatedly, it belongs in the comparison workflow or
+in a small gallery adapter, not in a bespoke documentation script.</p>
+</section>
+<section id="existing-transient-evidence">
+<h3>Existing Transient Evidence<a class="headerlink" href="#existing-transient-evidence" title="Link to this heading">#</a></h3>
+<p>The closest committed example is the recharge-ramp surface-interaction
+comparison. It is not a pure Boussinesq formulation comparison: it mixes
+MODFLOW-family solvers and Boussinesq variants. It is still the best current
+visual reference for the transient case where the surface closure controls
+storage release, overflow, and total outflow.</p>
+<figure class="hmp-gallery-figure"><picture><source srcset="../_static/capability_gallery/code_comparison/ramp_reference_k.webp" type="image/webp"><img src="../_static/capability_gallery/code_comparison/ramp_reference_k.png" alt="Recharge-ramp transient comparison across MODFLOW and Boussinesq variants" style="width: 100%;" loading="lazy"></picture><figcaption>Reference-conductivity transient ramp benchmark. The committed gallery
+version compares MODFLOW-NWT, MODFLOW 6, MODFLOW 6 on irregular triangles,
+the local Boussinesq partition route, PETSc partition, and PETSc
+complementarity.</figcaption></figure><p>Read this figure as mixed evidence:</p>
+<ul class="simple">
+<li><p>differences between the three Boussinesq curves can inform formulation and
+runtime sensitivity;</p></li>
+<li><p>differences between MODFLOW and Boussinesq curves also include vertical
+representation, support, boundary semantics, and budget-reconstruction
+effects;</p></li>
+<li><p>the page belongs in the cross-code gallery, but this Boussinesq-local
+section should point to it because it is where the scientific formulation
+question arises.</p></li>
+</ul>
+<section id="reference-configuration">
+<h4>Reference Configuration<a class="headerlink" href="#reference-configuration" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Geometry</p></td>
+<td><p>400 m by 30 m synthetic strip aquifer.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Topography</p></td>
+<td><p>Linear 5 m rise from the east outlet to the west divide.</p></td>
+</tr>
+<tr class="row-even"><td><p>Boundary conditions</p></td>
+<td><p>West no-flow divide, east fixed head, top drainage / surface
+interaction.</p></td>
+</tr>
+<tr class="row-odd"><td><p>East fixed head</p></td>
+<td><p>5.0625 m.</p></td>
+</tr>
+<tr class="row-even"><td><p>Transient forcing</p></td>
+<td><p>Progressive recharge ramp, followed by dry recovery.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Time step</p></td>
+<td><p>15 days.</p></td>
+</tr>
+<tr class="row-even"><td><p>Storage</p></td>
+<td><p>Specific yield 0.10.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Conductivity scale</p></td>
+<td><p>0.2 times the baseline strip conductivity for the reference-K figure;
+1.6 times for the high-K companion gallery tab.</p></td>
+</tr>
+<tr class="row-even"><td><p>Drainage conductance</p></td>
+<td><p>1e-4 m2/s.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Reference-K methods</p></td>
+<td><p>MODFLOW-NWT, MODFLOW 6, MODFLOW 6 on irregular triangles, Boussinesq
+local partition, Boussinesq PETSc partition, and Boussinesq PETSc
+complementarity.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="execution-times">
+<h4>Execution Times<a class="headerlink" href="#execution-times" title="Link to this heading">#</a></h4>
+<p>The transient investigation tools write calculation times into
+<code class="docutils literal notranslate"><span class="pre">execution_times.csv</span></code> and into the richer <code class="docutils literal notranslate"><span class="pre">summary_metrics.csv</span></code> table. The
+compact gallery JSON is now set up to preserve <code class="docutils literal notranslate"><span class="pre">wall_time_seconds</span></code> whenever
+<code class="docutils literal notranslate"><span class="pre">execution_times.csv</span></code> exists next to the source <code class="docutils literal notranslate"><span class="pre">timeseries.csv</span></code>.</p>
+<p>Use the timing values as run metadata, not as hydrological evidence. They
+depend on the machine, Linux/WSL setup, PETSc build, executable availability,
+and whether previous workspaces are still warm in the filesystem cache.</p>
+<p>The richer diagnostic run that isolates the remembered MODFLOW-NWT and
+Boussinesq PETSc variants is still an investigation script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tools.investigate_linux_nwt_boussinesq_transient<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-root<span class="w"> </span>out/linux_nwt_bouss_4m4m6m_local
+</pre></div>
+</div>
+<p>It compares:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">modflownwt</span></code>: MODFLOW-NWT through the launcher path;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">petsc_partition</span></code>: Boussinesq PETSc with regularized partition;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">petsc</span></code>: Boussinesq PETSc with complementarity.</p></li>
+</ul>
+<p>The run writes <code class="docutils literal notranslate"><span class="pre">timeseries.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">summary_metrics.csv</span></code>,
+<code class="docutils literal notranslate"><span class="pre">execution_times.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">head_point_timeseries.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">summary.md</span></code>, and a
+<code class="docutils literal notranslate"><span class="pre">figures</span></code> directory with head snapshots, head-point series, flux time
+series, total-outflow overlay, complete flux budget, and execution-time
+diagnostics. This is the right source to promote when the documentation needs
+the full transient MODFLOW-NWT versus Boussinesq story.</p>
+</section>
+<section id="documentation-refresh-contract">
+<h4>Documentation Refresh Contract<a class="headerlink" href="#documentation-refresh-contract" title="Link to this heading">#</a></h4>
+<p>The figures embedded by this page are not regenerated by Sphinx alone. The
+update chain is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tools.investigate_surface_interaction_hillslope_transient<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-root<span class="w"> </span>out/sih_tx_6cmp_linux_ramp_dirichlet_cell_20260416
+
+python<span class="w"> </span>tools/doc_gallery/generate_code_comparison_assets.py
+python<span class="w"> </span>-m<span class="w"> </span>tools.doc_gallery
+python<span class="w"> </span>-m<span class="w"> </span>sphinx<span class="w"> </span>-b<span class="w"> </span>html<span class="w"> </span>-j<span class="w"> </span>auto<span class="w"> </span>docs/source<span class="w"> </span>docs/build/html
+</pre></div>
+</div>
+<p>The first command refreshes the source run under <code class="docutils literal notranslate"><span class="pre">out</span></code>. The generator then
+rebuilds the committed gallery PNG/JSON files under
+<code class="docutils literal notranslate"><span class="pre">examples/projects/09_capability_gallery/code_comparison</span></code>. The doc-gallery
+step mirrors those committed assets into
+<code class="docutils literal notranslate"><span class="pre">docs/source/_static/capability_gallery/code_comparison</span></code> and
+refreshes the generated gallery pages. The final Sphinx build only renders the
+documentation from those already-updated source files.</p>
+</section>
+</section>
+<section id="promotion-rule">
+<h3>Promotion Rule<a class="headerlink" href="#promotion-rule" title="Link to this heading">#</a></h3>
+<p>When this transient benchmark is promoted from investigation to documentation,
+keep the same separation of concerns:</p>
+<ol class="arabic simple">
+<li><p>use the investigation script, or a small wrapper around it, as the producer
+of numerical outputs;</p></li>
+<li><p>republish only stable summary assets under
+<code class="docutils literal notranslate"><span class="pre">examples/projects/09_capability_gallery/code_comparison</span></code> or under
+<code class="docutils literal notranslate"><span class="pre">docs/source/_static/solvers/boussinesq</span></code>;</p></li>
+<li><p>have the Boussinesq page read committed PNG/JSON artifacts only;</p></li>
+<li><p>keep any pure <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">&quot;comparison&quot;</span></code> example separate from the
+MODFLOW-NWT bridge, because MODFLOW-NWT is a cross-code comparison rather
+than a Boussinesq-only formulation test.</p></li>
+</ol>
+</section>
+<section id="pure-boussinesq-starting-point">
+<h3>Pure Boussinesq Starting Point<a class="headerlink" href="#pure-boussinesq-starting-point" title="Link to this heading">#</a></h3>
+<p>For a Boussinesq-only transient comparison, the current validation case is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>validation_cases.numerical.transient.boussinesq_hillslope_recharge_pulse_overflow_1d.run_multi_solver_case<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--solvers<span class="w"> </span>boussinesq<span class="w"> </span>petsc_partition<span class="w"> </span>petsc<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--context-preset<span class="w"> </span>windows_surface_transient<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-root<span class="w"> </span>out/boussinesq_hillslope_overflow_multi_local
+</pre></div>
+</div>
+<p>This route compares the local head-only partition path, PETSc partition, and
+PETSc complementarity without adding MODFLOW-family effects. It is therefore
+better for a strict Boussinesq formulation page, while the MODFLOW-NWT bridge
+is better for explaining how far the Boussinesq closures sit from a mature
+external code. The same command writes an <code class="docutils literal notranslate"><span class="pre">execution_times.csv</span></code> file and an
+<code class="docutils literal notranslate"><span class="pre">execution_times.png</span></code> figure under its <code class="docutils literal notranslate"><span class="pre">figures</span></code> directory, so formulation
+and runtime questions can be read from one run directory without adding a
+separate timing script.</p>
+</section>
+<section id="current-comparison-workflow-template">
+<h3>Current Comparison-Workflow Template<a class="headerlink" href="#current-comparison-workflow-template" title="Link to this heading">#</a></h3>
+<p>The shipped comparison workflow also demonstrates the clean producer side with
+a MODFLOW 6 versus Boussinesq case:</p>
+<figure class="align-default" id="id9">
+<a class="reference internal image-reference" href="../_images/dupuit_head_triptych.png"><img alt="Dupuit MODFLOW 6 versus Boussinesq head-map triptych" src="../_images/dupuit_head_triptych.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 85 </span><span class="caption-text">This is a solver-family comparison, not a Boussinesq formulation
+comparison. It is still useful as the reference pattern for producing
+stable comparison artifacts through <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">&quot;comparison&quot;</span></code>.</span><a class="headerlink" href="#id9" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>Use it as a template for the mechanics, then narrow the variants to
+Boussinesq-only surface closures when the goal is formulation choice. Use the
+transient MODFLOW-NWT bridge when the goal is cross-code interpretation.</p>
+</section>
+<section id="reading-rules">
+<h3>Reading Rules<a class="headerlink" href="#reading-rules" title="Link to this heading">#</a></h3>
+<p>Before interpreting differences as formulation effects, check:</p>
+<ul class="simple">
+<li><p>same mesh source and resolution;</p></li>
+<li><p>same top and bottom surfaces;</p></li>
+<li><p>same hydraulic conductivity and storage mapping;</p></li>
+<li><p>same recharge, wells, and imposed-head supports;</p></li>
+<li><p>same flow regime and time stepping;</p></li>
+<li><p>same runtime backend, unless the question is explicitly runtime sensitivity;</p></li>
+<li><p>explicit surface-interaction model for every child run.</p></li>
+</ul>
+<p>If any of these differ, report the comparison as mixed. That does not make it
+invalid, but it changes the scientific claim.</p>
+</section>
+</section>
+<section id="mapping-between-equations-and-code">
+<h2>Mapping Between Equations And Code<a class="headerlink" href="#mapping-between-equations-and-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mathematical object</p></th>
+<th class="head"><p>Main implementation point</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(b_i(h)\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">saturated_thickness_from_head()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(T_i(h)\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">transmissivity_from_head()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(q^{\text{int}}_e\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">internal_edge_flux_from_head()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(q^{D}_e\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boundary_head_edge_flux_from_head()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(q_i^{\text{drain}}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">drainage_outflow_from_head()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(s_i(h)\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">saturation_excess_rate_from_balance()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(R_i^{\text{steady}}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">assemble_steady_residual()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(R_i^{\text{transient}}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">assemble_transient_residual()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(R_i^{\text{flow}}(h, q^{\text{ex}})\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">assemble_steady_residual_with_saturation_excess()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">assemble_transient_residual_with_saturation_excess()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Fischer-Burmeister complementarity residual</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_fischer_burmeister_residual_and_derivatives()</span></code> in <code class="docutils literal notranslate"><span class="pre">runtimes/petsc_mixed.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>runtime solve</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">runtimes/local.py</span></code> / <code class="docutils literal notranslate"><span class="pre">runtimes/scipy_dense.py</span></code> /
+<code class="docutils literal notranslate"><span class="pre">runtimes/scipy_sparse.py</span></code> / <code class="docutils literal notranslate"><span class="pre">runtimes/petsc_partition.py</span></code> /
+<code class="docutils literal notranslate"><span class="pre">runtimes/petsc_mixed.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>problem orchestration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boussinesq.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="interpretation-and-current-limits">
+<h2>Interpretation And Current Limits<a class="headerlink" href="#interpretation-and-current-limits" title="Link to this heading">#</a></h2>
+<p>The current backend is still best viewed as a finite-volume Boussinesq solver
+under active validation rather than as a finished production groundwater
+platform. The important point, however, is that the implementation is no
+longer limited to one dense prototype path.</p>
+<p>Today:</p>
+<ul class="simple">
+<li><p>dense prototype runtimes still exist (<code class="docutils literal notranslate"><span class="pre">local</span></code> and <code class="docutils literal notranslate"><span class="pre">scipy</span></code>),</p></li>
+<li><p>a cross-platform sparse Newton path exists in <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code>,</p></li>
+<li><p>two Linux/PETSc sparse paths exist:</p>
+<ul>
+<li><p>head-only regularized partition,</p></li>
+<li><p>mixed complementarity with explicit <span class="math notranslate nohighlight">\(q^{\text{ex}}\)</span>,</p></li>
+</ul>
+</li>
+<li><p>committed real unstructured meshes are now exercised in addition to the
+small analytical and numerical validation strips.</p></li>
+<li><p>committed mesh bundles can receive explicit project-side overrides of
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(S_y\)</span>, including heterogeneous mappings through domain
+supports, without requiring a separate remeshing workflow.</p></li>
+</ul>
+<p>The main current limits are elsewhere:</p>
+<ul class="simple">
+<li><p>the regularized-partition closure is still a pragmatic groundwater/surface
+release law, not a full coupled overland-flow model,</p></li>
+<li><p>the PETSc runtimes currently run on <code class="docutils literal notranslate"><span class="pre">PETSc.COMM_SELF</span></code> rather than a
+distributed MPI decomposition,</p></li>
+<li><p>the mixed complementarity path is validated on targeted overflow and real
+cases, but its benchmark envelope is still smaller than that of the
+head-only regularized-partition path.</p></li>
+</ul>
+</section>
+<section id="original-latex-source">
+<h2>Original LaTeX Source<a class="headerlink" href="#original-latex-source" title="Link to this heading">#</a></h2>
+<p>If a LaTeX distribution is installed, the original note in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/boussinesq_math_notes.tex</span></code> can still be
+compiled from the package directory with either:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pdflatex<span class="w"> </span>-interaction<span class="o">=</span>nonstopmode<span class="w"> </span>boussinesq_math_notes.tex
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>latexmk<span class="w"> </span>-pdf<span class="w"> </span>boussinesq_math_notes.tex
+</pre></div>
+</div>
+</section>
+<section id="validation-case-at-a-glance">
+<h2>Validation case at a glance<a class="headerlink" href="#validation-case-at-a-glance" title="Link to this heading">#</a></h2>
+<div class="validation-case-summary admonition">
+<p class="admonition-title">Boussinesq Fixed-Head Piecewise-K 1D</p>
+<p><strong>Regime: </strong>steady</p>
+<p><strong>Dimension: </strong>1d</p>
+<p><strong>Reference: </strong>Analytical Exact</p>
+<p><strong>Solvers tested: </strong>modflownwt, modflow6, modflow6_irregular_tri, boussinesq</p>
+<p><strong>Primary metrics: </strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">modflownwt</span></code>: Head-profile RMSE: 0.0107 m; Head-profile max abs error: 0.0231 m; Cross-row head spread: 3.81e-07 m</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code>: Head-profile RMSE: 0.0082 m; Head-profile max abs error: 0.0190 m; Cross-row head spread: 2.38e-06 m</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modflow6_irregular_tri</span></code>: Head-profile RMSE: 0.0237 m; Head-profile max abs error: 0.0701 m; Cross-row head spread: 8.88e-16 m</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">boussinesq</span></code>: Head-profile RMSE: 0.0079 m; Head-profile max abs error: 0.0207 m; Cross-row head spread: 5.30e-02 m</p></li>
+</ul>
+</div>
+</section>
+<section id="solver-comparison-snapshot">
+<h2>Solver comparison snapshot<a class="headerlink" href="#solver-comparison-snapshot" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="solver-comparison table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p>modflownwt</p></th>
+<th class="head"><p>modflow6</p></th>
+<th class="head"><p>modflow6_irregular_tri</p></th>
+<th class="head"><p>boussinesq</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Boussinesq Fixed-Head Piecewise-K 1D</p></td>
+<td><p>Head-profile RMSE: 0.0107 m</p></td>
+<td><p>Head-profile RMSE: 0.0082 m</p></td>
+<td><p>Head-profile RMSE: 0.0237 m</p></td>
+<td><p>Head-profile RMSE: 0.0079 m</p></td>
+</tr>
+<tr class="row-odd"><td><p>Boussinesq Hillslope Recharge-Step Interception 1D</p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p></p></td>
+<td><p>Analytical onset time: 60.0 d</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="related-pages">
+<h2>Related Pages<a class="headerlink" href="#related-pages" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="solvers/index.html"><span class="doc">Solvers</span></a></p></li>
+<li><p><a class="reference internal" href="solvers/flow/index.html"><span class="doc">Flow Solvers</span></a></p></li>
+<li><p><a class="reference internal" href="solvers/mesh-and-discretization-strategies.html"><span class="doc">Mesh And Discretization Strategies</span></a></p></li>
+<li><p><a class="reference internal" href="solvers/solver-capability-matrix.html"><span class="doc">Solver Capability Matrix</span></a></p></li>
+<li><p><a class="reference internal" href="../architecture/solver/index.html"><span class="doc">Solver Architecture</span></a></p></li>
+<li><p><a class="reference internal" href="../architecture/solver/boussinesq-uml-diagrams.html"><span class="doc">Boussinesq Solver UML Diagrams</span></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/solvers.html"><span class="doc">Solvers</span></a></p></li>
+<li><p><a class="reference internal" href="../capability_gallery/cases/surface_interaction_ramp_code_comparison.html"><span class="doc">Surface-Interaction Ramp Code Comparison</span></a></p></li>
+<li><p><a class="reference internal" href="../capability_gallery/cases/surface_interaction_no_seepage_code_comparison.html"><span class="doc">No-Seepage Surface-Interaction Comparison</span></a></p></li>
+<li><p><a class="reference internal" href="../user_guide/concepts/comparison-workflow.html"><span class="doc">Simulation Comparison Workflow</span></a></p></li>
+<li><p><a class="reference internal" href="../capability_gallery/simulation_comparison.html"><span class="doc">Simulation Comparison</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solvers/boussinesq-petsc-validation-results.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Boussinesq PETSc Validation Results</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="streams_and_seepage/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Streams And Seepage</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-scope">Current Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#result-anchors-for-the-equations">Result Anchors For The Equations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equation-and-unknowns">Equation And Unknowns</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primary-unknown">Primary Unknown</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-balance">Cell Balance</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#steady-equation">Steady Equation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transient-equation">Transient Equation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-this-equation-does-not-claim">What This Equation Does Not Claim</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometric-setting-and-cell-quantities">Geometric Setting And Cell Quantities</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-balance-and-sign-convention">Cell Balance And Sign Convention</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#internal-edge-fluxes">Internal Edge Fluxes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imposed-head-exchanges">Imposed-Head Exchanges</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recharge-wells-drainage-and-surface-interaction">Recharge, Wells, Drainage And Surface Interaction</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recharge">Recharge</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wells">Wells</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drainage">Drainage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regularized-saturation-excess-closure">Regularized Saturation Excess Closure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-complementarity-surface-closure">Mixed Complementarity Surface Closure</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surface-interaction-and-interception">Surface Interaction And Interception</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#surface-terms">Surface Terms</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regularized-partition-closure">Regularized Partition Closure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-complementarity-closure">Mixed Complementarity Closure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lower-drying-obstacle-surface-view">Lower Drying Obstacle (Surface View)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#selection-rule">Selection Rule</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lower-obstacle-drying">Lower Obstacle Drying</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bounded-saturated-thickness">Bounded Saturated Thickness</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regularized-partition-route">Regularized Partition Route</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#petsc-double-obstacle-route">PETSc Double Obstacle Route</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnostics-and-exports">Diagnostics And Exports</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validation-case-steep-hillslope-drying-and-rewetting">Validation Case: Steep Hillslope Drying And Rewetting</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#design-interpretation">Design Interpretation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boussinesq-method">Boussinesq Method</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-method">Spatial Method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-methods">Time Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#current-method-families">Current Method Families</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#head-only-regularized-partition">Head-Only Regularized Partition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-complementarity">Mixed Complementarity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#head-only-steady-residual">Head-Only Steady Residual</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#head-only-transient-residual">Head-Only Transient Residual</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-engines">Solver Engines</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#engine-matrix">Engine Matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#surface-model-resolution">Surface Model Resolution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-configuration-shape">Minimal Configuration Shape</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation-rule">Interpretation Rule</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nonlinear-solution-strategy">Nonlinear Solution Strategy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-runtime">Local Runtime</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scipy-runtime">SciPy Runtime</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scipy-sparse-runtime">SciPy Sparse Runtime</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#petsc-regularized-partition-runtime">PETSc Regularized-Partition Runtime</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#petsc-mixed-complementarity-runtime">PETSc Mixed Complementarity Runtime</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#possibility-map">Possibility Map</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main-possibilities">Main Possibilities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#possibility-axes">Possibility Axes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-report-in-a-comparison">What To Report In A Comparison</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#formulation-comparison">Formulation Comparison</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-being-compared">What Is Being Compared</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recommended-comparison-questions">Recommended Comparison Questions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-pattern">Implementation Pattern</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-store-the-evidence">Where To Store The Evidence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#existing-transient-evidence">Existing Transient Evidence</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-configuration">Reference Configuration</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-times">Execution Times</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-refresh-contract">Documentation Refresh Contract</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#promotion-rule">Promotion Rule</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pure-boussinesq-starting-point">Pure Boussinesq Starting Point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#current-comparison-workflow-template">Current Comparison-Workflow Template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-rules">Reading Rules</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-between-equations-and-code">Mapping Between Equations And Code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation-and-current-limits">Interpretation And Current Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#original-latex-source">Original LaTeX Source</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validation-case-at-a-glance">Validation case at a glance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-comparison-snapshot">Solver comparison snapshot</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-pages">Related Pages</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

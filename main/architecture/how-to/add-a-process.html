@@ -1,0 +1,720 @@
+
+<!DOCTYPE html>
+
+<html data-content_root="../../" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
+<link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Add a Process" property="og:title"/>
+<meta content="website" property="og:type"/>
+<meta content="https://hydromodpy.github.io/architecture/how-to/add-a-process.html" property="og:url"/>
+<meta content="HydroModPy" property="og:site_name"/>
+<meta content="A process in HydroModPy is a runtime payload that one or more solver adapters consume. Today two processes ship: Flow(groundwater flow) and Transport(particle tracking and concentration). This page..." property="og:description"/>
+<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="HydroModPy" property="og:image:alt"/>
+<meta content="A process in HydroModPy is a runtime payload that one or more solver adapters consume. Today two processes ship: Flow(groundwater flow) and Transport(particle tracking and concentration). This page..." name="description"/>
+<title>Add a Process — HydroModPy 2.0.0a1 documentation</title>
+<script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+<!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+<noscript>
+<style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+</noscript>
+<!-- Loaded before other Sphinx assets -->
+<link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet">
+<link href="../../_static/pygments.css?v=03e43079" rel="stylesheet" type="text/css"/>
+<link href="../../_static/copybutton.css?v=76b2166b" rel="stylesheet" type="text/css"/>
+<link href="../../_static/togglebutton.css?v=9c3e77be" rel="stylesheet" type="text/css"/>
+<link href="../../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
+<link href="../../_static/sphinx-codeautolink.css?v=b2176991" rel="stylesheet" type="text/css"/>
+<link href="../../_static/sg_gallery.css?v=fd6457a4" rel="stylesheet" type="text/css"/>
+<link href="../../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
+<link href="../../_static/custom.css?v=7115939c" rel="stylesheet" type="text/css"/>
+<link href="../../_static/uml-diagrams.css?v=3ab94cdd" rel="stylesheet" type="text/css"/>
+<link href="../../_static/api-reference.css?v=a49870ba" rel="stylesheet" type="text/css"/>
+<link href="../../_static/css/hmp-image-compare.css?v=b76b300f" rel="stylesheet" type="text/css"/>
+<link href="../../_static/css/hmp-feedback.css?v=22c36e05" rel="stylesheet" type="text/css"/>
+<link href="../../_static/css/hmp-page-badges.css?v=5987351c" rel="stylesheet" type="text/css"/>
+<link href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" rel="stylesheet" type="text/css"/>
+<link href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" rel="stylesheet" type="text/css"/>
+<!-- So that users can add custom icons -->
+<script defer="" src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+<!-- Pre-loaded scripts that we'll load fully later -->
+<link as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
+<link as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
+<script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+<script src="../../_static/doctools.js?v=9a2dae69"></script>
+<script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+<script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+<script src="../../_static/copybutton.js?v=15591f4d"></script>
+<script>let toggleHintShow = 'Click to show or hide details';</script>
+<script>let toggleHintHide = 'Click to hide';</script>
+<script>let toggleOpenOnPrint = 'true';</script>
+<script src="../../_static/togglebutton.js?v=b8b12719"></script>
+<script src="../../_static/design-tabs.js?v=f930bc37"></script>
+<script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+<script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+<script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+<script>DOCUMENTATION_OPTIONS.pagename = 'architecture/how-to/add-a-process';</script>
+<script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+<script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+<script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+<script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+<script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+<script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+<script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+<script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+<link href="https://hydromodpy.github.io/architecture/how-to/add-a-process.html" rel="canonical"/>
+<link href="../../_static/logoHydroModPy.png" rel="icon"/>
+<link href="../../genindex.html" rel="index" title="Index"/>
+<link href="../../search.html" rel="search" title="Search"/>
+<link href="add-a-config-field.html" rel="next" title="Add a Config Field"/>
+<link href="add-a-solver.html" rel="prev" title="Add a Solver"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="en" name="docsearch:language"/>
+<meta content="2.0" name="docsearch:version"/>
+<script src="../../_static/searchtools.js"></script>
+<script src="../../_static/language_data.js"></script>
+<script src="../../searchindex.js"></script>
+</link></link></head>
+<body data-default-mode="">
+<div class="skip-link d-print-none" id="pst-skip-link"><a href="#main-content">Skip to main content</a></div>
+<div id="pst-scroll-pixel-helper"></div>
+<button class="btn rounded-pill" id="pst-back-to-top" type="button">
+<i class="fa-solid fa-arrow-up"></i>Back to top</button>
+<dialog id="pst-search-dialog">
+<form action="../../search.html" class="bd-search d-flex align-items-center" method="get">
+<i class="fa-solid fa-magnifying-glass"></i>
+<input aria-label="Search the docs ..." autocapitalize="off" autocomplete="off" autocorrect="off" class="form-control" name="q" placeholder="Search the docs ..." spellcheck="false" type="search"/>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+</dialog>
+<div class="pst-async-banner-revealer d-none">
+<aside aria-label="Version warning" class="d-none d-print-none" id="bd-header-version-warning"></aside>
+</div>
+<aside aria-label="Announcement" class="bd-header-announcement">
+<div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+<header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none" id="pst-header">
+<div class="bd-header__inner bd-page-width">
+<button aria-label="Site navigation" class="pst-navbar-icon sidebar-toggle primary-toggle">
+<span class="fa-solid fa-bars"></span>
+</button>
+<div class="col-lg-3 navbar-header-items__start">
+<div class="navbar-item">
+<a class="navbar-brand logo" href="../../index.html">
+<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-light" src="../../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-dark pst-js-only" src="../../_static/logoHydroModPy_long.png"/>
+</a></div>
+</div>
+<div class="col-lg-9 navbar-header-items">
+<div class="me-auto navbar-header-items__center">
+<div class="navbar-item">
+<nav>
+<ul class="bd-navbar-elements navbar-nav">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+<li class="nav-item dropdown">
+<button aria-controls="pst-nav-more-links" aria-expanded="false" class="btn dropdown-toggle nav-item" data-bs-toggle="dropdown" type="button">
+                    More
+                </button>
+<ul class="dropdown-menu" id="pst-nav-more-links">
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+<li class="current active">
+<a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Developer
+  </a>
+</li>
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+</ul>
+</li>
+</ul>
+</nav></div>
+</div>
+<div class="navbar-header-items__end">
+<div class="navbar-item navbar-persistent--container">
+<button aria-label="Search" class="btn search-button-field search-button__button pst-js-only" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Search">
+<i class="fa-solid fa-magnifying-glass"></i>
+<span class="search-button__default-text">Search</span>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+</div>
+<div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+<button aria-controls="pst-version-switcher-list-2" aria-haspopup="listbox" aria-label="Version switcher list" class="version-switcher__button btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pst-version-switcher-button-2" type="button">
+    Choose version  <!-- this text may get changed later by javascript -->
+<span class="caret"></span>
+</button>
+<div aria-labelledby="pst-version-switcher-button-2" class="version-switcher__menu dropdown-menu list-group-flush py-0" id="pst-version-switcher-list-2" role="listbox">
+<!-- dropdown will be populated by javascript on page load -->
+</div>
+</div></div>
+<div class="navbar-item">
+<button aria-label="Color mode" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" data-bs-placement="bottom" data-bs-title="Color mode" data-bs-toggle="tooltip">
+<i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+<i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+<i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+</button></div>
+<div class="navbar-item"><ul aria-label="HydroModPy Resources" class="navbar-icon-links">
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy" rel="noopener" target="_blank" title="GitHub"><i aria-hidden="true" class="fa-brands fa-github fa-lg"></i>
+<span class="sr-only">GitHub</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy/issues" rel="noopener" target="_blank" title="Issues"><i aria-hidden="true" class="fa-solid fa-circle-info fa-lg"></i>
+<span class="sr-only">Issues</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://groups.google.com/g/hydromodpy" rel="noopener" target="_blank" title="Google Group"><i aria-hidden="true" class="fa-solid fa-envelope fa-lg"></i>
+<span class="sr-only">Google Group</span></a>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="navbar-persistent--mobile">
+<button aria-label="Search" class="btn search-button-field search-button__button pst-js-only" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Search">
+<i class="fa-solid fa-magnifying-glass"></i>
+<span class="search-button__default-text">Search</span>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+</div>
+<button aria-label="On this page" class="pst-navbar-icon sidebar-toggle secondary-toggle">
+<span class="fa-solid fa-outdent"></span>
+</button>
+</div>
+</header>
+<div class="bd-container">
+<div class="bd-container__inner bd-page-width">
+<dialog id="pst-primary-sidebar-modal"></dialog>
+<div class="bd-sidebar-primary bd-sidebar" id="pst-primary-sidebar">
+<div class="sidebar-header-items sidebar-primary__section">
+<div class="sidebar-header-items__center">
+<div class="navbar-item">
+<nav>
+<ul class="bd-navbar-elements navbar-nav">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+<li class="nav-item current active">
+<a class="nav-link nav-internal" href="../index.html">
+    Developer
+  </a>
+</li>
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+</ul>
+</nav></div>
+</div>
+<div class="sidebar-header-items__end">
+<div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+<button aria-controls="pst-version-switcher-list-3" aria-haspopup="listbox" aria-label="Version switcher list" class="version-switcher__button btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pst-version-switcher-button-3" type="button">
+    Choose version  <!-- this text may get changed later by javascript -->
+<span class="caret"></span>
+</button>
+<div aria-labelledby="pst-version-switcher-button-3" class="version-switcher__menu dropdown-menu list-group-flush py-0" id="pst-version-switcher-list-3" role="listbox">
+<!-- dropdown will be populated by javascript on page load -->
+</div>
+</div></div>
+<div class="navbar-item">
+<button aria-label="Color mode" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" data-bs-placement="bottom" data-bs-title="Color mode" data-bs-toggle="tooltip">
+<i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+<i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+<i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+</button></div>
+<div class="navbar-item"><ul aria-label="HydroModPy Resources" class="navbar-icon-links">
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy" rel="noopener" target="_blank" title="GitHub"><i aria-hidden="true" class="fa-brands fa-github fa-lg"></i>
+<span class="sr-only">GitHub</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy/issues" rel="noopener" target="_blank" title="Issues"><i aria-hidden="true" class="fa-solid fa-circle-info fa-lg"></i>
+<span class="sr-only">Issues</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://groups.google.com/g/hydromodpy" rel="noopener" target="_blank" title="Google Group"><i aria-hidden="true" class="fa-solid fa-envelope fa-lg"></i>
+<span class="sr-only">Google Group</span></a>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sidebar-primary-items__start sidebar-primary__section">
+<div class="sidebar-primary-item pst-sidebar-collapse"><button aria-controls="pst-primary-sidebar" aria-expanded="true" id="pst-collapse-sidebar-button"><svg aria-hidden="true" class="pst-icon svg-inline--fa" focusable="false" role="img" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z" fill="currentColor"></path>
+</svg>
+<span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+<span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+<div class="sidebar-primary-item">
+<nav aria-label="Section Navigation" class="bd-docs-nav bd-links">
+<p aria-level="1" class="bd-links__title" role="heading">Section Navigation</p>
+<div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../package-layout.html">Package Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../layered-architecture.html">Layered Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage-layout.html">Storage Layout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ci-workflows.html">GitHub Actions workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../artifact-policy.html">Artifact Policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release-contract-v1.html">V1 Release Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artefacts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../overview/index.html">Architecture Overview</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/test-families-and-quality-roles.html">Test Families and Quality Roles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/test-inventory.html">Test Inventory</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">How-to Recipes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a Solver</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Add a Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a Config Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a Data Variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-source.html">Add a Data Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a Figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a Block HTML Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an Exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a Test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI Command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a Calibration Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build-a-frontend.html">Build a Frontend</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Per-package reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../packages/index.html">Per-Package Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../packages/core.html">core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/config.html">config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/physics.html">physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/spatial.html">spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/discretization.html">discretization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/solver.html">solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/simulation.html">simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/calibration.html">calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/results.html">results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/catalog.html">catalog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/display.html">display</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/analysis.html">analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/reporting.html">reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/workflow.html">workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/validity_frame.html">validity_frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/schema.html">schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/cli.html">cli</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Subsystem deep dives</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../simulation/index.html">Simulation Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/toml-to-solver-walkthrough.html">TOML To Solver Walkthrough</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/simulation-orchestration-class-diagram.html">Simulation Orchestration Class Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/simulation-time-cycle-diagrams.html">Simulation Time Cycle Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/comparison-workflow.html">Comparison Workflow Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/testbed-workflow-architecture.html">Testbed Workflow Architecture</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../solver/index.html">Solver Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-uml-diagrams.html">Boussinesq Solver UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflow6-architecture-notes.html">MODFLOW 6 Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflownwt-architecture-notes.html">MODFLOW-NWT Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/modflow-contracts.html">MODFLOW-NWT Contracts</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../mesh/index.html">Mesh Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/catchment-mesh-architecture.html">Catchment-Mesh Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/structured-grid-architecture.html">Structured Grid Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/gmsh-meshing.html">Conformal Gmsh Meshing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mesh/mesh-pivot.html">Mesh Architecture Pivot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../calibration/index.html">Calibration Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../calibration/calibration-architecture.html">Calibration Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../calibration/calibration-guide.html">Calibration Guide</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../data_loading/index.html">Data Loading Architecture</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../data_loading/data-managers-and-external-dependencies.html">Data Managers And External Dependencies</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../spatial_support/index.html">Spatial Support and Hydrography</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/support-selection-guide.html">Choosing A Spatial Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/spatial-support-uml-diagrams.html">Spatial Support UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/hydrographic-network-uml-diagrams.html">Hydrographic Network UML Diagrams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../spatial_support/hydrographic-network-simulated-active-inventory.html">Hydrographic Network Simulated-Active Inventory</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../field/index.html">Field Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../process/process-architecture.html">Process Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../process/flow-boundary-conditions.html">Flow Boundary Conditions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contributing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing handbook</a></li>
+</ul>
+</div>
+</nav></div>
+</div>
+<div class="sidebar-primary-items__end sidebar-primary__section">
+<div class="sidebar-primary-item"><nav aria-labelledby="pst-indices-navigation-heading-2" class="sidebar-indices-items">
+<p aria-level="1" class="sidebar-indices-items__title" id="pst-indices-navigation-heading-2" role="heading">Indices</p>
+<ul class="indices-link">
+<li class="toctree-l1">
+<a accesskey="I" class="reference internal" href="../../genindex.html">General Index</a>
+</li>
+<li class="toctree-l1">
+<a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+</li>
+</ul>
+</nav></div>
+</div>
+</div>
+<main class="bd-main" id="main-content" role="main">
+<div class="bd-content">
+<div class="bd-article-container">
+<div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+<div class="header-article-items__start">
+<div class="header-article-item">
+<nav aria-label="Breadcrumb" class="d-print-none">
+<ul class="bd-breadcrumbs">
+<li class="breadcrumb-item breadcrumb-home">
+<a aria-label="Home" class="nav-link" href="../../index.html">
+<i class="fa-solid fa-home"></i>
+</a>
+</li>
+<li class="breadcrumb-item"><a class="nav-link" href="../index.html">Architecture and Developer Guide</a></li>
+<li class="breadcrumb-item"><a class="nav-link" href="index.html">How-to Recipes</a></li>
+<li aria-current="page" class="breadcrumb-item active"><span class="ellipsis">Add a Process</span></li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+</div>
+<div id="searchbox"></div>
+<article class="bd-article">
+<section id="add-a-process">
+<h1>Add a Process<a class="headerlink" href="#add-a-process" title="Link to this heading">#</a></h1>
+<p>A <em>process</em> in HydroModPy is a runtime payload that one or more
+solver adapters consume. Today two processes ship: <code class="docutils literal notranslate"><span class="pre">Flow</span></code>
+(groundwater flow) and <code class="docutils literal notranslate"><span class="pre">Transport</span></code> (particle tracking and
+concentration). This page describes how to add a third one (for
+example <code class="docutils literal notranslate"><span class="pre">Heat</span></code> or <code class="docutils literal notranslate"><span class="pre">ReactiveTransport</span></code>).</p>
+<p>Most solver-only additions do <strong>not</strong> need a new process; bind the
+new <code class="docutils literal notranslate"><span class="pre">solver_name</span></code> to <code class="docutils literal notranslate"><span class="pre">"flow"</span></code> or <code class="docutils literal notranslate"><span class="pre">"transport"</span></code> instead
+(<a class="reference internal" href="add-a-solver.html"><span class="doc">Add a Solver</span></a>). Add a process only when the runtime payload
+is genuinely new (different IC, BC, sink/source vocabulary).</p>
+<section id="contract">
+<h2>Contract<a class="headerlink" href="#contract" title="Link to this heading">#</a></h2>
+<p>Every process inherits the abstract base <code class="docutils literal notranslate"><span class="pre">ProcessSpatial[TIC]</span></code> from
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/base/process_spatial.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ProcessSpatial</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TIC</span><span class="p">]):</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FieldParam</span><span class="p">]</span>
+    <span class="n">initial_conditions</span><span class="p">:</span> <span class="n">TIC</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">boundary_conditions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BoundaryCondition</span><span class="p">]</span>
+    <span class="n">sinks_sources</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SinkSource</span><span class="p">]</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TIC</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_boundary_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span> <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_sinks_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>The matching Pydantic config inherits from <code class="docutils literal notranslate"><span class="pre">ProcessSpatialConfig</span></code>
+declared in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/base/process_spatial_config.py</span></code>.</p>
+</section>
+<section id="files-to-create">
+<h2>Files to create<a class="headerlink" href="#files-to-create" title="Link to this heading">#</a></h2>
+<p>For a new process called <code class="docutils literal notranslate"><span class="pre">heat</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/physics/heat/
+|-- __init__.py
+|-- heat.py                       # Heat(ProcessSpatial[HeatInitialConditions])
+|-- heat_config.py                # HeatConfig(ProcessSpatialConfig)
+|-- initial_conditions.py         # HeatInitialConditions
+|-- boundary_conditions.py        # HeatBoundaryConditionConfig
+|-- sinks_sources/
+|   |-- __init__.py
+|   `-- ...
+`-- README.md
+</pre></div>
+</div>
+<p>The package layout mirrors <code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/flow/</span></code>. Use that as
+the reference template.</p>
+</section>
+<section id="minimal-runtime-skeleton">
+<h2>Minimal runtime skeleton<a class="headerlink" href="#minimal-runtime-skeleton" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/physics/heat/heat.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.physics.base.process_spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessSpatial</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HeatInitialConditions</span><span class="p">:</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>   <span class="c1"># "uniform", "from_field", ...</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Heat</span><span class="p">(</span><span class="n">ProcessSpatial</span><span class="p">[</span><span class="n">HeatInitialConditions</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HeatInitialConditions</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_boundary_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_sinks_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="wire-it-into-hydromodpyconfig">
+<h2>Wire it into <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code><a class="headerlink" href="#wire-it-into-hydromodpyconfig" title="Link to this heading">#</a></h2>
+<p>Add a new TOML section <code class="docutils literal notranslate"><span class="pre">[heat]</span></code> backed by <code class="docutils literal notranslate"><span class="pre">HeatConfig</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/config/hydromodpy_config.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.physics.heat.heat_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatConfig</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HydroModPyConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">heat</span><span class="p">:</span> <span class="n">HeatConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>The Pydantic root validator can refuse the section when no solver
+declares <code class="docutils literal notranslate"><span class="pre">"heat"</span></code> as <code class="docutils literal notranslate"><span class="pre">process_type</span></code>, or accept it without solver
+binding for prototyping.</p>
+</section>
+<section id="bind-one-or-several-solvers">
+<h2>Bind one or several solvers<a class="headerlink" href="#bind-one-or-several-solvers" title="Link to this heading">#</a></h2>
+<p>Now register a solver adapter for <code class="docutils literal notranslate"><span class="pre">("heat",</span> <span class="pre">"&lt;solver_name&gt;")</span></code> (see
+<a class="reference internal" href="add-a-solver.html"><span class="doc">Add a Solver</span></a>). The simulation planner expands every
+<code class="docutils literal notranslate"><span class="pre">[[simulation.process]]</span></code> block of <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">=</span> <span class="pre">"heat"</span></code> into one
+<code class="docutils literal notranslate"><span class="pre">ProcessRun</span></code> per declared solver.</p>
+</section>
+<section id="pipeline-integration">
+<h2>Pipeline integration<a class="headerlink" href="#pipeline-integration" title="Link to this heading">#</a></h2>
+<p>Most processes do <strong>not</strong> need new pipeline steps: <code class="docutils literal notranslate"><span class="pre">BuildGeographic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LoadData</span></code>, <code class="docutils literal notranslate"><span class="pre">BuildMesh</span></code>, and <code class="docutils literal notranslate"><span class="pre">RunSolver</span></code> are process-agnostic.
+The handoff happens through <code class="docutils literal notranslate"><span class="pre">ProcessSpatial</span></code> instances stored in
+the <code class="docutils literal notranslate"><span class="pre">WorkflowContext</span></code>.</p>
+<p>If your process needs a dedicated forcing chain, add it under
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/forcing/</span></code> and reuse <code class="docutils literal notranslate"><span class="pre">ForcingBridge</span></code> /
+<code class="docutils literal notranslate"><span class="pre">time_alignment</span></code> instead of writing a new orchestrator.</p>
+</section>
+<section id="tests-to-add">
+<h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/physics/heat/</span></code> for the
+<code class="docutils literal notranslate"><span class="pre">ProcessSpatial</span></code> contract methods.</p></li>
+<li><p><strong>Integration</strong> under <code class="docutils literal notranslate"><span class="pre">tests/integration/physics/</span></code> for one
+end-to-end run with a stub solver.</p></li>
+<li><p><strong>Validation</strong> with at least one analytical reference (heat
+conduction, Dirichlet pulse, etc.) so tolerances are explicit from
+day one.</p></li>
+</ul>
+</section>
+<section id="pitfalls-flagged-by-the-layer-matrix">
+<h2>Pitfalls flagged by the layer matrix<a class="headerlink" href="#pitfalls-flagged-by-the-layer-matrix" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">physics</span></code> may import <code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, and <code class="docutils literal notranslate"><span class="pre">physics</span></code>; the
+documented <code class="docutils literal notranslate"><span class="pre">physics</span> <span class="pre">-&gt;</span> <span class="pre">spatial</span></code> tolerance is reserved for
+<code class="docutils literal notranslate"><span class="pre">FlowConfig</span></code> field-section discriminated unions and should not
+spread.</p></li>
+<li><p>Solver code lives in <code class="docutils literal notranslate"><span class="pre">solver/&lt;backend&gt;/</span></code>, never inside
+<code class="docutils literal notranslate"><span class="pre">physics/</span></code>.</p></li>
+<li><p>Initial / boundary / sink-source classes stay process-specific;
+the shared base in <code class="docutils literal notranslate"><span class="pre">physics/base/</span></code> is intentionally narrow.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../packages/physics.html"><span class="doc">physics</span></a> for the physics package map.</p></li>
+<li><p><a class="reference internal" href="add-a-solver.html"><span class="doc">Add a Solver</span></a> for the matching backend adapter.</p></li>
+<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a Config Field</span></a> for adding the new TOML section to the
+Pydantic root.</p></li>
+<li><p><a class="reference internal" href="../layered-architecture.html"><span class="doc">Layered Architecture</span></a> for the layer matrix.</p></li>
+</ul>
+</section>
+</section>
+</article>
+<footer class="prev-next-footer d-print-none">
+<div class="prev-next-area">
+<a class="left-prev" href="add-a-solver.html" title="previous page">
+<i class="fa-solid fa-angle-left"></i>
+<div class="prev-next-info">
+<p class="prev-next-subtitle">previous</p>
+<p class="prev-next-title">Add a Solver</p>
+</div>
+</a>
+<a class="right-next" href="add-a-config-field.html" title="next page">
+<div class="prev-next-info">
+<p class="prev-next-subtitle">next</p>
+<p class="prev-next-title">Add a Config Field</p>
+</div>
+<i class="fa-solid fa-angle-right"></i>
+</a>
+</div>
+</footer>
+</div>
+<dialog id="pst-secondary-sidebar-modal"></dialog>
+<div class="bd-sidebar-secondary bd-toc" id="pst-secondary-sidebar"><div class="sidebar-secondary-items sidebar-secondary__inner">
+<div class="sidebar-secondary-item">
+<div class="page-toc tocsection onthispage" id="pst-page-navigation-heading-2">
+<i class="fa-solid fa-list"></i> On this page
+  </div>
+<nav aria-labelledby="pst-page-navigation-heading-2" class="page-toc" id="pst-page-toc-nav">
+<ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract">Contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-to-create">Files to create</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-runtime-skeleton">Minimal runtime skeleton</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-into-hydromodpyconfig">Wire it into <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bind-one-or-several-solvers">Bind one or several solvers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pipeline-integration">Pipeline integration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls-flagged-by-the-layer-matrix">Pitfalls flagged by the layer matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+</nav></div>
+</div></div>
+</div>
+<footer class="bd-footer-content">
+</footer>
+</main>
+</div>
+</div>
+<!-- Scripts loaded after <body> so the DOM is not blocked -->
+<script defer="" src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer="" src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+<footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+<div class="footer-items__start">
+<div class="footer-item">
+<p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+</p>
+</div>
+</div>
+<div class="footer-items__end">
+<div class="footer-item">
+<p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+</p>
+</div>
+</div>
+</div>
+</footer>
+</body>
+</html>
