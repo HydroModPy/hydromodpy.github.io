@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Calibration Guide" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/calibration/calibration-guide.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/calibration/calibration-guide.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="Audience: hydrogeologists, modelers, and HydroModPy contributors who need to calibrate the parameters of a catchment-scale groundwater model. Suggested reading order: §1 (principles), §2 (workflow)..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Audience: hydrogeologists, modelers, and HydroModPy contributors who need to calibrate the parameters of a catchment-scale groundwater model. Suggested reading order: §1 (principles), §2 (workflow)..." name="description"/>
 <title>Calibration Guide — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/calibration/calibration-guide';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/calibration/calibration-guide.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/calibration/calibration-guide.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -510,7 +510,7 @@ material to consult once the loop is running.</p>
 sub-system. Code: <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/</span></code>.</p>
 <p>For complementary reading, see <a class="reference internal" href="index.html"><span class="doc">Calibration Architecture</span></a> (calibration architecture
 root), <a class="reference internal" href="../overview/design-patterns.html"><span class="doc">Design Patterns</span></a> (item 7 covers the calibration
-adapters), <a class="reference internal" href="../overview/two-databases.html"><span class="doc">The three workspace databases</span></a>, and
+adapters), <a class="reference internal" href="../overview/two-databases.html"><span class="doc">The three database scopes</span></a>, and
 <a class="reference internal" href="../../user_guide/workflows/calibration.html"><span class="doc">Calibration Workflow</span></a>.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
@@ -570,23 +570,30 @@ complete Zarr / Parquet simulation (§2, §5).</p></li>
 <code class="docutils literal notranslate"><span class="pre">WorkflowContext</span></code> consumed by the ask/tell loop.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Ask/tell loop (<code class="docutils literal notranslate"><span class="pre">run_trial_light</span></code>)</p></td>
-<td><p>Each trial reads the prepared context, writes one row to DuckDB
+<td><p>Each trial reads the prepared context, appends one line to
+<code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/trials.jsonl</span></code> and writes one row to DuckDB
 (<code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code>). After the loop ends, control passes
 to <code class="docutils literal notranslate"><span class="pre">promote_trial</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p>DuckDB (<code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> + <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code>)</p></td>
-<td><p>Stores trial fingerprints and session metadata. Read by
-<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span></code>.</p></td>
+<tr class="row-even"><td><p>Session journal (<code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/</span></code>)</p></td>
+<td><p>The history on disk: <code class="docutils literal notranslate"><span class="pre">session.json</span></code> (identity, search space,
+objective, dates, best trial) and <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code>. Read back by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">promote_trial</span></code> (top-N)</p></td>
+<tr class="row-odd"><td><p>DuckDB (<code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> + <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code>)</p></td>
+<td><p>Indexes trial fingerprints and session metadata. Read by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code>, rebuilt from the session journal.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">promote_trial</span></code> (top-N)</p></td>
 <td><p>Replays the chosen trials through the full pipeline. Writes
 Zarr + Parquet + <code class="docutils literal notranslate"><span class="pre">simulations</span></code> rows and back-fills
 <code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p>Catalog (simulations + Zarr + Parquet)</p></td>
-<td><p>Read by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span></code> alongside the DuckDB iteration history.</p></td>
+<tr class="row-odd"><td><p>Catalog (simulations + Zarr + Parquet)</p></td>
+<td><p>Read by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code> alongside the DuckDB iteration
+history.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code></p></td>
 <td><p>Reads sessions, iterations, simulation outputs, and renders the
 calibration HTML report with figures.</p></td>
 </tr>
@@ -602,7 +609,7 @@ calibration HTML report with figures.</p></td>
 what you would write for a single run.</p></li>
 <li><p><strong>``hmp run``</strong>: the unified CLI entry point. It reads
 <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">"calibration"</span></code> and dispatches to
-<code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.cli_runner.run_calibration_cli</span></code>. Calibration
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.runners.cli_runner.run_calibration_cli</span></code>. Calibration
 has no separate top-level subcommand.</p></li>
 <li><p><strong>``prepare_trials``</strong>: runs pipeline steps <code class="docutils literal notranslate"><span class="pre">[0..earliest)</span></code> exactly
 once. <code class="docutils literal notranslate"><span class="pre">earliest</span></code> is computed from the dotted paths declared by
@@ -614,19 +621,28 @@ loop forks the prepared context, injects the values, runs steps
 <code class="docutils literal notranslate"><span class="pre">[earliest..8]</span></code> in <strong>lightweight</strong> mode (no disk writes beyond the
 solver’s own scratch files), extracts the scalar objective from RAM,
 and tells the optimizer. Repeat up to <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>.</p></li>
+<li><p><strong>Session journal</strong>: the session owns <code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/</span></code> at the
+project root. <code class="docutils literal notranslate"><span class="pre">session.json</span></code> is written before the first trial and
+rewritten with the outcome at the end; <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code> gains one line
+per trial as it completes, so an interrupted calibration keeps its
+history. See <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p></li>
 <li><p><strong>DuckDB</strong>: every trial adds one row to <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code>
 (<code class="docutils literal notranslate"><span class="pre">sim_id</span></code> stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>). The session metadata lives in one row
-of <code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> finalized at the end.</p></li>
+of <code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> finalized at the end. Both tables are an
+index over the session journal: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code> rebuilds them
+from it.</p></li>
 <li><p><strong>``promote_trial`` (top-N)</strong>: if <code class="docutils literal notranslate"><span class="pre">save_runs</span> <span class="pre">!=</span> <span class="pre">"none"</span></code>, the
 chosen trials are replayed through the <em>full</em> pipeline (steps
 <code class="docutils literal notranslate"><span class="pre">00..11</span></code>) by <code class="docutils literal notranslate"><span class="pre">hydromodpy.Project(cfg_path).simulate(**values)</span></code>. Each
 promotion creates a Zarr store, a Parquet directory, and a
 <code class="docutils literal notranslate"><span class="pre">simulations</span></code> row, and back-fills the corresponding
 <code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code>.</p></li>
-<li><p><strong>``hmp report &lt;session_id&gt;``</strong>: post-processing CLI that reads the
-session and iterations from DuckDB, renders the six calibration
-figures, and emits a standalone HTML report at
-<code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/reports/&lt;session_id&gt;/report.html</span></code>.</p></li>
+<li><p><strong>``hmp report render &lt;session_ref&gt;``</strong>: post-processing CLI that
+reads the session descriptor and its trial log, renders the six
+calibration figures, and emits a standalone HTML report at
+<code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/share/reports/&lt;session_name&gt;/report.html</span></code>. The reference
+accepts a session id or prefix, or one of its runs; omitted, it renders
+the most recent session.</p></li>
 </ul>
 </section>
 <section id="the-user-toml">
@@ -651,7 +667,7 @@ overlays.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span> <span class="pre">"calibration"</span></code>: the single switch that tells
 <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> to dispatch to the ask/tell loop instead of the default
 single-simulation path. Dispatch logic lives in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/workflows.py:DISPATCH</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/project/dispatch/workflow.py:DISPATCH</span></code>.</p></li>
 </ul>
 </section>
 <section id="standard-simulation-block">
@@ -1106,42 +1122,47 @@ on each of the 12 <code class="docutils literal notranslate"><span class="pre">s
 <td><p>Built per trial by <code class="docutils literal notranslate"><span class="pre">run_trial_light</span></code> and discarded at end of
 trial. Never reaches disk.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code></p></td>
-<td><p>One row per session (start, finalize, status).</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">session.json</span></code></p></td>
+<td><p>The session descriptor: identity, project, search space,
+objective, dates, best trial. Written before the first trial and
+rewritten with the outcome at the end.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code> (<code class="docutils literal notranslate"><span class="pre">sim_id</span></code> NULL)</p></td>
-<td><p>One row per trial: parameters, objective, scalar metrics,
-<code class="docutils literal notranslate"><span class="pre">params_hash</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code></p></td>
+<td><p>The trial log: one JSON object per evaluated trial, appended
+live. An interrupted calibration keeps every trial it had time
+to evaluate.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code></p></td>
+<td><p>Index over the two journal files, rebuilt from them by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>. Not a source of truth.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulations</span></code>, <code class="docutils literal notranslate"><span class="pre">parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code></p></td>
 <td><p>Promoted top-N trials only (<code class="docutils literal notranslate"><span class="pre">promote_trial</span></code>). Updates the
 matching <code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p>Filesystem</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.zarr/</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runs/&lt;run_name&gt;/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fields.zarr/</span></code></p></td>
 <td><p>Spatial fields written <strong>only</strong> for promoted trials.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Filesystem</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.parquet/</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runs/&lt;run_name&gt;/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/</span></code></p></td>
 <td><p>Detailed timeseries, budgets, mass balance for promoted
 trials only.</p></td>
 </tr>
-<tr class="row-even"><td><p>Filesystem</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/figures/&lt;session_id&gt;/</span></code></p></td>
-<td><p>PNG figures rendered post-loop via the display registry.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Filesystem</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/reports/&lt;session_id&gt;/report.html</span></code></p></td>
-<td><p>HTML report rendered by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">&lt;session_id&gt;</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">share/reports/&lt;session_name&gt;/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">figures/*.png</span></code> and <code class="docutils literal notranslate"><span class="pre">report.html</span></code></p></td>
+<td><p>Rendered post-loop by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span> <span class="pre">&lt;session</span> <span class="pre">ref&gt;</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Rule of thumb: <strong>RAM inside the loop, DuckDB for the trace, Zarr /
-Parquet only for promoted runs.</strong></p>
+<p>Rule of thumb: <strong>RAM inside the loop, the session journal for the trace,
+a run directory only for promoted trials.</strong> The index is derived from
+both and never holds anything the disk does not.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Artefact</p></th>
@@ -1155,36 +1176,36 @@ Parquet only for promoted runs.</strong></p>
 <td><p>Each <code class="docutils literal notranslate"><span class="pre">run_trial_light</span></code>: discarded at end of trial</p></td>
 </tr>
 <tr class="row-odd"><td><p>Per-station scalar metrics (NSE, KGE, RMSE)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations.metrics</span></code> (JSON column)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/trials.jsonl</span></code></p></td>
 <td><p>After each trial</p></td>
 </tr>
 <tr class="row-even"><td><p>Session metadata</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> (1 row / session)</p></td>
-<td><p>Start + finalize</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/session.json</span></code></p></td>
+<td><p>Before the first trial, rewritten at finalize</p></td>
 </tr>
 <tr class="row-odd"><td><p>Parameters + scalar objective</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code> (sim_id NULL by default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/trials.jsonl</span></code></p></td>
 <td><p>After each trial</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">params_hash</span></code></p></td>
-<td><p>Column in <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/trials.jsonl</span></code></p></td>
 <td><p>After each trial</p></td>
 </tr>
 <tr class="row-odd"><td><p>Spatial fields <code class="docutils literal notranslate"><span class="pre">head(x,</span> <span class="pre">y,</span> <span class="pre">t)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.zarr/</span></code> or <code class="docutils literal notranslate"><span class="pre">.zarr.zip</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">runs/&lt;run_name&gt;/fields.zarr/</span></code></p></td>
 <td><p><strong>Only</strong> via <code class="docutils literal notranslate"><span class="pre">promote_trial</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Detailed timeseries (head, Q)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.parquet/timeseries.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">runs/&lt;run_name&gt;/tables.parquet/timeseries.parquet</span></code></p></td>
 <td><p><strong>Only</strong> via <code class="docutils literal notranslate"><span class="pre">promote_trial</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Figures (PNG)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/projects/&lt;name&gt;/figures/&lt;session_id&gt;/</span></code></p></td>
-<td><p>Post-loop via Display registry</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">share/reports/&lt;session_name&gt;/figures/</span></code></p></td>
+<td><p>Post-loop via the figure registry</p></td>
 </tr>
 <tr class="row-even"><td><p>HTML report</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/reports/&lt;session_id&gt;/report.html</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">&lt;session_id&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">share/reports/&lt;session_name&gt;/report.html</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span> <span class="pre">&lt;session</span> <span class="pre">ref&gt;</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1321,11 +1342,11 @@ Metropolis-Hastings tuned by the surrogate.</p></li>
 <h3>Python API and DuckDB<a class="headerlink" href="#python-api-and-duckdb" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hydromodpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">hmp</span>
 
-<a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">catalog</span></a> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.open.html#hydromodpy.open" title="hydromodpy.open"><span class="n">hmp</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">"~/workspace"</span><span class="p">)</span>
+<span class="n">catalog</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.open.html#hydromodpy.open" title="hydromodpy.open"><span class="n">hmp</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">"~/workspace/projects/&lt;name&gt;"</span><span class="p">)</span>
 <span class="n">sessions</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">calibration_sessions</span><span class="p">()</span>
 <span class="n">iters</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">calibration_iterations</span><span class="p">(</span><span class="n">session_id</span><span class="o">=</span><span class="n">sessions</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"session_id"</span><span class="p">])</span>
 <span class="n">best</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">best</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="s2">"calibration"</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">"nse"</span><span class="p">)</span>
-<span class="n">best</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s2">"watertable_map"</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="s2">"~/figures/"</span><span class="p">)</span>
+<span class="n">hmp</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="s2">"watertable_depth_map"</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="s2">"~/figures/"</span><span class="p">)</span>
 <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/functions.html#print"><span class="nb">print</span></a><span class="p">(</span><span class="n">iters</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -1356,16 +1377,19 @@ any 2-parameter slice.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">calibration_pairplot</span></code>: pairwise grid of scatter plus
 histograms.</p></li>
 </ul>
-<p>Render one figure at a time from the CLI (the session id is printed on
-stderr during <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code>):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_convergence
-hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_trace
-hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_landscape
-hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_posterior
-hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_objective_surface
-hmp<span class="w"> </span>display<span class="w"> </span>run_calibration_k.toml<span class="w"> </span>--session<span class="w"> </span>&lt;session_id&gt;<span class="w"> </span>--figure<span class="w"> </span>calibration_pairplot
+<p>Render one figure at a time from the CLI. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">show</span></code> takes a run
+reference and a figure name, so point it at a promoted run of the
+session (<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">ls</span> <span class="pre">--tag</span> <span class="pre">calibration:&lt;session_id&gt;</span></code> lists them):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_convergence
+hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_trace
+hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_landscape
+hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_posterior
+hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_objective_surface
+hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;run_ref&gt;<span class="w"> </span>calibration_pairplot
 </pre></div>
 </div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">--output</span></code> the PNG lands in <code class="docutils literal notranslate"><span class="pre">runs/&lt;run&gt;/figures/</span></code>.
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code> renders the whole set in one go.</p>
 <p>Pre-rendered examples for a Dupuit / MODFLOW 6 twin benchmark live
 under <code class="docutils literal notranslate"><span class="pre">docs/source/_static/capability_gallery/calibration/</span></code>: reuse
 them as visual references.</p>
@@ -1376,8 +1400,7 @@ TOML.</p>
 <section id="html-report">
 <h3>HTML report<a class="headerlink" href="#html-report" title="Link to this heading">#</a></h3>
 <p>For users who do not want to drop into Python:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>report<span class="w"> </span>&lt;session_id&gt;
-xdg-open<span class="w"> </span>~/workspace/reports/&lt;session_id&gt;/report.html
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>report<span class="w"> </span>render<span class="w"> </span>&lt;session_ref&gt;<span class="w"> </span>--open
 </pre></div>
 </div>
 <p>The report embeds the six figures together with a summary table
@@ -1446,7 +1469,7 @@ ignored.</p></li>
 <section id="python-api-reference">
 <h2>Python API reference<a class="headerlink" href="#python-api-reference" title="Link to this heading">#</a></h2>
 <p>Programmatic entry point (no CLI needed):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.cli_runner.html#module-hydromodpy.calibration.cli_runner"><span class="nn">hydromodpy.calibration.cli_runner</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">run_calibration_cli</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.runners.cli_runner.html#module-hydromodpy.calibration.runners.cli_runner"><span class="nn">hydromodpy.calibration.runners.cli_runner</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">run_calibration_cli</span>
 
 <span class="n">summary</span> <span class="o">=</span> <span class="n">run_calibration_cli</span><span class="p">(</span>
     <span class="s2">"run_calibration_k.toml"</span><span class="p">,</span>
@@ -1479,7 +1502,7 @@ best_sim_id, duration_s, save_runs, promoted
 <h3>Low-level primitives<a class="headerlink" href="#low-level-primitives" title="Link to this heading">#</a></h3>
 <p>The CLI is a thin wrapper around three primitives you can call
 directly for custom orchestration:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.simulation.execution.trial</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.runners.trial.html#module-hydromodpy.calibration.runners.trial"><span class="nn">hydromodpy.calibration.runners.trial</span></a><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">prepare_trials</span><span class="p">,</span> <span class="n">run_trial_light</span><span class="p">,</span> <span class="n">promote_trial</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -1501,7 +1524,7 @@ directly for custom orchestration:</p>
 </pre></div>
 </div>
 <p>Useful diagnostics on a persisted trace:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.diagnostics.html#module-hydromodpy.calibration.diagnostics"><span class="nn">hydromodpy.calibration.diagnostics</span></a><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.optim.diagnostics.html#module-hydromodpy.calibration.optim.diagnostics"><span class="nn">hydromodpy.calibration.optim.diagnostics</span></a><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">convergence_rate</span><span class="p">,</span> <span class="n">parameter_correlation</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -1512,15 +1535,16 @@ directly for custom orchestration:</p>
 </pre></div>
 </div>
 <p>Render a specific figure programmatically (equivalent to the
-<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">display</span></code> call above):</p>
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">show</span></code> call above):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/pathlib.html#module-pathlib"><span class="nn">pathlib</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hydromodpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">hmp</span>
 
-<a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">catalog</span></a> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.open.html#hydromodpy.open" title="hydromodpy.open"><span class="n">hmp</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">"~/workspace"</span><span class="p">)</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">hmp</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration_convergence"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">session_id</span><span class="o">=</span><span class="s2">"abcd1234ef..."</span><span class="p">,</span>
-    <span class="n">catalog</span><span class="o">=</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">catalog</span></a><span class="p">,</span>
-    <span class="n">save_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"~/figures/convergence.png"</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
+<span class="n">catalog</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.open.html#hydromodpy.open" title="hydromodpy.open"><span class="n">hmp</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">"~/workspace/projects/&lt;name&gt;"</span><span class="p">)</span>
+<span class="n">run</span> <span class="o">=</span> <span class="n">catalog</span><span class="p">[</span><span class="s2">"abcd1234"</span><span class="p">]</span>
+<a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">fig</span></a> <span class="o">=</span> <span class="n">hmp</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span>
+    <span class="n">run</span><span class="p">,</span>
+    <span class="s2">"calibration_convergence"</span><span class="p">,</span>
+    <span class="n">save</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"~/figures/convergence.png"</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
 <span class="p">)</span>
 </pre></div>
 </div>

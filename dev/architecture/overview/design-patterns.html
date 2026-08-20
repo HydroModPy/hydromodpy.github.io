@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Design Patterns" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/overview/design-patterns.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/overview/design-patterns.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="Most non-trivial features in the codebase rest on one of the patterns documented below. Knowing them makes the code predictable and shortens the time-to-first-edit when extending a backend, a data ..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Most non-trivial features in the codebase rest on one of the patterns documented below. Knowing them makes the code predictable and shortens the time-to-first-edit when extending a backend, a data ..." name="description"/>
 <title>Design Patterns — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/overview/design-patterns';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/overview/design-patterns.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/overview/design-patterns.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="frontend-hooks.html">Frontend Hooks</a></li>
@@ -509,7 +509,7 @@ figure family.</p>
 and <a class="reference internal" href="code-reading-guide.html"><span class="doc">Code Reading Guide</span></a>.</p>
 <section id="solveradapter-protocol">
 <h2>1. SolverAdapter Protocol<a class="headerlink" href="#solveradapter-protocol" title="Link to this heading">#</a></h2>
-<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/simulation/adapters/base.py</span></code>; concrete adapters
+<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/adapter_protocol.py</span></code>; concrete adapters
 sit next to each backend under <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/&lt;backend&gt;/adapters/</span></code>
 (<code class="docutils literal notranslate"><span class="pre">solver/modflow_nwt/adapters/flow.py</span></code>,
 <code class="docutils literal notranslate"><span class="pre">solver/modflow6/adapters/flow.py</span></code>,
@@ -586,7 +586,7 @@ placeholder.</p>
 </section>
 <section id="data-manager">
 <h2>5. Data Manager<a class="headerlink" href="#data-manager" title="Link to this heading">#</a></h2>
-<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/base_manager.py</span></code> with one subclass per
+<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/base_manager_variable.py</span></code> with one subclass per
 variable under <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/</span></code>.</p>
 <p>Every input variable (hydrometry, piezometry, geology, hydrography,
 climate) has a subclass of <code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code>:</p>
@@ -595,7 +595,7 @@ climate) has a subclass of <code class="docutils literal notranslate"><span clas
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">LoadResult</span></code> wraps the fetched data plus a fingerprint used for
-provenance. <code class="docutils literal notranslate"><span class="pre">DataManagersPlanner</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/planner.py</span></code>)
+provenance. <code class="docutils literal notranslate"><span class="pre">DataManagersPlanner</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/planner.py</span></code>)
 resolves the explicit config and the inferred needs into an immutable
 <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>.</p>
 <p>Why: a uniform fetch / cache / verify story for heterogeneous sources
@@ -644,7 +644,7 @@ through a thin adapter.</p>
 </section>
 <section id="objective">
 <h2>8. Objective<a class="headerlink" href="#objective" title="Link to this heading">#</a></h2>
-<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/objective.py</span></code>.</p>
+<p>Location: <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/objective.py</span></code>.</p>
 <p>An <code class="docutils literal notranslate"><span class="pre">Objective</span></code> aggregates one or more weighted <code class="docutils literal notranslate"><span class="pre">Metric</span></code> values into
 a scalar loss. Objectives are declarative (configured from TOML) and
 stateless: they accept a <code class="docutils literal notranslate"><span class="pre">Metrics</span></code> dict and return a float.</p>
@@ -657,9 +657,9 @@ piezo-discharge loss, multi-site mean) without touching the engine.</p>
 </section>
 <section id="metric">
 <h2>9. Metric<a class="headerlink" href="#metric" title="Link to this heading">#</a></h2>
-<p>Locations: <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/metrics/</span></code> (canonical: NSE, KGE, RMSE,
+<p>Locations: <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/metrics.py</span></code> (canonical: NSE, KGE, RMSE,
 MAE, log-NSE, bias, pbias, correlation) and
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/metrics.py</span></code> (trial-side extractor
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/metrics/composite.py</span></code> (trial-side extractor
 <code class="docutils literal notranslate"><span class="pre">build_metric_extractor</span></code>).</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">Metric</span></code> is a callable that compares a simulated series to an
 observed series:</p>
@@ -680,7 +680,7 @@ catalog.</p>
 <p>Anything that drives a UI widget (figure picker, parameter form,
 metrics panel) exposes a JSON-compatible contract. The <code class="docutils literal notranslate"><span class="pre">schema</span></code>
 package exposes helpers that dump Pydantic models as JSON Schema
-(<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">schema</span> <span class="pre">export</span></code>) and validate a partially edited TOML, so a
+(<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">dev</span> <span class="pre">schema</span> <span class="pre">export</span></code>) and validate a partially edited TOML, so a
 frontend can flag errors field by field without raising on the first
 invalid value.</p>
 <p>Why: the codebase also serves as the backend for external frontends.
@@ -693,7 +693,7 @@ duplicating the structure on the UI side.</p>
 <li><p><a class="reference internal" href="mental-model-and-design-choices.html"><span class="doc">Mental Model &amp; Design Choices</span></a> for the layer responsibilities
 behind these patterns.</p></li>
 <li><p><a class="reference internal" href="code-reading-guide.html"><span class="doc">Code Reading Guide</span></a> for a package-by-package reading order.</p></li>
-<li><p><a class="reference internal" href="two-databases.html"><span class="doc">The three workspace databases</span></a> for the persistence layer that several of these
+<li><p><a class="reference internal" href="two-databases.html"><span class="doc">The three database scopes</span></a> for the persistence layer that several of these
 patterns talk to.</p></li>
 </ul>
 </section>

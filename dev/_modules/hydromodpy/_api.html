@@ -67,7 +67,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hydromodpy/_api';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/_modules/hydromodpy/_api.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/_modules/hydromodpy/_api.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -599,18 +599,28 @@
                 <article class="bd-article">
                   
   <h1>Source code for hydromodpy._api</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Top-level functional API for HydroModPy.</span>
+<span></span><span class="sd">"""Top-level functional API for HydroModPy.</span>
 
-<span class="sd">Mirrors the CLI verbs so ``hmp run config.toml`` and ``hmp.run(&quot;config.toml&quot;)``</span>
+<span class="sd">Mirrors the CLI verbs so ``hmp run config.toml`` and ``hmp.run("config.toml")``</span>
 <span class="sd">execute the same workflow. Kept as a private module so the package facade</span>
 <span class="sd">stays minimal.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">The run-management CLI verbs (``hmp catalog trash/restore/tag/note/rename/</span>
+<span class="sd">rerun/diff/reindex/gc/watch``) are intentionally not mirrored as top-level</span>
+<span class="sd">``hmp.*`` symbols. Their Python surface is the :class:`Catalog` handle returned</span>
+<span class="sd">by :func:`open`: ``cat.trash(ref)``, ``cat.restore(ref)``, ``cat.add_tag(...)``,</span>
+<span class="sd">``cat.rename_simulation(...)``, ``cat.diff(...)``, plus</span>
+<span class="sd">:func:`hydromodpy.results.catalog.reindex.rebuild_index`. The</span>
+<span class="sd">``hmp.cli._workers`` package is a CLI-private implementation detail, not a</span>
+<span class="sd">public API.</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
@@ -621,76 +631,101 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.global_index</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobalIndex</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.spinup</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpinupResult</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span>
+
     <span class="n">Readable</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span>
 
 
 <div class="viewcode-block" id="open">
 <a class="viewcode-back" href="../../python_api/open.html#hydromodpy.open">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a HydroModPy project catalog.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">create</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Catalog</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Open a HydroModPy project catalog.</span>
 
 <span class="sd">    The single door to a workspace catalog: returns a</span>
-<span class="sd">    :class:`hydromodpy.results.catalog.SimulationCatalog` backed by</span>
-<span class="sd">    ``catalog.duckdb``. It exposes object access (``latest``, ``best``,</span>
+<span class="sd">    :class:`hydromodpy.results.catalog.Catalog` backed by</span>
+<span class="sd">    ``&lt;project&gt;/.hmp/index.duckdb``. It exposes object access (``latest``, ``best``,</span>
 <span class="sd">    ``find``, ``cat[ref]``), tabular access (``frame``, ``sql``,</span>
 <span class="sd">    ``list_simulations``), schema discovery (``describe``, ``tables``,</span>
-<span class="sd">    ``columns``, ``variables``, ``metrics``, ``stations``), per-id reads</span>
-<span class="sd">    (``read``), and the simulation writers used by the workflow engine.</span>
+<span class="sd">    ``columns``, ``variables``, ``metrics``, ``stations``), and per-id reads</span>
+<span class="sd">    (``read``).</span>
+
+<span class="sd">    The default open is **read-only**: inspecting a catalog never migrates it,</span>
+<span class="sd">    never rewrites a view, and never touches its mtime, so an archived project</span>
+<span class="sd">    can be browsed without leaving a trace and a reader never contends with a</span>
+<span class="sd">    running solve. Pass ``read_only=False`` (or ``create=True``) for the</span>
+<span class="sd">    writable handle used to initialise or annotate a catalog.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    workspace</span>
-<span class="sd">        Project directory holding ``catalog.duckdb`` (or a direct path to the</span>
-<span class="sd">        ``.duckdb`` file).</span>
+<span class="sd">        Project directory holding ``.hmp/index.duckdb`` (or a direct path to</span>
+<span class="sd">        the ``.duckdb`` file).</span>
 <span class="sd">    create</span>
 <span class="sd">        ``False`` (default) raises :class:`FileNotFoundError` when no catalog</span>
-<span class="sd">        exists yet (no phantom catalog is created). ``True`` opens and</span>
-<span class="sd">        initialises an empty catalog.</span>
+<span class="sd">        exists yet (no phantom catalog is created). ``True`` opens a writable</span>
+<span class="sd">        handle and initialises an empty catalog.</span>
+<span class="sd">    read_only</span>
+<span class="sd">        ``True`` (default) opens the catalog read-only. Ignored when</span>
+<span class="sd">        ``create=True`` (initialisation requires a writable handle).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    hydromodpy.results.catalog.SimulationCatalog</span>
+<span class="sd">    hydromodpy.results.catalog.Catalog</span>
 <span class="sd">        Catalog handle for the project.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    FileNotFoundError</span>
-<span class="sd">        If no ``catalog.duckdb`` is found and ``create`` is ``False``.</span>
+<span class="sd">        If no index database is found and ``create`` is ``False``.</span>
 <span class="sd">    hydromodpy.core.exceptions.CatalogError</span>
 <span class="sd">        If the DuckDB catalog file is locked, corrupted, or unreadable.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; cat = hmp.open(&quot;~/ws/projects/naizin&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; cat = hmp.open("~/ws/projects/naizin")  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; cat.latest()  # doctest: +SKIP</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    hydromodpy.index</span>
-<span class="sd">        Machine-wide federation across registered workspaces.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">CATALOG_FILENAME</span><span class="p">,</span> <span class="n">find_catalog_root</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationCatalog</span>
+<span class="sd">        Machine-wide federation across registered projects.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">catalog_path_for</span><span class="p">,</span> <span class="n">resolve_project_root</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span>
 
     <span class="n">ws</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">ws</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.duckdb&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ws</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".duckdb"</span><span class="p">:</span>
         <span class="n">catalog_file</span> <span class="o">=</span> <span class="n">ws</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">catalog_file</span> <span class="o">=</span> <span class="n">find_catalog_root</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span> <span class="o">/</span> <span class="n">CATALOG_FILENAME</span>
+        <span class="n">catalog_file</span> <span class="o">=</span> <span class="n">catalog_path_for</span><span class="p">(</span><span class="n">resolve_project_root</span><span class="p">(</span><span class="n">ws</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">create</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">catalog_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;No catalog at </span><span class="si">{</span><span class="n">catalog_file</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">. Run a workflow there first, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;or pass create=True to initialise an empty catalog.&quot;</span>
+            <span class="sa">f</span><span class="s2">"No catalog at </span><span class="si">{</span><span class="n">catalog_file</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">. Run a workflow there first, "</span>
+            <span class="sa">f</span><span class="s2">"or pass create=True to initialise an empty catalog."</span>
         <span class="p">)</span>
-    <span class="k">return</span> <span class="n">SimulationCatalog</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">create</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Catalog</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Catalog</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="n">read_only</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="index">
 <a class="viewcode-back" href="../../python_api/index_verb.html#hydromodpy.index">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="n">db_path</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open the machine-wide global index that federates registered workspaces.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="n">db_path</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GlobalIndex</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Open the machine-wide global index that federates registered projects.</span>
+
+<span class="sd">    One row is one project root, since a project root is what owns an index</span>
+<span class="sd">    database. Registering a workspace root expands it into the project roots</span>
+<span class="sd">    it holds.</span>
+
+<span class="sd">    Read-only by default, mirroring :func:`open`: browsing the federation index</span>
+<span class="sd">    never migrates it or touches its mtime, and a reader never contends with a</span>
+<span class="sd">    concurrent solve. Pass ``read_only=False`` for the writable handle used to</span>
+<span class="sd">    ``register`` / ``unregister`` / ``prune``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -698,16 +733,16 @@
 <span class="sd">        Optional path to the index DuckDB file. ``None`` uses the default</span>
 <span class="sd">        machine-state location.</span>
 <span class="sd">    read_only</span>
-<span class="sd">        Open the index in read-only mode. Writes (``register_workspace``,</span>
-<span class="sd">        ``forget``, ``prune``) will raise. Pure reads (``search``, ``find``,</span>
-<span class="sd">        ``list_workspaces``) keep working while another process holds the</span>
-<span class="sd">        write-lock.</span>
+<span class="sd">        Open the index in read-only mode (default ``True``). Writes</span>
+<span class="sd">        (``register``, ``unregister``, ``prune``) will raise. Pure reads</span>
+<span class="sd">        (``search``, ``find``, ``list_projects``) keep working while another</span>
+<span class="sd">        process holds the write-lock.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    GlobalIndex</span>
-<span class="sd">        Index object exposing ``register_workspace``, ``find``, ``search``,</span>
-<span class="sd">        ``prune`` and ``forget``.</span>
+<span class="sd">        Index object exposing ``register``, ``unregister``, ``list_projects``,</span>
+<span class="sd">        ``find``, ``search`` and ``prune``.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -720,13 +755,13 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
 <span class="sd">    &gt;&gt;&gt; idx = hmp.index(read_only=True)  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; idx.list_workspaces()  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; idx.list_projects()  # doctest: +SKIP</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    hydromodpy.core.state.global_index.GlobalIndex</span>
 <span class="sd">        Underlying federation implementation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.global_index</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobalIndex</span>
@@ -736,10 +771,71 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_open_run</span><span class="p">(</span><span class="n">project_root</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sim_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the :class:`Run` for ``sim_id`` bound to an open catalog.</span>
+
+<span class="sd">    Both :func:`run` branches expose the ``simulation`` workflow as a ``Run``</span>
+<span class="sd">    (or ``None`` for a dry-run / no persisted result) so :func:`read` /</span>
+<span class="sd">    :func:`export` accept the result directly. The catalog is intentionally</span>
+<span class="sd">    **not** context-managed here: the Run reads through it, so it must stay</span>
+<span class="sd">    open after :func:`run` returns (matching ``cat = hmp.open(...); cat[ref]``).</span>
+<span class="sd">    Returns ``None`` on any resolution failure rather than raising.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sim_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">project_root</span><span class="p">)[</span><span class="n">sim_id</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_lock_for_run</span><span class="p">(</span><span class="n">config_source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">no_lock</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write ``hydromodpy.lock`` after a Python-driven simulation.</span>
+
+<span class="sd">    Mirrors the CLI post-run lock write so ``hmp.run`` records the same</span>
+<span class="sd">    reproducibility provenance the terminal does. Best-effort and silent on</span>
+<span class="sd">    failure. ``config_source`` is a TOML path or a resolved config object.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">no_lock</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.lockfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_project_lockfile</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config_source</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">HydroModPyConfig</span>
+
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">HydroModPyConfig</span><span class="o">.</span><span class="n">from_toml</span><span class="p">(</span><span class="n">config_source</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">config_source</span>
+        <span class="n">write_project_lockfile</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_materialized_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Write a resolved config to a temp TOML in its project_root and yield it.</span>
+
+<span class="sd">    Lets the config-object branch of :func:`run` reuse the same path-based</span>
+<span class="sd">    workflow adapters as the TOML branch. The temp file lives inside</span>
+<span class="sd">    ``project_root`` so relative paths resolve identically; it is removed</span>
+<span class="sd">    afterwards.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">project_root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">materialized</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">".hmp_effective_</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">.toml"</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">to_toml</span><span class="p">(</span><span class="n">materialized</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">materialized</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">materialized</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="run">
 <a class="viewcode-back" href="../../python_api/run.html#hydromodpy.run">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a HydroModPy workflow from Python.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Run</span> <span class="o">|</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run a HydroModPy workflow from Python.</span>
 
 <span class="sd">    Path and config-object inputs converge on the same dispatch. Simulation</span>
 <span class="sd">    workflows return a :class:`~hydromodpy.results.run.Run` (or ``None`` when</span>
@@ -753,7 +849,10 @@
 <span class="sd">    kwargs</span>
 <span class="sd">        Runtime options forwarded to the selected workflow. The ``headless``</span>
 <span class="sd">        keyword is honored on both branches (path and config object) and</span>
-<span class="sd">        controls the underlying ``Project`` interactive side effects.</span>
+<span class="sd">        controls the underlying ``Project`` interactive side effects. Set</span>
+<span class="sd">        ``no_lock=True`` to skip the post-run ``hydromodpy.lock`` write (a</span>
+<span class="sd">        successful simulation writes the reproducibility lock by default,</span>
+<span class="sd">        matching ``hmp run``).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -776,14 +875,15 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; run = hmp.run(&quot;run_transient_nwt.toml&quot;, name=&quot;baseline&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; run = hmp.run("run_transient_nwt.toml", name="baseline")  # doctest: +SKIP</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    hydromodpy.project.Project.simulate</span>
 <span class="sd">        Object-oriented form for repeated runs from one project.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;headless&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+<span class="sd">    """</span>
+    <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+    <span class="n">no_lock</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"no_lock"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.dispatch.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">dispatch_workflow</span>
@@ -795,19 +895,43 @@
             <span class="n">cli_workflow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">require_toml_field</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">dispatch_workflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">dispatch_workflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># The simulation adapter returns a summary dict; expose it as the Run</span>
+        <span class="c1"># so hmp.read / hmp.export accept the result on either branch.</span>
+        <span class="k">if</span> <span class="n">workflow</span> <span class="o">==</span> <span class="s2">"simulation"</span><span class="p">:</span>
+            <span class="n">sim_id</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sim_id"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">run_obj</span> <span class="o">=</span> <span class="n">_open_run</span><span class="p">(</span><span class="n">config_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">sim_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">run_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_write_lock_for_run</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="n">no_lock</span><span class="o">=</span><span class="n">no_lock</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">run_obj</span>
+        <span class="k">return</span> <span class="n">summary</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
+    <span class="c1"># In-memory config object: dispatch on the declared workflow mode so a</span>
+    <span class="c1"># pure-Python config reaches every workflow, not only a plain simulation.</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"workflow"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"simulation"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"simulation"</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
 
-    <span class="k">with</span> <span class="n">Project</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span> <span class="k">as</span> <span class="n">project</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">project</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">with</span> <span class="n">Project</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span> <span class="k">as</span> <span class="n">project</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">_write_lock_for_run</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">no_lock</span><span class="o">=</span><span class="n">no_lock</span><span class="p">)</span>
+        <span class="c1"># Re-bind to a freshly opened catalog so hmp.read works after the</span>
+        <span class="c1"># project context (and its catalog connection) has closed.</span>
+        <span class="k">return</span> <span class="n">_open_run</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">project_root</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sim_id</span><span class="p">)</span> <span class="ow">or</span> <span class="n">result</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.dispatch.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">dispatch_workflow</span>
+
+    <span class="k">with</span> <span class="n">_materialized_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">materialized_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dispatch_workflow</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">materialized_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="calibrate">
 <a class="viewcode-back" href="../../api/generated/hydromodpy.calibrate.html#hydromodpy.calibrate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a calibration workflow from a TOML file or config object.</span>
+<span class="w">    </span><span class="sd">"""Run a calibration workflow from a TOML file or config object.</span>
 
 <span class="sd">    Paths route directly to :func:`run_calibration_cli`; in-memory config</span>
 <span class="sd">    objects open a lazy :class:`Project` so :func:`run_calibration_programmatic`</span>
@@ -840,35 +964,99 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; report = hmp.calibrate(&quot;calibration.toml&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; report = hmp.calibrate("calibration.toml")  # doctest: +SKIP</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    hydromodpy.calibration.cli_runner.run_calibration_cli</span>
+<span class="sd">    hydromodpy.calibration.runners.cli_runner.run_calibration_cli</span>
 <span class="sd">        TOML entry point used by the path branch.</span>
-<span class="sd">    hydromodpy.calibration.programmatic_runner.run_calibration_programmatic</span>
+<span class="sd">    hydromodpy.calibration.runners.programmatic_runner.run_calibration_programmatic</span>
 <span class="sd">        Python entry point used by the config-object branch.</span>
 <span class="sd">    hydromodpy.calibration.CalibrationReport</span>
 <span class="sd">        Structured calibration result.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.cli_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_calibration_cli</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.runners.cli_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_calibration_cli</span>
 
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;headless&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">run_calibration_cli</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
 
-    <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;headless&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
     <span class="k">with</span> <span class="n">Project</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span> <span class="k">as</span> <span class="n">project</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">project</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">spinup</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinupResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run a cyclic spin-up from a TOML file or config object.</span>
+
+<span class="sd">    Repeats the representative window (``[spinup] window_*``, else</span>
+<span class="sd">    ``[simulation.time]``), restarting each cycle from the previous cycle's state,</span>
+<span class="sd">    until the aquifer heads and the lake stage converge. One :class:`Project` is</span>
+<span class="sd">    reused so the mesh is identical across cycles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config</span>
+<span class="sd">        TOML path or validated configuration object.</span>
+<span class="sd">    kwargs</span>
+<span class="sd">        Forwarded to :func:`~hydromodpy.project.spinup.run_spinup` (``spinup``</span>
+<span class="sd">        settings override, ``name_prefix``). ``headless`` controls the project.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    hydromodpy.project.spinup.SpinupResult</span>
+<span class="sd">        The loop outcome. Feed ``result.restart_from`` to a production run's</span>
+<span class="sd">        ``[flow] restart_from`` (enable ``[mesh_catchment] cache`` for a gmsh grid</span>
+<span class="sd">        so that run reproduces this mesh).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    hydromodpy.project.spinup.run_spinup</span>
+<span class="sd">        The underlying driver, callable on an existing Project.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.facade</span><span class="w"> </span><span class="kn">import</span> <span class="n">_resolve_config</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.spinup</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_spinup</span>
+
+    <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="n">then_run</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"then_run"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">))</span> <span class="k">else</span> <span class="n">config</span>
+
+    <span class="c1"># Snapshot a clean production config before the spin-up mutates the model's</span>
+    <span class="c1"># (cycle window, restart_from, IC).</span>
+    <span class="n">prod_cfg</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">then_run</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">HydroModPyConfig</span>
+
+            <span class="n">prod_cfg</span> <span class="o">=</span> <span class="n">HydroModPyConfig</span><span class="o">.</span><span class="n">from_toml</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prod_cfg</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">_resolve_config</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+
+    <span class="k">with</span> <span class="n">Project</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span> <span class="n">no_display</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">project</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">run_spinup</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">then_run</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">restart_from</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c1"># Production run: a fresh project over the full [simulation.time] window,</span>
+    <span class="c1"># seeded from the converged state. Its mesh must reproduce the spin-up mesh,</span>
+    <span class="c1"># so a gmsh grid needs [mesh_catchment] cache = true.</span>
+    <span class="n">prod_cfg</span><span class="o">.</span><span class="n">flow</span><span class="o">.</span><span class="n">restart_from</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">restart_from</span>
+    <span class="n">production</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">prod_cfg</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">production_sim_id</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">production</span><span class="p">,</span> <span class="s2">"sim_id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="compare_pair">
 <a class="viewcode-back" href="../../api/generated/hydromodpy.compare_pair.html#hydromodpy.compare_pair">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compare_pair</span><span class="p">(</span><span class="n">sim_a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sim_b</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two simulations by id or result object.</span>
+<span class="w">    </span><span class="sd">"""Compare two simulations by id or result object.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -891,14 +1079,14 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
 <span class="sd">    &gt;&gt;&gt; table = hmp.compare_pair(</span>
-<span class="sd">    ...     &quot;ab12cd34&quot;, &quot;ef56gh78&quot;, workspace=&quot;~/hmp_workspace&quot;</span>
+<span class="sd">    ...     "ab12cd34", "ef56gh78", workspace="~/hmp_workspace"</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    hydromodpy.analysis.comparison</span>
 <span class="sd">        Comparison package used by this helper.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.analysis.comparison.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_pair</span> <span class="k">as</span> <span class="n">_compare_pair</span>
 
     <span class="k">return</span> <span class="n">_compare_pair</span><span class="p">(</span><span class="n">sim_a</span><span class="p">,</span> <span class="n">sim_b</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="n">workspace</span><span class="p">)</span></div>
@@ -908,20 +1096,25 @@
 <div class="viewcode-block" id="report">
 <a class="viewcode-back" href="../../python_api/report.html#hydromodpy.report">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="n">session_id_or_prefix</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the HTML report for a calibration session.</span>
+<span class="w">    </span><span class="sd">"""Render the HTML report for a calibration session.</span>
 
-<span class="sd">    ``session_id_or_prefix`` accepts a full UUID, a unique hex prefix,</span>
-<span class="sd">    or ``None`` to fall back to the most recently started session.</span>
-<span class="sd">    ``workspace`` defaults to the nearest ancestor of the current</span>
-<span class="sd">    working directory containing ``catalog.duckdb``.</span>
+<span class="sd">    ``session_id_or_prefix`` accepts a full UUID or a unique hex prefix</span>
+<span class="sd">    of either a calibration session or one of its runs (an iteration or the</span>
+<span class="sd">    promoted best run, as printed by ``hmp catalog ls``); the run reference is</span>
+<span class="sd">    mapped to its parent session. ``None`` falls back to the most recently</span>
+<span class="sd">    started session. ``workspace`` defaults to the nearest ancestor of the</span>
+<span class="sd">    current working directory holding a project index database.</span>
+
+<span class="sd">    When ``workspace`` is a workspace root, the lookup federates across every</span>
+<span class="sd">    ``projects/&lt;name&gt;`` catalog, matching how ``hmp catalog ls`` lists runs.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    session_id_or_prefix</span>
-<span class="sd">        Full session UUID, unique hex prefix, or ``None`` for the latest</span>
-<span class="sd">        session.</span>
+<span class="sd">        Full UUID or unique hex prefix of a session or one of its runs, or</span>
+<span class="sd">        ``None`` for the latest session.</span>
 <span class="sd">    workspace</span>
-<span class="sd">        Optional workspace directory.</span>
+<span class="sd">        Optional workspace root or project directory.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -939,28 +1132,28 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
 <span class="sd">    &gt;&gt;&gt; hmp.report()  # latest session in the current workspace  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; hmp.report(&quot;ab12cd34&quot;, workspace=&quot;~/hmp_workspace&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_calibration_session_id</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">CATALOG_FILENAME</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationCatalog</span>
+<span class="sd">    &gt;&gt;&gt; hmp.report("ab12cd34", workspace="~/hmp_workspace")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_session_in_workspace</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">catalog_path_for</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.steps.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">step_render_calibration_report</span>
 
     <span class="k">if</span> <span class="n">workspace</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">workspace_root</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="p">[</span><span class="n">workspace_root</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">workspace_root</span><span class="o">.</span><span class="n">parents</span><span class="p">):</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">parent</span> <span class="o">/</span> <span class="n">CATALOG_FILENAME</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">catalog_path_for</span><span class="p">(</span><span class="n">parent</span><span class="p">))</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">workspace_root</span> <span class="o">=</span> <span class="n">parent</span>
                 <span class="k">break</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">workspace_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
 
-    <span class="k">with</span> <span class="n">SimulationCatalog</span><span class="p">(</span><span class="n">workspace_root</span><span class="p">)</span> <span class="k">as</span> <span class="n">catalog</span><span class="p">:</span>
-        <span class="n">full_id</span> <span class="o">=</span> <span class="n">resolve_calibration_session_id</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="n">session_id_or_prefix</span><span class="p">)</span>
+    <span class="n">catalog_root</span><span class="p">,</span> <span class="n">full_id</span> <span class="o">=</span> <span class="n">resolve_session_in_workspace</span><span class="p">(</span><span class="n">workspace_root</span><span class="p">,</span> <span class="n">session_id_or_prefix</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">Catalog</span><span class="p">(</span><span class="n">catalog_root</span><span class="p">)</span> <span class="k">as</span> <span class="n">catalog</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">step_render_calibration_report</span><span class="p">(</span>
             <span class="n">catalog</span><span class="o">=</span><span class="n">catalog</span><span class="p">,</span>
             <span class="n">session_id</span><span class="o">=</span><span class="n">full_id</span><span class="p">,</span>
-            <span class="n">workspace_root</span><span class="o">=</span><span class="n">workspace_root</span><span class="p">,</span>
+            <span class="n">workspace_root</span><span class="o">=</span><span class="n">catalog_root</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -975,8 +1168,8 @@
     <span class="n">layer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sel</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">bbox</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a variable from a simulation Run with storage-kind auto-dispatch.</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Readable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Read a variable from a simulation Run with storage-kind auto-dispatch.</span>
 
 <span class="sd">    Single entry point for reads on a :class:`~hydromodpy.results.run.Run`.</span>
 <span class="sd">    The return type follows one rule:</span>
@@ -985,6 +1178,11 @@
 <span class="sd">      eager ``np.ndarray`` of that single timestep instead.</span>
 <span class="sd">    - timeseries -&gt; ``pd.Series``.</span>
 <span class="sd">    - geographic feature -&gt; ``gpd.GeoDataFrame``.</span>
+
+<span class="sd">    Every field a run reports through ``has_field`` reads back here. Fields</span>
+<span class="sd">    rebuilt on the fly (water-table elevation/depth, seepage mask, drain</span>
+<span class="sd">    outflow) are loaded eagerly rather than lazily, and ``time`` is ignored</span>
+<span class="sd">    for a field with no time dimension.</span>
 
 <span class="sd">    To read by reference (id / unique prefix / name) instead of a ``Run``, use</span>
 <span class="sd">    ``cat.read(ref, var)`` on a :class:`hydromodpy.catalog.Catalog`.</span>
@@ -1003,8 +1201,8 @@
 <span class="sd">    layer</span>
 <span class="sd">        Optional layer index for three-dimensional fields.</span>
 <span class="sd">    sel</span>
-<span class="sd">        Optional selectors forwarded to the reader: ``{&quot;station&quot;: ...}`` for</span>
-<span class="sd">        timeseries, ``{&quot;period&quot;: ...}`` for a time window.</span>
+<span class="sd">        Optional selectors forwarded to the reader: ``{"station": ...}`` for</span>
+<span class="sd">        timeseries, ``{"period": ...}`` for a time window.</span>
 <span class="sd">    bbox</span>
 <span class="sd">        Optional ``(xmin, ymin, xmax, ymax)`` in the simulation CRS;</span>
 <span class="sd">        restricts Zarr fields to faces whose centroid lies in the box.</span>
@@ -1024,17 +1222,83 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; cat = hmp.open(&quot;~/ws/projects/naizin&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; cat = hmp.open("~/ws/projects/naizin")  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; run = cat.latest()  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; da = hmp.read(run, &quot;head&quot;)  # lazy DataArray  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; arr = hmp.read(run, &quot;head&quot;, time=-1, layer=0)  # ndarray  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; ts = hmp.read(run, &quot;discharge&quot;, sel={&quot;station&quot;: &quot;outlet&quot;})  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; gdf = hmp.read(run, &quot;watershed_polygon&quot;)  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.reading</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_variable</span>
+<span class="sd">    &gt;&gt;&gt; da = hmp.read(run, "head")  # lazy DataArray  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; arr = hmp.read(run, "head", time=-1, layer=0)  # ndarray  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; ts = hmp.read(run, "discharge", sel={"station": "outlet"})  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; gdf = hmp.read(run, "watershed_polygon")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.derive.reading</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_variable</span>
 
     <span class="k">return</span> <span class="n">read_variable</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="n">layer</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="n">sel</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">figure</span><span class="p">(</span>
+    <span class="n">sim</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">save</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render one registered figure for a simulation Run.</span>
+
+<span class="sd">    The Python counterpart of ``[display].figures``: the same registry, the</span>
+<span class="sd">    same names, the same options, so a figure produced by ``hmp run`` can be</span>
+<span class="sd">    reproduced (or re-styled) from a script without importing anything from</span>
+<span class="sd">    the display internals. List the names with</span>
+<span class="sd">    :func:`hydromodpy.display.list_figures`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sim</span>
+<span class="sd">        A :class:`~hydromodpy.results.run.Run` (e.g. ``cat.latest()``).</span>
+<span class="sd">    name</span>
+<span class="sd">        Registered figure name, for example ``"piezometric_map"``.</span>
+<span class="sd">    save</span>
+<span class="sd">        Optional output path. A directory (or an extension-less path) gets</span>
+<span class="sd">        ``&lt;name&gt;.png`` appended.</span>
+<span class="sd">    dpi</span>
+<span class="sd">        Raster resolution used when saving.</span>
+<span class="sd">    **opts</span>
+<span class="sd">        Figure-specific options, identical to the ``[display.overrides]``</span>
+<span class="sd">        entries (``timestep``, ``overlays``, ``cmap``, ``units``, ...).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The rendered figure.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If ``name`` is not registered.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the run does not carry what the figure needs.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
+<span class="sd">    &gt;&gt;&gt; cat = hmp.open("~/ws/projects/aber")  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; run = cat.latest()  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; hmp.figure(run, "cross_section", orientation="sn")  # doctest: +SKIP</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">get</span> <span class="k">as</span> <span class="n">_get_figure</span>
+
+    <span class="n">renderer</span> <span class="o">=</span> <span class="n">_get_figure</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">unavailable_reason</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"figure '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' does not apply to this run: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">save</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">_Path</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">target</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.png"</span> <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">""</span> <span class="k">else</span> <span class="n">target</span>
+    <span class="k">return</span> <span class="n">renderer</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="export">
@@ -1051,7 +1315,7 @@
     <span class="n">crs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodata</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">9999.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export a variable from a simulation to a standalone file.</span>
+<span class="w">    </span><span class="sd">"""Export a variable from a simulation to a standalone file.</span>
 
 <span class="sd">    Functional mirror of :func:`read`: same selector (``sim`` / ``var`` /</span>
 <span class="sd">    ``time`` / ``layer``) plus an output format and destination. ``sim`` must</span>
@@ -1065,20 +1329,20 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; run = hmp.open(&quot;~/hmp_workspace&quot;)[&quot;transient_nwt&quot;]  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; run = hmp.open("~/hmp_workspace")["transient_nwt"]  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.export(</span>
-<span class="sd">    ...     run, &quot;head&quot;, &quot;head.tif&quot;, time=&quot;last&quot;, resolution=50</span>
+<span class="sd">    ...     run, "head", "head.tif", time="last", resolution=50</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.export(</span>
-<span class="sd">    ...     run, [&quot;head&quot;, &quot;watertable_depth&quot;], &quot;fields.nc&quot;, time=&quot;all&quot;</span>
+<span class="sd">    ...     run, ["head", "watertable_depth"], "fields.nc", time="all"</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">Run</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;hmp.export expects a Run object as first argument, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;Obtain one with hmp.open(workspace)[ref] or catalog.latest().&quot;</span>
+            <span class="sa">f</span><span class="s2">"hmp.export expects a Run object as first argument, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Obtain one with hmp.open(workspace)[ref] or catalog.latest()."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">sim</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
         <span class="n">var</span><span class="p">,</span>
@@ -1093,51 +1357,10 @@
 
 
 
-<div class="viewcode-block" id="audit_prune">
-<a class="viewcode-back" href="../../api/generated/hydromodpy.audit_prune.html#hydromodpy.audit_prune">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">audit_prune</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">apply</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply ``retention_policies`` to ``audit_log`` for the workspace catalog.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    workspace</span>
-<span class="sd">        Path to a workspace or project directory. Resolved via</span>
-<span class="sd">        :func:`hydromodpy.cli.helpers.find_catalog_root` so any path under</span>
-<span class="sd">        the project tree works. ``None`` resolves to the current directory.</span>
-<span class="sd">    apply</span>
-<span class="sd">        ``False`` (default) counts rows that would be removed without</span>
-<span class="sd">        modifying the file. ``True`` actually deletes rows.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict[str, int]</span>
-<span class="sd">        Mapping ``event_type -&gt; rows_affected``. Empty when no retention</span>
-<span class="sd">        policy is registered.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    FileNotFoundError</span>
-<span class="sd">        If the workspace does not host a ``catalog.duckdb``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">CATALOG_FILENAME</span><span class="p">,</span> <span class="n">find_catalog_root</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationCatalog</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog.audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_retention</span>
-
-    <span class="n">workspace_root</span> <span class="o">=</span> <span class="n">find_catalog_root</span><span class="p">(</span>
-        <span class="n">Path</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="k">if</span> <span class="n">workspace</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-    <span class="p">)</span>
-    <span class="n">catalog_path</span> <span class="o">=</span> <span class="n">workspace_root</span> <span class="o">/</span> <span class="n">CATALOG_FILENAME</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">catalog_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No catalog at </span><span class="si">{</span><span class="n">workspace_root</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">SimulationCatalog</span><span class="p">(</span><span class="n">workspace_root</span><span class="p">)</span> <span class="k">as</span> <span class="n">catalog</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">apply_retention</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="ow">not</span> <span class="n">apply</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="doctor">
 <a class="viewcode-back" href="../../python_api/doctor.html#hydromodpy.doctor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">doctor</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lightweight environment diagnostic.</span>
+<span class="w">    </span><span class="sd">"""Lightweight environment diagnostic.</span>
 
 <span class="sd">    Returns a dict describing Python, hydromodpy, and solver versions. Quick</span>
 <span class="sd">    by design (no actual solver invocation) and safe to call at import probing</span>
@@ -1152,40 +1375,40 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
-<span class="sd">    &gt;&gt;&gt; hmp.doctor()[&quot;hydromodpy&quot;]  # doctest: +SKIP</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; hmp.doctor()["hydromodpy"]  # doctest: +SKIP</span>
+<span class="sd">    """</span>
     <span class="n">info</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;python&quot;</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
-        <span class="s2">&quot;hydromodpy&quot;</span><span class="p">:</span> <span class="n">__version__</span><span class="p">,</span>
-        <span class="s2">&quot;solvers&quot;</span><span class="p">:</span> <span class="p">{},</span>
-        <span class="s2">&quot;optional&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s2">"python"</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
+        <span class="s2">"hydromodpy"</span><span class="p">:</span> <span class="n">__version__</span><span class="p">,</span>
+        <span class="s2">"solvers"</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s2">"optional"</span><span class="p">:</span> <span class="p">{},</span>
     <span class="p">}</span>
     <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pandas&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;duckdb&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pyproj&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;rasterio&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;shapely&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;xarray&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;flopy&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pydantic&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pint&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;gmsh&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;whitebox_workflows&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;geopandas&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pyvista&quot;</span><span class="p">,</span>
+        <span class="s2">"numpy"</span><span class="p">,</span>
+        <span class="s2">"pandas"</span><span class="p">,</span>
+        <span class="s2">"scipy"</span><span class="p">,</span>
+        <span class="s2">"duckdb"</span><span class="p">,</span>
+        <span class="s2">"zarr"</span><span class="p">,</span>
+        <span class="s2">"pyproj"</span><span class="p">,</span>
+        <span class="s2">"rasterio"</span><span class="p">,</span>
+        <span class="s2">"shapely"</span><span class="p">,</span>
+        <span class="s2">"xarray"</span><span class="p">,</span>
+        <span class="s2">"flopy"</span><span class="p">,</span>
+        <span class="s2">"pydantic"</span><span class="p">,</span>
+        <span class="s2">"pint"</span><span class="p">,</span>
+        <span class="s2">"matplotlib"</span><span class="p">,</span>
+        <span class="s2">"gmsh"</span><span class="p">,</span>
+        <span class="s2">"whitebox_workflows"</span><span class="p">,</span>
+        <span class="s2">"geopandas"</span><span class="p">,</span>
+        <span class="s2">"pyvista"</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
-            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;optional&quot;</span><span class="p">][</span><span class="n">pkg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">"optional"</span><span class="p">][</span><span class="n">pkg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">"__version__"</span><span class="p">,</span> <span class="s2">"?"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;optional&quot;</span><span class="p">][</span><span class="n">pkg</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="n">exe</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mf2005&quot;</span><span class="p">,</span> <span class="s2">&quot;mfnwt&quot;</span><span class="p">,</span> <span class="s2">&quot;mf6&quot;</span><span class="p">,</span> <span class="s2">&quot;mp6&quot;</span><span class="p">,</span> <span class="s2">&quot;mp7&quot;</span><span class="p">,</span> <span class="s2">&quot;mt3dusgs&quot;</span><span class="p">):</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;solvers&quot;</span><span class="p">][</span><span class="n">exe</span><span class="p">]</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">exe</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">"optional"</span><span class="p">][</span><span class="n">pkg</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">exe</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"mf2005"</span><span class="p">,</span> <span class="s2">"mfnwt"</span><span class="p">,</span> <span class="s2">"mf6"</span><span class="p">,</span> <span class="s2">"mp6"</span><span class="p">,</span> <span class="s2">"mp7"</span><span class="p">,</span> <span class="s2">"mt3dusgs"</span><span class="p">):</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"solvers"</span><span class="p">][</span><span class="n">exe</span><span class="p">]</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">exe</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">info</span></div>
 
 </pre></div>

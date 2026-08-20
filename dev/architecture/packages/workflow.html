@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="workflow" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/packages/workflow.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/packages/workflow.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="hydromodpy.workflow provides composable steps and an immutable PipelineState payload that flows from one step to the next. The Project facade and every workflow launcher (simulation, calibration, b..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.workflow provides composable steps and an immutable PipelineState payload that flows from one step to the next. The Project facade and every workflow launcher (simulation, calibration, b..." name="description"/>
 <title>workflow — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/workflow';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/packages/workflow.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/packages/workflow.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -518,21 +518,24 @@ generic dataclass, immutable, specialised by step
 <code class="docutils literal notranslate"><span class="pre">state.advance(...)</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/step.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Step[TIn,</span> <span class="pre">TOut]</span></code> Protocol
 (<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">run(state)</span> <span class="pre">-&gt;</span> <span class="pre">state</span></code>, optional <code class="docutils literal notranslate"><span class="pre">config_sections</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/checkpoint.py</span></code> – <code class="docutils literal notranslate"><span class="pre">CheckpointStore</span></code> with
-HMAC-SHA256 signed pickle plus zstd compression.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/ledger.py</span></code> – DuckDB ledger of executed
-steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow/tracking/journal.py</span></code> – <code class="docutils literal notranslate"><span class="pre">WorkflowJournal</span></code>, the DuckDB
+journal of executed steps; <code class="docutils literal notranslate"><span class="pre">workflow/tracking/resume.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">workflow/tracking/heartbeat.py</span></code> sit beside it. There is no
+checkpoint store and no pickle layer: resume reads artefacts, see
+<a class="reference internal" href="../pipeline_resume.html"><span class="doc">Pipeline resume from artefacts</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/dependencies.py</span></code> –
 <code class="docutils literal notranslate"><span class="pre">earliest_affected_step</span></code> resolves the first pipeline index
 affected by a dotted-path override (used by calibration to skip
 shared phases).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/derived.py</span></code> – <code class="docutils literal notranslate"><span class="pre">DerivedRegistry</span></code> for
 ordered post-extraction calculations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/manifest.py</span></code> – <code class="docutils literal notranslate"><span class="pre">WorkflowManifest</span></code> summary
-for the lockfile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/manifest.py</span></code> – <code class="docutils literal notranslate"><span class="pre">ResolvedRunManifest</span></code>, the
+step blueprint plus config digest written under
+<code class="docutils literal notranslate"><span class="pre">.hmp/checkpoints/&lt;run_id&gt;/resolved_manifest.json</span></code> and verified on
+resume.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/runner.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code> runner that chains steps,
-manages the ledger, the optional checkpoint store, and typed
-errors (<code class="docutils literal notranslate"><span class="pre">StepError</span></code> exposes <code class="docutils literal notranslate"><span class="pre">step_name</span></code> and <code class="docutils literal notranslate"><span class="pre">run_id</span></code>).</p></li>
+manages the journal, and raises typed errors (<code class="docutils literal notranslate"><span class="pre">StepError</span></code> exposes
+<code class="docutils literal notranslate"><span class="pre">step_name</span></code> and <code class="docutils literal notranslate"><span class="pre">run_id</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/steps/</span></code> – the canonical step library.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/pipelines/</span></code> – pre-assembled pipelines for the
 standard workflows.</p></li>
@@ -545,7 +548,11 @@ standard workflows.</p></li>
 <p><code class="docutils literal notranslate"><span class="pre">ValidateStep</span></code>, <code class="docutils literal notranslate"><span class="pre">ResolveStep</span></code>, <code class="docutils literal notranslate"><span class="pre">LoadDataStep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">BuildGeographicStep</span></code>, <code class="docutils literal notranslate"><span class="pre">BuildMeshStep</span></code>,
 <code class="docutils literal notranslate"><span class="pre">SetupProcessStep</span></code>, <code class="docutils literal notranslate"><span class="pre">PrepareSolverStep</span></code>, <code class="docutils literal notranslate"><span class="pre">RunSolverStep</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ExtractStep</span></code>, <code class="docutils literal notranslate"><span class="pre">DeriveStep</span></code>, <code class="docutils literal notranslate"><span class="pre">ExportStep</span></code>, <code class="docutils literal notranslate"><span class="pre">DisplayStep</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">ExtractStep</span></code>, <code class="docutils literal notranslate"><span class="pre">DeriveStep</span></code>, <code class="docutils literal notranslate"><span class="pre">DisplayStep</span></code>, <code class="docutils literal notranslate"><span class="pre">ExportStep</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DisplayStep</span></code> runs before <code class="docutils literal notranslate"><span class="pre">ExportStep</span></code>: figures are the last reader
+of a run, so they draw from the open store while the intermediate fields
+are still there. <code class="docutils literal notranslate"><span class="pre">ExportStep</span></code> then drops what reconciliation forced on
+(the per-cell budget) and seals the store.</p>
 </section>
 <section id="step-contract">
 <h2>Step contract<a class="headerlink" href="#step-contract" title="Link to this heading">#</a></h2>
@@ -574,7 +581,7 @@ trial.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.state.PipelineState</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.step.Step</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.checkpoint.CheckpointStore</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.manifest.ResolvedRunManifest</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.dependencies.earliest_affected_step</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.internals.derived.DerivedRegistry</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.workflow.runner.Pipeline</span></code></p></li>
@@ -582,7 +589,7 @@ trial.</p>
 <span class="pre">DisplayStep}</span></code></p></li>
 </ul>
 <p>The v1 <code class="docutils literal notranslate"><span class="pre">StepsLedger</span></code> module is removed; workflow steps are now
-recorded in the project <code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code> under the
+recorded in the project index (<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>) under the
 <code class="docutils literal notranslate"><span class="pre">workflow_steps</span></code> table (see <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>).</p>
 </section>
 <section id="recommended-reading-path">
@@ -593,7 +600,7 @@ recorded in the project <code class="docutils literal notranslate"><span class="
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/runner.py</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/__init__.py</span></code> to see the registered
 steps.</p></li>
-<li><p>one step (<code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/build_geographic.py</span></code>).</p></li>
+<li><p>one step (<code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/setup.py</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/internals/dependencies.py</span></code> for the
 skip-aware logic used by calibration.</p></li>
 </ol>

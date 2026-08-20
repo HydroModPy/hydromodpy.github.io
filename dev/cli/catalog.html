@@ -8,12 +8,12 @@
 <link href="../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="hmp catalog" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/cli/catalog.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/cli/catalog.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
-<meta content="The hmp catalog family inspects, queries, and maintains the DuckDB + Zarr catalog of a workspace. All actions auto-detect the catalog root by walking up from the current directory; pass--workspace ..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="The hmp catalog family inspects, queries and maintains the runs of a project. It reads the project index at&lt;project&gt;/.hmp/index.duckdb and the run directories under&lt;project&gt;/runs/. All ..." property="og:description"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
-<meta content="The hmp catalog family inspects, queries, and maintains the DuckDB + Zarr catalog of a workspace. All actions auto-detect the catalog root by walking up from the current directory; pass--workspace ..." name="description"/>
+<meta content="The hmp catalog family inspects, queries and maintains the runs of a project. It reads the project index at&lt;project&gt;/.hmp/index.duckdb and the run directories under&lt;project&gt;/runs/. All ..." name="description"/>
 <title>hmp catalog — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'cli/catalog';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/cli/catalog.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/cli/catalog.html" rel="canonical"/>
 <link href="../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../genindex.html" rel="index" title="Index"/>
 <link href="../search.html" rel="search" title="Search"/>
@@ -345,6 +345,7 @@
 <nav aria-label="Section Navigation" class="bd-docs-nav bd-links">
 <p aria-level="1" class="bd-links__title" role="heading">Section Navigation</p>
 <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="run.html">hmp run, calibrate, spinup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project.html">hmp project</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">hmp catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workspace.html">hmp workspace</a></li>
@@ -388,7 +389,7 @@
 <i class="fa-solid fa-home"></i>
 </a>
 </li>
-<li class="breadcrumb-item"><a class="nav-link" href="index.html">CLI Reference</a></li>
+<li class="breadcrumb-item"><a class="nav-link" href="index.html">CLI reference</a></li>
 <li aria-current="page" class="breadcrumb-item active"><span class="ellipsis">hmp catalog</span></li>
 </ul>
 </nav>
@@ -400,64 +401,291 @@
 <article class="bd-article">
 <section id="hmp-catalog">
 <h1>hmp catalog<a class="headerlink" href="#hmp-catalog" title="Link to this heading">#</a></h1>
-<p>The <strong class="command">hmp catalog</strong> family inspects, queries, and maintains the
-DuckDB + Zarr catalog of a workspace. All actions auto-detect the
-catalog root by walking up from the current directory; pass
-<code class="docutils literal notranslate"><span class="pre">--workspace</span></code> to point at a different project.</p>
+<p>The <strong class="command">hmp catalog</strong> family inspects, queries and maintains the runs
+of a project. It reads the project index at <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/index.duckdb</span></code>
+and the run directories under <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/runs/</span></code>. All actions auto-detect
+the project root by walking up from the current directory to the first
+<code class="docutils literal notranslate"><span class="pre">project.toml</span></code>; pass <code class="docutils literal notranslate"><span class="pre">--workspace</span></code> to point at a different project.</p>
+<p>The index is derived data. <code class="docutils literal notranslate"><span class="pre">reindex</span></code> rebuilds it from the run
+directories, so nothing a run needs in order to be read, replayed or
+compared lives only in SQL.</p>
+<p>A run is addressed by <strong>reference</strong>: its name (<code class="docutils literal notranslate"><span class="pre">cheze_baseline</span></code>), a versioned
+name (<code class="docutils literal notranslate"><span class="pre">cheze_baseline.v3</span></code>), a unique UUID prefix (<code class="docutils literal notranslate"><span class="pre">9c41aa02</span></code>), the full
+UUID, or a selector (<code class="docutils literal notranslate"><span class="pre">@last</span></code>, <code class="docutils literal notranslate"><span class="pre">@last~1</span></code>, <code class="docutils literal notranslate"><span class="pre">@best:nse</span></code>, <code class="docutils literal notranslate"><span class="pre">@worst:rmse</span></code>,
+<code class="docutils literal notranslate"><span class="pre">@running</span></code>). A bare name resolves to the latest version of that stem.</p>
+<section id="inspecting-read-only">
+<h2>Inspecting (read-only)<a class="headerlink" href="#inspecting-read-only" title="Link to this heading">#</a></h2>
 <section id="ls">
-<h2>ls<a class="headerlink" href="#ls" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">ls</span> <span class="pre">[--solver</span> <span class="pre">&lt;name&gt;]</span> <span class="pre">[--catchment</span> <span class="pre">&lt;name&gt;]</span> <span class="pre">[--project</span> <span class="pre">&lt;label&gt;]</span></code></p>
-<p>List the simulations in the catalog, with one row per simulation
-showing the short identifier, the solver, and the run name. Filters
-restrict the listing to a solver, a catchment, or a project.</p>
+<h3>ls<a class="headerlink" href="#ls" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">ls</span> <span class="pre">[--solver</span> <span class="pre">&lt;name&gt;]</span> <span class="pre">[--catchment</span> <span class="pre">&lt;name&gt;]</span>
+<span class="pre">[--project</span> <span class="pre">&lt;label&gt;]</span> <span class="pre">[--status</span> <span class="pre">&lt;code&gt;]</span> <span class="pre">[--tag</span> <span class="pre">&lt;tag&gt;]</span> <span class="pre">[--limit</span> <span class="pre">N]</span>
+<span class="pre">[--format</span> <span class="pre">table|json|csv]</span></code></p>
+<p>List runs, one row each with the name, short id, solver, status and
+duration. Trashed runs are hidden unless <code class="docutils literal notranslate"><span class="pre">--status</span> <span class="pre">trashed</span></code> is given. The
+<code class="docutils literal notranslate"><span class="pre">json</span></code>/<code class="docutils literal notranslate"><span class="pre">csv</span></code> formats emit a stable 12-column projection (string ids, ISO
+dates, no config blobs).</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">ls</span> <span class="o">--</span><span class="n">solver</span> <span class="n">mf6</span>
-</pre></div>
-</div>
-</section>
-<section id="query">
-<h2>query<a class="headerlink" href="#query" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">query</span> <span class="pre">"&lt;SQL&gt;"</span></code></p>
-<p>Run a raw SQL statement against the catalog DuckDB. Read-only by
-convention; favour it for ad-hoc exploration that does not fit the
-canned filters of <strong class="command">hmp catalog ls</strong>.</p>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">query</span> <span class="s2">"SELECT solver, COUNT(*) FROM simulations GROUP BY 1"</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">ls</span> <span class="o">--</span><span class="n">solver</span> <span class="n">mf6</span> <span class="o">--</span><span class="n">status</span> <span class="n">completed</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">ls</span> <span class="o">--</span><span class="n">tag</span> <span class="n">pinned</span> <span class="o">--</span><span class="nb">format</span> <span class="n">json</span>
 </pre></div>
 </div>
 </section>
 <section id="show">
-<h2>show<a class="headerlink" href="#show" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">show</span> <span class="pre">&lt;sim_ref&gt;</span> <span class="pre">[--detail]</span></code></p>
-<p>Show one simulation by full UUID, unique prefix, or run name. <code class="docutils literal notranslate"><span class="pre">--detail</span></code>
-expands provenance fields, lockfile state, and per-output sizes.</p>
+<h3>show<a class="headerlink" href="#show" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">show</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">[--detail]</span> <span class="pre">[--format</span> <span class="pre">table|json]</span></code></p>
+<p>Show one run’s identity card: metadata, version, config hash, tags, notes,
+parameters and outlet metrics, plus a footer suggesting the next commands.
+<code class="docutils literal notranslate"><span class="pre">--detail</span></code> expands the Zarr store layout.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">show</span> <span class="mi">1</span><span class="n">a2b3c4d</span> <span class="o">--</span><span class="n">detail</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">show</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v3</span> <span class="o">--</span><span class="n">detail</span>
 </pre></div>
 </div>
+</section>
+<section id="diff">
+<h3>diff<a class="headerlink" href="#diff" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">diff</span> <span class="pre">&lt;ref_a&gt;</span> <span class="pre">&lt;ref_b&gt;</span></code></p>
+<p>Compare two runs’ parameters and outlet metrics, printing only the keys that
+differ.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">diff</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v2</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v3</span>
+</pre></div>
+</div>
+</section>
+<section id="watch">
+<h3>watch<a class="headerlink" href="#watch" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">watch</span> <span class="pre">[--stale-minutes</span> <span class="pre">N]</span></code></p>
+<p>Show the runs currently in the <code class="docutils literal notranslate"><span class="pre">running</span></code> state with their heartbeat age and a
+<code class="docutils literal notranslate"><span class="pre">STALE</span></code> flag when a process died without finalizing.</p>
+</section>
+<section id="point">
+<h3>point<a class="headerlink" href="#point" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">point</span> <span class="pre">&lt;ref&gt;...</span> <span class="pre">--var</span> <span class="pre">NAME</span> <span class="pre">[--var</span> <span class="pre">NAME]</span> <span class="pre">(--xy</span> <span class="pre">X</span> <span class="pre">Y</span> <span class="pre">|</span>
+<span class="pre">--cell</span> <span class="pre">N)</span> <span class="pre">[--layer</span> <span class="pre">N</span> <span class="pre">|</span> <span class="pre">--depth</span> <span class="pre">M]</span> <span class="pre">[--label</span> <span class="pre">NAME]</span> <span class="pre">[--timestep</span> <span class="pre">N]</span>
+<span class="pre">[-o</span> <span class="pre">FILE.csv|FILE.parquet]</span> <span class="pre">[--format</span> <span class="pre">table|json|csv]</span></code></p>
+<p>Read the value of a variable in one precise cell of a finished run, after the
+fact. The cell is named in one of three ways:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--xy</span> <span class="pre">X</span> <span class="pre">Y</span></code>: coordinates in the simulation CRS, resolved to the cell that
+contains them;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--cell</span> <span class="pre">N</span></code>: the zero-based cell index, when it is already known;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--depth</span> <span class="pre">M</span></code> (with either of the above): metres below the local model top,
+which picks the layer from the mesh layer thicknesses. <code class="docutils literal notranslate"><span class="pre">--layer</span> <span class="pre">N</span></code> sets the
+layer index directly instead.</p></li>
+</ul>
+<p>The answer is one row per timestep and variable (a single row for a steady
+run), with the resolved <code class="docutils literal notranslate"><span class="pre">cell</span></code>, <code class="docutils literal notranslate"><span class="pre">layer</span></code> and coordinates so the table stays
+self-describing. Virtual fields answer like persisted ones:
+<code class="docutils literal notranslate"><span class="pre">watertable_depth</span></code>, <code class="docutils literal notranslate"><span class="pre">watertable_elevation</span></code>, <code class="docutils literal notranslate"><span class="pre">seepage_mask</span></code> and
+<code class="docutils literal notranslate"><span class="pre">outflow_drain</span></code> are rebuilt on read.</p>
+<p>Passing several references reads the <em>same</em> point on each of them and stacks
+the answers, which is the scenario comparison: the <code class="docutils literal notranslate"><span class="pre">run</span></code> column tells the
+series apart. Coordinates are resolved per run, since two runs rarely share a
+mesh.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-o</span></code> writes the table to <code class="docutils literal notranslate"><span class="pre">.csv</span></code> or <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> (the extension picks the
+format) in addition to printing it.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">point</span> <span class="nd">@last</span> <span class="o">--</span><span class="n">var</span> <span class="n">head</span> <span class="o">--</span><span class="n">xy</span> <span class="mf">327816.965</span> <span class="mf">6777886.670</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">point</span> <span class="nd">@last</span> <span class="o">--</span><span class="n">var</span> <span class="n">head</span> <span class="o">--</span><span class="n">xy</span> <span class="mf">327816.965</span> <span class="mf">6777886.670</span> <span class="o">--</span><span class="n">depth</span> <span class="mi">30</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">point</span> <span class="nd">@last</span> <span class="o">--</span><span class="n">var</span> <span class="n">head</span> <span class="o">--</span><span class="n">var</span> <span class="n">watertable_depth</span> <span class="o">--</span><span class="n">cell</span> <span class="mi">2550</span> <span class="o">--</span><span class="n">timestep</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">point</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v2</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v3</span> <span class="o">--</span><span class="n">var</span> <span class="n">head</span> <span class="o">--</span><span class="n">cell</span> <span class="mi">2550</span> <span class="o">-</span><span class="n">o</span> <span class="n">probe</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+<p>The point-to-cell lookup is cached per mesh, under
+<code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/cache/cell_index/&lt;mesh_hash&gt;.json</span></code>. The cache is keyed by the
+geometry fingerprint of the run, so a different mesh never reuses it, and
+deleting it costs only the rebuild.</p>
+<p>For a point known before the run, prefer declaring it in <code class="docutils literal notranslate"><span class="pre">[observation]</span></code>:
+it is then sampled while the run still holds its fields, and reading it back
+is a plain table read (<code class="docutils literal notranslate"><span class="pre">run.timeseries("head",</span> <span class="pre">station="obs:&lt;id&gt;")</span></code>) instead
+of a scan of the whole field. See
+<a class="reference internal" href="../user_guide/config_reference/observation.html"><span class="doc">[observation] ObservationConfig</span></a>.</p>
+<p>The Python form of this action is <code class="docutils literal notranslate"><span class="pre">run.probe.series("head",</span> <span class="pre">x=...,</span> <span class="pre">y=...)</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">group.probe.series(...)</span></code> on a <code class="xref py py-class docutils literal notranslate"><span class="pre">RunSet</span></code>
+for the multi-run comparison.</p>
+</section>
+<section id="query">
+<h3>query<a class="headerlink" href="#query" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">query</span> <span class="pre">"&lt;SQL&gt;"</span></code></p>
+<p>Run a raw SQL statement against the index, read-only, for ad-hoc
+exploration beyond the canned filters.</p>
+<p>Query the <code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code> view rather than the <code class="docutils literal notranslate"><span class="pre">simulations</span></code>
+table: the table stores foreign keys (<code class="docutils literal notranslate"><span class="pre">solver_id</span></code>, <code class="docutils literal notranslate"><span class="pre">status_id</span></code>), the
+view resolves them into readable columns.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">query</span> <span class="s2">"SELECT solver, COUNT(*) AS n FROM v_simulation_summary GROUP BY 1"</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="annotating">
+<h2>Annotating<a class="headerlink" href="#annotating" title="Link to this heading">#</a></h2>
+<section id="tag">
+<h3>tag<a class="headerlink" href="#tag" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">tag</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">TAG...</span> <span class="pre">[--rm</span> <span class="pre">TAG]</span></code></p>
+<p>Add or remove tags. <code class="docutils literal notranslate"><span class="pre">pinned</span></code> is reserved: a pinned run is refused by every
+destructive action without <code class="docutils literal notranslate"><span class="pre">--force</span></code>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">tag</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v3</span> <span class="n">pinned</span> <span class="n">paper</span><span class="o">-</span><span class="n">fig4</span> <span class="o">--</span><span class="n">rm</span> <span class="n">draft</span>
+</pre></div>
+</div>
+</section>
+<section id="note">
+<h3>note<a class="headerlink" href="#note" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">note</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">"&lt;text&gt;"</span></code></p>
+<p>Append a timestamped note to a run.</p>
+</section>
+<section id="rename">
+<h3>rename<a class="headerlink" href="#rename" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">rename</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">&lt;new_name&gt;</span></code></p>
+<p>Rename a run. The run directory is named after the run, so <code class="docutils literal notranslate"><span class="pre">runs/&lt;old&gt;/</span></code> is
+moved to <code class="docutils literal notranslate"><span class="pre">runs/&lt;new&gt;/</span></code> and the index is updated afterwards. The target name
+must be free: renaming onto a live run is refused rather than merged.</p>
+</section>
+</section>
+<section id="lifecycle">
+<h2>Lifecycle<a class="headerlink" href="#lifecycle" title="Link to this heading">#</a></h2>
+<section id="delete">
+<h3>delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">delete</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">[--now]</span> <span class="pre">[--force]</span> <span class="pre">[-y]</span></code></p>
+<p>Move a run to the trash (reversible; the run directory stays in place and
+is stamped with a <code class="docutils literal notranslate"><span class="pre">trash.json</span></code> marker). <code class="docutils literal notranslate"><span class="pre">--now</span></code> purges it permanently
+(cascade + storage removal); <code class="docutils literal notranslate"><span class="pre">--force</span></code> acts on a pinned run. No byte is
+freed until the trash is emptied.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">delete</span> <span class="n">ksweep_trial_004</span> <span class="o">-</span><span class="n">y</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">delete</span> <span class="n">ksweep_trial_004</span> <span class="o">--</span><span class="n">now</span> <span class="o">-</span><span class="n">y</span>
+</pre></div>
+</div>
+</section>
+<section id="restore">
+<h3>restore<a class="headerlink" href="#restore" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">restore</span> <span class="pre">&lt;ref&gt;</span></code></p>
+<p>Bring a trashed run back. If the original name was reused, the stem is
+version-bumped so the restore never collides.</p>
+<p>Address a trashed run by its id prefix: name resolution only sees live
+runs, so <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">trash</span></code> first, then restore with the short id it
+prints.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">trash</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">restore</span> <span class="mi">56</span><span class="n">df62a9</span>
+</pre></div>
+</div>
+</section>
+<section id="trash">
+<h3>trash<a class="headerlink" href="#trash" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">trash</span> <span class="pre">[--empty]</span> <span class="pre">[--force]</span></code></p>
+<p>List trashed runs, or permanently empty the trash with <code class="docutils literal notranslate"><span class="pre">--empty</span></code> (pinned runs
+are skipped unless <code class="docutils literal notranslate"><span class="pre">--force</span></code>).</p>
 </section>
 <section id="gc">
-<h2>gc<a class="headerlink" href="#gc" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span> <span class="pre">[--dry-run]</span></code></p>
-<p>Garbage-collect orphan Zarr/Parquet caches and reap simulations that
-were left in the <code class="docutils literal notranslate"><span class="pre">running</span></code> state by a hard crash. <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> only
-reports what would be removed.</p>
-</section>
-<section id="vacuum">
-<h2>vacuum<a class="headerlink" href="#vacuum" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">vacuum</span></code></p>
-<p>Compact the DuckDB file in place and consolidate Zarr metadata. Safe
-to run periodically; recommended after a long <strong class="command">hmp catalog gc</strong>.</p>
-</section>
-<section id="delete">
-<h2>delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">delete</span> <span class="pre">&lt;sim_ref&gt;</span> <span class="pre">[--force]</span></code></p>
-<p>Delete one simulation row and its Zarr store. For policy-grade hard
-deletion with an audit certificate, use <strong class="command">hmp privacy purge</strong>.</p>
+<h3>gc<a class="headerlink" href="#gc" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span> <span class="pre">[--apply]</span> <span class="pre">[--keep-versions</span> <span class="pre">N|all]</span> <span class="pre">[--max-age-days</span> <span class="pre">DAYS]</span>
+<span class="pre">[--purge-figures]</span></code></p>
+<p>Plan, by default, the garbage collection of orphan stores, tmp parquet,
+expired trash, stale <code class="docutils literal notranslate"><span class="pre">running</span></code> rows, pending purges and orphan
+calibration sessions. It only reports unless <code class="docutils literal notranslate"><span class="pre">--apply</span></code> is given (the safe
+inverse of the old destructive default). <code class="docutils literal notranslate"><span class="pre">gc</span> <span class="pre">--apply</span></code> also compacts the
+DuckDB file and consolidates Zarr metadata, the maintenance formerly
+exposed as the separate <code class="docutils literal notranslate"><span class="pre">vacuum</span></code> verb.</p>
+<section id="retention-policy">
+<h4>Retention policy<a class="headerlink" href="#retention-policy" title="Link to this heading">#</a></h4>
+<p>Three rules decide how much run history a project keeps. They are prudent by
+default, so a project that never sets them keeps everything but the tail of a
+long lineage:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%"/>
+<col style="width: 16.0%"/>
+<col style="width: 58.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Rule</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it selects</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--keep-versions</span> <span class="pre">N|all</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Every version of one run name beyond the <code class="docutils literal notranslate"><span class="pre">N</span></code> newest
+(<code class="docutils literal notranslate"><span class="pre">cheze</span></code>, <code class="docutils literal notranslate"><span class="pre">cheze.v2</span></code>, … is one lineage). <code class="docutils literal notranslate"><span class="pre">all</span></code> disables it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--max-age-days</span> <span class="pre">DAYS</span></code></p></td>
+<td><p>disabled</p></td>
+<td><p>Runs created more than <code class="docutils literal notranslate"><span class="pre">DAYS</span></code> ago.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--purge-figures</span></code></p></td>
+<td><p>disabled</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">figures/</span></code> directory of each run, which is rebuildable from the
+run outputs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>No rule destroys anything. A selected run is moved to the project trash: a
+reversible status flip stamped on disk as <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/trash.json</span></code>, undone
+by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">restore</span></code>. Its bytes are freed later, by the trash-expiry
+rule, once the retention window has passed. Selected figures are moved to
+<code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/trash/&lt;stamp&gt;/&lt;run&gt;/figures</span></code>. A run tagged <code class="docutils literal notranslate"><span class="pre">pinned</span></code> is
+exempt from every rule.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">delete</span> <span class="mi">1</span><span class="n">a2b3c4d</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">gc</span>                                  <span class="c1"># plan only, default policy</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">gc</span> <span class="o">--</span><span class="n">keep</span><span class="o">-</span><span class="n">versions</span> <span class="mi">2</span> <span class="o">--</span><span class="n">apply</span>        <span class="c1"># keep the two newest per lineage</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">gc</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">age</span><span class="o">-</span><span class="n">days</span> <span class="mi">365</span> <span class="o">--</span><span class="n">apply</span>       <span class="c1"># also retire runs older than a year</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="n">gc</span> <span class="o">--</span><span class="n">keep</span><span class="o">-</span><span class="n">versions</span> <span class="nb">all</span>              <span class="c1"># inspect the rest, keep every version</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="reindex">
+<h3>reindex<a class="headerlink" href="#reindex" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span> <span class="pre">[--workspace</span> <span class="pre">&lt;path&gt;]</span> <span class="pre">[--format</span> <span class="pre">table|json]</span></code></p>
+<p>Rebuild the project index from what the run directories declare. It walks
+<code class="docutils literal notranslate"><span class="pre">runs/</span></code> and <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, reads each <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and each
+<code class="docutils literal notranslate"><span class="pre">session.json</span></code>, and repopulates every table, reporting the run names, the
+session names and the row count per table.</p>
+<p>Use it after moving a project, after restoring a backup, or whenever
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--toml</span></code> reports that the index row count and the number of
+run directories disagree. Deleting <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code> loses nothing that
+a rebuild cannot restore.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">reindex</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="sharing-and-re-running">
+<h2>Sharing and re-running<a class="headerlink" href="#sharing-and-re-running" title="Link to this heading">#</a></h2>
+<section id="export-import">
+<h3>export / import<a class="headerlink" href="#export-import" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">[-o</span> <span class="pre">FILE.hmp]</span></code> / <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">import</span> <span class="pre">&lt;FILE.hmp&gt;</span> <span class="pre">[--force]</span></code></p>
+<p>Write a run as a portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> archive (config snapshot, provenance, Zarr
+fields, timeseries, RO-Crate) and restore it into any workspace with checksum
+verification. The simulation identity survives the round-trip.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">export</span> <span class="n">cheze_baseline</span><span class="o">.</span><span class="n">v3</span> <span class="o">-</span><span class="n">o</span> <span class="n">paper</span><span class="o">.</span><span class="n">hmp</span>
+<span class="n">hmp</span> <span class="n">catalog</span> <span class="kn">import</span><span class="w"> </span><span class="nn">paper.hmp</span>
+</pre></div>
+</div>
+</section>
+<section id="rerun">
+<h3>rerun<a class="headerlink" href="#rerun" title="Link to this heading">#</a></h3>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">rerun</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">[--set</span> <span class="pre">PATH=VALUE</span> <span class="pre">...]</span> <span class="pre">[--name</span> <span class="pre">&lt;name&gt;]</span></code></p>
+<p>Re-launch a run from its frozen <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/config.toml</span></code>, applying
+dotted-path overrides. Without <code class="docutils literal notranslate"><span class="pre">--name</span></code> the result is versioned under the
+original stem.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">catalog</span> <span class="n">rerun</span> <span class="n">demo</span> <span class="o">--</span><span class="nb">set</span> <span class="n">flow</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">value</span><span class="o">=</span><span class="mf">2e-4</span> <span class="o">--</span><span class="n">name</span> <span class="n">demo_k2</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="schema-maintenance">
+<h2>Schema maintenance<a class="headerlink" href="#schema-maintenance" title="Link to this heading">#</a></h2>
+<p>The catalog schema is migrated by <strong class="command">hmp doctor --migrate</strong>. Inspection
+commands open the catalog read-only and never migrate it; a catalog whose
+schema is behind is reported with that hint. Legacy project TOML keys are
+migrated in place by <strong class="command">hmp doctor --fix-config FILE.toml</strong>.</p>
 </section>
 </section>
 </article>
@@ -488,12 +716,38 @@ deletion with an audit certificate, use <strong class="command">hmp privacy purg
   </div>
 <nav aria-labelledby="pst-page-navigation-heading-2" class="page-toc" id="pst-page-toc-nav">
 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ls">ls</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query">query</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#show">show</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gc">gc</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vacuum">vacuum</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">delete</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inspecting-read-only">Inspecting (read-only)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ls">ls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show">show</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff">diff</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#watch">watch</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#point">point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query">query</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#annotating">Annotating</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tag">tag</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#note">note</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rename">rename</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lifecycle">Lifecycle</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">delete</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#restore">restore</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#trash">trash</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gc">gc</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#retention-policy">Retention policy</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reindex">reindex</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-and-re-running">Sharing and re-running</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#export-import">export / import</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rerun">rerun</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#schema-maintenance">Schema maintenance</a></li>
 </ul>
 </nav></div>
 </div></div>

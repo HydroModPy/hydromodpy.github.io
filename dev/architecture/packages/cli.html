@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="cli" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/packages/cli.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/packages/cli.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="hydromodpy.cli is the top-level dispatcher for the hmp and hydromodpy console entry points. One verb per module under cli/commands/, registered through ALL_COMMANDS in cli/commands/__init__.py. Sub..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.cli is the top-level dispatcher for the hmp and hydromodpy console entry points. One verb per module under cli/commands/, registered through ALL_COMMANDS in cli/commands/__init__.py. Sub..." name="description"/>
 <title>cli — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/cli';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/packages/cli.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/packages/cli.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -510,18 +510,24 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cli/main.py</span></code> – argparse dispatcher; iterates <code class="docutils literal notranslate"><span class="pre">ALL_COMMANDS</span></code>
 and forwards the parsed namespace to <code class="docutils literal notranslate"><span class="pre">args._handler</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cli/commands/</span></code> – one module per verb (see inventory below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cli/commands/</span></code> – one module per leaf verb, one sub-package per
+verb family (see inventory below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cli/_conventions.py</span></code> – the shared argparse grammar
+(<code class="docutils literal notranslate"><span class="pre">workspace_parser</span></code>, <code class="docutils literal notranslate"><span class="pre">confirm_parser</span></code>, <code class="docutils literal notranslate"><span class="pre">format_parser</span></code>,
+<code class="docutils literal notranslate"><span class="pre">profile_parser</span></code>, <code class="docutils literal notranslate"><span class="pre">add_sim_ref</span></code>, <code class="docutils literal notranslate"><span class="pre">add_action_subparsers</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cli/helpers.py</span></code> – typed exit codes and <code class="docutils literal notranslate"><span class="pre">exit_code_for(exc)</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cli/_workers/</span></code> – CLI application services for commands whose
 reusable Python surface is not part of <code class="docutils literal notranslate"><span class="pre">hydromodpy._api</span></code>. Workers
 may assemble diagnostics, catalog listings and developer reports, but
 they must not become hidden scientific workflow implementations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cli/workflows.py</span></code> – workflow dispatcher used by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> to
-pick the right launcher from <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span></code>.</p></li>
 </ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span></code> dispatch does not live here: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">hydromodpy._api.run</span></code>, which reaches
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/project/dispatch/workflow.py</span></code>.</p>
 </section>
 <section id="verb-inventory">
 <h2>Verb inventory<a class="headerlink" href="#verb-inventory" title="Link to this heading">#</a></h2>
-<p>Twenty-six verbs ship today.</p>
+<p>Seventeen top-level verbs ship today, in <code class="docutils literal notranslate"><span class="pre">ALL_COMMANDS</span></code> order.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 22.0%"/>
@@ -533,90 +539,71 @@ pick the right launcher from <code class="docutils literal notranslate"><span cl
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">init</span></code></p></td>
-<td><p>Scaffold a workspace (catalog, <code class="docutils literal notranslate"><span class="pre">data/</span></code>, <code class="docutils literal notranslate"><span class="pre">projects/</span></code>,
-<code class="docutils literal notranslate"><span class="pre">simulations/</span></code>).</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">workspace</span></code></p></td>
+<td><p>Workspace lifecycle and global-index registration: <code class="docutils literal notranslate"><span class="pre">init</span></code>,
+<code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">register</span></code>, <code class="docutils literal notranslate"><span class="pre">search</span></code>, <code class="docutils literal notranslate"><span class="pre">forget</span></code>, <code class="docutils literal notranslate"><span class="pre">prune</span></code>,
+<code class="docutils literal notranslate"><span class="pre">clean</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">new</span></code></p></td>
-<td><p>Create a new project inside a workspace.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">project</span></code></p></td>
+<td><p>Projects inside a workspace: <code class="docutils literal notranslate"><span class="pre">new</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">show</span></code>,
+<code class="docutils literal notranslate"><span class="pre">delete</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config</span></code></p></td>
-<td><p>Generate a TOML template, validate one, list modules, open
-the wizard.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">catalog</span></code></p></td>
+<td><p>The run lifecycle: <code class="docutils literal notranslate"><span class="pre">ls</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">show</span></code>, <code class="docutils literal notranslate"><span class="pre">point</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gc</span></code>, <code class="docutils literal notranslate"><span class="pre">reindex</span></code>, <code class="docutils literal notranslate"><span class="pre">delete</span></code>, <code class="docutils literal notranslate"><span class="pre">restore</span></code>, <code class="docutils literal notranslate"><span class="pre">trash</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tag</span></code>, <code class="docutils literal notranslate"><span class="pre">note</span></code>, <code class="docutils literal notranslate"><span class="pre">rename</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">watch</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>,
+<code class="docutils literal notranslate"><span class="pre">import</span></code>, <code class="docutils literal notranslate"><span class="pre">rerun</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">schema</span></code></p></td>
-<td><p>Export JSON Schema and the companion files for frontends.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>Input cache and <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> package exchange: <code class="docutils literal notranslate"><span class="pre">ls</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code>,
+<code class="docutils literal notranslate"><span class="pre">check</span></code>, <code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">remove</span></code>, <code class="docutils literal notranslate"><span class="pre">prune</span></code>, <code class="docutils literal notranslate"><span class="pre">archive</span></code>,
+<code class="docutils literal notranslate"><span class="pre">restore</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">export-package</span></code>, <code class="docutils literal notranslate"><span class="pre">import</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">viz</span></code></p></td>
+<td><p>Figures: <code class="docutils literal notranslate"><span class="pre">list</span></code> (registered names), <code class="docutils literal notranslate"><span class="pre">show</span></code> (one figure for
+one run), <code class="docutils literal notranslate"><span class="pre">gallery</span></code> (the <code class="docutils literal notranslate"><span class="pre">[display]</span></code> set for one or several
+runs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">template</span></code>, <code class="docutils literal notranslate"><span class="pre">check</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, <code class="docutils literal notranslate"><span class="pre">wizard</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code></p></td>
+<td><p>Developer-only: <code class="docutils literal notranslate"><span class="pre">run-script</span></code>, <code class="docutils literal notranslate"><span class="pre">completion</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lock</span></code>, <code class="docutils literal notranslate"><span class="pre">rank</span></code>, <code class="docutils literal notranslate"><span class="pre">manage</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">audit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code> and <code class="docutils literal notranslate"><span class="pre">verify</span></code> on the hash-chained audit log.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">privacy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">purge</span></code> a simulation with a JSON certificate, and <code class="docutils literal notranslate"><span class="pre">verify</span></code>
+that certificate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></td>
 <td><p>Execute a workflow (<code class="docutils literal notranslate"><span class="pre">simulation</span></code> / <code class="docutils literal notranslate"><span class="pre">calibration</span></code> /
 <code class="docutils literal notranslate"><span class="pre">overview</span></code> / <code class="docutils literal notranslate"><span class="pre">comparison</span></code> / <code class="docutils literal notranslate"><span class="pre">testbed</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p>Developer-only verbs (<code class="docutils literal notranslate"><span class="pre">run-script</span></code>, schema diagnostics,
-etc.).</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calibrate</span></code></p></td>
+<td><p>Run a calibration workflow from a TOML config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">catalog</span></code></p></td>
-<td><p>Query the workspace-level catalog.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spinup</span></code></p></td>
+<td><p>Cyclic spin-up until heads and lake stage converge.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">display</span></code></p></td>
-<td><p>Render registered figures for one persisted simulation.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report</span></code></p></td>
-<td><p>Render the HTML report for a calibration session.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
-<td><p>Browse projects or runs in a workspace.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export</span></code></p></td>
-<td><p>Export geographic data or simulation results to external
-formats.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">site-selection</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">plan</span></code>, <code class="docutils literal notranslate"><span class="pre">select-catchments</span></code>, <code class="docutils literal notranslate"><span class="pre">build-observed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">build-generated</span></code>, <code class="docutils literal notranslate"><span class="pre">report</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p>Run the unit, integration, regression, validation tiers.</p></td>
+<td><p>Run the <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">regression</span></code> or <code class="docutils literal notranslate"><span class="pre">validation</span></code> tier.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
-<td><p>Inspect or manage custom data artefacts.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">render</span></code> a calibration report, <code class="docutils literal notranslate"><span class="pre">compare</span></code> two runs, build a
+<code class="docutils literal notranslate"><span class="pre">catchment</span></code> report.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lock</span></code></p></td>
-<td><p>Manage the reproducibility lockfile.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">show</span></code></p></td>
-<td><p>Show metadata, metrics, parameters of a simulation.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compare</span></code></p></td>
-<td><p>Compare two simulations by id, prefix, or name.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add</span></code></p></td>
-<td><p>Import a portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> archive and dematerialise inputs.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">import</span></code></p></td>
-<td><p>Import a portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> package into a workspace.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">doctor</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">doctor</span></code></p></td>
 <td><p>Diagnose Python, dependencies, solver binaries, workspace.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inspect</span></code></p></td>
-<td><p>Inspect metadata, mesh, status, files of a simulation.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">manage</span></code></p></td>
-<td><p>Open the local browser UI for catalog tables and cleanup.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">install-binaries</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">install-binaries</span></code></p></td>
 <td><p>Download the MODFLOW / MODPATH / MT3D-USGS binaries.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank</span></code></p></td>
-<td><p>Rank simulations for a project by one metric.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delete</span></code></p></td>
-<td><p>Delete a simulation (catalog row plus Zarr / Parquet
-artefacts).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">workspace</span></code></p></td>
-<td><p>Inspect or initialise workspace paths and storage
-conventions.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">completion</span></code></p></td>
-<td><p>Emit shell completion scripts (bash / zsh / fish).</p></td>
 </tr>
 </tbody>
 </table>
@@ -624,7 +611,7 @@ conventions.</p></td>
 </section>
 <section id="verb-contract">
 <h2>Verb contract<a class="headerlink" href="#verb-contract" title="Link to this heading">#</a></h2>
-<p>Each module under <code class="docutils literal notranslate"><span class="pre">cli/commands/</span></code> exposes:</p>
+<p>Each leaf module under <code class="docutils literal notranslate"><span class="pre">cli/commands/</span></code> exposes:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">NAME</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">=</span> <span class="s2">"myverb"</span>
 <span class="n">HELP</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">=</span> <span class="s2">"One-line description."</span>
 
@@ -640,6 +627,12 @@ conventions.</p></td>
 </div>
 <p>The dispatcher iterates <code class="docutils literal notranslate"><span class="pre">ALL_COMMANDS</span></code>, calls <code class="docutils literal notranslate"><span class="pre">register</span></code> on
 each, then forwards the parsed namespace to <code class="docutils literal notranslate"><span class="pre">args._handler</span></code>.</p>
+<p>A verb family (<code class="docutils literal notranslate"><span class="pre">workspace/</span></code>, <code class="docutils literal notranslate"><span class="pre">project/</span></code>, <code class="docutils literal notranslate"><span class="pre">catalog/</span></code>, <code class="docutils literal notranslate"><span class="pre">data/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">viz/</span></code>, <code class="docutils literal notranslate"><span class="pre">dev/</span></code>) is a sub-package: its <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> carries
+<code class="docutils literal notranslate"><span class="pre">NAME</span></code>, <code class="docutils literal notranslate"><span class="pre">HELP</span></code> and an <code class="docutils literal notranslate"><span class="pre">ACTIONS</span></code> tuple, and every action module
+repeats the same four symbols. The group is attached with
+<code class="docutils literal notranslate"><span class="pre">add_action_subparsers</span></code>, so a bare <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span></code> is a usage error
+and exits 2.</p>
 <p>For V1, the CLI boundary is:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cli/commands/*.py</span></code> parse arguments, call <code class="docutils literal notranslate"><span class="pre">hydromodpy._api</span></code> or a
@@ -658,10 +651,11 @@ in their domain package, then be called by the command module.</p></li>
 registered tuple <code class="docutils literal notranslate"><span class="pre">ALL_COMMANDS</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/commands/run.py</span></code> for the canonical workflow
 verb.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/workflows.py</span></code> for the
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/project/dispatch/workflow.py</span></code> for the
 <code class="docutils literal notranslate"><span class="pre">[workflow].mode</span></code> -&gt; launcher dispatch.</p></li>
-<li><p>One small verb such as <code class="docutils literal notranslate"><span class="pre">cli/commands/show.py</span></code> to see the
-thin-handler convention.</p></li>
+<li><p>One small verb such as <code class="docutils literal notranslate"><span class="pre">cli/commands/catalog/point.py</span></code> to see the
+thin-handler convention: parse, call a worker, format, map errors to
+exit codes.</p></li>
 </ol>
 </section>
 <section id="layer-matrix-neighbours">
@@ -676,7 +670,7 @@ of the stable CLI target set.</p></li>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../../user_guide/cli-reference.html"><span class="doc">CLI Reference</span></a> – user-facing CLI inventory with
+<li><p><a class="reference internal" href="../../user_guide/cli-reference.html"><span class="doc">CLI reference</span></a> – user-facing CLI inventory with
 every flag.</p></li>
 <li><p><a class="reference internal" href="../how-to/add-a-cli-command.html"><span class="doc">Add a CLI Command</span></a> – step-by-step
 recipe.</p></li>

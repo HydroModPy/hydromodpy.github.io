@@ -10,10 +10,10 @@
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
     <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Calibration Architecture" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/calibration/calibration-architecture.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/calibration/calibration-architecture.html" />
 <meta property="og:site_name" content="HydroModPy" />
 <meta property="og:description" content="This page is the code-oriented entry point for the calibration stack. It groups the package map, the runtime classes, the execution-flow diagrams, and the case-vs-core boundary in one place. For th..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page is the code-oriented entry point for the calibration stack. It groups the package map, the runtime classes, the execution-flow diagrams, and the case-vs-core boundary in one place. For th..." />
 
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/calibration/calibration-architecture';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,7 +89,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/calibration/calibration-architecture.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/calibration/calibration-architecture.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -756,17 +756,18 @@ catalogue, storage rules, pitfalls, Python API), see
 <h2>Architecture map<a class="headerlink" href="#architecture-map" title="Link to this heading">#</a></h2>
 <p>The current calibration stack is split into four layers:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cli_runner.py</span></code> owns the
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/cli_runner.py</span></code> owns the
 <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">&lt;calibration.toml&gt;</span></code> workflow entry point: validates the
 config, builds the engine, runs the optimizer, writes the report.
-<code class="docutils literal notranslate"><span class="pre">programmatic_runner.py</span></code> exposes the same flow for in-process use.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/simulation/execution/trial.py</span></code> owns the prepare-once,
+<code class="docutils literal notranslate"><span class="pre">runners/programmatic_runner.py</span></code> exposes the same flow for
+in-process use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/trial.py</span></code> owns the prepare-once,
 evaluate-many primitive used by every trial inside the ask/tell
 loop.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/</span></code> (engine, parameters, objective,
-optimizer, diagnostics, persistence) owns the reusable engine,
-parameter sets, objective handling, method dispatch, and canonical
-results.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/</span></code> (engine, parameters, objective,
+optimizer, diagnostics) plus <code class="docutils literal notranslate"><span class="pre">persistence.py</span></code> own the reusable
+engine, parameter sets, objective handling, method dispatch, and
+canonical results.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases/</span></code> owns runnable scientific cases
 that exercise the full calibration loop end to end.</p></li>
 </ul>
@@ -777,14 +778,14 @@ that exercise the full calibration loop end to end.</p></li>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/commands/run.py</span></code> (<code class="docutils literal notranslate"><span class="pre">[workflow].mode</span> <span class="pre">=</span>
 <span class="pre">&quot;calibration&quot;</span></code> dispatch)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cli_runner.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/engine.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/simulation/execution/trial.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/cli_runner.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/engine.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/trial.py</span></code></p></li>
 <li><p>one case under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases/</span></code></p></li>
 </ol>
 <p>Companion files:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/README.md</span></code> for the package map.</p></li>
+<li><p><a class="reference internal" href="../packages/calibration.html"><span class="doc">calibration</span></a> for the package map.</p></li>
 <li><p><a class="reference internal" href="calibration-guide.html"><span class="doc">Calibration Guide</span></a> for the end-to-end reference.</p></li>
 <li><p>Case-local docstrings under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases/</span></code> for
 runnable examples.</p></li>
@@ -1319,7 +1320,8 @@ end note
 <li><p>Case packages under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases</span></code> are expected
 to stay thin adapters around the shared engine.</p></li>
 <li><p>CLI-specific concerns such as manifests, reruns, and report
-persistence are owned by <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cli_runner.py</span></code> and
+persistence are owned by
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/cli_runner.py</span></code> and
 the reporting helpers in
 <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/persistence.py</span></code> and <code class="docutils literal notranslate"><span class="pre">report.py</span></code>.</p></li>
 </ul>

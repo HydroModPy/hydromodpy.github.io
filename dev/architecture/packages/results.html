@@ -10,10 +10,10 @@
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
     <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="results" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/packages/results.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/packages/results.html" />
 <meta property="og:site_name" content="HydroModPy" />
 <meta property="og:description" content="hydromodpy.results owns the project-level catalog and the per-run Run facade. It is the read-write layer between solver outputs and downstream consumers (display, analysis, exports). Sub-modules: r..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="hydromodpy.results owns the project-level catalog and the per-run Run facade. It is the read-write layer between solver outputs and downstream consumers (display, analysis, exports). Sub-modules: r..." />
 
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/results';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,7 +89,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/packages/results.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/packages/results.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -752,30 +752,40 @@ outputs and downstream consumers (display, analysis, exports).</p>
 <section id="sub-modules">
 <h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">results/catalog/</span></code> – <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code> facade plus
+<li><p><code class="docutils literal notranslate"><span class="pre">results/catalog/</span></code> – <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> facade plus
 read / write mixins. One DuckDB file per project
-(<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code>); see <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p></li>
+(<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>); see <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/catalog/ports.py</span></code> – <code class="xref py py-class docutils literal notranslate"><span class="pre">CatalogBackend</span></code> Protocol
 (Ports and Adapters port) consumed by every catalog operation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/catalog/adapters/</span></code> – <code class="docutils literal notranslate"><span class="pre">DuckDBBackend</span></code> in-tree adapter.
 Additional adapters can plug in by implementing the protocol.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/catalog/migrations/</span></code> – Alembic-like SQL migrations
 applied by the runner in <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/migrations/runner.py</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/run.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Run</span></code> facade exposing read-only access to
-one persisted simulation. Stays below the 50-method limit.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/run_array.py</span></code>, <code class="docutils literal notranslate"><span class="pre">run_timeseries.py</span></code>,
-<code class="docutils literal notranslate"><span class="pre">run_geographic.py</span></code>, <code class="docutils literal notranslate"><span class="pre">run_hydrographic.py</span></code>,
-<code class="docutils literal notranslate"><span class="pre">run_environment.py</span></code> – focused mixins behind the <code class="docutils literal notranslate"><span class="pre">Run</span></code> facade.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/run/view.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Run</span></code> facade exposing read-only access
+to one persisted simulation. Stays below the 50-method limit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/run/array.py</span></code>, <code class="docutils literal notranslate"><span class="pre">timeseries.py</span></code>, <code class="docutils literal notranslate"><span class="pre">geographic.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hydrographic.py</span></code>, <code class="docutils literal notranslate"><span class="pre">environment.py</span></code> – focused providers behind
+the <code class="docutils literal notranslate"><span class="pre">Run</span></code> facade.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/run/point.py</span></code> – <code class="docutils literal notranslate"><span class="pre">RunPointProvider</span></code>, bound as
+<code class="docutils literal notranslate"><span class="pre">run.probe</span></code> and <code class="docutils literal notranslate"><span class="pre">group.probe</span></code>: one variable in one cell, named by
+coordinates, cell index or depth.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/run/observation_points.py</span></code> – samples the points declared
+in <code class="docutils literal notranslate"><span class="pre">[observation]</span></code> and writes them to the run directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/run/group.py</span></code> – <code class="docutils literal notranslate"><span class="pre">RunSet</span></code> view across multiple runs
+(used by comparison and calibration analysis).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/field_registry.py</span></code> – maps a logical field name to a
 Zarr or Parquet reader. Used by the <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code> facade.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/zarr_store/</span></code> – Zarr v2 store with atomic writes,
-filelock, ACDD and CF metadata, <code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/parquet_io.py</span></code> and <code class="docutils literal notranslate"><span class="pre">parquet_schemas.py</span></code> – Parquet
-v2.6 writers, KV-metadata mixin, <code class="docutils literal notranslate"><span class="pre">PARQUET_SCHEMA_VERSION</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/geoparquet_io.py</span></code> – GeoParquet 1.1 writers
+<li><p><code class="docutils literal notranslate"><span class="pre">results/zarr_store/</span></code> – Zarr format 3 store with atomic writes,
+filelock, ACDD and CF metadata, <code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span></code>, and the
+chunk / shard heuristics in <code class="docutils literal notranslate"><span class="pre">chunks.py</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/storage/parquet_io.py</span></code> and
+<code class="docutils literal notranslate"><span class="pre">results/storage/parquet_schemas.py</span></code> – Parquet v2.6 writers, KV
+metadata, and the declared schema of every payload.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/storage/contract.py</span></code> – the machine-readable run layout:
+physical layers and every file name a run or session directory may
+carry.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/geoparquet.py</span></code> – GeoParquet 1.1 writers
 (<code class="docutils literal notranslate"><span class="pre">GEOPARQUET_SCHEMA_VERSION</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">results/simulation_group.py</span></code> – <code class="docutils literal notranslate"><span class="pre">SimulationGroup</span></code> view across
-multiple runs (used by comparison and calibration analysis).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/exporters/</span></code> – format writers: <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">netcdf</span></code>,
 <code class="docutils literal notranslate"><span class="pre">geotiff</span></code>, <code class="docutils literal notranslate"><span class="pre">vtu</span></code>, <code class="docutils literal notranslate"><span class="pre">shapefile</span></code>, <code class="docutils literal notranslate"><span class="pre">hmp_package</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">results/importers/</span></code> – <code class="docutils literal notranslate"><span class="pre">hmp_package</span></code> reader plus catalog
@@ -804,17 +814,20 @@ ingestion helpers.</p></li>
 <li><p><strong>Array provider</strong>: <code class="docutils literal notranslate"><span class="pre">run.array.dataset(variable=None)</span></code> returns
 an <code class="docutils literal notranslate"><span class="pre">xugrid.UgridDataset</span></code>; <code class="docutils literal notranslate"><span class="pre">to_xarray_batch()</span></code>;
 <code class="docutils literal notranslate"><span class="pre">at(timestep,</span> <span class="pre">layer)</span></code>.</p></li>
+<li><p><strong>Point provider</strong>: <code class="docutils literal notranslate"><span class="pre">run.probe.series(variable,</span> <span class="pre">x=...,</span> <span class="pre">y=...)</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">cell=</span></code> / <code class="docutils literal notranslate"><span class="pre">layer=</span></code> / <code class="docutils literal notranslate"><span class="pre">depth=</span></code>. <code class="docutils literal notranslate"><span class="pre">group.probe.series(...)</span></code>
+stacks the same point across several runs.</p></li>
 </ul>
 </section>
 <section id="catalog-operations">
 <h2>Catalog operations<a class="headerlink" href="#catalog-operations" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code> exposes:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Catalog</span></code> exposes:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp.open(project_path)</span></code> – single catalog door. Default
 <code class="docutils literal notranslate"><span class="pre">create=False</span></code> raises <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code> when no
-<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code> exists; pass <code class="docutils literal notranslate"><span class="pre">create=True</span></code> to initialise an
+<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code> exists; pass <code class="docutils literal notranslate"><span class="pre">create=True</span></code> to initialise an
 empty one.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">find(**filters)</span></code> – one return type (a <code class="docutils literal notranslate"><span class="pre">SimulationGroup</span></code>);
+<li><p><code class="docutils literal notranslate"><span class="pre">find(**filters)</span></code> – one return type (a <code class="docutils literal notranslate"><span class="pre">RunSet</span></code>);
 raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> listing valid filters on an unknown key.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">frame</span></code> – the full simulations <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">resolve(prefix)</span></code> – expand a sim id prefix.</p></li>
@@ -842,10 +855,14 @@ field lives. The by-id path is <code class="docutils literal notranslate"><span 
 <p>Companion DuckDB views (<code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code>,
 <code class="docutils literal notranslate"><span class="pre">v_best_per_project</span></code>, <code class="docutils literal notranslate"><span class="pre">v_metrics_wide</span></code>, <code class="docutils literal notranslate"><span class="pre">v_params_wide</span></code>)
 remain available for ad-hoc SQL.</p>
-<p>Cross-project / cross-workspace queries go through the
+<p>Cross-project queries go through the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">GlobalIndex</span></code> exposed as
-<code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code>. The index federates every registered workspace via
-ATTACH read-only and rebuilds <code class="docutils literal notranslate"><span class="pre">all_simulations</span></code> on refresh.</p>
+<code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code>. Its <code class="docutils literal notranslate"><span class="pre">projects</span></code> table holds one row per project
+root, the directory that owns <code class="docutils literal notranslate"><span class="pre">project.toml</span></code> and the index database
+at <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>; a workspace root owns no index, so
+registering one expands into the project roots under its
+<code class="docutils literal notranslate"><span class="pre">projects/</span></code> directory. The index ATTACHes every registered project
+index read-only and rebuilds <code class="docutils literal notranslate"><span class="pre">all_simulations</span></code> on refresh.</p>
 </section>
 <section id="concurrency">
 <h2>Concurrency<a class="headerlink" href="#concurrency" title="Link to this heading">#</a></h2>
@@ -861,8 +878,8 @@ canonical table layout.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/ports.py</span></code> (Protocol).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/adapters/duckdb.py</span></code> (in-tree
 implementation).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/facade.py</span></code> (<code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/run.py</span></code> (<code class="docutils literal notranslate"><span class="pre">Run</span></code> facade).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/facade.py</span></code> (<code class="docutils literal notranslate"><span class="pre">Catalog</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/run/view.py</span></code> (<code class="docutils literal notranslate"><span class="pre">Run</span></code> facade).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/field_registry.py</span></code> for the field dispatch
 used by <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/exporters/csv.py</span></code> for an exporter
@@ -887,11 +904,11 @@ cross-DB ATTACH bridge.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a> – DuckDB schema, Zarr stores,
 Parquet directories, basename rule.</p></li>
-<li><p><a class="reference internal" href="../overview/two-databases.html"><span class="doc">The three workspace databases</span></a> – cache-vs-catalog
+<li><p><a class="reference internal" href="../overview/two-databases.html"><span class="doc">The three database scopes</span></a> – cache-vs-catalog
 split.</p></li>
 <li><p><a class="reference internal" href="../how-to/add-an-exporter.html"><span class="doc">Add an Exporter</span></a> – step-by-step
 recipe.</p></li>
-<li><p><a class="reference internal" href="../../user_guide/results-and-exports.html"><span class="doc">Results and Exports</span></a> – user-facing reference.</p></li>
+<li><p><a class="reference internal" href="../../user_guide/results-and-exports.html"><span class="doc">Results and exports</span></a> – user-facing reference.</p></li>
 </ul>
 </section>
 </section>

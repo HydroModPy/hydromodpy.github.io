@@ -10,10 +10,10 @@
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
     <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Schema Evolution" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/overview/schema-evolution.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/overview/schema-evolution.html" />
 <meta property="og:site_name" content="HydroModPy" />
 <meta property="og:description" content="HydroModPy V1 ships an Alembic-like migration runner that applies versioned SQL migrations on every DuckDB the toolbox owns, and pins a single integer schema version on Zarr and Parquet stores. The..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="HydroModPy V1 ships an Alembic-like migration runner that applies versioned SQL migrations on every DuckDB the toolbox owns, and pins a single integer schema version on Zarr and Parquet stores. The..." />
 
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/overview/schema-evolution';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,12 +89,12 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/overview/schema-evolution.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/overview/schema-evolution.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Protocols and public contracts" href="contracts.html" />
-    <link rel="prev" title="The three workspace databases" href="two-databases.html" />
+    <link rel="prev" title="The three database scopes" href="two-databases.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="frontend-hooks.html">Frontend Hooks</a></li>
@@ -757,24 +757,31 @@ row per component (catalog, cache, index).</p>
 <h2>Scope<a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
 <p>Covered:</p>
 <ul class="simple">
-<li><p>DuckDB databases: project <code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code>, workspace
+<li><p>DuckDB databases: project <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>, workspace
 <code class="docutils literal notranslate"><span class="pre">data/cache.duckdb</span></code>, machine <code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code>.</p></li>
-<li><p>Zarr v2 stores: <code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.zarr/</span></code> with
-<code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span></code> pinned in the root ACDD attributes.</p></li>
-<li><p>Parquet v2.6 outputs with <code class="docutils literal notranslate"><span class="pre">hmp.schema_version</span></code> in KV metadata
+<li><p>Zarr stores: <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/fields.zarr/</span></code>, written in Zarr format 3 and
+carrying HydroModPy’s own <code class="docutils literal notranslate"><span class="pre">zarr_schema_version</span></code> in the root ACDD
+attributes.</p></li>
+<li><p>Parquet 2.6 outputs with <code class="docutils literal notranslate"><span class="pre">hmp.schema_version</span></code> in KV metadata
 (<code class="docutils literal notranslate"><span class="pre">PARQUET_SCHEMA_VERSION</span></code>).</p></li>
-<li><p>Portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages produced by
-<code class="docutils literal notranslate"><span class="pre">SimulationCatalog.export_package</span></code>.</p></li>
+<li><p>Portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages produced by <code class="docutils literal notranslate"><span class="pre">Catalog.export_package</span></code>.</p></li>
 </ul>
 <p>Out of scope: user TOML files. Their versioning is handled by Pydantic
 v2 with <code class="docutils literal notranslate"><span class="pre">ConfigDict(extra=&quot;forbid&quot;)</span></code>.</p>
+<p>The project index is the exception to the chain-of-migrations model. It
+is an index over the run directories, so its schema evolves by replacing
+the initial DDL and rebuilding from disk with <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>,
+which ships and is the supported path. The runner still deploys the DDL
+on a fresh index; it is simply not the way that scope is meant to move
+forward. The doctrine and the rebuild invariants are stated in
+<a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p>
 </section>
 <section id="migration-runner">
 <h2>Migration runner<a class="headerlink" href="#migration-runner" title="Link to this heading">#</a></h2>
 <p>Source: <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/migrations/runner.py</span></code> plus per-component
 migration directories:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/migrations/</span></code> for the project catalog;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/migrations/</span></code> for the project index;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/registry/migrations/</span></code> for the workspace cache;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/state/migrations/</span></code> for the global index.</p></li>
 </ul>
@@ -784,17 +791,28 @@ runner:</p>
 <ol class="arabic simple">
 <li><p>ensures the <code class="docutils literal notranslate"><span class="pre">schema_migrations</span></code> ledger exists with columns
 <code class="docutils literal notranslate"><span class="pre">version</span> <span class="pre">INTEGER</span></code>, <code class="docutils literal notranslate"><span class="pre">component</span> <span class="pre">TEXT</span></code>, <code class="docutils literal notranslate"><span class="pre">slug</span> <span class="pre">TEXT</span></code>,
-<code class="docutils literal notranslate"><span class="pre">checksum</span> <span class="pre">TEXT</span></code>, <code class="docutils literal notranslate"><span class="pre">applied_at</span> <span class="pre">TIMESTAMP</span></code>;</p></li>
+<code class="docutils literal notranslate"><span class="pre">checksum</span> <span class="pre">TEXT</span></code>, <code class="docutils literal notranslate"><span class="pre">applied_at</span> <span class="pre">TIMESTAMP</span></code>, alongside a
+<code class="docutils literal notranslate"><span class="pre">_schema_version</span></code> row per component;</p></li>
 <li><p>reads the max applied version for the requested component;</p></li>
 <li><p>applies every newer migration inside one transaction per file;</p></li>
-<li><p>records the migration with a SHA-256 checksum of the SQL payload so
-a tampered migration is detected on re-runs.</p></li>
+<li><p>records the migration with a SHA-256 checksum of the SQL payload, and
+refuses to proceed when a recorded checksum no longer matches the file
+on disk.</p></li>
 </ol>
 <p>Calling <code class="docutils literal notranslate"><span class="pre">ensure_schema()</span></code> from a backend (<code class="docutils literal notranslate"><span class="pre">DuckDBBackend</span></code> or any
 other adapter implementing the protocol) deploys the latest schema for
-that component.
-The facade <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp.open</span></code> call <code class="docutils literal notranslate"><span class="pre">ensure_schema()</span></code> on
-first access so users never see a half-deployed catalog.</p>
+that component. The facade <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp.open</span></code> reach it on
+first access so users never see a half-deployed index.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/migrations/auto_boot.py</span></code> wraps that runner for
+boot-time upgrades: a <code class="docutils literal notranslate"><span class="pre">FileLock</span></code> on <code class="docutils literal notranslate"><span class="pre">&lt;db&gt;.lock</span></code>, an atomic
+<code class="docutils literal notranslate"><span class="pre">&lt;db&gt;.bak-&lt;ISO8601Z&gt;</span></code> snapshot with restore-on-failure, and a rolling
+history of at most five snapshots. Only the workspace cache is backed
+up. The <code class="docutils literal notranslate"><span class="pre">catalog</span></code> and <code class="docutils literal notranslate"><span class="pre">index</span></code> components are listed in
+<code class="docutils literal notranslate"><span class="pre">NO_BACKUP_COMPONENTS</span></code> and skip the snapshot, because an index is
+rebuilt, not restored: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code> for a project,
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">register</span></code> for the machine scope. <code class="docutils literal notranslate"><span class="pre">HMP_AUTO_MIGRATE=0</span></code>
+turns a pending migration into <code class="docutils literal notranslate"><span class="pre">AutoMigrationDisabled</span></code> and leaves the
+file untouched.</p>
 </section>
 <section id="principles">
 <h2>Principles<a class="headerlink" href="#principles" title="Link to this heading">#</a></h2>
@@ -823,17 +841,19 @@ current backend;</p></li>
 order, or semantics of an existing field triggers a version bump and
 a migration. Pure refactors that do not touch disk do not bump the
 version.</p></li>
-<li><p><strong>Export/import boundary.</strong> <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages embed the version of
-every component in their manifest. The import path rejects packages
-whose component versions exceed the local library and silently
-migrates older ones through the registry.</p></li>
+<li><p><strong>Export/import boundary.</strong> A <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> archive carries <code class="docutils literal notranslate"><span class="pre">format</span></code> and
+<code class="docutils literal notranslate"><span class="pre">format_version</span></code> in its own manifest, plus a SHA-256 for every file
+it contains. Import verifies the magic and every checksum before
+materialising anything. It does not currently gate on
+<code class="docutils literal notranslate"><span class="pre">format_version</span></code>, so a package written by a newer library is
+detected only when a checked file fails to read.</p></li>
 </ol>
 </section>
 <section id="anti-patterns">
 <h2>Anti-patterns<a class="headerlink" href="#anti-patterns" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Do not</strong> silently accept unknown tables or columns. The reader
-rejects stores whose version exceeds the maximum it knows about.</p></li>
+rejects stores whose version differs from the one it knows.</p></li>
 <li><p><strong>Do not</strong> inject data from outside the migration. The function
 operates only on the SQL or store handle handed to it.</p></li>
 <li><p><strong>Do not</strong> couple SQL and field-store version numbers. Each evolves
@@ -857,31 +877,51 @@ columnar stores.</p></li>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Project catalog (<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code>)</p></td>
+<tr class="row-even"><td><p>Project index (<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0001</span></code></p></td>
-<td><p>Initial v2 DDL: simulations, parameters, metrics,
-provenance, calibration, workflow_steps, schema_migrations.</p></td>
+<td><p>Initial v2 DDL: simulations, parameters, metrics, provenance,
+calibration, workflow, tags, schema_migrations. Evolves by
+replacing the DDL plus <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Workspace cache (<code class="docutils literal notranslate"><span class="pre">cache.duckdb</span></code>)</p></td>
+<tr class="row-odd"><td><p>Workspace cache (<code class="docutils literal notranslate"><span class="pre">data/cache.duckdb</span></code>)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0001</span></code></p></td>
 <td><p>Entries with workspace-relative paths, provenance, failures,
 validation_reports.</p></td>
 </tr>
 <tr class="row-even"><td><p>Machine global index (<code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code>)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0001</span></code></p></td>
-<td><p>Workspaces table plus federated views.</p></td>
+<td><p>Projects table, one row per project root; <code class="docutils literal notranslate"><span class="pre">all_simulations</span></code> is
+rebuilt at attach time.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Zarr field store</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span> <span class="pre">=</span> <span class="pre">&quot;2&quot;</span></code></p></td>
-<td><p>ACDD root attrs, CF <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code>, consolidated metadata strict.</p></td>
+<td><p>Zarr format 3, ACDD root attrs, CF <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code>, consolidated
+metadata.</p></td>
 </tr>
 <tr class="row-even"><td><p>Parquet tabular store</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PARQUET_SCHEMA_VERSION</span> <span class="pre">=</span> <span class="pre">&quot;v2&quot;</span></code></p></td>
-<td><p>pyarrow <code class="docutils literal notranslate"><span class="pre">Schema</span></code> + KV metadata mixin, version <code class="docutils literal notranslate"><span class="pre">2.6</span></code>.</p></td>
+<td><p>pyarrow <code class="docutils literal notranslate"><span class="pre">Schema</span></code> + KV metadata mixin, format <code class="docutils literal notranslate"><span class="pre">2.6</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p>GeoParquet</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">GEOPARQUET_SCHEMA_VERSION</span> <span class="pre">=</span> <span class="pre">&quot;1.1.0&quot;</span></code></p></td>
 <td><p>OGC 1.1, GeoArrow encoding.</p></td>
+</tr>
+<tr class="row-even"><td><p>Run seal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MANIFEST_SCHEMA_VERSION</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> and <code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, versioned together.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Session journal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SESSION_JOURNAL_VERSION</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">session.json</span></code> and <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Trash marker</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TRASH_VERSION</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">trash.json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Portable package</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HMP_FORMAT_VERSION</span> <span class="pre">=</span> <span class="pre">&quot;1.4&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.hmp</span></code> archive header, magic <code class="docutils literal notranslate"><span class="pre">hydromodpy/hmp</span></code>. A multi-run
+container declares <code class="docutils literal notranslate"><span class="pre">format_version</span></code> <code class="docutils literal notranslate"><span class="pre">2.0</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -915,7 +955,7 @@ the storage.</p></li>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">The three workspace databases</p>
+        <p class="prev-next-title">The three database scopes</p>
       </div>
     </a>
     <a class="right-next"

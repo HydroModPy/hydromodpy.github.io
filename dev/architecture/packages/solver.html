@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="solver" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/packages/solver.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/packages/solver.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="hydromodpy.solver exposes the backend abstraction ( base/) plus three concrete backends: MODFLOW 6, MODFLOW-NWT, and Boussinesq. It also hosts shared helpers ( modflow_common, modflow_grid) that st..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.solver exposes the backend abstraction ( base/) plus three concrete backends: MODFLOW 6, MODFLOW-NWT, and Boussinesq. It also hosts shared helpers ( modflow_common, modflow_grid) that st..." name="description"/>
 <title>solver — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/solver';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/packages/solver.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/packages/solver.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -524,7 +524,13 @@ runtime selection.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">solver/modflow6/</span></code> – FloPy-backed MODFLOW 6 wrapper. Flow
 through <code class="docutils literal notranslate"><span class="pre">adapters/flow.py</span></code>, transport through
 <code class="docutils literal notranslate"><span class="pre">adapters/transport.py</span></code>, output extraction through
-<code class="docutils literal notranslate"><span class="pre">extractors/</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">extractors/</span></code>. Advanced packages are built by dedicated builder
+modules: <code class="docutils literal notranslate"><span class="pre">builders/lake.py</span></code> (LAK) and <code class="docutils literal notranslate"><span class="pre">builders/sfr.py</span></code> (SFR)
+are mutually independent and couple only through the
+package-agnostic <code class="docutils literal notranslate"><span class="pre">builders/mvr.py</span></code> water-mover records that
+<code class="docutils literal notranslate"><span class="pre">build.py</span></code> instantiates last. The SFR builder consumes the reach
+trace delineated in <code class="docutils literal notranslate"><span class="pre">spatial</span></code> (a legal <code class="docutils literal notranslate"><span class="pre">solver</span> <span class="pre">-&gt;</span> <span class="pre">spatial</span></code>
+edge) and never imports the lake builder.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">solver/modflow_nwt/</span></code> – legacy MODFLOW-NWT wrapper plus
 Modpath / MT3DMS transport adapters.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">calibration/lumped/</span></code> – GR4J adapter and extractor. This lives
@@ -580,7 +586,7 @@ queryable through <code class="docutils literal notranslate"><span class="pre">c
 <section id="key-public-symbols">
 <h2>Key public symbols<a class="headerlink" href="#key-public-symbols" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.protocol.SolverAdapter</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.adapter_protocol.SolverAdapter</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.registry.{register,</span> <span class="pre">get,</span> <span class="pre">get_solver_adapter,</span>
 <span class="pre">register_extractor,</span> <span class="pre">get_extractor,</span> <span class="pre">list_pairs,</span> <span class="pre">capabilities,</span>
 <span class="pre">required_bindings,</span> <span class="pre">load_plugins}</span></code></p></li>
@@ -596,7 +602,7 @@ queryable through <code class="docutils literal notranslate"><span class="pre">c
 <section id="recommended-reading-path">
 <h2>Recommended reading path<a class="headerlink" href="#recommended-reading-path" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/protocol.py</span></code> and <code class="docutils literal notranslate"><span class="pre">registry.py</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/adapter_protocol.py</span></code> and <code class="docutils literal notranslate"><span class="pre">registry.py</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/adapters/flow.py</span></code> for a concrete
 adapter.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/flow_adapter_helpers.py</span></code> for

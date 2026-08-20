@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Add a Solver" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/how-to/add-a-solver.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-solver.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="A solver in HydroModPy is one(process_type, solver_name) pair bound to a concrete backend. Today three backends ship: modflow6, modflow_nwt, and boussinesq. This page documents how to add a fourth ..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="A solver in HydroModPy is one(process_type, solver_name) pair bound to a concrete backend. Today three backends ship: modflow6, modflow_nwt, and boussinesq. This page documents how to add a fourth ..." name="description"/>
 <title>Add a Solver — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/how-to/add-a-solver';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/how-to/add-a-solver.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-solver.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -509,7 +509,7 @@ fourth flow backend or, equivalently, a new <code class="docutils literal notran
 <section id="contract">
 <h2>Contract<a class="headerlink" href="#contract" title="Link to this heading">#</a></h2>
 <p>A solver implements the <code class="docutils literal notranslate"><span class="pre">SolverAdapter</span></code> Protocol declared in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/protocol.py</span></code>:</p>
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/adapter_protocol.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SolverAdapter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
     <span class="n">process_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span>   <span class="c1"># "flow", "transport", "postprocess"</span>
     <span class="n">solver_name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span>    <span class="c1"># "modflow6", "modflow_nwt", "boussinesq", ...</span>
@@ -531,12 +531,12 @@ fourth flow backend or, equivalently, a new <code class="docutils literal notran
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">RunExecutionResult</span></code> is a small dataclass exposing
 <code class="docutils literal notranslate"><span class="pre">success:</span> <span class="pre">bool</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs:</span> <span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code>.</p>
-<p>A separate <strong>output adapter</strong> ingests the persisted outputs into the
-catalog. It implements the dual contract:</p>
+<p>A separate <strong>output adapter</strong> (the <em>extractor</em>) ingests the persisted
+outputs into the catalog. It is registered on the same
+<code class="docutils literal notranslate"><span class="pre">(process_type,</span> <span class="pre">solver_name)</span></code> pair as the adapter and implements:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SolverOutputAdapter</span><span class="p">:</span>
-    <span class="n">solver_name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_id</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="n">solver_output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">solver_output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 </div>
 </section>
@@ -565,7 +565,7 @@ duplicating preprocess/postprocess flow.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/solver/mysolver/adapters/flow.py</span>
 <span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#module-typing"><span class="nn">typing</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a>
 
-<span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.solver.base.protocol.html#module-hydromodpy.solver.base.protocol"><span class="nn">hydromodpy.solver.base.protocol</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">RunExecutionResult</span>
+<span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.solver.base.adapter_protocol.html#module-hydromodpy.solver.base.adapter_protocol"><span class="nn">hydromodpy.solver.base.adapter_protocol</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">RunExecutionResult</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MysolverFlowAdapter</span><span class="p">:</span>
@@ -598,27 +598,47 @@ duplicating preprocess/postprocess flow.</p>
 <h2>Registration<a class="headerlink" href="#registration" title="Link to this heading">#</a></h2>
 <p>Two paths, depending on whether the backend ships inside the
 HydroModPy repository or as an external plugin.</p>
-<p><strong>In-tree backend.</strong> Register through the built-in path table in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/registry.py</span></code>:</p>
+<p><strong>In-tree backend.</strong> Register through the two built-in path tables in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/registry.py</span></code>. Both tables are keyed on the
+<strong>same ``(process_type, solver_name)`` tuple</strong> — the extractor table is
+not keyed on the solver name alone, because one backend can carry a
+different extractor per process (flow vs transport for MODFLOW 6):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_BUILTIN_PATHS</span><span class="p">[(</span><span class="s2">"flow"</span><span class="p">,</span> <span class="s2">"mysolver"</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"hydromodpy.solver.mysolver.adapters.flow:MysolverFlowAdapter"</span>
 <span class="p">)</span>
-<span class="n">_BUILTIN_EXTRACTOR_PATHS</span><span class="p">[</span><span class="s2">"mysolver"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">_BUILTIN_EXTRACTOR_PATHS</span><span class="p">[(</span><span class="s2">"flow"</span><span class="p">,</span> <span class="s2">"mysolver"</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"hydromodpy.solver.mysolver.extractors.flow:MysolverOutputAdapter"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>External plugin.</strong> Declare the entry point in your distribution’s
-<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>:</p>
+<p>A string key such as <code class="docutils literal notranslate"><span class="pre">_BUILTIN_EXTRACTOR_PATHS["mysolver"]</span></code> registers
+nothing that <code class="docutils literal notranslate"><span class="pre">get_extractor("flow",</span> <span class="pre">"mysolver")</span></code> can find:
+<code class="docutils literal notranslate"><span class="pre">get_extractor_instance</span></code> then returns <code class="docutils literal notranslate"><span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">post_run_results</span></code>
+treats it as a configuration error. The backend solves and the run is
+lost on the way to the catalog.</p>
+<p><strong>External plugin.</strong> Declare the entry points in your distribution’s
+<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. Ship both groups, for the same reason:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[project.entry-points.</span><span class="s2">"hydromodpy.solver"</span><span class="k">]</span>
 <span class="n">flow_mysolver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mypkg.adapters:MysolverFlowAdapter"</span>
+
+<span class="k">[project.entry-points.</span><span class="s2">"hydromodpy.solver.extractor"</span><span class="k">]</span>
+<span class="n">flow_mysolver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mypkg.extractors:MysolverOutputAdapter"</span>
 </pre></div>
 </div>
-<p>The runtime calls
-<code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.registry.load_plugins()</span></code> once at import
-time, then resolves the adapter through <code class="docutils literal notranslate"><span class="pre">registry.get(process_type,</span>
-<span class="pre">solver_name)</span></code> and instantiates it via
-<code class="docutils literal notranslate"><span class="pre">registry.get_solver_adapter(process_type,</span> <span class="pre">solver_name)</span></code>.</p>
+<p>Entry-point names are split at the <strong>first</strong> underscore, so
+<code class="docutils literal notranslate"><span class="pre">flow_mysolver</span></code> yields <code class="docutils literal notranslate"><span class="pre">("flow",</span> <span class="pre">"mysolver")</span></code>. Never declare an
+in-tree backend through an entry point as well: <code class="docutils literal notranslate"><span class="pre">flow_modflownwt</span></code>
+would mint a second pair <code class="docutils literal notranslate"><span class="pre">flow/modflownwt</span></code> next to the real
+<code class="docutils literal notranslate"><span class="pre">flow/modflow_nwt</span></code>, which the config accepts but which has an adapter
+and no extractor.</p>
+<p>Nothing is loaded at import time. <code class="docutils literal notranslate"><span class="pre">registry.get(process_type,</span>
+<span class="pre">solver_name)</span></code> serves explicit registrations first, then lazy-imports
+the <code class="docutils literal notranslate"><span class="pre">_BUILTIN_PATHS</span></code> entry, and only calls <code class="docutils literal notranslate"><span class="pre">load_plugins()</span></code> once if
+the pair is still unknown. Launchers may also call
+<code class="docutils literal notranslate"><span class="pre">SolverConfig.validate_registry()</span></code> to force that scan up front and
+fail early on an unknown backend name. The runner instantiates the
+adapter through <code class="docutils literal notranslate"><span class="pre">registry.get_solver_adapter(process_type,</span>
+<span class="pre">solver_name)</span></code>.</p>
 </section>
 <section id="capabilities-optional-but-recommended">
 <h2>Capabilities (optional but recommended)<a class="headerlink" href="#capabilities-optional-but-recommended" title="Link to this heading">#</a></h2>

@@ -8,16 +8,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
-    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="The three workspace databases" />
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="The three database scopes" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/overview/two-databases.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/overview/two-databases.html" />
 <meta property="og:site_name" content="HydroModPy" />
-<meta property="og:description" content="HydroModPy splits SQL state across three scopes: machine, workspace, project. Each scope owns a DuckDB file with a focused role and an independent lifecycle. The hydromodpy.catalog layer exposes ea..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:description" content="HydroModPy splits SQL state across three scopes: machine, workspace, project. Each scope owns a DuckDB file with a focused role and an independent lifecycle. None of the three is a place where irre..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
-<meta name="description" content="HydroModPy splits SQL state across three scopes: machine, workspace, project. Each scope owns a DuckDB file with a focused role and an independent lifecycle. The hydromodpy.catalog layer exposes ea..." />
+<meta name="description" content="HydroModPy splits SQL state across three scopes: machine, workspace, project. Each scope owns a DuckDB file with a focused role and an independent lifecycle. None of the three is a place where irre..." />
 
-    <title>The three workspace databases &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <title>The three database scopes &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
   
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/overview/two-databases';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,7 +89,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/overview/two-databases.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/overview/two-databases.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">The three workspace databases</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="frontend-hooks.html">Frontend Hooks</a></li>
@@ -727,7 +727,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Architecture Overview</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The three workspace databases</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The three database scopes</span></li>
   </ul>
 </nav>
 </div>
@@ -744,143 +744,225 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="the-three-workspace-databases">
-<h1>The three workspace databases<a class="headerlink" href="#the-three-workspace-databases" title="Link to this heading">#</a></h1>
+  <section id="the-three-database-scopes">
+<h1>The three database scopes<a class="headerlink" href="#the-three-database-scopes" title="Link to this heading">#</a></h1>
 <p>HydroModPy splits SQL state across three scopes: machine, workspace,
 project. Each scope owns a DuckDB file with a focused role and an
-independent lifecycle. The <a class="reference internal" href="../../api/generated/hydromodpy.catalog.html#module-hydromodpy.catalog" title="hydromodpy.catalog"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.catalog</span></code></a> layer exposes each
-scope through its own door: <code class="docutils literal notranslate"><span class="pre">hmp.open(ws)</span></code> for the project catalog,
-<code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code> for the machine-wide federation, and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">InputsNamespace</span></code> (or the <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span></code> CLI)
-for the input cache.</p>
-<p>For the complete layout, see <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>. For the migration
-policy applied to every database below, see <a class="reference internal" href="schema-evolution.html"><span class="doc">Schema Evolution</span></a>.</p>
+independent lifecycle.</p>
+<p><strong>None of the three is a place where irreplaceable results live.</strong> Every
+one of them is an index or a cache over something else: registered
+projects for the machine scope, upstream sources for the workspace
+cache, the project’s run directories for the project index. The disk is
+the source of truth; the databases make it queryable.</p>
+<p>This page states the role of each scope. The full on-disk contract, the
+three classes of data and the rebuild invariants live in
+<a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>. For the migration policy applied to every
+database below, see <a class="reference internal" href="schema-evolution.html"><span class="doc">Schema Evolution</span></a>.</p>
 <section id="machine-global-index-xdg-state-home-hydromodpy-index-duckdb">
-<h2>Machine global index – <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/index.duckdb</span></code><a class="headerlink" href="#machine-global-index-xdg-state-home-hydromodpy-index-duckdb" title="Link to this heading">#</a></h2>
-<p>Federates every registered workspace and exposes cross-workspace
-queries through <code class="docutils literal notranslate"><span class="pre">ATTACH</span></code> in read-only mode. Recreated from the
-registered workspaces alone – it carries no science output of its own.</p>
-<p>Tables: <code class="docutils literal notranslate"><span class="pre">workspaces</span></code>, <code class="docutils literal notranslate"><span class="pre">projects</span></code>, <code class="docutils literal notranslate"><span class="pre">simulations_cache</span></code>,
-<code class="docutils literal notranslate"><span class="pre">index_metadata</span></code> plus the view <code class="docutils literal notranslate"><span class="pre">v_workspace_health</span></code>.</p>
+<h2>Machine global index: <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/index.duckdb</span></code><a class="headerlink" href="#machine-global-index-xdg-state-home-hydromodpy-index-duckdb" title="Link to this heading">#</a></h2>
+<p>Federates every registered project and answers cross-project queries
+through read-only <code class="docutils literal notranslate"><span class="pre">ATTACH</span></code>. Recreated from the registered projects
+alone: it carries no science output of its own.</p>
+<p>It stores one table, <code class="docutils literal notranslate"><span class="pre">projects</span></code>, plus its migration ledger. <strong>One row is
+one project root</strong>, because a project root is what owns an index database
+at <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>. A workspace root owns none, so it is never a row:
+registering one expands it into the project roots it holds, and a workspace
+with no project yet registers nothing.</p>
+<p>The federated view <code class="docutils literal notranslate"><span class="pre">all_simulations</span></code> is not stored: it is rebuilt at
+attach time as a <code class="docutils literal notranslate"><span class="pre">UNION</span> <span class="pre">ALL</span></code> over each project’s <code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code>,
+stamped with the <code class="docutils literal notranslate"><span class="pre">project_id</span></code> of its row, and a project whose index file
+is missing is skipped with a warning.</p>
 <p>Exposed through:</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.core.state.global_index.GlobalIndex</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code> (machine-wide discovery and federation)</p></li>
-<li><p>CLI verbs <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">index</span> <span class="pre">search</span> <span class="pre">/</span> <span class="pre">forget</span> <span class="pre">/</span> <span class="pre">prune</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.core.state.global_index.GlobalIndex</span></code>, whose
+<code class="docutils literal notranslate"><span class="pre">register</span></code> / <code class="docutils literal notranslate"><span class="pre">unregister</span></code> / <code class="docutils literal notranslate"><span class="pre">list_projects</span></code> / <code class="docutils literal notranslate"><span class="pre">prune</span></code> surface
+speaks in <code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectRecord</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code> for machine-wide discovery</p></li>
+<li><p>CLI verbs <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">register</span> <span class="pre">/</span> <span class="pre">list</span> <span class="pre">/</span> <span class="pre">search</span> <span class="pre">/</span> <span class="pre">forget</span> <span class="pre">/</span> <span class="pre">prune</span></code></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">hydromodpy.core.state.paths.project_roots_under()</span></code>, the single place
+that turns a directory into the project roots it stands for</p></li>
 </ul>
 </section>
 <section id="workspace-input-cache-workspace-data-cache-duckdb">
-<h2>Workspace input cache – <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/cache.duckdb</span></code><a class="headerlink" href="#workspace-input-cache-workspace-data-cache-duckdb" title="Link to this heading">#</a></h2>
+<h2>Workspace input cache: <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/cache.duckdb</span></code><a class="headerlink" href="#workspace-input-cache-workspace-data-cache-duckdb" title="Link to this heading">#</a></h2>
 <p>Tracks downloaded or custom datasets used as model inputs. One file per
-workspace, mutualised across every project of that workspace. Purgeable
-and reconstructible from upstream sources.</p>
+workspace, shared by every project of that workspace. Purgeable, and
+reconstructible from upstream sources at the cost of re-downloading.</p>
 <p>Tables: <code class="docutils literal notranslate"><span class="pre">entries</span></code>, <code class="docutils literal notranslate"><span class="pre">api_coverage</span></code>, <code class="docutils literal notranslate"><span class="pre">artifacts</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance</span></code>,
-<code class="docutils literal notranslate"><span class="pre">stations</span></code>, <code class="docutils literal notranslate"><span class="pre">coverage</span></code>, <code class="docutils literal notranslate"><span class="pre">failures</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_reports</span></code> plus
+<code class="docutils literal notranslate"><span class="pre">stations</span></code>, <code class="docutils literal notranslate"><span class="pre">coverage</span></code>, <code class="docutils literal notranslate"><span class="pre">failures</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_reports</span></code>, plus
 the view <code class="docutils literal notranslate"><span class="pre">v_entries_summary</span></code>.</p>
 <p>Exposed through:</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.data.registry.DataCatalogDuckDB</span></code> (low-level)</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.catalog.InputsNamespace</span></code> (or the <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span></code> CLI)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">project.data</span></code> / <code class="docutils literal notranslate"><span class="pre">workspace.data</span></code> accessors</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.data.registry.DataCatalogDuckDB</span></code> (low level)</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.catalog.InputsNamespace</span></code>, opened on a workspace
+root, and the <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span></code> CLI</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">project.data</span></code> accessor, which scopes the same cache to one
+project</p></li>
 </ul>
-<p>Each row carries a workspace-relative POSIX <code class="docutils literal notranslate"><span class="pre">file_path</span></code> so caches
-remain portable between machines.</p>
+<p>Each row carries a workspace-relative POSIX <code class="docutils literal notranslate"><span class="pre">file_path</span></code>, so a cache
+stays portable between machines.</p>
 </section>
-<section id="project-simulation-catalog-project-catalog-duckdb">
-<h2>Project simulation catalog – <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/catalog.duckdb</span></code><a class="headerlink" href="#project-simulation-catalog-project-catalog-duckdb" title="Link to this heading">#</a></h2>
-<p>Holds the science output: simulation metadata, parameters, metrics,
-per-sim provenance, calibration history, workflow ledger and audit
-trail. Scoped to one project (typically one catchment) and
-irreplaceable. Each simulation gets a row plus per-simulation Zarr and
-Parquet artefacts under <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/simulations/</span></code>.</p>
-<p>Tables: 26 (dim_*, solvers, statuses, flow_regimes, mesh_topologies,
-simulations, parameters, metrics, metric_definitions, observations,
-observation_points, provenance, runs_environment, audit_log, deletions,
-tracked_files, geographic_features, geographic_metadata, parquet_files,
-tags, stations, calibration_sessions, calibration_iterations,
-workflow_steps) plus the views <code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code> and
-<code class="docutils literal notranslate"><span class="pre">v_metrics_pivot</span></code>.</p>
+<section id="project-index-project-hmp-index-duckdb">
+<h2>Project index: <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/index.duckdb</span></code><a class="headerlink" href="#project-index-project-hmp-index-duckdb" title="Link to this heading">#</a></h2>
+<p>Indexes the runs of one project: identity, parameters, metrics,
+provenance, calibration trace and workflow trace. It is the query layer
+over <code class="docutils literal notranslate"><span class="pre">runs/</span></code> and <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, not their owner. It lives under
+<code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> precisely because that directory is disposable.</p>
+<p>The project index is explicitly <strong>not</strong> a store of irreplaceable output.
+What a run needs in order to be read, replayed, resumed or compared is
+written into its run folder, and the index is derived from it. A change
+that makes a result reachable only through SQL is a regression of this
+contract.</p>
 <p>Exposed through:</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.SimulationCatalog</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.Catalog</span></code></p></li>
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.run.Run</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.simulation_group.SimulationGroup</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hmp.open(project_path)</span></code> door (returns the <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>;
-<code class="docutils literal notranslate"><span class="pre">cat.find(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">cat.frame</span></code>, <code class="docutils literal notranslate"><span class="pre">cat.latest()</span></code>, <code class="docutils literal notranslate"><span class="pre">cat[ref]</span></code>)</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.run.group.RunSet</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp.open(project_path)</span></code>, which returns the <code class="docutils literal notranslate"><span class="pre">Catalog</span></code></p></li>
 <li><p>CLI verb <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">...</span></code></p></li>
 </ul>
+<section id="rebuilding-it">
+<h3>Rebuilding it<a class="headerlink" href="#rebuilding-it" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code> reads every sealed run under <code class="docutils literal notranslate"><span class="pre">runs/</span></code> and every
+calibration session under <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, and rebuilds the index from
+them. Per run it reads <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> (the seal of a complete run),
+then <code class="docutils literal notranslate"><span class="pre">tables.parquet/simulation.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">parameters.parquet</span></code>,
+<code class="docutils literal notranslate"><span class="pre">metrics.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance.parquet</span></code>, the <code class="docutils literal notranslate"><span class="pre">geographic_*.parquet</span></code>
+features, <code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code> and <code class="docutils literal notranslate"><span class="pre">trash.json</span></code>.
+Per session it reads <code class="docutils literal notranslate"><span class="pre">session.json</span></code> and <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code>. The rebuild
+fills a staging database next to the index and installs it with one
+atomic rename, so <code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code> is never absent nor half-written: a
+reader that was reading keeps reading the file it opened, the next
+opener gets the rebuilt one, and two rebuilds describe the project
+identically. That rename is
+<code class="xref py py-func docutils literal notranslate"><span class="pre">hydromodpy.core.io.atomic_replace.rename_over_open_file()</span></code>, the
+only publishing path: <code class="docutils literal notranslate"><span class="pre">os.replace</span></code> on POSIX, and on Windows, where
+<code class="docutils literal notranslate"><span class="pre">MoveFileEx</span></code> refuses as soon as another handle is on the index, the
+same rename asked of the kernel with <code class="docutils literal notranslate"><span class="pre">FILE_RENAME_POSIX_SEMANTICS</span></code>.
+There is no non-atomic fallback: where the kernel supports neither, the
+rebuild fails, the previous index stays untouched and readable, and the
+fix is to close the processes reading the project and rebuild again.
+<a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a> carries the full statement.</p>
+<p>The run <strong>name comes from the directory</strong>, never from the files: a
+rename moves the directory, so the tree is what the name is. A directory
+whose manifest names another run is reported and left out rather than
+indexed under a doubtful identity.</p>
+</section>
+<section id="what-survives-a-rebuild">
+<h3>What survives a rebuild<a class="headerlink" href="#what-survives-a-rebuild" title="Link to this heading">#</a></h3>
+<p>The rule is stated once, in <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>, and summarised
+here. The authoritative list is the module docstring of
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/reindex.py</span></code>, which is the code that
+performs the rebuild.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 44.0%" />
+<col style="width: 36.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Content</p></th>
+<th class="head"><p>Rebuild behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Reconstructible</p></td>
+<td><p>Run identity and geometry, catchment metadata, parameters,
+metrics, input provenance, run environment, geographic features,
+tracked files, declared observation points, tags and notes, trash
+state, calibration sessions and trials. The frozen
+<code class="docutils literal notranslate"><span class="pre">config.toml</span></code> stays in the run folder</p></td>
+<td><p>Obligation: written in the run or session folder, restored
+identically by the rebuild</p></td>
+</tr>
+<tr class="row-odd"><td><p>Losable</p></td>
+<td><p>Audit log, export log, workflow journal, deletion tombstones,
+purge resume state, and the promoted <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> back-filled on a
+trial</p></td>
+<td><p>Dropped, by an explicit decision. The runs, their results and
+their lineage are unaffected</p></td>
+</tr>
+<tr class="row-even"><td><p>Input</p></td>
+<td><p>Observation series and station metadata</p></td>
+<td><p>Out of the results scope. Repopulated from the input cache and
+the data loaders</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Two consequences are worth naming. Losing the audit log means the
+machine event history of the project is gone, while run identity,
+results and lineage survive because they come from the manifests. Losing
+the workflow journal means an interrupted workflow replans from scratch
+instead of resuming.</p>
+</section>
 </section>
 <section id="provenance-bridge">
 <h2>Provenance bridge<a class="headerlink" href="#provenance-bridge" title="Link to this heading">#</a></h2>
-<p>Each simulation records, in its <code class="docutils literal notranslate"><span class="pre">provenance</span></code> rows, which input-cache
-entries it consumed. <code class="docutils literal notranslate"><span class="pre">run.input_entries()</span></code> walks the bridge to list
-them, and <code class="docutils literal notranslate"><span class="pre">entry.used_by()</span></code> returns the simulations that referenced a
-given entry. Cross-workspace lookups go through the machine index.</p>
+<p>Each run records, in its <code class="docutils literal notranslate"><span class="pre">provenance</span></code> rows, which input-cache entries
+it consumed. <code class="docutils literal notranslate"><span class="pre">run.input_entries()</span></code> walks the bridge to list them, and
+<code class="docutils literal notranslate"><span class="pre">entry.used_by()</span></code> returns the runs that referenced a given entry by
+joining <code class="docutils literal notranslate"><span class="pre">tracked_files.sha256</span></code>. Cross-project lookups go through the
+machine index.</p>
 </section>
 <section id="why-three-scopes">
 <h2>Why three scopes<a class="headerlink" href="#why-three-scopes" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Machine index</strong> – cross-workspace discovery without copying data.</p></li>
-<li><p><strong>Workspace cache</strong> – input mutualisation between projects sharing a
-geographic area.</p></li>
-<li><p><strong>Project catalog</strong> – irreplaceable science output that warrants its
-own backup policy and stays writable while other projects keep using
-the same workspace cache.</p></li>
+<li><p><strong>Machine index</strong>: cross-project discovery without copying data.</p></li>
+<li><p><strong>Workspace cache</strong>: input sharing between projects covering the same
+geographic area, so a regional DEM is downloaded once.</p></li>
+<li><p><strong>Project index</strong>: fast queries over one project’s runs, scoped so a
+project stays usable while other projects write to the same workspace
+cache.</p></li>
 </ul>
-<p>Three scopes match three distinct lifecycles: the index is fully
-recreatable from registered workspaces, the cache is purgeable and
-reconstructible from upstream sources, the project catalog is the only
-SQL store that holds output which cannot be regenerated without
-re-running the simulations.</p>
+<p>Three scopes, three rebuild costs: the machine index is recreated from
+the registered projects, the workspace cache from upstream sources
+(network cost), the project index from the project’s own run
+directories (local cost). No scope is a single point of loss for a
+scientific result.</p>
 </section>
-<section id="unified-architecture">
-<h2>Unified architecture<a class="headerlink" href="#unified-architecture" title="Link to this heading">#</a></h2>
-<p>A single set of patterns governs the three databases:</p>
+<section id="shared-architecture">
+<h2>Shared architecture<a class="headerlink" href="#shared-architecture" title="Link to this heading">#</a></h2>
+<p>One set of patterns governs the three databases.</p>
 <ul class="simple">
 <li><p><strong>Single migrations runner</strong>:
 <a class="reference internal" href="../../api/generated/hydromodpy.core.migrations.runner.html#module-hydromodpy.core.migrations.runner" title="hydromodpy.core.migrations.runner"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.core.migrations.runner</span></code></a> exposes
-<code class="docutils literal notranslate"><span class="pre">apply_migrations(db_path,</span> <span class="pre">migrations_dir)</span></code> (with a
-<code class="docutils literal notranslate"><span class="pre">&lt;db_path&gt;.lock</span></code> filelock to serialise concurrent callers) and is
-used by all three databases. Each scope owns a flat <code class="docutils literal notranslate"><span class="pre">migrations/</span></code>
-directory containing one <code class="docutils literal notranslate"><span class="pre">0001_initial.sql</span></code>.</p></li>
-<li><p><strong>Per-scope doors</strong>:
-<a class="reference internal" href="../../api/generated/hydromodpy.catalog.html#module-hydromodpy.catalog" title="hydromodpy.catalog"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.catalog</span></code></a> exposes each database through its own door:
-<code class="docutils literal notranslate"><span class="pre">hmp.open(ws)</span></code> returns the project <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>,
-<code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code> federates the machine-wide scope, and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">InputsNamespace</span></code> reaches the input cache.
-Users write <code class="docutils literal notranslate"><span class="pre">hmp.open(ws).find(solver=&quot;modflow6&quot;)</span></code> on the catalog
-itself.</p></li>
+<code class="docutils literal notranslate"><span class="pre">apply_migrations(db_path,</span> <span class="pre">migrations_dir)</span></code>, serialised by a
+<code class="docutils literal notranslate"><span class="pre">&lt;db_path&gt;.lock</span></code> filelock, and is used by all three. Each scope owns
+a flat <code class="docutils literal notranslate"><span class="pre">migrations/</span></code> directory of numbered SQL files starting at
+<code class="docutils literal notranslate"><span class="pre">0001_initial.sql</span></code>. Because the project index is rebuildable, a
+schema change there is a new initial DDL plus a rebuild, not a chain
+of migrations: its only later file, <code class="docutils literal notranslate"><span class="pre">0002</span></code>, drops the unused
+<code class="docutils literal notranslate"><span class="pre">retention_policies</span></code> table rather than reshaping one.</p></li>
+<li><p><strong>Per-scope doors</strong>: one entry point per database.
+<code class="docutils literal notranslate"><span class="pre">hmp.open(project_path)</span></code> opens the project directory holding
+<code class="docutils literal notranslate"><span class="pre">project.toml</span></code> and <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>, and returns its
+<code class="docutils literal notranslate"><span class="pre">Catalog</span></code>; <code class="docutils literal notranslate"><span class="pre">hmp.index()</span></code> federates the machine scope; and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.catalog.InputsNamespace</span></code>, opened on a workspace
+root, reaches the input cache.</p></li>
 <li><p><strong>Backend Protocol</strong>:
 <code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.ports.CatalogBackend</span></code> is a
 <code class="docutils literal notranslate"><span class="pre">typing.Protocol</span></code> with <code class="docutils literal notranslate"><span class="pre">execute</span> <span class="pre">/</span> <span class="pre">query</span> <span class="pre">/</span> <span class="pre">fetch_one</span> <span class="pre">/</span> <span class="pre">fetch_all</span> <span class="pre">/</span>
-<span class="pre">insert</span> <span class="pre">/</span> <span class="pre">upsert</span> <span class="pre">/</span> <span class="pre">transaction</span> <span class="pre">/</span> <span class="pre">close</span></code>. The catalog mixins call the
-protocol so swapping the adapter does not touch call sites.</p></li>
+<span class="pre">insert</span> <span class="pre">/</span> <span class="pre">upsert</span> <span class="pre">/</span> <span class="pre">transaction</span> <span class="pre">/</span> <span class="pre">close</span></code>. Catalog mixins call the
+protocol, so swapping the adapter does not touch call sites.</p></li>
 <li><p><strong>Authentication Protocol</strong>:
 <code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.core.auth.AuthBackend</span></code> exposes a structural
-<code class="docutils literal notranslate"><span class="pre">current_user</span> <span class="pre">/</span> <span class="pre">can_read</span> <span class="pre">/</span> <span class="pre">can_write</span></code> surface with
+<code class="docutils literal notranslate"><span class="pre">current_user</span> <span class="pre">/</span> <span class="pre">can_read</span> <span class="pre">/</span> <span class="pre">can_write</span></code> surface, with
 <code class="xref py py-class docutils literal notranslate"><span class="pre">LocalAuthBackend</span></code> as the V1 default.</p></li>
-<li><p><strong>URI-aware paths</strong>: every workspace / cache / state argument is
-typed <code class="docutils literal notranslate"><span class="pre">Path</span> <span class="pre">|</span> <span class="pre">UPath</span></code>. The runtime accepts local paths and
-<code class="docutils literal notranslate"><span class="pre">file://</span></code> URIs; any other scheme raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>.</p></li>
+<li><p><strong>URI-aware paths</strong>: every workspace, cache and state argument is
+typed <code class="docutils literal notranslate"><span class="pre">Path</span> <span class="pre">|</span> <span class="pre">UPath</span></code>. The runtime accepts local paths and <code class="docutils literal notranslate"><span class="pre">file://</span></code>
+URIs; any other scheme raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>.</p></li>
 </ul>
 </section>
-<section id="refactor-outcomes">
-<h2>Refactor outcomes<a class="headerlink" href="#refactor-outcomes" title="Link to this heading">#</a></h2>
-<p>The catalog stack used to concentrate three god-classes (each above
-1000 LOC). V1 split them into single-concern modules:</p>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SimulationZarr</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">simulation_zarr</span></code> (facade) +
-<code class="docutils literal notranslate"><span class="pre">zarr_schema</span></code> + <code class="docutils literal notranslate"><span class="pre">zarr_writer</span></code> + <code class="docutils literal notranslate"><span class="pre">zarr_reader</span></code> +
-<code class="docutils literal notranslate"><span class="pre">zarr_finalizer</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DataCatalogDuckDB</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">catalog_duckdb</span></code> (facade) +
-<code class="docutils literal notranslate"><span class="pre">cache_store</span></code> + <code class="docutils literal notranslate"><span class="pre">cache_queries</span></code> + <code class="docutils literal notranslate"><span class="pre">cache_lifecycle</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">WritesMixin</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">writes</span></code> (facade) + <code class="docutils literal notranslate"><span class="pre">writes_duckdb</span></code> +
-<code class="docutils literal notranslate"><span class="pre">writes_parquet</span></code> + <code class="docutils literal notranslate"><span class="pre">writes_zarr</span></code> + <code class="docutils literal notranslate"><span class="pre">writes_helpers</span></code>.</p></li>
+<li><p><a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a> for the on-disk contract, the three data
+classes and the rebuild invariants.</p></li>
+<li><p><a class="reference internal" href="schema-evolution.html"><span class="doc">Schema Evolution</span></a> for the migration policy.</p></li>
+<li><p><a class="reference internal" href="../packages/results.html"><span class="doc">results</span></a> for the Python surface.</p></li>
 </ul>
-<p>The original public symbols (<code class="docutils literal notranslate"><span class="pre">SimulationZarr</span></code>, <code class="docutils literal notranslate"><span class="pre">DataCatalogDuckDB</span></code>,
-<code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>, <code class="docutils literal notranslate"><span class="pre">WritesMixin</span></code>) keep their import path and
-their full API; golden tests pin bit-identical artefacts before and
-after each split.</p>
 </section>
 </section>
 
@@ -931,13 +1013,17 @@ after each split.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-global-index-xdg-state-home-hydromodpy-index-duckdb">Machine global index – <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/index.duckdb</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-input-cache-workspace-data-cache-duckdb">Workspace input cache – <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/cache.duckdb</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-simulation-catalog-project-catalog-duckdb">Project simulation catalog – <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/catalog.duckdb</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-global-index-xdg-state-home-hydromodpy-index-duckdb">Machine global index: <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/index.duckdb</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-input-cache-workspace-data-cache-duckdb">Workspace input cache: <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/cache.duckdb</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-index-project-hmp-index-duckdb">Project index: <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/index.duckdb</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rebuilding-it">Rebuilding it</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-survives-a-rebuild">What survives a rebuild</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance-bridge">Provenance bridge</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-three-scopes">Why three scopes</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unified-architecture">Unified architecture</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#refactor-outcomes">Refactor outcomes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-architecture">Shared architecture</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
 </ul>
   </nav></div>
 

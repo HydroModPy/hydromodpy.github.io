@@ -10,12 +10,12 @@
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
     <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="validity_frame" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/packages/validity_frame.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/packages/validity_frame.html" />
 <meta property="og:site_name" content="HydroModPy" />
-<meta property="og:description" content="hydromodpy.validity_frame is experimental observability tooling. It records runtime metadata and can ingest JSONL capture files into a DuckDB database for downstream inspection. V1 status: validity..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:description" content="validity_frame is experimental observability tooling shipped as a standalone distribution at validity_frame/src/validity_frame/, next to hydromodpy/ and never inside it. It records runtime metadata..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
-<meta name="description" content="hydromodpy.validity_frame is experimental observability tooling. It records runtime metadata and can ingest JSONL capture files into a DuckDB database for downstream inspection. V1 status: validity..." />
+<meta name="description" content="validity_frame is experimental observability tooling shipped as a standalone distribution at validity_frame/src/validity_frame/, next to hydromodpy/ and never inside it. It records runtime metadata..." />
 
     <title>validity_frame &#8212; HydroModPy 2.0.0a1 documentation</title>
   
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/validity_frame';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,7 +89,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/packages/validity_frame.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/packages/validity_frame.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -746,7 +746,9 @@
                   
   <section id="validity-frame">
 <h1>validity_frame<a class="headerlink" href="#validity-frame" title="Link to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.validity_frame</span></code> is experimental observability tooling. It
+<p><code class="docutils literal notranslate"><span class="pre">validity_frame</span></code> is experimental observability tooling shipped as a
+standalone distribution at <code class="docutils literal notranslate"><span class="pre">validity_frame/src/validity_frame/</span></code>, next
+to <code class="docutils literal notranslate"><span class="pre">hydromodpy/</span></code> and never inside it. It
 records runtime metadata and can ingest JSONL capture files into a
 DuckDB database for downstream inspection.</p>
 <section id="v1-status">
@@ -770,15 +772,66 @@ workflow state.</p>
 utilities.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">validity_frame/probes/</span></code> – runtime, hardware, solver and system
 probes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">validity_frame/storage/</span></code> – JSONL-to-DuckDB ingestion helpers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validity_frame/loader.py</span></code> – JSONL-to-DuckDB ingestion helper.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validity_frame/validity.py</span></code> – the capture entry point.</p></li>
 </ul>
 </section>
 <section id="sequence-diagram">
 <h2>Sequence diagram<a class="headerlink" href="#sequence-diagram" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><span class="xref std std-doc">../process/diagrams/validity_frame_runtime_sequence</span> – runtime
-envelope showing capture before, during and after simulation.</p></li>
-</ul>
+<p>Runtime envelope showing capture before, during and after simulation:</p>
+<p class="plantuml">
+<object data="../../_images/plantuml-660e71707a19010aaf09e3086f84445ed01c4f95.svg" type="image/svg+xml" style="width:1724px;height:1073px;">
+<img src="../../_images/plantuml-660e71707a19010aaf09e3086f84445ed01c4f95.png" alt="&#64;startuml
+title Process - Validity Frame Runtime Sequence
+
+actor User
+participant &quot;Workflow Runner\n(example script / API)&quot; as Runner
+participant &quot;RuntimeAutoCapture&quot; as Capture
+participant &quot;Adapter / Entry-point\n(create_validity_frame / external adapter)&quot; as Adapter
+participant &quot;AutoCaptureCollector&quot; as Collector
+participant &quot;System / Hardware / Runtime / Solver probes&quot; as Probes
+participant &quot;Simulation / Solver&quot; as Simulation
+participant &quot;DuckDB / JSONL sidecar&quot; as Storage
+
+User -&gt; Runner: launch simulation workflow
+Runner -&gt; Capture: initialize context and output_dir
+Runner -&gt; Adapter: resolve collector implementation
+Adapter -&gt; Collector: instantiate collector (entry-point)
+Capture -&gt; Collector: capture_start()
+Collector -&gt; Probes: collect initial system/runtime state
+Probes --&gt; Collector: start snapshot data
+Collector --&gt; Capture: start snapshot
+
+Runner -&gt; Capture: run_with_capture(work)
+Capture -&gt; Simulation: execute simulation
+Simulation --&gt; Capture: results or exception
+
+alt success
+  Capture -&gt; Collector: capture_end(start_time, solver_source, logs)
+  Collector -&gt; Probes: collect end state and solver metrics
+  Probes --&gt; Collector: completed snapshot data
+  Collector --&gt; Capture: completed snapshot
+  Capture -&gt; Runner: return snapshot
+  Runner -&gt; Storage: write runtime_capture_success.json\n+append runtime_capture.jsonl
+else failure
+  Capture -&gt; Collector: capture_exception(start_time, exc, solver_source, logs)
+  Collector -&gt; Probes: collect end state and exception details
+  Probes --&gt; Collector: failed snapshot data
+  Collector --&gt; Capture: failed snapshot
+  Capture -&gt; Runner: return failed snapshot
+  Runner -&gt; Storage: write runtime_capture_failure.json\n+append runtime_capture.jsonl
+end
+
+note right of Capture
+  Collector failures are non-fatal by default: errors are logged and
+  collection is attempted but will not stop the simulation run unless
+  explicitly configured.
+end note
+
+Storage --&gt; User: observability artifacts for inspection
+&#64;enduml"/>
+
+</object></p>
 </section>
 <section id="storage-contract">
 <h2>Storage contract<a class="headerlink" href="#storage-contract" title="Link to this heading">#</a></h2>

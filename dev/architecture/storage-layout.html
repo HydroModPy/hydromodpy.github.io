@@ -1,569 +1,350 @@
 
 <!DOCTYPE html>
 
-
-<html lang="en" data-content_root="../" >
-
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
-    <link rel="shortcut icon" href="../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Storage Layout" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/storage-layout.html" />
-<meta property="og:site_name" content="HydroModPy" />
-<meta property="og:description" content="HydroModPy V1 organises storage around three SQL databases plus columnar file stores. The model is workspace &gt; project &gt; run, with each level holding its own catalog: a machine-wide global in..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
-<meta property="og:image:alt" content="HydroModPy" />
-<meta name="description" content="HydroModPy V1 organises storage around three SQL databases plus columnar file stores. The model is workspace &gt; project &gt; run, with each level holding its own catalog: a machine-wide global in..." />
-
-    <title>Storage Layout &#8212; HydroModPy 2.0.0a1 documentation</title>
-  
-  
-  
-  <script data-cfasync="false">
+<html data-content_root="../" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
+<link href="../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Storage Layout" property="og:title"/>
+<meta content="website" property="og:type"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/storage-layout.html" property="og:url"/>
+<meta content="HydroModPy" property="og:site_name"/>
+<meta content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories, one per run. The DuckDB file under.hmp/ is a query index over those directories: ..." property="og:description"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="HydroModPy" property="og:image:alt"/>
+<meta content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories, one per run. The DuckDB file under.hmp/ is a query index over those directories: ..." name="description"/>
+<title>Storage Layout — HydroModPy 2.0.0a1 documentation</title>
+<script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!--
+<!--
     this give us a css class that will be invisible only if js is disabled
   -->
-  <noscript>
-    <style>
+<noscript>
+<style>
       .pst-js-only { display: none !important; }
 
     </style>
-  </noscript>
-  
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
-    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-codeautolink.css?v=b2176991" />
-    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7115939c" />
-    <link rel="stylesheet" type="text/css" href="../_static/uml-diagrams.css?v=3ab94cdd" />
-    <link rel="stylesheet" type="text/css" href="../_static/api-reference.css?v=a49870ba" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-image-compare.css?v=b76b300f" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-feedback.css?v=22c36e05" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-page-badges.css?v=5987351c" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
-  
-  <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
-
-    <script src="../_static/documentation_options.js?v=3b17aab0"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=15591f4d"></script>
-    <script>let toggleHintShow = 'Click to show or hide details';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js?v=b8b12719"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/storage-layout';</script>
-    <script>
+</noscript>
+<!-- Loaded before other Sphinx assets -->
+<link href="../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet"/>
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet"/>
+<link href="../_static/pygments.css?v=03e43079" rel="stylesheet" type="text/css"/>
+<link href="../_static/copybutton.css?v=76b2166b" rel="stylesheet" type="text/css"/>
+<link href="../_static/togglebutton.css?v=9c3e77be" rel="stylesheet" type="text/css"/>
+<link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
+<link href="../_static/sphinx-codeautolink.css?v=b2176991" rel="stylesheet" type="text/css"/>
+<link href="../_static/sg_gallery.css?v=fd6457a4" rel="stylesheet" type="text/css"/>
+<link href="../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
+<link href="../_static/custom.css?v=7115939c" rel="stylesheet" type="text/css"/>
+<link href="../_static/uml-diagrams.css?v=3ab94cdd" rel="stylesheet" type="text/css"/>
+<link href="../_static/api-reference.css?v=a49870ba" rel="stylesheet" type="text/css"/>
+<link href="../_static/css/hmp-image-compare.css?v=b76b300f" rel="stylesheet" type="text/css"/>
+<link href="../_static/css/hmp-feedback.css?v=22c36e05" rel="stylesheet" type="text/css"/>
+<link href="../_static/css/hmp-page-badges.css?v=5987351c" rel="stylesheet" type="text/css"/>
+<link href="../_static/css/hmp-zoom-image.css?v=fa5dac89" rel="stylesheet" type="text/css"/>
+<link href="../_static/css/hmp-config-reference.css?v=3d4f2d4f" rel="stylesheet" type="text/css"/>
+<!-- So that users can add custom icons -->
+<script defer="" src="../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+<!-- Pre-loaded scripts that we'll load fully later -->
+<link as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
+<link as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
+<script src="../_static/documentation_options.js?v=3b17aab0"></script>
+<script src="../_static/doctools.js?v=9a2dae69"></script>
+<script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+<script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+<script src="../_static/copybutton.js?v=15591f4d"></script>
+<script>let toggleHintShow = 'Click to show or hide details';</script>
+<script>let toggleHintHide = 'Click to hide';</script>
+<script>let toggleOpenOnPrint = 'true';</script>
+<script src="../_static/togglebutton.js?v=b8b12719"></script>
+<script src="../_static/design-tabs.js?v=f930bc37"></script>
+<script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+<script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+<script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+<script>DOCUMENTATION_OPTIONS.pagename = 'architecture/storage-layout';</script>
+<script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
-    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
-    <script src="../_static/uml-diagrams.js?v=fefff902"></script>
-    <script src="../_static/js/hmp-image-compare.js?v=f121e18f"></script>
-    <script src="../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
-    <script src="../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
-    <script src="../_static/js/hmp-config-reference.js?v=0136e78b"></script>
-    <script src="../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/storage-layout.html" />
-    <link rel="icon" href="../_static/logoHydroModPy.png"/>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="GitHub Actions workflows" href="ci-workflows.html" />
-    <link rel="prev" title="Layered Architecture" href="layered-architecture.html" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.0" />
-  
-    
-    <script src="../_static/searchtools.js"></script>
-    <script src="../_static/language_data.js"></script>
-    <script src="../searchindex.js"></script>
-  
-  </head>
-  <body data-default-mode="">
-  
-  
-  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
-
-  
-  <div id="pst-scroll-pixel-helper"></div>
-  
-  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-  
-  
-  
-  
-  <dialog id="pst-search-dialog">
-    
-<form class="bd-search d-flex align-items-center"
-      action="../search.html"
-      method="get">
-  <i class="fa-solid fa-magnifying-glass"></i>
-  <input type="search"
-         class="form-control"
-         name="q"
-         placeholder="Search the docs ..."
-         aria-label="Search the docs ..."
-         autocomplete="off"
-         autocorrect="off"
-         autocapitalize="off"
-         spellcheck="false"/>
-  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+<script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+<script src="../_static/uml-diagrams.js?v=fefff902"></script>
+<script src="../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+<script src="../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+<script src="../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+<script src="../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+<script src="../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+<link href="https://docs.hydromodpy.fr/dev/architecture/storage-layout.html" rel="canonical"/>
+<link href="../_static/logoHydroModPy.png" rel="icon"/>
+<link href="../genindex.html" rel="index" title="Index"/>
+<link href="../search.html" rel="search" title="Search"/>
+<link href="ci-workflows.html" rel="next" title="GitHub Actions workflows"/>
+<link href="layered-architecture.html" rel="prev" title="Layered Architecture"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="en" name="docsearch:language"/>
+<meta content="2.0" name="docsearch:version"/>
+<script src="../_static/searchtools.js"></script>
+<script src="../_static/language_data.js"></script>
+<script src="../searchindex.js"></script>
+</head>
+<body data-default-mode="">
+<div class="skip-link d-print-none" id="pst-skip-link"><a href="#main-content">Skip to main content</a></div>
+<div id="pst-scroll-pixel-helper"></div>
+<button class="btn rounded-pill" id="pst-back-to-top" type="button">
+<i class="fa-solid fa-arrow-up"></i>Back to top</button>
+<dialog id="pst-search-dialog">
+<form action="../search.html" class="bd-search d-flex align-items-center" method="get">
+<i class="fa-solid fa-magnifying-glass"></i>
+<input aria-label="Search the docs ..." autocapitalize="off" autocomplete="off" autocorrect="off" class="form-control" name="q" placeholder="Search the docs ..." spellcheck="false" type="search"/>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form>
-  </dialog>
-
-  <div class="pst-async-banner-revealer d-none">
-  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</dialog>
+<div class="pst-async-banner-revealer d-none">
+<aside aria-label="Version warning" class="d-none d-print-none" id="bd-header-version-warning"></aside>
 </div>
-<aside class="bd-header-announcement" aria-label="Announcement">
-  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+<aside aria-label="Announcement" class="bd-header-announcement">
+<div class="bd-header-announcement__content">🚧 Development documentation</div>
 </aside>
-
-  
-    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none" id="pst-header">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
-    <span class="fa-solid fa-bars"></span>
-  </button>
-  
-  
-  <div class="col-lg-3 navbar-header-items__start">
-    
-      <div class="navbar-item">
-
-  
-    
-  
-
+<button aria-label="Site navigation" class="pst-navbar-icon sidebar-toggle primary-toggle">
+<span class="fa-solid fa-bars"></span>
+</button>
+<div class="col-lg-3 navbar-header-items__start">
+<div class="navbar-item">
 <a class="navbar-brand logo" href="../index.html">
-  
-  
-  
-  
-  
-    
-    
-      
-    
-    
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-  
-  
+<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-light" src="../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-dark pst-js-only" src="../_static/logoHydroModPy_long.png"/>
 </a></div>
-    
-  </div>
-  
-  <div class="col-lg-9 navbar-header-items">
-    
-    <div class="me-auto navbar-header-items__center">
-      
-        <div class="navbar-item">
+</div>
+<div class="col-lg-9 navbar-header-items">
+<div class="me-auto navbar-header-items__center">
+<div class="navbar-item">
 <nav>
-  <ul class="bd-navbar-elements navbar-nav">
-    
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+<ul class="bd-navbar-elements navbar-nav">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../index.html">
     Home
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../getting_started/index.html">
     Get started
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../user_guide/index.html">
     User Guide
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../python_api/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../python_api/index.html">
     Python API
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../cli/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../cli/index.html">
     CLI
   </a>
 </li>
-
-            <li class="nav-item dropdown">
-                <button class="btn dropdown-toggle nav-item" type="button"
-                data-bs-toggle="dropdown" aria-expanded="false"
-                aria-controls="pst-nav-more-links">
+<li class="nav-item dropdown">
+<button aria-controls="pst-nav-more-links" aria-expanded="false" class="btn dropdown-toggle nav-item" data-bs-toggle="dropdown" type="button">
                     More
                 </button>
-                <ul id="pst-nav-more-links" class="dropdown-menu">
-                    
-<li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../oo/index.html">
+<ul class="dropdown-menu" id="pst-nav-more-links">
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../oo/index.html">
     OO Patterns
   </a>
 </li>
-
-
-<li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../capability_gallery/index.html">
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../capability_gallery/index.html">
     Gallery
   </a>
 </li>
-
-
-<li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../api/index.html">
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../api/index.html">
     API Reference
   </a>
 </li>
-
-
-<li class=" current active">
-  <a class="nav-link dropdown-item nav-internal" href="index.html">
+<li class="current active">
+<a class="nav-link dropdown-item nav-internal" href="index.html">
     Developer
   </a>
 </li>
-
-
-<li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../about/index.html">
+<li class="">
+<a class="nav-link dropdown-item nav-internal" href="../about/index.html">
     About
   </a>
 </li>
-
-                </ul>
-            </li>
-            
-  </ul>
+</ul>
+</li>
+</ul>
 </nav></div>
-      
-    </div>
-    
-    
-    <div class="navbar-header-items__end">
-      
-        <div class="navbar-item navbar-persistent--container">
-          
-
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button>
-        </div>
-      
-      
-        <div class="navbar-item">
-<div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-2"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-2"
-    aria-label="Version switcher list"
-  >
-    Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-2"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-2">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
-</div></div>
-      
-        <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button></div>
-      
-        <div class="navbar-item"><ul class="navbar-icon-links"
-    aria-label="HydroModPy Resources">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">Issues</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">Google Group</span></a>
-        </li>
-</ul></div>
-      
-    </div>
-    
-  </div>
-  
-  
-    <div class="navbar-persistent--mobile">
-
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button>
-    </div>
-  
-
-  
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
-      <span class="fa-solid fa-outdent"></span>
-    </button>
-  
 </div>
-
-    </header>
-  
-
-  <div class="bd-container">
-    <div class="bd-container__inner bd-page-width">
-      
-      
-      
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
-        
-
-  
-  <div class="sidebar-header-items sidebar-primary__section">
-    
-    
-      <div class="sidebar-header-items__center">
-        
-          
-          
-            <div class="navbar-item">
+<div class="navbar-header-items__end">
+<div class="navbar-item navbar-persistent--container">
+<button aria-label="Search" class="btn search-button-field search-button__button pst-js-only" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Search">
+<i class="fa-solid fa-magnifying-glass"></i>
+<span class="search-button__default-text">Search</span>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+</div>
+<div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+<button aria-controls="pst-version-switcher-list-2" aria-haspopup="listbox" aria-label="Version switcher list" class="version-switcher__button btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pst-version-switcher-button-2" type="button">
+    Choose version  <!-- this text may get changed later by javascript -->
+<span class="caret"></span>
+</button>
+<div aria-labelledby="pst-version-switcher-button-2" class="version-switcher__menu dropdown-menu list-group-flush py-0" id="pst-version-switcher-list-2" role="listbox">
+<!-- dropdown will be populated by javascript on page load -->
+</div>
+</div></div>
+<div class="navbar-item">
+<button aria-label="Color mode" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" data-bs-placement="bottom" data-bs-title="Color mode" data-bs-toggle="tooltip">
+<i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+<i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+<i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+</button></div>
+<div class="navbar-item"><ul aria-label="HydroModPy Resources" class="navbar-icon-links">
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy" rel="noopener" target="_blank" title="GitHub"><i aria-hidden="true" class="fa-brands fa-github fa-lg"></i>
+<span class="sr-only">GitHub</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy/issues" rel="noopener" target="_blank" title="Issues"><i aria-hidden="true" class="fa-solid fa-circle-info fa-lg"></i>
+<span class="sr-only">Issues</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://groups.google.com/g/hydromodpy" rel="noopener" target="_blank" title="Google Group"><i aria-hidden="true" class="fa-solid fa-envelope fa-lg"></i>
+<span class="sr-only">Google Group</span></a>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="navbar-persistent--mobile">
+<button aria-label="Search" class="btn search-button-field search-button__button pst-js-only" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Search">
+<i class="fa-solid fa-magnifying-glass"></i>
+<span class="search-button__default-text">Search</span>
+<span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+</div>
+<button aria-label="On this page" class="pst-navbar-icon sidebar-toggle secondary-toggle">
+<span class="fa-solid fa-outdent"></span>
+</button>
+</div>
+</header>
+<div class="bd-container">
+<div class="bd-container__inner bd-page-width">
+<dialog id="pst-primary-sidebar-modal"></dialog>
+<div class="bd-sidebar-primary bd-sidebar" id="pst-primary-sidebar">
+<div class="sidebar-header-items sidebar-primary__section">
+<div class="sidebar-header-items__center">
+<div class="navbar-item">
 <nav>
-  <ul class="bd-navbar-elements navbar-nav">
-    
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+<ul class="bd-navbar-elements navbar-nav">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../index.html">
     Home
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../getting_started/index.html">
     Get started
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../user_guide/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../user_guide/index.html">
     User Guide
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../python_api/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../python_api/index.html">
     Python API
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../cli/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../cli/index.html">
     CLI
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../oo/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../oo/index.html">
     OO Patterns
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../capability_gallery/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../capability_gallery/index.html">
     Gallery
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../api/index.html">
     API Reference
   </a>
 </li>
-
-
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="index.html">
+<a class="nav-link nav-internal" href="index.html">
     Developer
   </a>
 </li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../about/index.html">
+<li class="nav-item">
+<a class="nav-link nav-internal" href="../about/index.html">
     About
   </a>
 </li>
-
-  </ul>
+</ul>
 </nav></div>
-          
-        
-      </div>
-    
-    
-    
-      <div class="sidebar-header-items__end">
-        
-          <div class="navbar-item">
+</div>
+<div class="sidebar-header-items__end">
+<div class="navbar-item">
 <div class="version-switcher__container dropdown pst-js-only">
-  <button id="pst-version-switcher-button-3"
-    type="button"
-    class="version-switcher__button btn btn-sm dropdown-toggle"
-    data-bs-toggle="dropdown"
-    aria-haspopup="listbox"
-    aria-controls="pst-version-switcher-list-3"
-    aria-label="Version switcher list"
-  >
+<button aria-controls="pst-version-switcher-list-3" aria-haspopup="listbox" aria-label="Version switcher list" class="version-switcher__button btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pst-version-switcher-button-3" type="button">
     Choose version  <!-- this text may get changed later by javascript -->
-    <span class="caret"></span>
-  </button>
-  <div id="pst-version-switcher-list-3"
-    class="version-switcher__menu dropdown-menu list-group-flush py-0"
-    role="listbox" aria-labelledby="pst-version-switcher-button-3">
-    <!-- dropdown will be populated by javascript on page load -->
-  </div>
+<span class="caret"></span>
+</button>
+<div aria-labelledby="pst-version-switcher-button-3" class="version-switcher__menu dropdown-menu list-group-flush py-0" id="pst-version-switcher-list-3" role="listbox">
+<!-- dropdown will be populated by javascript on page load -->
+</div>
 </div></div>
-        
-          <div class="navbar-item">
-
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+<div class="navbar-item">
+<button aria-label="Color mode" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" data-bs-placement="bottom" data-bs-title="Color mode" data-bs-toggle="tooltip">
+<i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+<i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+<i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
 </button></div>
-        
-          <div class="navbar-item"><ul class="navbar-icon-links"
-    aria-label="HydroModPy Resources">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">GitHub</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">Issues</span></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
-            <span class="sr-only">Google Group</span></a>
-        </li>
+<div class="navbar-item"><ul aria-label="HydroModPy Resources" class="navbar-icon-links">
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy" rel="noopener" target="_blank" title="GitHub"><i aria-hidden="true" class="fa-brands fa-github fa-lg"></i>
+<span class="sr-only">GitHub</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://github.com/HydroModPy/HydroModPy/issues" rel="noopener" target="_blank" title="Issues"><i aria-hidden="true" class="fa-solid fa-circle-info fa-lg"></i>
+<span class="sr-only">Issues</span></a>
+</li>
+<li class="nav-item">
+<a class="nav-link pst-navbar-icon" data-bs-placement="bottom" data-bs-toggle="tooltip" href="https://groups.google.com/g/hydromodpy" rel="noopener" target="_blank" title="Google Group"><i aria-hidden="true" class="fa-solid fa-envelope fa-lg"></i>
+<span class="sr-only">Google Group</span></a>
+</li>
 </ul></div>
-        
-      </div>
-    
-  </div>
-  
-    <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
-  </svg>
-  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
-  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</div>
+</div>
+<div class="sidebar-primary-items__start sidebar-primary__section">
+<div class="sidebar-primary-item pst-sidebar-collapse"><button aria-controls="pst-primary-sidebar" aria-expanded="true" id="pst-collapse-sidebar-button"><svg aria-hidden="true" class="pst-icon svg-inline--fa" focusable="false" role="img" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z" fill="currentColor"></path>
+</svg>
+<span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+<span class="pst-expand-sidebar-label">Expand Sidebar</span>
 </button></div>
-        <div class="sidebar-primary-item">
-
-<nav class="bd-docs-nav bd-links"
-     aria-label="Section Navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
+<div class="sidebar-primary-item">
+<nav aria-label="Section Navigation" class="bd-docs-nav bd-links">
+<p aria-level="1" class="bd-links__title" role="heading">Section Navigation</p>
+<div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Foundations</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="package-layout.html">Package Layout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layered-architecture.html">Layered Architecture</a></li>
@@ -576,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -678,381 +459,734 @@
 </ul>
 </div>
 </nav></div>
-    </div>
-  
-  
-  <div class="sidebar-primary-items__end sidebar-primary__section">
-      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
-  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
-  <ul class="indices-link">
-        <li class="toctree-l1">
-          <a class="reference internal"
-             href="../genindex.html"
-             accesskey="I">General Index</a>
-        </li>
-        <li class="toctree-l1">
-          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
-        </li>
-  </ul>
+</div>
+<div class="sidebar-primary-items__end sidebar-primary__section">
+<div class="sidebar-primary-item"><nav aria-labelledby="pst-indices-navigation-heading-2" class="sidebar-indices-items">
+<p aria-level="1" class="sidebar-indices-items__title" id="pst-indices-navigation-heading-2" role="heading">Indices</p>
+<ul class="indices-link">
+<li class="toctree-l1">
+<a accesskey="I" class="reference internal" href="../genindex.html">General Index</a>
+</li>
+<li class="toctree-l1">
+<a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+</li>
+</ul>
 </nav></div>
-  </div>
-
-
-      </div>
-      
-      <main id="main-content" class="bd-main" role="main">
-        
-        
-          <div class="bd-content">
-            <div class="bd-article-container">
-              
-              <div class="bd-header-article d-print-none">
+</div>
+</div>
+<main class="bd-main" id="main-content" role="main">
+<div class="bd-content">
+<div class="bd-article-container">
+<div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
-  
-    <div class="header-article-items__start">
-      
-        <div class="header-article-item">
-
+<div class="header-article-items__start">
+<div class="header-article-item">
 <nav aria-label="Breadcrumb" class="d-print-none">
-  <ul class="bd-breadcrumbs">
-    
-    <li class="breadcrumb-item breadcrumb-home">
-      <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
-      </a>
-    </li>
-    
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Architecture and Developer Guide</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Storage Layout</span></li>
-  </ul>
+<ul class="bd-breadcrumbs">
+<li class="breadcrumb-item breadcrumb-home">
+<a aria-label="Home" class="nav-link" href="../index.html">
+<i class="fa-solid fa-home"></i>
+</a>
+</li>
+<li class="breadcrumb-item"><a class="nav-link" href="index.html">Architecture and Developer Guide</a></li>
+<li aria-current="page" class="breadcrumb-item active"><span class="ellipsis">Storage Layout</span></li>
+</ul>
 </nav>
 </div>
-      
-    </div>
-  
-  
 </div>
 </div>
-              
-              
-              
-                
+</div>
 <div id="searchbox"></div>
-                <article class="bd-article">
-                  
-  <section id="storage-layout">
+<article class="bd-article">
+<section id="storage-layout">
 <h1>Storage Layout<a class="headerlink" href="#storage-layout" title="Link to this heading">#</a></h1>
-<p>HydroModPy V1 organises storage around three SQL databases plus columnar
-file stores. The model is <strong>workspace &gt; project &gt; run</strong>, with each level
-holding its own catalog:</p>
-<ul class="simple">
-<li><p>a <strong>machine-wide global index</strong> (<code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code>) federating registered
-workspaces;</p></li>
-<li><p>a per-workspace <strong>input cache</strong> (<code class="docutils literal notranslate"><span class="pre">data/cache.duckdb</span></code>) tracking
-downloaded and custom datasets;</p></li>
-<li><p>a per-project <strong>simulation catalog</strong> (<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code>) holding
-simulations, parameters, metrics, provenance, calibration trace, and
-the workflow ledger.</p></li>
-</ul>
-<p>Field arrays are persisted as <strong>Zarr v2</strong> stores under
-<code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.zarr/</span></code> or <code class="docutils literal notranslate"><span class="pre">.zarr.zip</span></code>. Tabular outputs are
-persisted as <strong>Parquet v2.6</strong> under <code class="docutils literal notranslate"><span class="pre">simulations/&lt;basename&gt;.parquet/</span></code>
-and exposed as DuckDB views.</p>
-<p>For background on the cache/catalog split, see
-<a class="reference internal" href="overview/two-databases.html"><span class="doc">The three workspace databases</span></a>. For the migration policy that applies to
-every change in this layout, see <a class="reference internal" href="overview/schema-evolution.html"><span class="doc">Schema Evolution</span></a>.</p>
-<section id="three-level-layout">
-<h2>Three-level layout<a class="headerlink" href="#three-level-layout" title="Link to this heading">#</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;workspace&gt;/
-|-- workspace.toml                metadata of the research workspace
-|-- data/
-|   |-- cache.duckdb              input cache (one per workspace)
-|   |-- dem/
-|   |   |-- raw/                  immutable downloads + sidecar .json
-|   |   `-- processed/            reprojected and clipped derivatives
-|   |-- climate/
-|   `-- ...
-`-- projects/
-    `-- &lt;project_name&gt;/
-        |-- hydromodpy.toml       project config (Pydantic root)
-        |-- catalog.duckdb        simulation catalog (one per project)
-        `-- simulations/
-            |-- &lt;basename&gt;.zarr/  or .zarr.zip
-            `-- &lt;basename&gt;.parquet/
-                |-- timeseries.parquet
-                |-- budgets.parquet
-                `-- mass_balance.parquet
-</pre></div>
-</div>
-<p>The machine-wide <code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code> lives at <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/</span></code>
-(<code class="docutils literal notranslate"><span class="pre">~/.local/state/hydromodpy/</span></code> on Linux) and federates several workspaces
-through ATTACH read-only.</p>
-</section>
-<section id="storage-basename-rule">
-<h2>Storage basename rule<a class="headerlink" href="#storage-basename-rule" title="Link to this heading">#</a></h2>
-<p>The per-simulation basename is built by <code class="docutils literal notranslate"><span class="pre">StoragePathResolver</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;basename&gt; = &quot;&lt;project&gt;__&lt;name&gt;__&lt;sim_id_first_chars&gt;&quot;
-</pre></div>
-</div>
-<p>The database identity stays the full <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> stored in the project
-<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code>.</p>
-</section>
-<section id="project-catalog-duckdb-schema">
-<h2>Project catalog DuckDB schema<a class="headerlink" href="#project-catalog-duckdb-schema" title="Link to this heading">#</a></h2>
-<p>Tables in <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/catalog.duckdb</span></code> (see
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/migrations/</span></code> for the authoritative DDL
-shipped as Alembic-like migrations).</p>
+<p><strong>Disk is the truth. The database is an index rebuilt from disk.</strong></p>
+<p>A project keeps its results as ordinary directories, one per run. The
+DuckDB file under <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> is a query index over those directories: it
+makes <code class="docutils literal notranslate"><span class="pre">ls</span></code>, <code class="docutils literal notranslate"><span class="pre">show</span></code>, metric ranking and cross-project federation fast,
+and it can be deleted and rebuilt with <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>. Nothing a
+run needs in order to be read, replayed, resumed or compared may live
+only in SQL.</p>
+<p>This page is the storage contract. It describes what the toolbox writes
+today. The last section lists what is <em>not</em> in place, so that nothing
+here is read as a promise.</p>
+<p>For the role of each database scope, see <a class="reference internal" href="overview/two-databases.html"><span class="doc">The three database scopes</span></a>.
+For the migration policy that applies to any change in this layout, see
+<a class="reference internal" href="overview/schema-evolution.html"><span class="doc">Schema Evolution</span></a>.</p>
+<section id="delivery-status">
+<h2>Delivery status<a class="headerlink" href="#delivery-status" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
-<col style="width: 24.0%" />
-<col style="width: 76.0%" />
+<col style="width: 18.0%"/>
+<col style="width: 82.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head"><p>Items</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>In place</p></td>
+<td><p>Runs-first layout: <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/</span></code> named after the run, with
+<code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> (written last, atomically), <code class="docutils literal notranslate"><span class="pre">config.toml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code>, <code class="docutils literal notranslate"><span class="pre">trash.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">fields.zarr/</span></code>, <code class="docutils literal notranslate"><span class="pre">tables.parquet/</span></code> and <code class="docutils literal notranslate"><span class="pre">figures/</span></code>.
+<code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/</span></code> with <code class="docutils literal notranslate"><span class="pre">session.json</span></code> and <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code>,
+written live by every calibration. <code class="docutils literal notranslate"><span class="pre">share/</span></code> for exports and
+reports. <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> for the index, logs, checkpoints, heartbeats,
+solver scratch and the <code class="docutils literal notranslate"><span class="pre">gc</span></code> quarantine. <code class="docutils literal notranslate"><span class="pre">project.toml</span></code> as the
+project-root marker. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>, which rebuilds the
+whole index from <code class="docutils literal notranslate"><span class="pre">runs/</span></code> and <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>. Point interrogation
+(<code class="docutils literal notranslate"><span class="pre">run.probe.series</span></code>, <code class="docutils literal notranslate"><span class="pre">group.probe.series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">point</span></code>). Observation points declared in
+<code class="docutils literal notranslate"><span class="pre">[observation]</span></code>, sampled by the run and persisted as
+<code class="docutils literal notranslate"><span class="pre">tables.parquet/observation_points.parquet</span></code>. Run retention
+enforced by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Removed</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulations/</span></code>, <code class="docutils literal notranslate"><span class="pre">exports/</span></code>, <code class="docutils literal notranslate"><span class="pre">figures/</span></code> and <code class="docutils literal notranslate"><span class="pre">reports/</span></code> at
+the project root; <code class="docutils literal notranslate"><span class="pre">.solver_scratch/</span></code>; <code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code> at the
+project root; the <code class="docutils literal notranslate"><span class="pre">.parquet.d</span></code> and <code class="docutils literal notranslate"><span class="pre">.zarr.zip</span></code> container
+suffixes; the opaque <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;__&lt;id8&gt;</span></code> storage basename; the
+adoption verb; the <code class="docutils literal notranslate"><span class="pre">retention_policies</span></code> table and the
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">audit</span> <span class="pre">prune</span></code> verb, dropped together by migration <code class="docutils literal notranslate"><span class="pre">0002</span></code>.
+<code class="docutils literal notranslate"><span class="pre">tests/unit/results/test_run_layout_contract.py</span></code> fails if any of
+the layout entries reappears.</p></td>
+</tr>
+<tr class="row-even"><td><p>Not in place</p></td>
+<td><p>A chunk layout tuned for point reads: a series at one cell still
+decompresses every chunk its time axis crosses. A per-run
+replacement for the project-wide <code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code>. See
+<a class="reference internal" href="#what-is-not-in-place">What is not in place</a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="project-layout">
+<h2>Project layout<a class="headerlink" href="#project-layout" title="Link to this heading">#</a></h2>
+<p>Layout of a project root, as written today:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;project&gt;/
+|-- project.toml         canonical config, and the marker of the root
+|-- configs/             config variants (user-managed, never created)
+|-- hydromodpy.lock      reproducibility lockfile, best effort
+|-- runs/
+|   `-- &lt;run_name&gt;/      one directory per run (see below)
+|-- sessions/
+|   `-- &lt;session_name&gt;/  one directory per calibration session
+|-- share/               exports, reports and .hmp packages
+`-- .hmp/                disposable internals
+    |-- index.duckdb     the index rebuilt from runs/ and sessions/
+    |-- logs/            hydromodpy_debug.log
+    |-- checkpoints/     resolved workflow manifests, for resume
+    |-- running/         live-run heartbeat sidecars
+    |-- scratch/         solver working directory
+    `-- trash/           orphan stores and figures quarantined by gc
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">runs/</span></code>, <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, <code class="docutils literal notranslate"><span class="pre">share/</span></code> and <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> are ignored by git.</p>
+<p>The project config file is <code class="docutils literal notranslate"><span class="pre">project.toml</span></code>, and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">resolve_project_root()</span></code> anchors on it,
+never on a database file: a project stays a project after its index is
+deleted. A workspace-level <code class="docutils literal notranslate"><span class="pre">workspace.toml</span></code> is optional metadata
+written by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">init</span></code>; it carries no part of this contract.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> is the one project-root entry the layout test does
+not cover, because it is written by a run and not by the catalog. Its
+per-run replacement does not exist yet.</p>
+<p>The machine-wide <code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code> lives at <code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">~/.local/state/hydromodpy/</span></code> on Linux) and federates registered
+<strong>projects</strong> through read-only <code class="docutils literal notranslate"><span class="pre">ATTACH</span></code>. One row of its <code class="docutils literal notranslate"><span class="pre">projects</span></code>
+table is one project root, because a project root is what owns the
+<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code> the federation attaches. A workspace root owns
+none, so it is never a row: registering one expands it into the project
+roots under its <code class="docutils literal notranslate"><span class="pre">projects/</span></code> directory, one row each, and a workspace
+with no project registers nothing.</p>
+</section>
+<section id="a-run-folder">
+<h2>A run folder<a class="headerlink" href="#a-run-folder" title="Link to this heading">#</a></h2>
+<p>All paths relative to <code class="docutils literal notranslate"><span class="pre">runs/&lt;run_name&gt;/</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runs/&lt;run_name&gt;/
+|-- manifest.json        identity, geometry, artefacts. Written LAST
+|-- config.toml          exact resolved configuration, frozen
+|-- provenance.json      environment, git, solver, timing
+|-- annotations.json     tags and notes, written after the seal
+|-- trash.json           present only while the run sits in the trash
+|-- fields.zarr/         array store
+|-- tables.parquet/      tabular payloads
+`-- figures/             figures rendered for this run
+</pre></div>
+</div>
+<p>Those names are the whole vocabulary: they are declared in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/storage/contract.py</span></code> and no other name is a run
+artefact. A run folder holds results, never diagnostics: the pipeline log
+stays under <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/logs/</span></code>, which is disposable, so nothing
+sealed by the manifest can grow after the seal.</p>
+<p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> is written last, through a temporary file and a
+rename. That single atomic write is the crash-safety mechanism: a run
+directory without a manifest is incomplete by definition, and the
+rebuild reports it instead of indexing it. The run is not staged
+elsewhere and moved into place, because the Zarr store is created at
+registration and appended to during the whole solve, which live readers
+depend on.</p>
+<p>The manifest carries five blocks (<code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">geometry</span></code>, <code class="docutils literal notranslate"><span class="pre">period</span></code>,
+<code class="docutils literal notranslate"><span class="pre">config</span></code>, <code class="docutils literal notranslate"><span class="pre">artifacts</span></code>) plus the run’s <code class="docutils literal notranslate"><span class="pre">parameters</span></code> and <code class="docutils literal notranslate"><span class="pre">metrics</span></code>
+summaries. <code class="docutils literal notranslate"><span class="pre">geometry.catchment</span></code> is the important one: the catchment
+area and the outlet live there, and a discharge derived from runoff is
+scaled by that area, so losing it yields a silently wrong series rather
+than an error.</p>
+</section>
+<section id="a-session-folder">
+<h2>A session folder<a class="headerlink" href="#a-session-folder" title="Link to this heading">#</a></h2>
+<p>A calibration session keeps its own directory under <code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/</span></code>,
+named after the instant it started, its method and the first eight
+characters of its identifier:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sessions/20260726-014233-optuna-3f2a1b7c/
+|-- session.json         identity, project, frozen search space,
+|                        objective, dates, status, best trial
+`-- trials.jsonl         one JSON object per trial, appended live
+</pre></div>
+</div>
+<p>Both files are written <strong>while the calibration runs</strong>: the descriptor
+before the first trial, one line per trial as it completes, and the
+descriptor once more at the end with the outcome. An interrupted
+calibration therefore keeps every trial it had time to evaluate, and
+stays in the index as a <code class="docutils literal notranslate"><span class="pre">running</span></code> session with the trials it ran.</p>
+<p>The format is declared by
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/session_journal.py</span></code>. It lives in <code class="docutils literal notranslate"><span class="pre">results</span></code>, not
+in <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, because the rebuild reads it and may not import the
+<code class="docutils literal notranslate"><span class="pre">calibration</span></code> layer. A trial number written twice is one trial written
+twice: the last line wins, exactly like the upsert the index does on
+<code class="docutils literal notranslate"><span class="pre">(session_id,</span> <span class="pre">iteration)</span></code>, so two rebuilds never duplicate a trial.</p>
+<p>Spin-up sessions do not write a descriptor. A directory under
+<code class="docutils literal notranslate"><span class="pre">sessions/</span></code> without <code class="docutils literal notranslate"><span class="pre">session.json</span></code> is simply not a calibration, and
+the rebuild reports it as skipped.</p>
+</section>
+<section id="naming-and-identity">
+<h2>Naming and identity<a class="headerlink" href="#naming-and-identity" title="Link to this heading">#</a></h2>
+<p>The directory under <code class="docutils literal notranslate"><span class="pre">runs/</span></code> <strong>is</strong> the run name, with its <code class="docutils literal notranslate"><span class="pre">.vN</span></code>
+version suffix. <code class="docutils literal notranslate"><span class="pre">run_dirname</span></code> folds accents to ASCII and replaces
+characters a filesystem cannot carry; it preserves case, and it raises
+<code class="docutils literal notranslate"><span class="pre">RunNameTooLongError</span></code> rather than truncating a name past 96
+characters. No output path anywhere carries the <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> or its first
+eight hex digits.</p>
+<p>Name collisions follow the <code class="docutils literal notranslate"><span class="pre">.vN</span></code> grammar: a bare name is version one
+for life, and the next run registered under the same stem becomes
+<code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;.v2</span></code> in a sibling directory. Renaming a run moves its
+directory, through the single <code class="docutils literal notranslate"><span class="pre">StoragePathResolver.move</span></code> call site, so
+the index and the tree never disagree.</p>
+<p>Trashing a run does not move bytes. It flips the index status and writes
+<code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/trash.json</span></code>, which holds the name and status the run must
+come back as. The marker is what makes the trash survive a rebuild: the
+directory is the truth, so a rebuilt index finds the run trashed instead
+of quietly resurrecting it. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">trash</span> <span class="pre">--empty</span></code> is what
+actually frees the bytes.</p>
+</section>
+<section id="three-classes-of-data">
+<h2>Three classes of data<a class="headerlink" href="#three-classes-of-data" title="Link to this heading">#</a></h2>
+<p>The classification is by consumer, not by table. It decides what must
+exist on disk before the index can be thrown away. The authoritative
+statement of the split is the module docstring of
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/reindex.py</span></code>, which is the code that
+performs the rebuild.</p>
+<section id="class-1-reconstructible">
+<h3>Class 1: reconstructible<a class="headerlink" href="#class-1-reconstructible" title="Link to this heading">#</a></h3>
+<p>Written into the run or session directory, and restored identically by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%"/>
+<col style="width: 34.0%"/>
+<col style="width: 36.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Index table</p></th>
+<th class="head"><p>Rebuilt from</p></th>
+<th class="head"><p>Read by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/simulation.parquet</span></code>, with the name taken from
+the directory</p></td>
+<td><p>catalog reads, <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">ls</span></code> and <code class="docutils literal notranslate"><span class="pre">show</span></code>, comparison</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/parameters.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">results/catalog/discovery.py</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_loader</span></code>, calibration</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/metrics.parquet</span></code></p></td>
+<td><p>ranking, comparison, calibration reporting</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/provenance.parquet</span></code></p></td>
+<td><p>input bridge (<code class="docutils literal notranslate"><span class="pre">run.input_entries()</span></code>), frozen replay</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tables.parquet/geographic_*.parquet</span></code></p></td>
+<td><p>watershed and river figures</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">geometry.catchment</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulation/extraction/derivation/catchment_aggregation.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runs_environment</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">provenance.json</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">results/export/context.py</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_loader</span></code>, rerun</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">sim_notes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">annotations.json</span></code></p></td>
+<td><p>tag search, <code class="docutils literal notranslate"><span class="pre">gc</span></code> pinning, spinup convergence gate</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracked_files</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs[]</span></code> (path, <code class="docutils literal notranslate"><span class="pre">sha256</span></code>, size, role)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entry.used_by()</span></code>, cache-to-run linking</p></td>
+</tr>
+<tr class="row-odd"><td><p>trash state</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">trash.json</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">trash</span></code> and <code class="docutils literal notranslate"><span class="pre">restore</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/session.json</span></code></p></td>
+<td><p>calibration resume, best promotion, calibration report</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/trials.jsonl</span></code></p></td>
+<td><p>calibration resume, calibration report</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The frozen <code class="docutils literal notranslate"><span class="pre">config.toml</span></code> is not a table: it stays in the run directory,
+and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--resume</span> <span class="pre">&lt;ref&gt;</span></code> replays it straight from there.
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">rerun</span></code> goes through <code class="docutils literal notranslate"><span class="pre">simulations.config_snapshot</span></code>, which
+comes back with <code class="docutils literal notranslate"><span class="pre">simulation.parquet</span></code>. <code class="docutils literal notranslate"><span class="pre">timeseries</span></code>, <code class="docutils literal notranslate"><span class="pre">budgets</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mass_balance</span></code> and <code class="docutils literal notranslate"><span class="pre">observation_points</span></code> are not tables either but
+DuckDB views over the Parquet payloads, so they come back with the files
+themselves.</p>
+</section>
+<section id="class-2-losable">
+<h3>Class 2: losable<a class="headerlink" href="#class-2-losable" title="Link to this heading">#</a></h3>
+<p>Not mirrored on disk. A rebuild drops them, by decision. Stating the
+consequence is part of the contract.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%"/>
+<col style="width: 70.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Index table</p></th>
+<th class="head"><p>Consequence of a rebuild</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">audit_log</span></code></p></td>
+<td><p>the machine event history of the project is lost. Run identity,
+results and lineage are unaffected because they come from the
+manifests. A fresh index writes one <code class="docutils literal notranslate"><span class="pre">migrate</span></code> row of its own.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_log</span></code></p></td>
+<td><p>the record of which artefacts were published under <code class="docutils literal notranslate"><span class="pre">share/</span></code> is
+lost. The artefacts themselves stay on disk.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">workflow_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">workflow_events</span></code></p></td>
+<td><p>the workflow journal is lost, so an interrupted workflow replans
+from scratch instead of resuming. The resolved manifests under
+<code class="docutils literal notranslate"><span class="pre">.hmp/checkpoints/</span></code> are disposable for the same reason.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code></p></td>
+<td><p>promotion back-fills that column in the index after the trial is
+journalled. The session keeps its <code class="docutils literal notranslate"><span class="pre">best_sim_id</span></code> and each
+promoted run keeps its <code class="docutils literal notranslate"><span class="pre">calibration:&lt;session&gt;</span></code> tag on disk, so
+the session-to-run link survives in both directions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deletions</span></code>, <code class="docutils literal notranslate"><span class="pre">purge_journal</span></code></p></td>
+<td><p>tombstones and purge resume state are lost. An interrupted hard
+purge is not replayed; the leftover directory becomes an orphan
+that <code class="docutils literal notranslate"><span class="pre">gc</span></code> reports.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Three bookkeeping columns have no home on disk:
+<code class="docutils literal notranslate"><span class="pre">runs_environment.recorded_at</span></code>, <code class="docutils literal notranslate"><span class="pre">tracked_files.recorded_at</span></code> and
+<code class="docutils literal notranslate"><span class="pre">provenance.valid_from</span></code>. The rebuild dates them from the seal time of
+their run (<code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">sealed_at</span></code>) rather than from the wall
+clock, so a rebuild stays reproducible instead of stamping itself into
+the data.</p>
+</section>
+<section id="class-3-input">
+<h3>Class 3: input<a class="headerlink" href="#class-3-input" title="Link to this heading">#</a></h3>
+<p>Observation series and station metadata (<code class="docutils literal notranslate"><span class="pre">stations</span></code>, <code class="docutils literal notranslate"><span class="pre">observations</span></code>)
+are input data. They are repopulated from their source, that is the
+workspace input cache and the data loaders, exactly like a DEM or a
+climate series. A results rebuild never tries to recreate them and never
+treats their absence as a corrupted run.</p>
+<p>Tables outside the three classes are the static dimension tables seeded
+by the DDL (<code class="docutils literal notranslate"><span class="pre">solvers</span></code>, <code class="docutils literal notranslate"><span class="pre">statuses</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_regimes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mesh_topologies</span></code>, <code class="docutils literal notranslate"><span class="pre">metric_definitions</span></code> and the <code class="docutils literal notranslate"><span class="pre">dim_*</span></code> tables). A
+rebuild recreates them from the DDL.</p>
+</section>
+</section>
+<section id="contract-coverage">
+<h2>Contract coverage<a class="headerlink" href="#contract-coverage" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/storage/contract.py</span></code> is the machine-readable half.
+It declares the three physical layers (<code class="docutils literal notranslate"><span class="pre">catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">zarr</span></code>,
+<code class="docutils literal notranslate"><span class="pre">parquet</span></code>) with their path templates, and every file name a run or
+session directory may carry. Path builders, exporters and this page
+share that one vocabulary.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%"/>
+<col style="width: 30.0%"/>
+<col style="width: 44.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Area</p></th>
+<th class="head"><p>Path</p></th>
+<th class="head"><p>Rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Index</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code></p></td>
+<td><p>one per project, rebuildable, never at the project root</p></td>
+</tr>
+<tr class="row-odd"><td><p>Run folders</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/</span></code></p></td>
+<td><p>one directory per run, named after the run, every file declared
+in the manifest</p></td>
+</tr>
+<tr class="row-even"><td><p>Sessions</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sessions/&lt;name&gt;/</span></code></p></td>
+<td><p>one directory per calibration session, descriptor plus trials
+journal</p></td>
+</tr>
+<tr class="row-odd"><td><p>Exchange</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">share/&lt;label&gt;/</span></code></p></td>
+<td><p>configured exports, reports and <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages</p></td>
+</tr>
+<tr class="row-even"><td><p>Technical cache</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.hmp/</span></code></p></td>
+<td><p>index, logs, checkpoints, heartbeats, scratch, quarantine.
+Entirely regenerable, safe to delete</p></td>
+</tr>
+<tr class="row-odd"><td><p>Project configuration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">project.toml</span></code> plus <code class="docutils literal notranslate"><span class="pre">configs/</span></code></p></td>
+<td><p>the canonical config and its variants</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="tested-invariants">
+<h3>Tested invariants<a class="headerlink" href="#tested-invariants" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Layout.</strong> <code class="docutils literal notranslate"><span class="pre">tests/unit/results/test_run_layout_contract.py</span></code> asserts
+that one solved run produces exactly one directory named after the
+run, that the tabular payloads are plain <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> files in one
+directory, that the project root grows none of the removed entries,
+that no output path carries an opaque identifier, and that no path
+ends in <code class="docutils literal notranslate"><span class="pre">.parquet.d</span></code> or <code class="docutils literal notranslate"><span class="pre">.zarr.zip</span></code>.</p></li>
+<li><p><strong>Naming.</strong> <code class="docutils literal notranslate"><span class="pre">tests/unit/results/test_result_storage_layout.py</span></code> pins
+the layer templates, refuses an over-long name instead of truncating
+it, and checks a versioned rerun lands in a sibling directory.</p></li>
+<li><p><strong>Rebuild.</strong> <code class="docutils literal notranslate"><span class="pre">tests/unit/results/test_reindex.py</span></code> covers
+coverage (every sealed run on disk is indexed, an unsealed one is
+reported and left out, a manifest naming another run is refused),
+sufficiency (what execution reads back is restored, the frozen config
+stays readable, a trashed run stays trashed), idempotence (two
+rebuilds produce the same index), and atomicity (the previous index
+survives a failed rebuild, a reader keeps reading across the swap).</p></li>
+</ul>
+</section>
+</section>
+<section id="per-run-zarr-store">
+<h2>Per-run Zarr store<a class="headerlink" href="#per-run-zarr-store" title="Link to this heading">#</a></h2>
+<p>Zarr <strong>format 3</strong> store, carrying HydroModPy’s own
+<code class="docutils literal notranslate"><span class="pre">zarr_schema_version</span> <span class="pre">=</span> <span class="pre">"2"</span></code> in its root attributes. The store is staged
+and promoted to its final path with a rename at registration, then
+appended to in place for the whole solve, under a cross-process file
+lock. It is not staged again at the end, because live readers follow that
+path while the run is solving, and there is no packed form: a container
+suffix would break those readers.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runs/&lt;name&gt;/fields.zarr/
+|-- zarr.json     root attributes (ACDD) and consolidated metadata
+|-- meta/         schema and store-level metadata
+|-- mesh/         topology, cell types, coordinates, thicknesses
+|-- state/        solver state fields
+|-- forcing/      recharge and other forcings
+|-- particles/    particle trajectories
+|-- derived/      created only when a derived field is opted in
+|-- budget/       created only when budget.spatial_fields is on
+|-- geographic/   created on demand for the geographic rasters
+|-- head          root array, (time, layer, cell)
+|-- time          root array, the CF time axis
+`-- crs           root array, the CF grid mapping
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">meta</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">particles</span></code> and <code class="docutils literal notranslate"><span class="pre">forcing</span></code> are created
+at store init. <code class="docutils literal notranslate"><span class="pre">derived</span></code>, <code class="docutils literal notranslate"><span class="pre">budget</span></code> and <code class="docutils literal notranslate"><span class="pre">geographic</span></code> are not
+pre-created: heavy fields are opt-in
+(<code class="docutils literal notranslate"><span class="pre">[simulation.results.derived]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">[simulation.results.budget]</span> <span class="pre">spatial_fields</span></code>), so a default run carries
+neither group and the lumped budget still feeds the catchment scalars.</p>
+<p>Compression defaults to Blosc-zstd with bitshuffle, each variable carries
+CF <code class="docutils literal notranslate"><span class="pre">standard_name</span></code> and <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code> attributes where the CF table has
+one, consolidated metadata is written at the root, and solver sentinel
+values are masked to NaN at write time. Chunks target about 1 MiB.
+Sharding switches on when a variable’s total footprint
+(<code class="docutils literal notranslate"><span class="pre">n_timesteps</span> <span class="pre">*</span> <span class="pre">layer_bytes_per_step</span></code>) exceeds 100 MiB, with shards
+capped near 64 MiB.</p>
+</section>
+<section id="per-run-parquet-directory">
+<h2>Per-run Parquet directory<a class="headerlink" href="#per-run-parquet-directory" title="Link to this heading">#</a></h2>
+<p>Parquet format <code class="docutils literal notranslate"><span class="pre">2.6</span></code> written through <code class="docutils literal notranslate"><span class="pre">write_table_atomic</span></code> (temporary
+file plus <code class="docutils literal notranslate"><span class="pre">os.replace</span></code>) with ZSTD level 5, 50 000-row groups, page
+index and bloom filters on the primary-key columns where the linked
+pyarrow build supports them. Each file carries
+<code class="docutils literal notranslate"><span class="pre">hmp.schema_version</span> <span class="pre">=</span> <span class="pre">"v2"</span></code> plus its schema name, primary key and the
+run’s identity in Parquet key-value metadata, and is exposed as a DuckDB
+view named after the payload.</p>
+<p>The container directory is <code class="docutils literal notranslate"><span class="pre">tables.parquet/</span></code> and the payloads inside
+are plain <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> files. No suffix marks a container.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%"/>
+<col style="width: 70.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Payload</p></th>
+<th class="head"><p>Content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation.parquet</span></code></p></td>
+<td><p>one-row snapshot of the run’s index entry, read by <code class="docutils literal notranslate"><span class="pre">reindex</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parameters.parquet</span></code></p></td>
+<td><p>the run parameters, one row each</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>, <code class="docutils literal notranslate"><span class="pre">metric</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n_samples</span></code>, validity window</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timeseries.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>, <code class="docutils literal notranslate"><span class="pre">datetime</span></code>,
+<code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">qflag</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">budgets.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">timestep</span></code>, <code class="docutils literal notranslate"><span class="pre">zone_id</span></code>, <code class="docutils literal notranslate"><span class="pre">component</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flux_in</span></code>, <code class="docutils literal notranslate"><span class="pre">flux_out</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mass_balance.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">timestep</span></code>, <code class="docutils literal notranslate"><span class="pre">total_in</span></code>, <code class="docutils literal notranslate"><span class="pre">total_out</span></code>,
+<code class="docutils literal notranslate"><span class="pre">storage_in</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_out</span></code>, <code class="docutils literal notranslate"><span class="pre">percent_error</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observation_points.parquet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">cell_id</span></code>, <code class="docutils literal notranslate"><span class="pre">layer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crs_wkt</span></code>, <code class="docutils literal notranslate"><span class="pre">crs_epsg</span></code>: the points declared in <code class="docutils literal notranslate"><span class="pre">[observation]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance.parquet</span></code></p></td>
+<td><p>input provenance rows of the run</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_*.parquet</span></code></p></td>
+<td><p>GeoParquet 1.1 vector layers (catchment outline, buffered box,
+drainage network)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="project-index-duckdb-schema">
+<h2>Project index DuckDB schema<a class="headerlink" href="#project-index-duckdb-schema" title="Link to this heading">#</a></h2>
+<p>Tables of the project index. The authoritative DDL is
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/migrations/0001_initial.sql</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">Class</span></code> column is the classification defined above.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 24.0%"/>
+<col style="width: 18.0%"/>
+<col style="width: 58.0%"/>
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Table</p></th>
+<th class="head"><p>Class</p></th>
 <th class="head"><p>Key columns</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code> (UUID v7), <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code>,
-<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">n_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">n_layers</span></code>,
-<code class="docutils literal notranslate"><span class="pre">n_timesteps</span></code>, <code class="docutils literal notranslate"><span class="pre">crs_wkt</span></code>, <code class="docutils literal notranslate"><span class="pre">bbox_xmin/ymin/xmax/ymax</span></code>,
-<code class="docutils literal notranslate"><span class="pre">period_start/end</span></code>, <code class="docutils literal notranslate"><span class="pre">zarr_path</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_basename</span></code>,
-<code class="docutils literal notranslate"><span class="pre">duration_s</span></code>, <code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>,
-<code class="docutils literal notranslate"><span class="pre">scientific_objective</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code> (UUID), <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">name_stem</span></code>, <code class="docutils literal notranslate"><span class="pre">version_int</span></code>,
+<code class="docutils literal notranslate"><span class="pre">original_name</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">solver_id</span></code>, <code class="docutils literal notranslate"><span class="pre">status_id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mesh_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">n_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">n_layers</span></code>, <code class="docutils literal notranslate"><span class="pre">n_timesteps</span></code>,
+<code class="docutils literal notranslate"><span class="pre">crs_wkt</span></code>, <code class="docutils literal notranslate"><span class="pre">bbox_*</span></code>, <code class="docutils literal notranslate"><span class="pre">period_start/end</span></code>,
+<code class="docutils literal notranslate"><span class="pre">config_snapshot</span></code>, <code class="docutils literal notranslate"><span class="pre">config_hash</span></code>, <code class="docutils literal notranslate"><span class="pre">zarr_path</span></code>,
+<code class="docutils literal notranslate"><span class="pre">storage_basename</span></code>, <code class="docutils literal notranslate"><span class="pre">trashed_at</span></code>, <code class="docutils literal notranslate"><span class="pre">duration_s</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">param_name</span></code>, <code class="docutils literal notranslate"><span class="pre">zone_id</span></code> (default
-<code class="docutils literal notranslate"><span class="pre">&quot;__global__&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">parameterization</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">param_name</span></code>, <code class="docutils literal notranslate"><span class="pre">zone_id</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code>,
+<code class="docutils literal notranslate"><span class="pre">parameterization</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;__outlet__&quot;</span></code>),
-<code class="docutils literal notranslate"><span class="pre">metric_name</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">n_samples</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">objective_name</span></code>,
-<code class="docutils literal notranslate"><span class="pre">n_iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">best_sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">iteration</span></code>, <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">params_hash</span></code>,
-<code class="docutils literal notranslate"><span class="pre">parameters</span></code> (JSON), <code class="docutils literal notranslate"><span class="pre">objective_value</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">metric_name</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n_samples</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance</span></code></p></td>
+<td><p>reconstructible</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>, <code class="docutils literal notranslate"><span class="pre">source_type</span></code>, <code class="docutils literal notranslate"><span class="pre">source_ref</span></code>,
 <code class="docutils literal notranslate"><span class="pre">source_sha256</span></code>, <code class="docutils literal notranslate"><span class="pre">payload_sha256</span></code>, <code class="docutils literal notranslate"><span class="pre">fetched_at</span></code>,
 <code class="docutils literal notranslate"><span class="pre">n_records</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observation_points</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">cell_id</span></code>,
-<code class="docutils literal notranslate"><span class="pre">layer</span></code>, <code class="docutils literal notranslate"><span class="pre">crs_wkt</span></code>, <code class="docutils literal notranslate"><span class="pre">crs_epsg</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runs_environment</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy_version</span></code>,
+<code class="docutils literal notranslate"><span class="pre">platform</span></code>, <code class="docutils literal notranslate"><span class="pre">git_commit</span></code>, <code class="docutils literal notranslate"><span class="pre">solver_binary_sha256</span></code>,
+<code class="docutils literal notranslate"><span class="pre">env_packages</span></code>, <code class="docutils literal notranslate"><span class="pre">rng_seed</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_metadata</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">key</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>. Holds the catchment area and
+outlet coordinates used by catchment aggregation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">geographic_features</span></code></p></td>
+<td><p>reconstructible</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_name</span></code>, <code class="docutils literal notranslate"><span class="pre">geometry_kind</span></code>,
 <code class="docutils literal notranslate"><span class="pre">geoparquet_path</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runs_environment</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">python_version</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy_version</span></code>,
-<code class="docutils literal notranslate"><span class="pre">platform</span></code>, <code class="docutils literal notranslate"><span class="pre">git_commit</span></code>, <code class="docutils literal notranslate"><span class="pre">solver_binary_sha256</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rng_seed</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tags</span></code>, <code class="docutils literal notranslate"><span class="pre">sim_notes</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">tag</span></code> / <code class="docutils literal notranslate"><span class="pre">note</span></code>. Mirrored in <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tracked_files</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">role</span></code>, <code class="docutils literal notranslate"><span class="pre">category</span></code>, <code class="docutils literal notranslate"><span class="pre">original_path</span></code>
-(workspace-relative), <code class="docutils literal notranslate"><span class="pre">canonical_path</span></code>, <code class="docutils literal notranslate"><span class="pre">sha256</span></code>,
-<code class="docutils literal notranslate"><span class="pre">size_bytes</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">objective_name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n_iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">best_sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">status_id</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code>, <code class="docutils literal notranslate"><span class="pre">longitude</span></code>,
-<code class="docutils literal notranslate"><span class="pre">variable_type</span></code>, <code class="docutils literal notranslate"><span class="pre">source</span></code>, <code class="docutils literal notranslate"><span class="pre">active</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">iteration</span></code>, <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">params_hash</span></code>,
+<code class="docutils literal notranslate"><span class="pre">parameters</span></code> (JSON), <code class="docutils literal notranslate"><span class="pre">objective_value</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_type</span></code>, <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
-<code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">quality</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracked_files</span></code></p></td>
+<td><p>reconstructible</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">role</span></code>, <code class="docutils literal notranslate"><span class="pre">category</span></code>, <code class="docutils literal notranslate"><span class="pre">original_path</span></code>,
+<code class="docutils literal notranslate"><span class="pre">canonical_path</span></code>, <code class="docutils literal notranslate"><span class="pre">sha256</span></code>, <code class="docutils literal notranslate"><span class="pre">size_bytes</span></code>, from the
+<code class="docutils literal notranslate"><span class="pre">inputs[]</span></code> block of <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">workflow_steps</span></code></p></td>
-<td><p>workflow ledger merged into the catalog: <code class="docutils literal notranslate"><span class="pre">step_id</span></code>,
-<code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">step_name</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">started_at</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ended_at</span></code>, <code class="docutils literal notranslate"><span class="pre">payload</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">workflow_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">workflow_events</span></code></p></td>
+<td><p>losable</p></td>
+<td><p>workflow journal: <code class="docutils literal notranslate"><span class="pre">step_id</span></code>, <code class="docutils literal notranslate"><span class="pre">run_id</span></code>, <code class="docutils literal notranslate"><span class="pre">step_name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">status_id</span></code>, <code class="docutils literal notranslate"><span class="pre">started_at</span></code>, <code class="docutils literal notranslate"><span class="pre">ended_at</span></code>, <code class="docutils literal notranslate"><span class="pre">payload</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">audit_log</span></code>, <code class="docutils literal notranslate"><span class="pre">export_log</span></code>, <code class="docutils literal notranslate"><span class="pre">deletions</span></code>, <code class="docutils literal notranslate"><span class="pre">purge_journal</span></code></p></td>
+<td><p>losable</p></td>
+<td><p>machine event history, export bookkeeping, tombstones, purge
+resume state</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stations</span></code>, <code class="docutils literal notranslate"><span class="pre">observations</span></code></p></td>
+<td><p>input</p></td>
+<td><p>station metadata and observation series, repopulated from the
+input cache</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solvers</span></code>, <code class="docutils literal notranslate"><span class="pre">statuses</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_regimes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mesh_topologies</span></code>, <code class="docutils literal notranslate"><span class="pre">dim_*</span></code>, <code class="docutils literal notranslate"><span class="pre">metric_definitions</span></code></p></td>
+<td><p>dimension</p></td>
+<td><p>static vocabularies seeded by the DDL</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">schema_migrations</span></code></p></td>
+<td><p>dimension</p></td>
 <td><p>one row per applied migration: <code class="docutils literal notranslate"><span class="pre">version</span></code>, <code class="docutils literal notranslate"><span class="pre">component</span></code>,
 <code class="docutils literal notranslate"><span class="pre">slug</span></code>, <code class="docutils literal notranslate"><span class="pre">checksum</span></code>, <code class="docutils literal notranslate"><span class="pre">applied_at</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Companion views (read-only):</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code>,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">v_best_per_project</span></code>,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">v_metrics_wide</span></code>, <code class="docutils literal notranslate"><span class="pre">v_params_wide</span></code>.</p></li>
-</ul>
-</section>
-<section id="workspace-cache-duckdb-schema">
-<h2>Workspace cache DuckDB schema<a class="headerlink" href="#workspace-cache-duckdb-schema" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/cache.duckdb</span></code> is keyed on the data variable, source,
-and SHA-256 fingerprint. Key tables:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<colgroup>
-<col style="width: 24.0%" />
-<col style="width: 76.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Table</p></th>
-<th class="head"><p>Role</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entries</span></code></p></td>
-<td><p>one row per cached file. Columns <code class="docutils literal notranslate"><span class="pre">entry_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>,
-<code class="docutils literal notranslate"><span class="pre">source_type</span></code>, <code class="docutils literal notranslate"><span class="pre">file_path</span></code> (workspace-relative POSIX),
-<code class="docutils literal notranslate"><span class="pre">payload_sha256</span></code>, <code class="docutils literal notranslate"><span class="pre">fetched_at</span></code>, <code class="docutils literal notranslate"><span class="pre">size_bytes</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></td>
-<td><p>derived layers (reprojections, clipping, mosaics) tied back to a
-parent <code class="docutils literal notranslate"><span class="pre">entries</span></code> row.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">provenance</span></code></p></td>
-<td><p>upstream source ref, license, citation, query parameters.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">failures</span></code></p></td>
-<td><p>failed downloads tagged for retry.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">validation_reports</span></code></p></td>
-<td><p>sidecar JSON validation outcome per <code class="docutils literal notranslate"><span class="pre">entries</span></code> row.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">schema_migrations</span></code></p></td>
-<td><p>same migration ledger format as the project catalog.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="machine-global-index-duckdb-schema">
-<h2>Machine global index DuckDB schema<a class="headerlink" href="#machine-global-index-duckdb-schema" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">$XDG_STATE_HOME/hydromodpy/index.duckdb</span></code> keeps the list of registered
-workspaces and rebuilds federated views on demand:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<colgroup>
-<col style="width: 24.0%" />
-<col style="width: 76.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Table or view</p></th>
-<th class="head"><p>Role</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">workspaces</span></code></p></td>
-<td><p>one row per registered workspace URI plus the path to its
-<code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code> files.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">all_simulations</span></code></p></td>
-<td><p>federated view over every project catalog reachable from
-registered workspaces. Read-only.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">all_projects</span></code></p></td>
-<td><p>companion federated views used by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">index</span> <span class="pre">search</span></code>.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="per-simulation-zarr-store">
-<h2>Per-simulation Zarr store<a class="headerlink" href="#per-simulation-zarr-store" title="Link to this heading">#</a></h2>
-<p>Zarr v2 root layout, written atomically (tmp + rename + fsync) under a
-file lock:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;basename&gt;.zarr/
-|-- meta/                  ACDD root attributes + ZARR_SCHEMA_VERSION
-|-- mesh/                  topology, cell types, coordinates
-|-- field/                 head, watertable_*, accumulation_flux, ...
-|-- topography/            DEM-derived rasters (renamed from raster/)
-|-- particles/             particle trajectories (renamed from pathlines/)
-`-- budget/                budget components per timestep
-</pre></div>
-</div>
-<p>Compression defaults to Blosc-zstd. Each variable carries CF
-<code class="docutils literal notranslate"><span class="pre">standard_name</span></code> and <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code> attributes, consolidated metadata
-is strict, and <code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span></code> is pinned to <code class="docutils literal notranslate"><span class="pre">&quot;2&quot;</span></code>.</p>
-</section>
-<section id="per-simulation-parquet-directory">
-<h2>Per-simulation Parquet directory<a class="headerlink" href="#per-simulation-parquet-directory" title="Link to this heading">#</a></h2>
-<p>Parquet v2.6 files produced through <code class="docutils literal notranslate"><span class="pre">write_table_atomic</span></code> (tmp +
-<code class="docutils literal notranslate"><span class="pre">os.replace</span></code>) with ZSTD compression, row-group size 50 000, page index
-and bloom filters where available. Each file carries
-<code class="docutils literal notranslate"><span class="pre">hmp.schema_version</span> <span class="pre">=</span> <span class="pre">&quot;v2&quot;</span></code> in the KV-metadata mixin and is exposed as
-a DuckDB view named after the table.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<colgroup>
-<col style="width: 24.0%" />
-<col style="width: 76.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>File</p></th>
-<th class="head"><p>Columns</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeseries.parquet</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">station_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>, <code class="docutils literal notranslate"><span class="pre">datetime</span></code>,
-<code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">qflag</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">budgets.parquet</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">timestep</span></code> (BIGINT), <code class="docutils literal notranslate"><span class="pre">zone_id</span></code>, <code class="docutils literal notranslate"><span class="pre">component</span></code>,
-<code class="docutils literal notranslate"><span class="pre">flux_in</span></code>, <code class="docutils literal notranslate"><span class="pre">flux_out</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mass_balance.parquet</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">timestep</span></code>, <code class="docutils literal notranslate"><span class="pre">total_in</span></code>, <code class="docutils literal notranslate"><span class="pre">total_out</span></code>,
-<code class="docutils literal notranslate"><span class="pre">storage_in</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_out</span></code>, <code class="docutils literal notranslate"><span class="pre">percent_error</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>GeoParquet 1.1 is used for vector layers persisted alongside the
-simulation (catchment outline, drainage network).</p>
+<p><code class="docutils literal notranslate"><span class="pre">observation_points</span></code> has no row here on purpose: the declaration lives
+in the run directory and is exposed as a Parquet-backed view, which is
+what makes it survive a rebuild. <code class="docutils literal notranslate"><span class="pre">retention_policies</span></code> is gone;
+migration <code class="docutils literal notranslate"><span class="pre">0002</span></code> dropped it together with the <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">audit</span> <span class="pre">prune</span></code> verb,
+because a per-event-type age sweep deletes rows from the middle of the
+<code class="docutils literal notranslate"><span class="pre">audit_log</span></code> hash chain and would break <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">audit</span> <span class="pre">verify</span></code>
+permanently.</p>
+<p>Views. <code class="docutils literal notranslate"><span class="pre">v_workflow_heartbeats</span></code> comes from the DDL.
+<code class="docutils literal notranslate"><span class="pre">v_simulation_summary</span></code> (the view the machine index federates),
+<code class="docutils literal notranslate"><span class="pre">v_best_per_project</span></code>, <code class="docutils literal notranslate"><span class="pre">v_metrics_wide</span></code>, <code class="docutils literal notranslate"><span class="pre">v_params_long</span></code> and
+<code class="docutils literal notranslate"><span class="pre">v_params_wide</span></code> are created at runtime by
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/views.py</span></code>. <code class="docutils literal notranslate"><span class="pre">timeseries</span></code>, <code class="docutils literal notranslate"><span class="pre">budgets</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mass_balance</span></code>, <code class="docutils literal notranslate"><span class="pre">observation_points</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics_parquet</span></code> and
+<code class="docutils literal notranslate"><span class="pre">provenance_parquet</span></code> are views over the run’s Parquet payloads,
+declared once in <code class="docutils literal notranslate"><span class="pre">PARQUET_VIEW_NAMES</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/constants.py</span></code>).</p>
 </section>
 <section id="backend-abstraction">
 <h2>Backend abstraction<a class="headerlink" href="#backend-abstraction" title="Link to this heading">#</a></h2>
-<p>Project-catalog SQL access goes through the
+<p>Project index SQL access goes through the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">CatalogBackend</span></code> Protocol in
 normal runtime paths. The in-tree V1 adapter is <code class="docutils literal notranslate"><span class="pre">DuckDBBackend</span></code>.
 HydroModPy V1 does not promise a fully portable non-DuckDB backend:
 cache stores, diagnostics, migration runners and portable-package
-snapshots are DuckDB-specific by contract.
-Field readers go through <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code> which dispatches to Zarr or
-Parquet stores via the field registry. See
-<a class="reference internal" href="packages/results.html"><span class="doc">results</span></a> for the Python surface.</p>
+snapshots are DuckDB-specific by contract. Field readers go through
+<code class="docutils literal notranslate"><span class="pre">hmp.read</span></code>, which dispatches to Zarr or Parquet stores via the field
+registry. See <a class="reference internal" href="packages/results.html"><span class="doc">results</span></a> for the Python
+surface.</p>
 </section>
-<section id="concurrency-and-retry">
-<h2>Concurrency and retry<a class="headerlink" href="#concurrency-and-retry" title="Link to this heading">#</a></h2>
-<p>DuckDB project-catalog writes use <code class="docutils literal notranslate"><span class="pre">connect_with_retry</span></code> and the
-<code class="docutils literal notranslate"><span class="pre">&#64;with_lock_retry</span></code> decorator on write paths. Data-cache writes use the
-data-cache DuckDB adapter. Zarr writes acquire a <code class="docutils literal notranslate"><span class="pre">filelock</span></code> on the
-store root, write to a sibling tmp directory, and promote with
-<code class="docutils literal notranslate"><span class="pre">os.replace</span></code>. Short-lived cross-process lock contention resolves
-transparently instead of surfacing as an error.</p>
+<section id="concurrency-and-atomic-writes">
+<h2>Concurrency and atomic writes<a class="headerlink" href="#concurrency-and-atomic-writes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Index writes use <code class="docutils literal notranslate"><span class="pre">connect_with_retry</span></code> and the <code class="docutils literal notranslate"><span class="pre">@with_lock_retry</span></code>
+decorator, so short-lived cross-process contention resolves instead of
+surfacing as an error.</p></li>
+<li><p>Zarr field writes hold a cross-process <code class="docutils literal notranslate"><span class="pre">filelock</span></code> on the store root
+and append in place. The store directory is promoted with a rename
+when it is created.</p></li>
+<li><p>Parquet writes use a temporary file plus <code class="docutils literal notranslate"><span class="pre">os.replace</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code> and
+<code class="docutils literal notranslate"><span class="pre">trash.json</span></code> are written the same way: temporary file, then rename.</p></li>
+<li><p>A solving run refreshes a heartbeat sidecar under <code class="docutils literal notranslate"><span class="pre">.hmp/running/</span></code> so
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">watch</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span></code> read liveness from a file
+rather than from a database a live solve holds locked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code> fills a staging database next to the index
+and installs it with one atomic rename (<code class="docutils literal notranslate"><span class="pre">_publish</span></code> in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/reindex.py</span></code>, the only publishing path).
+The invariant is that <code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code> is never absent nor
+half-written: a reader that was reading keeps reading the file it
+opened, and the next opener gets the rebuilt one. <code class="docutils literal notranslate"><span class="pre">os.replace</span></code>
+delivers exactly that on POSIX. Windows refuses it with
+<code class="docutils literal notranslate"><span class="pre">PermissionError</span></code> as soon as another handle is on the index,
+because <code class="docutils literal notranslate"><span class="pre">MoveFileEx</span></code> deletes the target eagerly, so the same rename
+is asked of the kernel there through <code class="docutils literal notranslate"><span class="pre">SetFileInformationByHandle</span></code>
+with <code class="docutils literal notranslate"><span class="pre">FILE_RENAME_INFO_EX</span></code> and <code class="docutils literal notranslate"><span class="pre">FILE_RENAME_POSIX_SEMANTICS</span></code>,
+which unlinks the target from its directory instead of deleting it.
+Both ends are one atomic rename; there is no non-atomic fallback.
+Where the kernel supports neither (below Windows 10 1709, or a volume
+that is not NTFS) the rebuild fails and says so: the previous index is
+untouched and still readable, and the fix is to close the processes
+reading the project and rebuild again.</p></li>
+</ul>
 </section>
 <section id="lockfile-and-reproducibility">
 <h2>Lockfile and reproducibility<a class="headerlink" href="#lockfile-and-reproducibility" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> is written best-effort next to the project catalog
-when the run can inspect the input cache and collect fingerprints. The
-lockfile pins:</p>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> is written best-effort at the project root when the
+run can reach the workspace input cache. It is written atomically and
+pins:</p>
 <ul class="simple">
-<li><p>the resolved Pydantic configuration tree;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy</span></code> version and git commit;</p></li>
-<li><p>the solver binary release tag and SHA-256;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ZARR_SCHEMA_VERSION</span></code>, <code class="docutils literal notranslate"><span class="pre">PARQUET_SCHEMA_VERSION</span></code>, and the catalog
-migration version applied;</p></li>
-<li><p>input-data fingerprints from <code class="docutils literal notranslate"><span class="pre">provenance</span></code>.</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">hydromodpy</span></code> version, git commit, Python version and config
+schema fingerprint;</p></li>
+<li><p>the solver binaries with their SHA-256 and version text;</p></li>
+<li><p>the catalog, Zarr and Parquet schema versions;</p></li>
+<li><p>input fingerprints (relative path, SHA-256, size, fetch date).</p></li>
 </ul>
-<p>A frozen replay (<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--frozen</span></code>) refuses any source whose
-fingerprint has changed since the lockfile was written. When no input
-cache is available, a normal run may complete without a lockfile; that
-is a reproducibility warning, not a failed run.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--frozen</span></code> refuses any source whose fingerprint changed since
+the lockfile was written; <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--no-lock</span></code> skips the post-run write.
+When no input cache is available, a normal run may complete without a
+lockfile; that is a reproducibility warning, not a failed run.</p>
 </section>
 <section id="direct-duckdb-exceptions">
 <h2>Direct DuckDB exceptions<a class="headerlink" href="#direct-duckdb-exceptions" title="Link to this heading">#</a></h2>
-<p>The normal application path uses catalog/cache adapters. Direct
+<p>The normal application path uses index and cache adapters. Direct
 <code class="docutils literal notranslate"><span class="pre">duckdb.connect</span></code> is accepted only for:</p>
 <ul class="simple">
 <li><p>migration runners that bootstrap schema files;</p></li>
@@ -1060,152 +1194,253 @@ is a reproducibility warning, not a failed run.</p>
 <li><p>read-only diagnostics and doctor output;</p></li>
 <li><p>portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> package snapshots;</p></li>
 <li><p>tests and performance benchmarks;</p></li>
-<li><p>developer-only CLI inspection commands;</p></li>
-<li><p>experimental <code class="docutils literal notranslate"><span class="pre">validity_frame</span></code> ingestion.</p></li>
+<li><p>developer-only CLI inspection commands.</p></li>
 </ul>
-<p>New direct DuckDB calls in user-facing CLI commands or <code class="docutils literal notranslate"><span class="pre">hydromodpy._api</span></code>
-should be considered a contract regression unless this list is updated
+<p>A new direct DuckDB call in a user-facing CLI command or in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy._api</span></code> is a contract regression unless this list is updated
 with a rationale.</p>
 </section>
 <section id="portable-hmp-packages">
 <h2>Portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages<a class="headerlink" href="#portable-hmp-packages" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export-package</span> <span class="pre">&lt;sim_id&gt;</span> <span class="pre">-o</span> <span class="pre">run.hmp</span></code> bundles:</p>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">-o</span> <span class="pre">run.hmp</span></code> bundles the run seal (manifest,
+provenance, frozen config), a one-simulation DuckDB snapshot and the
+Zarr and Parquet stores into one <code class="docutils literal notranslate"><span class="pre">tar.zst</span></code> archive with a SHA-256 per
+file; several references produce a single multi-run container. The Zarr
+store is packed to <code class="docutils literal notranslate"><span class="pre">fields.zarr.zip</span></code> <strong>inside the archive only</strong>, and
+import unpacks it back to a directory store, so nothing on disk ever
+stays zipped. Without <code class="docutils literal notranslate"><span class="pre">-o</span></code> the archive lands in the current directory,
+named after the run. A run whose config enables <code class="docutils literal notranslate"><span class="pre">[export]</span> <span class="pre">package</span></code>
+writes its archive under <code class="docutils literal notranslate"><span class="pre">share/&lt;label&gt;/</span></code> instead.
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">import</span> <span class="pre">run.hmp</span></code> verifies the magic and every checksum,
+then re-materialises the runs in the target project.</p>
+</section>
+<section id="reading-one-cell">
+<h2>Reading one cell<a class="headerlink" href="#reading-one-cell" title="Link to this heading">#</a></h2>
+<p>A finished run answers for one precise cell, after the fact.
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/run/point.py</span></code> binds the point-to-cell lookup
+(<code class="docutils literal notranslate"><span class="pre">results/spatial_index</span></code>) and the on-the-fly derivations
+(<code class="docutils literal notranslate"><span class="pre">results/derive/virtual_fields</span></code>) to a run, and exposes the gesture as
+<code class="docutils literal notranslate"><span class="pre">run.probe.series</span></code> and <code class="docutils literal notranslate"><span class="pre">group.probe.series</span></code>. The cell is named by
+project-CRS coordinates, by its zero-based index, or by a depth in
+metres below the local model top that picks the layer. A virtual field
+(<code class="docutils literal notranslate"><span class="pre">watertable_depth</span></code> …) answers exactly like a persisted one, so a
+map read and a point read can never disagree.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">probe</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">352000.0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">6789000.0</span><span class="p">)</span>
+<span class="n">run</span><span class="o">.</span><span class="n">probe</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="s2">"watertable_depth"</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="mi">1204</span><span class="p">,</span> <span class="n">timestep</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">group</span><span class="o">.</span><span class="n">probe</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="s2">"head"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">352000.0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">6789000.0</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">12.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The answer is a long-format table (<code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>, <code class="docutils literal notranslate"><span class="pre">variable</span></code>,
+<code class="docutils literal notranslate"><span class="pre">timestep</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">cell</span></code>, <code class="docutils literal notranslate"><span class="pre">layer</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code>,
+<code class="docutils literal notranslate"><span class="pre">y</span></code>), which makes the multi-run form a plain concatenation ready for a
+scenario comparison. The same reader backs the CLI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>catalog<span class="w"> </span>point<span class="w"> </span>@last<span class="w"> </span>--var<span class="w"> </span>head<span class="w"> </span>--xy<span class="w"> </span><span class="m">395100</span><span class="w"> </span><span class="m">6824925</span>
+hmp<span class="w"> </span>catalog<span class="w"> </span>point<span class="w"> </span>@last<span class="w"> </span>--var<span class="w"> </span>head<span class="w"> </span>--cell<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--timestep<span class="w"> </span>-1
+hmp<span class="w"> </span>catalog<span class="w"> </span>point<span class="w"> </span>run_a<span class="w"> </span>run_b<span class="w"> </span>--var<span class="w"> </span>watertable_depth<span class="w"> </span>--cell<span class="w"> </span><span class="m">5000</span><span class="w"> </span>-o<span class="w"> </span>point.csv
+</pre></div>
+</div>
+<p>A persisted field is sliced in a single Zarr call
+(<code class="docutils literal notranslate"><span class="pre">array[:,</span> <span class="pre">layer,</span> <span class="pre">cell]</span></code>), so the series costs one decompression pass
+over the touched chunks instead of one per timestep. A virtual field is
+rebuilt timestep by timestep and reduced to the cell right away, so
+memory stays at one field.</p>
+</section>
+<section id="declared-observation-points">
+<h2>Declared observation points<a class="headerlink" href="#declared-observation-points" title="Link to this heading">#</a></h2>
+<p>A location known before the run is declared in <code class="docutils literal notranslate"><span class="pre">[observation]</span></code> rather
+than interrogated afterwards:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[observation]</span>
+<span class="n">variables</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"head"</span><span class="p">,</span><span class="w"> </span><span class="s2">"watertable_depth"</span><span class="p">]</span>
+
+<span class="k">[[observation.points]]</span>
+<span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"piezo_amont"</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">395100.0</span>
+<span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">6824925.0</span>
+<span class="n">depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">12.5</span>
+</pre></div>
+</div>
+<p>Each point names <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> and either <code class="docutils literal notranslate"><span class="pre">layer</span></code> or <code class="docutils literal notranslate"><span class="pre">depth</span></code>, and may
+override the section-level <code class="docutils literal notranslate"><span class="pre">variables</span></code>. <code class="docutils literal notranslate"><span class="pre">ObservationConfig</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/simulation/planning/observation_config.py</span></code>) validates the
+ids and the vertical selector; the run samples the points at the end of
+extraction, while it still holds its fields
+(<code class="docutils literal notranslate"><span class="pre">simulation/extraction/post_run.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sample_declared_observation_points</span></code>). A declaration mistake is logged
+and skipped: it must not lose a run whose results are already in.</p>
+<p>Both halves of a declared point are run artefacts. The series lands in
+<code class="docutils literal notranslate"><span class="pre">tables.parquet/timeseries.parquet</span></code> under the station id
+<code class="docutils literal notranslate"><span class="pre">obs:&lt;point</span> <span class="pre">id&gt;</span></code>, so a declared probe never collides with a solver
+station (gauge, SFR reach, lake). The declaration itself lands in
+<code class="docutils literal notranslate"><span class="pre">tables.parquet/observation_points.parquet</span></code> and is exposed as a
+Parquet-backed view, so <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">reindex</span></code> finds it again with the
+files. This is not <code class="docutils literal notranslate"><span class="pre">[data.piezometry]</span></code>: that section loads <em>measured</em>
+series, this one declares <em>where the model is read</em>.</p>
+</section>
+<section id="retention-and-garbage-collection">
+<h2>Retention and garbage collection<a class="headerlink" href="#retention-and-garbage-collection" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span></code> is the single maintenance verb, and it plans by
+default: nothing moves without <code class="docutils literal notranslate"><span class="pre">--apply</span></code>. Nothing is destroyed on the
+spot either. The rules are <code class="docutils literal notranslate"><span class="pre">RetentionPolicy</span></code> in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/_workers/catalog.py</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%"/>
+<col style="width: 70.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Rule</p></th>
+<th class="head"><p>Behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keep_versions</span></code> (default 5)</p></td>
+<td><p>Keeps the newest versions of one lineage (<code class="docutils literal notranslate"><span class="pre">name_stem</span></code>) and
+trashes the rest. <code class="docutils literal notranslate"><span class="pre">--keep-versions</span> <span class="pre">all</span></code> disables the rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_age_days</span></code> (default off)</p></td>
+<td><p>Trashes runs created more than N days ago. Opt-in through
+<code class="docutils literal notranslate"><span class="pre">--max-age-days</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">purge_figures</span></code> (default off)</p></td>
+<td><p>Quarantines the regenerable <code class="docutils literal notranslate"><span class="pre">figures/</span></code> directory of each run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pinned</span></code> tag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PROTECTED_TAG</span></code>: a run carrying it is exempt from every rule.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A selected run goes to the project trash, a reversible status flip
+stamped on disk as <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/trash.json</span></code> and undone by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">restore</span></code>. Orphan stores and swept figures are moved to
+<code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/.hmp/trash/&lt;stamp&gt;/</span></code>. Bytes are freed later by the trash
+expiry rule: a trashed, non-pinned run older than
+<code class="docutils literal notranslate"><span class="pre">TRASH_RETENTION_DAYS</span></code> (30) is listed as <code class="docutils literal notranslate"><span class="pre">expired_trash</span></code>. The same
+sweep also replays interrupted purges, marks stale running runs failed,
+drops orphan geographic caches and tmp Parquet files, checkpoints the
+DuckDB files and consolidates Zarr metadata (the absorbed <code class="docutils literal notranslate"><span class="pre">vacuum</span></code>
+verb). Every applied sweep writes one <code class="docutils literal notranslate"><span class="pre">gc</span></code> row in the project audit
+log.</p>
+</section>
+<section id="what-is-not-in-place">
+<h2>What is not in place<a class="headerlink" href="#what-is-not-in-place" title="Link to this heading">#</a></h2>
+<p>Stated here so that nothing above is read as a promise.</p>
 <ul class="simple">
-<li><p>the resolved TOML and the lockfile;</p></li>
-<li><p>the matched DuckDB rows for that <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> plus referenced rows;</p></li>
-<li><p>the per-simulation Zarr store and Parquet directory;</p></li>
-<li><p>a JSON manifest with the schema version and SHA-256 checksums;</p></li>
-<li><p>a RO-Crate sidecar when enough metadata is available.</p></li>
+<li><p><strong>A chunk layout tuned for point reads.</strong> Chunks are sized for map
+reads: about 1 MiB each, and a whole timestep sits in one chunk as long
+as it fits that budget
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/zarr_store/chunks.py</span></code>). Reading one cell across
+time is a single Zarr call, but it decompresses every chunk the time
+axis crosses, so a point series pays for the neighbouring cells it
+never uses. Making that read cheap needs a cell-major layout, or a
+second copy laid out that way, and neither is written today.</p></li>
+<li><p><strong>A per-run lockfile.</strong> <code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> sits at the project root
+and describes the whole project’s input cache. A run seals its own
+inputs in <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> (<code class="docutils literal notranslate"><span class="pre">inputs[]</span></code>), but there is no per-run
+lockfile, so replaying one old run still reads a project-wide file
+that a later run may have rewritten.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">add</span> <span class="pre">run.hmp</span></code> re-materialises the bundle in the target project,
-refusing packages whose schema version exceeds the current library.</p>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="overview/two-databases.html"><span class="doc">The three workspace databases</span></a> for the cache vs catalog split.</p></li>
+<li><p><a class="reference internal" href="overview/two-databases.html"><span class="doc">The three database scopes</span></a> for the role of each database scope.</p></li>
 <li><p><a class="reference internal" href="overview/schema-evolution.html"><span class="doc">Schema Evolution</span></a> for the migration policy.</p></li>
-<li><p><a class="reference internal" href="artifact-policy.html"><span class="doc">Artifact Policy</span></a> for non-canonical artifacts and sidecars.</p></li>
+<li><p><a class="reference internal" href="artifact-policy.html"><span class="doc">Artifact Policy</span></a> for non-canonical artefacts and sidecars.</p></li>
 <li><p><a class="reference internal" href="packages/results.html"><span class="doc">results</span></a> for the Python API on top of
-this storage (<code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>, <code class="docutils literal notranslate"><span class="pre">Run</span></code>, <code class="docutils literal notranslate"><span class="pre">SimulationGroup</span></code>,
-<code class="docutils literal notranslate"><span class="pre">hmp.read</span></code> facade).</p></li>
+this storage (<code class="docutils literal notranslate"><span class="pre">Catalog</span></code>, <code class="docutils literal notranslate"><span class="pre">Run</span></code>, <code class="docutils literal notranslate"><span class="pre">RunSet</span></code>, <code class="docutils literal notranslate"><span class="pre">hmp.read</span></code>).</p></li>
 <li><p><a class="reference internal" href="packages/data.html"><span class="doc">data</span></a> for the input cache writer.</p></li>
 </ul>
 </section>
 </section>
-
-
-                </article>
-              
-              
-              
-              
-              
-                <footer class="prev-next-footer d-print-none">
-                  
+</article>
+<footer class="prev-next-footer d-print-none">
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="layered-architecture.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Layered Architecture</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="ci-workflows.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">GitHub Actions workflows</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
+<a class="left-prev" href="layered-architecture.html" title="previous page">
+<i class="fa-solid fa-angle-left"></i>
+<div class="prev-next-info">
+<p class="prev-next-subtitle">previous</p>
+<p class="prev-next-title">Layered Architecture</p>
 </div>
-                </footer>
-              
-            </div>
-            
-            
-              
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
+</a>
+<a class="right-next" href="ci-workflows.html" title="next page">
+<div class="prev-next-info">
+<p class="prev-next-subtitle">next</p>
+<p class="prev-next-title">GitHub Actions workflows</p>
+</div>
+<i class="fa-solid fa-angle-right"></i>
+</a>
+</div>
+</footer>
+</div>
+<dialog id="pst-secondary-sidebar-modal"></dialog>
+<div class="bd-sidebar-secondary bd-toc" id="pst-secondary-sidebar"><div class="sidebar-secondary-items sidebar-secondary__inner">
+<div class="sidebar-secondary-item">
+<div class="page-toc tocsection onthispage" id="pst-page-navigation-heading-2">
+<i class="fa-solid fa-list"></i> On this page
   </div>
-  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-level-layout">Three-level layout</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#storage-basename-rule">Storage basename rule</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-catalog-duckdb-schema">Project catalog DuckDB schema</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-cache-duckdb-schema">Workspace cache DuckDB schema</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-global-index-duckdb-schema">Machine global index DuckDB schema</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-simulation-zarr-store">Per-simulation Zarr store</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-simulation-parquet-directory">Per-simulation Parquet directory</a></li>
+<nav aria-labelledby="pst-page-navigation-heading-2" class="page-toc" id="pst-page-toc-nav">
+<ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#delivery-status">Delivery status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-layout">Project layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-run-folder">A run folder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-session-folder">A session folder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#naming-and-identity">Naming and identity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-classes-of-data">Three classes of data</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#class-1-reconstructible">Class 1: reconstructible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#class-2-losable">Class 2: losable</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#class-3-input">Class 3: input</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract-coverage">Contract coverage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tested-invariants">Tested invariants</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-run-zarr-store">Per-run Zarr store</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-run-parquet-directory">Per-run Parquet directory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-index-duckdb-schema">Project index DuckDB schema</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-abstraction">Backend abstraction</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concurrency-and-retry">Concurrency and retry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concurrency-and-atomic-writes">Concurrency and atomic writes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lockfile-and-reproducibility">Lockfile and reproducibility</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-duckdb-exceptions">Direct DuckDB exceptions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#portable-hmp-packages">Portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-one-cell">Reading one cell</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declared-observation-points">Declared observation points</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retention-and-garbage-collection">Retention and garbage collection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-not-in-place">What is not in place</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
 </ul>
-  </nav></div>
-
+</nav></div>
 </div></div>
-              
-            
-          </div>
-          <footer class="bd-footer-content">
-            
-          </footer>
-        
-      </main>
-    </div>
-  </div>
-  
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
-
-  <footer class="bd-footer">
+</div>
+<footer class="bd-footer-content">
+</footer>
+</main>
+</div>
+</div>
+<!-- Scripts loaded after <body> so the DOM is not blocked -->
+<script defer="" src="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer="" src="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+<footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
-  
-    <div class="footer-items__start">
-      
-        <div class="footer-item">
-
-  <p class="copyright">
+<div class="footer-items__start">
+<div class="footer-item">
+<p class="copyright">
     
       © Copyright 2021.
       <br/>
-    
-  </p>
+</p>
 </div>
-      
-    </div>
-  
-  
-  
-    <div class="footer-items__end">
-      
-        <div class="footer-item">
-
-  <p class="sphinx-version">
+</div>
+<div class="footer-items__end">
+<div class="footer-item">
+<p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
-  </p>
+</p>
 </div>
-      
-    </div>
-  
 </div>
-
-  </footer>
-  </body>
+</div>
+</footer>
+</body>
 </html>

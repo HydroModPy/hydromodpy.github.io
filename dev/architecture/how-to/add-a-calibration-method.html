@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Add a Calibration Method" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/how-to/add-a-calibration-method.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-calibration-method.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="Calibration in HydroModPy runs an ask/tell loop: an optimizer proposes a parameter point, the engine evaluates it, the optimizer ingests the result. Optimizers are plugged through adapters under hy..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Calibration in HydroModPy runs an ask/tell loop: an optimizer proposes a parameter point, the engine evaluates it, the optimizer ingests the result. Optimizers are plugged through adapters under hy..." name="description"/>
 <title>Add a Calibration Method — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/how-to/add-a-calibration-method';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/how-to/add-a-calibration-method.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-calibration-method.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -539,19 +539,19 @@ metadata.</p>
 </pre></div>
 </div>
 <p>Skeleton:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#module-typing"><span class="nn">typing</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.adapters.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">CalibrationMethodAdapter</span><span class="p">,</span> <span class="n">EvaluationResult</span><span class="p">,</span> <span class="n">ParamSuggestion</span><span class="p">,</span> <span class="n">ParameterSpace</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.optim.optimizer.html#module-hydromodpy.calibration.optim.optimizer"><span class="nn">hydromodpy.calibration.optim.optimizer</span></a><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EvaluationResult</span><span class="p">,</span>
+    <span class="n">ParamSuggestion</span><span class="p">,</span>
+    <span class="n">register_optimizer</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.optim.parameters.html#module-hydromodpy.calibration.optim.parameters"><span class="nn">hydromodpy.calibration.optim.parameters</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterSpace</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MyMethodAdapter</span><span class="p">:</span>
-    <span class="n">method_name</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span> <span class="o">=</span> <span class="s2">"mymethod"</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#dict"><span class="nb">dict</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/functions.html#int"><span class="nb">int</span></a><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_iter"</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+<span class="nd">@register_optimizer</span><span class="p">(</span><span class="s2">"mymethod"</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyMethodOptimizer</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/functions.html#int"><span class="nb">int</span></a> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_best</span><span class="p">:</span> <span class="n">EvaluationResult</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -566,36 +566,38 @@ metadata.</p>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">best</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">converged</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/functions.html#bool"><span class="nb">bool</span></a><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span>
 </pre></div>
 </div>
 </section>
-<section id="register-in-the-engine">
-<h2>Register in the engine<a class="headerlink" href="#register-in-the-engine" title="Link to this heading">#</a></h2>
-<p>The engine resolves adapters through a name-keyed registry in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/__init__.py</span></code>. Add the entry:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.adapters.mymethod</span><span class="w"> </span><span class="kn">import</span> <span class="n">MyMethodAdapter</span>
-
-<span class="n">_ADAPTERS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="o">...</span><span class="p">,</span>
-    <span class="n">MyMethodAdapter</span><span class="o">.</span><span class="n">method_name</span><span class="p">:</span> <span class="n">MyMethodAdapter</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<section id="registration">
+<h2>Registration<a class="headerlink" href="#registration" title="Link to this heading">#</a></h2>
+<p>There is no registry dict to edit. <code class="docutils literal notranslate"><span class="pre">@register_optimizer("mymethod")</span></code>
+publishes the class under the name accepted by
+<code class="docutils literal notranslate"><span class="pre">CalibrationConfig.method</span></code> and by <code class="docutils literal notranslate"><span class="pre">build_optimizer</span></code>. The registry
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/optimizer.py</span></code>) auto-discovers every
+module under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/</span></code> on the first
+<code class="docutils literal notranslate"><span class="pre">build_optimizer</span></code> call, so dropping the file in that package is all
+the wiring required.</p>
+<p>Third-party methods shipped outside the repository register through the
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.optimizer</span></code> entry-point group instead.</p>
 </section>
 <section id="optional-dependencies">
 <h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading">#</a></h2>
 <p>If your method depends on a heavy or optional package
-(<code class="docutils literal notranslate"><span class="pre">cma</span></code>, <code class="docutils literal notranslate"><span class="pre">cmaes</span></code>, <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>, <code class="docutils literal notranslate"><span class="pre">torch</span></code>), import it
-inside <code class="docutils literal notranslate"><span class="pre">configure</span></code> and raise a clear <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> when it is
-missing:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">cma</span>  <span class="c1"># noqa: F401</span>
-    <span class="k">except</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ImportError"><span class="ne">ImportError</span></a> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ImportError"><span class="ne">ImportError</span></a><span class="p">(</span>
-            <span class="s2">"method 'mymethod' requires the 'calibration' extra "</span>
-            <span class="s2">"(pip install -e </span><span class="se">\"</span><span class="s2">.[calibration]</span><span class="se">\"</span><span class="s2">)"</span>
-        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+(<code class="docutils literal notranslate"><span class="pre">cma</span></code>, <code class="docutils literal notranslate"><span class="pre">cmaes</span></code>, <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>, <code class="docutils literal notranslate"><span class="pre">torch</span></code>), import it at module
+level and let the <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> propagate: auto-discovery treats an
+adapter that fails to import as simply unregistered, so a missing
+optional never breaks the other methods.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cma</span>  <span class="c1"># noqa: F401</span>
+<span class="k">except</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ImportError"><span class="ne">ImportError</span></a> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="k">raise</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ImportError"><span class="ne">ImportError</span></a><span class="p">(</span>
+        <span class="s2">"method 'mymethod' requires the 'calibration' extra "</span>
+        <span class="s2">"(pip install -e </span><span class="se">\"</span><span class="s2">.[calibration]</span><span class="se">\"</span><span class="s2">)"</span>
+    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 </pre></div>
 </div>
 </section>
@@ -690,7 +692,7 @@ pitfalls, Python API).</p></li>
 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract">Contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-to-create">Files to create</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#register-in-the-engine">Register in the engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration">Registration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-dependencies">Optional dependencies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling-space-coordinates">Sampling-space coordinates</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distribution-valued-methods">Distribution-valued methods</a></li>

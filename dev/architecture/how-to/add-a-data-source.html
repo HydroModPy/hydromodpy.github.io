@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Add a Data Source" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/how-to/add-a-data-source.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-data-source.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="A source is a concrete origin (public API, custom file, synthetic generator, or constant) bound to an existing data variable such as hydrometry, geology, dem, or recharge. This page covers the thre..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="A source is a concrete origin (public API, custom file, synthetic generator, or constant) bound to an existing data variable such as hydrometry, geology, dem, or recharge. This page covers the thre..." name="description"/>
 <title>Add a Data Source — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/how-to/add-a-data-source';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/how-to/add-a-data-source.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-data-source.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -509,28 +509,25 @@ covers the three flavours.</p>
 first.</p>
 <section id="source-contract">
 <h2>Source contract<a class="headerlink" href="#source-contract" title="Link to this heading">#</a></h2>
-<p>Every source registers itself through
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/sources.py</span></code> with the <code class="docutils literal notranslate"><span class="pre">@register_source</span></code>
-decorator:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_source</span>
-
-
-<span class="nd">@register_source</span><span class="p">(</span><span class="n">variable_type</span><span class="o">=</span><span class="s2">"hydrometry"</span><span class="p">,</span> <span class="n">source_name</span><span class="o">=</span><span class="s2">"mysource"</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MySource</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"LoadResult"</span><span class="p">:</span>
-        <span class="o">...</span>
+<p>There is no source registry and no registration decorator. A source is
+wired by two explicit edits inside its own variable package:</p>
+<ol class="arabic simple">
+<li><p>a new literal in the variable’s discriminated source union
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/config.py</span></code>);</p></li>
+<li><p>a new branch in the variable manager’s <code class="docutils literal notranslate"><span class="pre">_fetch_from_source</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/manager.py</span></code>), which imports
+the adapter module lazily and calls its module-level <code class="docutils literal notranslate"><span class="pre">fetch</span></code>.</p></li>
+</ol>
+<p>The adapter itself is a plain module exposing a <code class="docutils literal notranslate"><span class="pre">fetch</span></code> function that
+returns contract records:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/&lt;variable&gt;/apis/&lt;source_name&gt;.py</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
+    <span class="o">...</span>
 </pre></div>
 </div>
-<p>The minimal Protocol exposes:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">variable_type</span></code> (class attribute or decorator argument);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">source_name</span></code> (class attribute or decorator argument);</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fetch(source_cfg,</span> <span class="pre">context)</span> <span class="pre">-&gt;</span> <span class="pre">LoadResult</span></code>.</p></li>
-</ul>
 <p><code class="docutils literal notranslate"><span class="pre">source_cfg</span></code> is the validated Pydantic block from
-<code class="docutils literal notranslate"><span class="pre">[[data.&lt;variable&gt;.sources]]</span></code>; <code class="docutils literal notranslate"><span class="pre">context</span></code> carries the project
-period, the workspace cache handle, and the geographic context when
-needed.</p>
+<code class="docutils literal notranslate"><span class="pre">[data.&lt;variable&gt;]</span></code>; the manager supplies the project period, the
+workspace cache handle, and the geographic context when needed.</p>
 </section>
 <section id="public-api-source">
 <h2>Public API source<a class="headerlink" href="#public-api-source" title="Link to this heading">#</a></h2>
@@ -540,28 +537,24 @@ SIM2, SHOM, IGN BD Alti, etc.).</p>
 </pre></div>
 </div>
 <p>Skeleton:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.core.io.html#module-hydromodpy.core.io"><span class="nn">hydromodpy.core.io</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPClient</span><span class="p">,</span> <span class="n">json_loads</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointRecord</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoadResult</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_source</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.data.common.api_client.html#module-hydromodpy.data.common.api_client"><span class="nn">hydromodpy.data.common.api_client</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">get_json</span>
+<span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.data.contracts.timeseries.html#module-hydromodpy.data.contracts.timeseries"><span class="nn">hydromodpy.data.contracts.timeseries</span></a><span class="w"> </span><span class="kn">import</span> <span class="n">PointRecord</span>
 
 
-<span class="nd">@register_source</span><span class="p">(</span><span class="n">variable_type</span><span class="o">=</span><span class="s2">"hydrometry"</span><span class="p">,</span> <span class="n">source_name</span><span class="o">=</span><span class="s2">"mysource"</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MyHydrometrySource</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LoadResult</span><span class="p">:</span>
-        <span class="n">client</span> <span class="o">=</span> <span class="n">HTTPClient</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"https://api.example.org/hydrometry"</span><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"product"</span><span class="p">:</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">product</span><span class="p">,</span> <span class="s2">"extent"</span><span class="p">:</span> <span class="s2">"watershed"</span><span class="p">},</span>
-            <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
-        <span class="p">)</span>
-        <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">payload</span></a> <span class="o">=</span> <span class="n">json_loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-        <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">PointRecord</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Any" title="typing.Any"><span class="n">payload</span></a><span class="p">[</span><span class="s2">"data"</span><span class="p">]]</span>
-        <span class="k">return</span> <span class="n">LoadResult</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="n">records</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[],</span> <span class="n">warnings</span><span class="o">=</span><span class="p">[])</span>
+<span class="n">API_BASE</span> <span class="o">=</span> <span class="s2">"https://api.example.org/hydrometry"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">get_json</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">API_BASE</span><span class="si">}</span><span class="s2">/observations"</span><span class="p">,</span>
+        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"stations"</span><span class="p">:</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">station_ids</span><span class="p">),</span> <span class="s2">"start"</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">:</span> <span class="n">end</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">PointRecord</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]]</span>
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">HTTPClient</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/http_client.py</span></code>) instead of
-raw <code class="docutils literal notranslate"><span class="pre">requests</span></code>: it handles retry, backoff, timeout, and SHA-256
+<p>Use <code class="docutils literal notranslate"><span class="pre">get_json</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/common/api_client.py</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">HTTPClient</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/http_client.py</span></code>) instead of raw
+<code class="docutils literal notranslate"><span class="pre">requests</span></code>: they handle retry, backoff, timeout, and SHA-256
 streaming.</p>
 <p>Cache integrity goes through <code class="docutils literal notranslate"><span class="pre">DataCatalogDuckDB</span></code>: every fetched
 file is recorded with its path, mtime, and SHA-256 so future runs
@@ -579,9 +572,8 @@ the supported formats.</p>
     <span class="k">return</span> <span class="n">LoadResult</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">warnings</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Custom sources usually do not register through <code class="docutils literal notranslate"><span class="pre">@register_source</span></code>
-because they are dispatched directly by the manager (<code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">==</span>
-<span class="pre">"custom"</span></code> branch).</p>
+<p>Custom sources need no extra wiring beyond the <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">==</span> <span class="pre">"custom"</span></code>
+branch the manager already carries.</p>
 </section>
 <section id="synthetic-source">
 <h2>Synthetic source<a class="headerlink" href="#synthetic-source" title="Link to this heading">#</a></h2>
@@ -590,11 +582,9 @@ forcing, periodic chronicle). They live next to the variable’s
 custom loader and produce <code class="docutils literal notranslate"><span class="pre">PointRecord</span></code> or <code class="docutils literal notranslate"><span class="pre">FieldRecord</span></code> from
 parameters declared in the TOML.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/recharge/synthetic.py</span>
-<span class="nd">@register_source</span><span class="p">(</span><span class="n">variable_type</span><span class="o">=</span><span class="s2">"recharge"</span><span class="p">,</span> <span class="n">source_name</span><span class="o">=</span><span class="s2">"synthetic"</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SyntheticRecharge</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LoadResult</span><span class="p">:</span>
-        <span class="n">series</span> <span class="o">=</span> <span class="n">build_series</span><span class="p">(</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">LoadResult</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">warnings</span><span class="o">=</span><span class="p">[])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_synthetic</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="n">build_series</span><span class="p">(</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">PointRecord</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">series</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
@@ -621,14 +611,14 @@ accepted with the wrong fields.</p>
 <h2>Wire the source into the manager<a class="headerlink" href="#wire-the-source-into-the-manager" title="Link to this heading">#</a></h2>
 <p>Most variable managers dispatch on <code class="docutils literal notranslate"><span class="pre">source_cfg.source</span></code> inside
 <code class="docutils literal notranslate"><span class="pre">_fetch_from_source</span></code>. Add the new branch:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_fetch_from_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_fetch_from_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"custom"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">load_custom</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">load_custom</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_period</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"mysource"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">get_source</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VARIABLE_NAME</span><span class="p">,</span> <span class="s2">"mysource"</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
-            <span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span>
-        <span class="p">)</span>
-    <span class="k">raise</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ValueError"><span class="ne">ValueError</span></a><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown source </span><span class="si">{</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.myvariable.apis.mysource</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch</span>
+
+        <span class="k">return</span> <span class="n">fetch</span><span class="p">(</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">station_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+    <span class="k">raise</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/exceptions.html#ValueError"><span class="ne">ValueError</span></a><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown myvariable source: </span><span class="si">{</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

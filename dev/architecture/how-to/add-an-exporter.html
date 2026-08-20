@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Add an Exporter" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/how-to/add-an-exporter.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-an-exporter.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="Exporters convert simulation results into external file formats. Six exporters ship today under hydromodpy/results/exporters/: CSV, NetCDF, GeoTIFF, VTU, Shapefile, and the portable.hmp package. Us..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Exporters convert simulation results into external file formats. Six exporters ship today under hydromodpy/results/exporters/: CSV, NetCDF, GeoTIFF, VTU, Shapefile, and the portable.hmp package. Us..." name="description"/>
 <title>Add an Exporter — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/how-to/add-an-exporter';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/how-to/add-an-exporter.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/how-to/add-an-exporter.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -568,9 +568,9 @@ chosen format to disk:</p>
 </pre></div>
 </div>
 </section>
-<section id="wire-it-through-simulationcatalog-export">
-<h2>Wire it through <code class="docutils literal notranslate"><span class="pre">SimulationCatalog.export</span></code><a class="headerlink" href="#wire-it-through-simulationcatalog-export" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">SimulationCatalog.export</span></code> method dispatches on <code class="docutils literal notranslate"><span class="pre">fmt</span></code>. Add the
+<section id="wire-it-through-catalog-export">
+<h2>Wire it through <code class="docutils literal notranslate"><span class="pre">Catalog.export</span></code><a class="headerlink" href="#wire-it-through-catalog-export" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Catalog.export</span></code> method dispatches on <code class="docutils literal notranslate"><span class="pre">fmt</span></code>. Add the
 new branch in <code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/reads.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">"myfmt"</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.exporters.myfmt</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_myfmt</span>
@@ -580,9 +580,9 @@ new branch in <code class="docutils literal notranslate"><span class="pre">hydro
 </section>
 <section id="wire-it-through-the-cli">
 <h2>Wire it through the CLI<a class="headerlink" href="#wire-it-through-the-cli" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export</span></code> command (<code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/commands/export.py</span></code>)
-forwards <code class="docutils literal notranslate"><span class="pre">--myfmt</span></code> to the exporter. Add an argument and a dispatch
-branch:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span></code> command
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/commands/catalog/export.py</span></code>) forwards <code class="docutils literal notranslate"><span class="pre">--myfmt</span></code> to
+the exporter. Add an argument and a dispatch branch:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--myfmt"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
                     <span class="n">help</span><span class="o">=</span><span class="s2">"Export to .myfmt (custom format)."</span><span class="p">)</span>
 
@@ -602,19 +602,18 @@ Parquet views via DuckDB. CSV is the canonical example.</p></li>
 <li><p><strong>Bundle</strong>: read both plus the catalog rows. <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> is the
 reference (see <code class="docutils literal notranslate"><span class="pre">hmp_package.py</span></code>).</p></li>
 </ul>
-<p>Reuse the connection handed by <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code> rather than
+<p>Reuse the connection handed by <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> rather than
 opening a new one. Reuse <code class="docutils literal notranslate"><span class="pre">Run.field</span></code> rather than reading raw Zarr
 keys.</p>
 </section>
 <section id="tests-to-add">
 <h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/results/exporters/</span></code> with a tiny
-fixture catalog (<code class="docutils literal notranslate"><span class="pre">conftest.py</span></code> already ships <code class="docutils literal notranslate"><span class="pre">catalog_with_data</span></code>).
-Assert the file is created and round-trips for the field’s dtype
-and shape.</p></li>
+<li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/results/</span></code> with a tiny fixture catalog
+(<code class="docutils literal notranslate"><span class="pre">conftest.py</span></code> already ships <code class="docutils literal notranslate"><span class="pre">catalog_with_data</span></code>). Assert the file
+is created and round-trips for the field’s dtype and shape.</p></li>
 <li><p><strong>Integration</strong> under <code class="docutils literal notranslate"><span class="pre">tests/integration/results/</span></code> for an
-end-to-end <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export</span></code> invocation.</p></li>
+end-to-end <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span></code> invocation.</p></li>
 </ul>
 </section>
 <section id="pitfalls-flagged-by-the-layer-matrix">
@@ -636,7 +635,7 @@ must overwrite cleanly.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="../packages/results.html"><span class="doc">results</span></a> for the catalog and the <code class="docutils literal notranslate"><span class="pre">Run</span></code> API.</p></li>
 <li><p><a class="reference internal" href="add-a-figure.html"><span class="doc">Add a Figure</span></a> for matplotlib outputs.</p></li>
-<li><p><a class="reference internal" href="../../user_guide/results-and-exports.html"><span class="doc">Results and Exports</span></a> for the user-facing export
+<li><p><a class="reference internal" href="../../user_guide/results-and-exports.html"><span class="doc">Results and exports</span></a> for the user-facing export
 inventory.</p></li>
 </ul>
 </section>
@@ -671,7 +670,7 @@ inventory.</p></li>
 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract">Contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-to-create">Files to create</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-through-simulationcatalog-export">Wire it through <code class="docutils literal notranslate"><span class="pre">SimulationCatalog.export</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-through-catalog-export">Wire it through <code class="docutils literal notranslate"><span class="pre">Catalog.export</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-through-the-cli">Wire it through the CLI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choose-what-to-read">Choose what to read</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>

@@ -8,12 +8,12 @@
 <link href="../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="hmp project" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/cli/project.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/cli/project.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
-<meta content="The hmp project family manages the lifecycle of projects inside a workspace. A project owns its catalog rows, its simulation artefacts, and its TOML configurations. Every action below auto-detects ..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="The hmp project family manages the lifecycle of projects inside a workspace. A project owns its configurations, its runs, its calibration sessions and the index over them. Every action auto-detects..." property="og:description"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
-<meta content="The hmp project family manages the lifecycle of projects inside a workspace. A project owns its catalog rows, its simulation artefacts, and its TOML configurations. Every action below auto-detects ..." name="description"/>
+<meta content="The hmp project family manages the lifecycle of projects inside a workspace. A project owns its configurations, its runs, its calibration sessions and the index over them. Every action auto-detects..." name="description"/>
 <title>hmp project — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'cli/project';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,12 +79,12 @@
 <script src="../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/cli/project.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/cli/project.html" rel="canonical"/>
 <link href="../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../genindex.html" rel="index" title="Index"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="catalog.html" rel="next" title="hmp catalog"/>
-<link href="index.html" rel="prev" title="CLI Reference"/>
+<link href="run.html" rel="prev" title="hmp run, calibrate, spinup"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
@@ -345,6 +345,7 @@
 <nav aria-label="Section Navigation" class="bd-docs-nav bd-links">
 <p aria-level="1" class="bd-links__title" role="heading">Section Navigation</p>
 <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="run.html">hmp run, calibrate, spinup</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">hmp project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="catalog.html">hmp catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workspace.html">hmp workspace</a></li>
@@ -388,7 +389,7 @@
 <i class="fa-solid fa-home"></i>
 </a>
 </li>
-<li class="breadcrumb-item"><a class="nav-link" href="index.html">CLI Reference</a></li>
+<li class="breadcrumb-item"><a class="nav-link" href="index.html">CLI reference</a></li>
 <li aria-current="page" class="breadcrumb-item active"><span class="ellipsis">hmp project</span></li>
 </ul>
 </nav>
@@ -400,16 +401,24 @@
 <article class="bd-article">
 <section id="hmp-project">
 <h1>hmp project<a class="headerlink" href="#hmp-project" title="Link to this heading">#</a></h1>
-<p>The <strong class="command">hmp project</strong> family manages the lifecycle of projects
-inside a workspace. A project owns its catalog rows, its simulation
-artefacts, and its TOML configurations. Every action below auto-detects
-the enclosing workspace; pass <code class="docutils literal notranslate"><span class="pre">--workspace</span></code> to override it.</p>
+<p>The <strong class="command">hmp project</strong> family manages the lifecycle of projects inside
+a workspace. A project owns its configurations, its runs, its calibration
+sessions and the index over them. Every action auto-detects the enclosing
+workspace; pass <code class="docutils literal notranslate"><span class="pre">--workspace</span></code> to override it.</p>
 <section id="new">
 <h2>new<a class="headerlink" href="#new" title="Link to this heading">#</a></h2>
 <p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">new</span> <span class="pre">&lt;name&gt;</span> <span class="pre">[--workspace</span> <span class="pre">&lt;path&gt;]</span></code></p>
-<p>Scaffold a new project directory under <code class="docutils literal notranslate"><span class="pre">projects/</span></code> of the active
-workspace. The action creates the catalog skeleton and a starter TOML
-suitable for <strong class="command">hmp run</strong>.</p>
+<p>Scaffold a project directory under <code class="docutils literal notranslate"><span class="pre">projects/</span></code> of the active workspace.
+It writes three files and nothing else:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">project.toml</span></code>, the shared settings, which is also the marker that
+anchors the project root;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run_demo.toml</span></code>, an executable run inheriting from it through
+<code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">"project.toml"</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>, excluding <code class="docutils literal notranslate"><span class="pre">runs/</span></code>, <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, <code class="docutils literal notranslate"><span class="pre">share/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">.hmp/</span></code>.</p></li>
+</ul>
+<p>No index database is created: the first run creates <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">project</span> <span class="n">new</span> <span class="n">sample</span><span class="o">-</span><span class="n">catchment</span>
 </pre></div>
@@ -418,9 +427,8 @@ suitable for <strong class="command">hmp run</strong>.</p>
 <section id="list">
 <h2>list<a class="headerlink" href="#list" title="Link to this heading">#</a></h2>
 <p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">list</span> <span class="pre">[--workspace</span> <span class="pre">&lt;path&gt;]</span></code></p>
-<p>List every project registered in the workspace, with one row per
-project showing the project name, the number of simulations stored,
-and the latest activity timestamp.</p>
+<p>List every project directory found under <code class="docutils literal notranslate"><span class="pre">projects/</span></code>, reporting whether
+<code class="docutils literal notranslate"><span class="pre">project.toml</span></code> is present and how many run configs it holds.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">project</span> <span class="nb">list</span>
 </pre></div>
@@ -429,9 +437,10 @@ and the latest activity timestamp.</p>
 <section id="show">
 <h2>show<a class="headerlink" href="#show" title="Link to this heading">#</a></h2>
 <p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">show</span> <span class="pre">&lt;name&gt;</span> <span class="pre">[--workspace</span> <span class="pre">&lt;path&gt;]</span></code></p>
-<p>Print a single-project summary: catalog statistics, last successful
-run, on-disk footprint, and a sample of recent simulations. Use it
-before <strong class="command">hmp project delete</strong> to confirm what will be removed.</p>
+<p>Print a single-project summary: the project path, the presence of
+<code class="docutils literal notranslate"><span class="pre">project.toml</span></code>, the run TOMLs, and the runs recorded in the index with
+their short id, solver and status. Use it before
+<strong class="command">hmp project delete</strong> to confirm what will be removed.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">project</span> <span class="n">show</span> <span class="n">sample</span><span class="o">-</span><span class="n">catchment</span>
 </pre></div>
@@ -439,12 +448,12 @@ before <strong class="command">hmp project delete</strong> to confirm what will 
 </section>
 <section id="delete">
 <h2>delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h2>
-<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">delete</span> <span class="pre">&lt;name&gt;</span> <span class="pre">[--force]</span></code></p>
-<p>Delete a project entry and all its catalog rows + Zarr stores. Outside
-a TTY the action refuses to proceed without <code class="docutils literal notranslate"><span class="pre">--force</span></code> so that scripts
-do not silently wipe data.</p>
+<p>Synopsis: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">delete</span> <span class="pre">&lt;name&gt;</span> <span class="pre">[-w</span> <span class="pre">&lt;path&gt;]</span> <span class="pre">[-y]</span></code></p>
+<p>Remove the whole <code class="docutils literal notranslate"><span class="pre">projects/&lt;name&gt;/</span></code> directory, TOMLs included, and report
+the bytes freed. Outside a TTY the action refuses to proceed without
+<code class="docutils literal notranslate"><span class="pre">-y</span></code>/<code class="docutils literal notranslate"><span class="pre">--yes</span></code> so that scripts do not silently wipe data.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">project</span> <span class="n">delete</span> <span class="n">sample</span><span class="o">-</span><span class="n">catchment</span> <span class="o">--</span><span class="n">force</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hmp</span> <span class="n">project</span> <span class="n">delete</span> <span class="n">sample</span><span class="o">-</span><span class="n">catchment</span> <span class="o">-</span><span class="n">y</span>
 </pre></div>
 </div>
 </section>
@@ -452,11 +461,11 @@ do not silently wipe data.</p>
 </article>
 <footer class="prev-next-footer d-print-none">
 <div class="prev-next-area">
-<a class="left-prev" href="index.html" title="previous page">
+<a class="left-prev" href="run.html" title="previous page">
 <i class="fa-solid fa-angle-left"></i>
 <div class="prev-next-info">
 <p class="prev-next-subtitle">previous</p>
-<p class="prev-next-title">CLI Reference</p>
+<p class="prev-next-title">hmp run, calibrate, spinup</p>
 </div>
 </a>
 <a class="right-next" href="catalog.html" title="next page">

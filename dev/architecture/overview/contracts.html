@@ -8,10 +8,10 @@
 <link href="../../_static/logoHydroModPy.png" rel="icon" sizes="824x987" type="image/png"/>
 <link href="../../_static/logoHydroModPy.ico" rel="shortcut icon" type="image/x-icon"/><meta content="Protocols and public contracts" property="og:title"/>
 <meta content="website" property="og:type"/>
-<meta content="https://hydromodpy.github.io/architecture/overview/contracts.html" property="og:url"/>
+<meta content="https://docs.hydromodpy.fr/dev/architecture/overview/contracts.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
 <meta content="HydroModPy V1 makes its public surface explicit through three layers: the public facade hydromodpy(re-exports open, read, run, calibrate, index, viz, ml stubs);, a small set of Protocols that pin t..." property="og:description"/>
-<meta content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" property="og:image"/>
+<meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="HydroModPy V1 makes its public surface explicit through three layers: the public facade hydromodpy(re-exports open, read, run, calibrate, index, viz, ml stubs);, a small set of Protocols that pin t..." name="description"/>
 <title>Protocols and public contracts — HydroModPy 2.0.0a1 documentation</title>
@@ -67,7 +67,7 @@
 <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/overview/contracts';</script>
 <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -79,7 +79,7 @@
 <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
 <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
 <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-<link href="https://hydromodpy.github.io/architecture/overview/contracts.html" rel="canonical"/>
+<link href="https://docs.hydromodpy.fr/dev/architecture/overview/contracts.html" rel="canonical"/>
 <link href="../../_static/logoHydroModPy.png" rel="icon"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
@@ -357,7 +357,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="frontend-hooks.html">Frontend Hooks</a></li>
@@ -527,8 +527,8 @@ package exposes a flat set of verbs and helpers re-exported from
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hmp.open(project_path)</span></code></p></td>
-<td><p>Open a project catalog. Returns a <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>
-backed by <code class="docutils literal notranslate"><span class="pre">catalog.duckdb</span></code> at the project root. Calls
+<td><p>Open a project catalog. Returns a <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+backed by <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code> inside the project. Calls
 <code class="docutils literal notranslate"><span class="pre">ensure_schema()</span></code> on the underlying backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hmp.read(run,</span> <span class="pre">field,</span> <span class="pre">**selectors)</span></code></p></td>
@@ -542,7 +542,9 @@ reader or a Parquet reader through the field registry.</p></td>
 <td><p>Drive a calibration session.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hmp.index(db_path=None)</span></code></p></td>
-<td><p>Open the machine-wide <code class="docutils literal notranslate"><span class="pre">GlobalIndex</span></code>.</p></td>
+<td><p>Open the machine-wide <code class="docutils literal notranslate"><span class="pre">GlobalIndex</span></code>, the registry of project
+roots. One row is one project; a workspace root passed to
+<code class="docutils literal notranslate"><span class="pre">register</span></code> expands into the projects it holds.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hmp.viz.show(run,</span> <span class="pre">figure,</span> <span class="pre">**kwargs)</span></code></p></td>
 <td><p>Render one figure for a run. Scalable defaults via
@@ -574,7 +576,7 @@ the catalog is always at the version pinned by the library.</p>
 </section>
 <section id="simulation-store-protocol">
 <h2>Simulation store Protocol<a class="headerlink" href="#simulation-store-protocol" title="Link to this heading">#</a></h2>
-<p>Source: <code class="docutils literal notranslate"><span class="pre">hydromodpy/results/storage_contract.py</span></code>
+<p>Source: <code class="docutils literal notranslate"><span class="pre">hydromodpy/results/storage/contract.py</span></code>
 (<code class="docutils literal notranslate"><span class="pre">SimulationStore</span></code> Protocol).</p>
 <p>Covers the minimal write/read surface that workflow steps, solver
 adapters, and post-run extractors actually call:</p>
@@ -590,7 +592,7 @@ adapters, and post-run extractors actually call:</p>
 protocol.</p></li>
 </ul>
 <p>The default implementation is
-<code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationCatalog</span></code>. Conforming
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code>. Conforming
 alternative backends (PostgreSQL, Parquet-only, in-memory, remote
 object storage) can plug in without touching workflow code.</p>
 </section>
@@ -637,11 +639,11 @@ keep working unchanged.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PARQUET_SCHEMA_VERSION</span></code></p></td>
 <td><p>Pinned to <code class="docutils literal notranslate"><span class="pre">"v2"</span></code> in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/parquet_schemas.py</span></code>.</p></td>
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/storage/parquet_schemas.py</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GEOPARQUET_SCHEMA_VERSION</span></code></p></td>
 <td><p>Pinned to <code class="docutils literal notranslate"><span class="pre">"1.1.0"</span></code> in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/geoparquet_io.py</span></code>.</p></td>
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/geoparquet.py</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -665,6 +667,10 @@ requires:</p>
 <li><p>a docs update on this page and on
 <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p></li>
 </ul>
+<p>The project index is the exception being built: because it is rebuilt
+from the run directories, its schema is meant to evolve by replacing the
+initial DDL and rebuilding, not by chaining migrations. See
+<a class="reference internal" href="schema-evolution.html"><span class="doc">Schema Evolution</span></a> and <a class="reference internal" href="../storage-layout.html"><span class="doc">Storage Layout</span></a>.</p>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>

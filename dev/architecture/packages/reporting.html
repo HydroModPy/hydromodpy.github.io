@@ -10,12 +10,12 @@
     <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
     <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="reporting" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://hydromodpy.github.io/architecture/packages/reporting.html" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/packages/reporting.html" />
 <meta property="og:site_name" content="HydroModPy" />
-<meta property="og:description" content="hydromodpy.reporting is the HTML composites layer. It assembles figures from display/ and analysis features from analysis/ into standalone HTML deliverables: the calibration session report, the sim..." />
-<meta property="og:image" content="https://hydromodpy.github.io/_static/logoHydroModPy_long.png" />
+<meta property="og:description" content="hydromodpy.reporting is the HTML composites layer. It assembles figures from display/ and analysis features from analysis/ into standalone HTML deliverables: the calibration session report and the ..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
-<meta name="description" content="hydromodpy.reporting is the HTML composites layer. It assembles figures from display/ and analysis features from analysis/ into standalone HTML deliverables: the calibration session report, the sim..." />
+<meta name="description" content="hydromodpy.reporting is the HTML composites layer. It assembles figures from display/ and analysis features from analysis/ into standalone HTML deliverables: the calibration session report and the ..." />
 
     <title>reporting &#8212; HydroModPy 2.0.0a1 documentation</title>
   
@@ -77,7 +77,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'architecture/packages/reporting';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://hydromodpy.github.io/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
@@ -89,7 +89,7 @@
     <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
     <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
     <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
-    <link rel="canonical" href="https://hydromodpy.github.io/architecture/packages/reporting.html" />
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/architecture/packages/reporting.html" />
     <link rel="icon" href="../../_static/logoHydroModPy.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -576,7 +576,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../overview/mental-model-and-design-choices.html">Mental Model &amp; Design Choices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/design-patterns.html">Design Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/code-reading-guide.html">Code Reading Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three workspace databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview/two-databases.html">The three database scopes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/schema-evolution.html">Schema Evolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/contracts.html">Protocols and public contracts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../overview/frontend-hooks.html">Frontend Hooks</a></li>
@@ -748,24 +748,27 @@
 <h1>reporting<a class="headerlink" href="#reporting" title="Link to this heading">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting</span></code> is the HTML composites layer. It assembles
 figures from <code class="docutils literal notranslate"><span class="pre">display/</span></code> and analysis features from <code class="docutils literal notranslate"><span class="pre">analysis/</span></code>
-into standalone HTML deliverables: the calibration session report,
-the simulation comparison web report, and the streamlit configurator.
+into standalone HTML deliverables: the calibration session report
+and the simulation comparison web report.
 Not every HTML report lives in this package: workflow-owned reports
 such as site-selection and catchment review pages may live beside their
 workflow code, but should reuse <code class="docutils literal notranslate"><span class="pre">hydromodpy.display.report_blocks</span></code>
 when they are block-based static pages.</p>
 <p>Reporting is a one-way sink: <code class="docutils literal notranslate"><span class="pre">display</span></code> and <code class="docutils literal notranslate"><span class="pre">analysis</span></code> must not
 import from <code class="docutils literal notranslate"><span class="pre">reporting</span></code>.</p>
+<p>Every deliverable of this package lands under <code class="docutils literal notranslate"><span class="pre">&lt;project&gt;/share/</span></code>,
+the publication directory: reports in <code class="docutils literal notranslate"><span class="pre">share/reports/&lt;name&gt;/</span></code>,
+exports next to them. Nothing in <code class="docutils literal notranslate"><span class="pre">share/</span></code> is a source of truth; it is
+regenerated from <code class="docutils literal notranslate"><span class="pre">runs/</span></code> and <code class="docutils literal notranslate"><span class="pre">sessions/</span></code>.</p>
 <section id="sub-modules">
 <h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">reporting/calibration_report.py</span></code> – calibration session HTML
-report (moved from <code class="docutils literal notranslate"><span class="pre">display/</span></code>). Reads sessions, iterations, and
-promoted runs from the catalog; renders six calibration figures
-through the <code class="docutils literal notranslate"><span class="pre">display</span></code> catalog; emits a standalone HTML file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reporting/streamlit_config.py</span></code> – streamlit configurator UI
-(moved from <code class="docutils literal notranslate"><span class="pre">display/</span></code>). Exposes the JSON Schema export to a live
-TOML editor.</p></li>
+report (moved from <code class="docutils literal notranslate"><span class="pre">display/</span></code>). Reads the session descriptor and
+the trial log from <code class="docutils literal notranslate"><span class="pre">sessions/&lt;session_name&gt;/</span></code>; renders six
+calibration figures through the <code class="docutils literal notranslate"><span class="pre">display</span></code> figure registry; emits
+<code class="docutils literal notranslate"><span class="pre">share/reports/&lt;session_name&gt;/report.html</span></code> next to a <code class="docutils literal notranslate"><span class="pre">figures/</span></code>
+sub-directory.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reporting/comparison/</span></code> – simulation comparison HTML web report
 (moved from <code class="docutils literal notranslate"><span class="pre">analysis/comparison/web/</span></code>).</p>
 <ul>
@@ -785,8 +788,7 @@ section (was <code class="docutils literal notranslate"><span class="pre">compac
 <section id="key-public-symbols">
 <h2>Key public symbols<a class="headerlink" href="#key-public-symbols" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting.calibration_report.render_report</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting.streamlit_config</span></code> (CLI script entry point)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting.calibration_report.render_session</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting.comparison.render</span></code> (web report orchestrator)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.reporting.comparison.compact_network.builder.build_compact_network_synthesis</span></code></p></li>
 </ul>
@@ -810,8 +812,6 @@ web report entry point.</p></li>
 session report.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/reporting/comparison/sections/__init__.py</span></code> for the
 per-section composition.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/reporting/streamlit_config.py</span></code> for the configurator
-UI.</p></li>
 </ol>
 </section>
 <section id="layer-matrix-neighbours">
