@@ -518,15 +518,14 @@ fourth flow backend or, equivalently, a new <code class="docutils literal notran
     <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RunContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RunContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunExecutionResult</span><span class="p">:</span> <span class="o">...</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">RunContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">extract_calibration_series</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_observables</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ctx</span><span class="p">:</span> <span class="n">RunContext</span><span class="p">,</span>
         <span class="n">store</span><span class="p">,</span>
+        <span class="n">requests</span><span class="p">:</span> <span class="s2">"Sequence[ObservableRequest]"</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">variable</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span>
-        <span class="n">station_cells</span><span class="p">,</span>
-        <span class="n">time_index</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"pandas.Series"</span><span class="p">:</span> <span class="o">...</span>
+        <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"dict[str, ObservableResult]"</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">RunExecutionResult</span></code> is a small dataclass exposing
@@ -586,10 +585,10 @@ duplicating preprocess/postprocess flow.</p>
         <span class="c1"># remove scratch files; leave persisted outputs alone</span>
         <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">extract_calibration_series</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">station_cells</span><span class="p">,</span> <span class="n">time_index</span>
-    <span class="p">):</span>
-        <span class="c1"># cheap series extraction used inside the calibration loop</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># cheap extraction inside the calibration loop: the whole batch</span>
+        <span class="c1"># arrives at once, so each binary file is opened once. Refuse what</span>
+        <span class="c1"># the backend cannot produce with ObservableNotAvailableError.</span>
         <span class="o">...</span>
 </pre></div>
 </div>

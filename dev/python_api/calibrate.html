@@ -409,11 +409,17 @@
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">hydromodpy.</span></span><span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hydromodpy/_api.html#calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">hydromodpy.</span></span><span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hydromodpy/_api.html#calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Run a calibration workflow from a TOML file or config object.</p>
 <p>Paths route directly to <code class="xref py py-func docutils literal notranslate"><span class="pre">run_calibration_cli()</span></code>; in-memory config
 objects open a lazy <code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code> so <code class="xref py py-func docutils literal notranslate"><span class="pre">run_calibration_programmatic()</span></code>
 has the project context it requires.</p>
+<p>A TOML declaring <code class="docutils literal notranslate"><span class="pre">[[calibration.phases]]</span></code> <strong>routes</strong> to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">run_staged_calibration()</span></code>:
+each phase calibrates its own parameters and freezes them for the next. The
+same declaration carried by an in-memory config object is <strong>refused</strong>: a
+phase forks its configuration from the source file, and there is none.
+Write the config out and pass the path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
@@ -421,6 +427,8 @@ has the project context it requires.</p>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>phase</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>list_phases</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 <li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
 </ul>
 </dd>
@@ -429,6 +437,12 @@ has the project context it requires.</p>
 <h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h3>
 <dl class="simple">
 <dt>config</dt><dd><p>Calibration TOML path or validated configuration object.</p>
+</dd>
+<dt>phase</dt><dd><p>Run only the named phase. It still needs the parameters its dependency
+froze, so a phase whose dependency has not run is refused rather than
+calibrated against un-frozen values.</p>
+</dd>
+<dt>list_phases</dt><dd><p>Return the declared phases without running anything.</p>
 </dd>
 <dt>kwargs</dt><dd><p>Options forwarded to the underlying calibration runner. The
 <code class="docutils literal notranslate"><span class="pre">headless</span></code> keyword controls the project initialization for the
@@ -440,7 +454,8 @@ builds no project).</p>
 <section id="returns">
 <h3>Returns<a class="headerlink" href="#returns" title="Link to this heading">#</a></h3>
 <dl class="simple">
-<dt>Any</dt><dd><p>Calibration report or workflow-specific result.</p>
+<dt>Any</dt><dd><p>Calibration report or workflow-specific result. A <code class="docutils literal notranslate"><span class="pre">list</span></code> of phase
+descriptions when <code class="docutils literal notranslate"><span class="pre">list_phases</span></code> is set.</p>
 </dd>
 </dl>
 </section>
@@ -449,9 +464,14 @@ builds no project).</p>
 <dl class="simple">
 <dt>FileNotFoundError</dt><dd><p>If the calibration TOML path does not exist.</p>
 </dd>
+<dt>hydromodpy.core.exceptions.ConfigError</dt><dd><p>If the configuration cannot be read and the answer depends on reading
+it (<code class="docutils literal notranslate"><span class="pre">phase</span></code> or <code class="docutils literal notranslate"><span class="pre">list_phases</span></code>).</p>
+</dd>
 <dt>hydromodpy.core.exceptions.ConfigMissingError</dt><dd><p>If neither <code class="docutils literal notranslate"><span class="pre">config_path</span></code> nor <code class="docutils literal notranslate"><span class="pre">parameters</span></code> is supplied.</p>
 </dd>
-<dt>hydromodpy.core.exceptions.CalibrationError</dt><dd><p>If the optimizer or objective evaluation fails.</p>
+<dt>hydromodpy.core.exceptions.CalibrationError</dt><dd><p>If a staged calibration cannot be run as declared, if <code class="docutils literal notranslate"><span class="pre">phase</span></code> names a
+phase the configuration does not declare, or if the optimizer or
+objective evaluation fails.</p>
 </dd>
 </dl>
 </section>
@@ -467,6 +487,8 @@ builds no project).</p>
 <dl class="simple">
 <dt>hydromodpy.calibration.runners.cli_runner.run_calibration_cli</dt><dd><p>TOML entry point used by the path branch.</p>
 </dd>
+<dt>hydromodpy.calibration.runners.staged_runner.run_staged_calibration</dt><dd><p>Staged entry point used when the TOML declares phases.</p>
+</dd>
 <dt>hydromodpy.calibration.runners.programmatic_runner.run_calibration_programmatic</dt><dd><p>Python entry point used by the config-object branch.</p>
 </dd>
 <dt>hydromodpy.calibration.CalibrationReport</dt><dd><p>Structured calibration result.</p>
@@ -477,6 +499,16 @@ builds no project).</p>
 <dd class="field-odd"><p></p></dd>
 <dt class="field-even">type config<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
+</dd>
+<dt class="field-odd">param phase<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">type phase<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+<dt class="field-odd">param list_phases<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">type list_phases<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 <dt class="field-odd">param kwargs<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>

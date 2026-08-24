@@ -602,6 +602,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/stream-network-calibration.html">Calibrating on the stream network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
 </ul>
 </details></li>
@@ -664,6 +665,7 @@
 <li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streams_and_seepage/downslope-distance-calibration.html">Downslope-distance calibration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydrology/simulated-active-network.html">Simulated active network</a></li>
 </ul>
@@ -997,6 +999,83 @@ heterogeneous, anisotropic.</p></td>
 <td><p>Kling-Gupta efficiency</p></td>
 <td><p>dimensionless</p></td>
 <td><p>Optional alternative to NSE.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NSElog</span></code></p></td>
+<td><p>Nash-Sutcliffe efficiency on log-transformed series</p></td>
+<td><p>dimensionless</p></td>
+<td><p>Weights the recessions rather than the peaks. Not to be confused with
+<code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">=</span> <span class="pre">&quot;log&quot;</span></code>, which takes the logarithm of an already-computed
+cost; the two names look alike and mean unrelated things.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">D_so</span></code></p></td>
+<td><p>Mean downslope distance from the simulated stream network to the mapped
+one</p></td>
+<td><p>m</p></td>
+<td><p>A tail statistic, not a typical gap: its median is usually zero. See
+<a class="reference internal" href="streams_and_seepage/downslope-distance-calibration.html"><span class="doc">Downslope-distance calibration of the stream network</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">D_os</span></code></p></td>
+<td><p>Mean downslope distance from the mapped stream network to the simulated
+one</p></td>
+<td><p>m</p></td>
+<td><p>Same page. <code class="docutils literal notranslate"><span class="pre">D_so</span></code> large means an excess of simulated stream, <code class="docutils literal notranslate"><span class="pre">D_os</span></code>
+large a deficit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">J</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">|D_so</span> <span class="pre">-</span> <span class="pre">D_os|</span></code>, the calibrated cost</p></td>
+<td><p>m</p></td>
+<td><p>Its zero is the intersection of two curves, not the minimum of a
+distance. The signed residual travels separately, because a root search
+needs its sign.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">J_signed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">D_so</span> <span class="pre">-</span> <span class="pre">D_os</span></code>, the residual the root search drives to zero</p></td>
+<td><p>m</p></td>
+<td><p>Positive means an excess of simulated stream, negative a deficit. It
+travels in the trial components and never in the cost, so picking the
+best trial by lowest cost gives the one closest to zero rather than the
+most negative one.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Doptim</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(D_so</span> <span class="pre">+</span> <span class="pre">D_os)</span> <span class="pre">/</span> <span class="pre">2</span></code></p></td>
+<td><p>m</p></td>
+<td><p>A diagnostic. Legitimate as a cost only in the outer loop that picks
+between structures already balanced at <code class="docutils literal notranslate"><span class="pre">J</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">roptim</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">/</span> <span class="pre">L_ref</span></code></p></td>
+<td><p>dimensionless</p></td>
+<td><p>Validity indicator. It measures agreement, never correctness: measured
+on synthetic truth it improves as the bias worsens, and it improved from
+4.58 to 2.21 on one catchment purely because the grid was coarser. Two
+values from different meshes are not comparable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L_ref</span></code></p></td>
+<td><p>Square root of the median cell area over the catchment</p></td>
+<td><p>m</p></td>
+<td><p>The median and not the mean: a few large buffer cells would otherwise
+set the scale. Declaring <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> floors it, so
+that refining the mesh stops shrinking the denominator on its own.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">L_cap</span></code></p></td>
+<td><p>Longest downslope descent to the outlet inside the catchment</p></td>
+<td><p>m</p></td>
+<td><p>The value a cell whose descent never meets its target saturates at.
+Counting it as <code class="docutils literal notranslate"><span class="pre">+inf</span></code> makes the mean infinite; dropping it moves the
+support with the calibrated parameter.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p>Ratio of the mapped network to its own downslope closure</p></td>
+<td><p>dimensionless</p></td>
+<td><p>Measures the agreement between the routing surface and the mapped
+network. Below 0.90, the distances read a dataset disagreement rather
+than hydrogeology.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">T/R</span></code></p></td>
+<td><p>Transmissivity over recharge</p></td>
+<td><p>m</p></td>
+<td><p>The output to publish. <code class="docutils literal notranslate"><span class="pre">K</span></code> inherits the recharge series entirely,
+measured at plus or minus 25 per cent between reanalyses.</p></td>
 </tr>
 </tbody>
 </table>

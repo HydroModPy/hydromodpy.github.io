@@ -598,6 +598,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../workflows/regional_lab.html">Regional Lab Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../workflows/site_selection.html">Site Selection Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../workflows/stream-network-calibration.html">Calibrating on the stream network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../workflows/comparison.html">Comparison Workflow</a></li>
 </ul>
 </details></li>
@@ -660,6 +661,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../theory/streams_and_seepage/status-and-limitations.html">Status and limitations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../theory/streams_and_seepage/nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../theory/streams_and_seepage/network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../theory/streams_and_seepage/downslope-distance-calibration.html">Downslope-distance calibration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../theory/hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../theory/hydrology/simulated-active-network.html">Simulated active network</a></li>
 </ul>
@@ -850,6 +852,8 @@ replace the placeholder before running the project. Lines tagged
 <span class="c1"># synthetic = ...  # uses factory default</span>
 <span class="c1"># Optional DEM-derived river-network extraction settings. When disabled, no stream network is generated in geographic preprocessing.</span>
 <span class="c1"># river_network = ...  # uses factory default</span>
+<span class="c1"># Optional stream burning of the routing DEM: lower the mapped network cells so the computed D8 paths follow the observed network, without touching the model grid top. Applied before the lake carve.</span>
+<span class="c1"># enforce_streams = ...  # uses factory default</span>
 <span class="c1"># Optional lake hydro-enforcement of the routing DEM: carve the lake footprints so streams route into the lakes and drain to the outlet, without touching the model grid top.</span>
 <span class="c1"># enforce_lakes = ...  # uses factory default</span>
 <span class="c1"># Optional dam structure-carve of the model-top DEM: lower the dam footprint to the valley floor so a cutoff wall sits at the dam on a raw DEM (mirror of enforce_lakes, on the top instead of the routing DEM).</span>
@@ -1303,6 +1307,10 @@ replace the placeholder before running the project. Lines tagged
 <span class="n">parallel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
 <span class="c1"># Spin-up (burn-in) periods excluded from every objective block. The first warmup_periods of each observed/simulated series are dropped before the metric, so the window where the state still depends on the initial condition does not bias the calibration. Default 0 (no exclusion). Size it by increasing it until the objective stops changing (initial-condition insensitivity), not a fixed guess.</span>
 <span class="n">warmup_periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="c1"># Dates bounding the samples every metric is computed on. Mutually exclusive with warmup_periods, which counts samples instead of dates.</span>
+<span class="c1"># scoring_window = ...  # default = None</span>
+<span class="c1"># Stages run one after the other, each calibrating its own parameters and freezing them for the next. Declaring this table is what switches the runner to staged mode; without it nothing changes for an existing configuration. The default is None and not an empty list on purpose: the resume lock hashes the configuration with exclude_none, so an absent table leaves that hash untouched and checkpoints stay resumable.</span>
+<span class="c1"># phases = ...  # default = None</span>
 <span class="c1"># Random seed for reproducibility.</span>
 <span class="c1"># seed = ...  # default = None</span>
 <span class="c1"># How much to persist per iteration: - 'none': 1 DuckDB row per iteration, no Zarr. - 'best_n': same + promote top N to full simulations after the loop. - 'all': every iteration becomes a full simulation (Zarr included).</span>

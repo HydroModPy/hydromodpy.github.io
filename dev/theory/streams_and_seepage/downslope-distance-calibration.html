@@ -1,0 +1,1586 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Downslope-distance calibration of the stream network" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/dev/theory/streams_and_seepage/downslope-distance-calibration.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="This page explains the criterion that calibrates a catchment against the spatial extent of its stream network rather than against a gauge[ Abhervé et al., 2023], and how to read what it returns. It..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="This page explains the criterion that calibrates a catchment against the spatial extent of its stream network rather than against a gauge[ Abhervé et al., 2023], and how to read what it returns. It..." />
+
+    <title>Downslope-distance calibration of the stream network &#8212; HydroModPy 2.0.0a1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=3d4f2d4f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script>let toggleHintShow = 'Click to show or hide details';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/streams_and_seepage/downslope-distance-calibration';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=0136e78b"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/dev/theory/streams_and_seepage/downslope-distance-calibration.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Calibration" href="../calibration/index.html" />
+    <link rel="prev" title="Network Metrics And Extreme K-Sweep" href="network-metrics-and-extreme-k-sweep.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../oo/index.html">
+    OO Patterns
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/export.html">[export] ExportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/observation.html">[observation] ObservationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/spinup.html">[spinup] SpinupConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/workflows/index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/stream-network-calibration.html">Calibrating on the stream network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/workflows/comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/workspace-layout.html">Workspace layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Theory</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../foundations/index.html">Foundations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/system-scope-and-assumptions.html">System Scope And Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../foundations/groundwater-flow-problem-definition.html">Groundwater Flow Problem Definition</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../hydrology/index.html">Hydrology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/hydrological-forcing-chain.html">Hydrological Forcing Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/forcing-time-aggregation-and-first-clim.html">Forcing Time Aggregation And First_Clim</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/recharge-and-surface-exchange-semantics.html">Recharge And Surface-Exchange Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Stream, Ocean, And Drainage Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated Active Network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-and-discretization-strategies.html">Mesh and discretization strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/regular-vs-irregular-meshes.html">Regular and irregular mesh cell budgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/field-to-cell-parameter-transfer.html">Field-to-cell parameter transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-quality-and-acceptance-criteria.html">Mesh quality and acceptance criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/vertical-representation-and-storage-assumptions.html">Vertical representation and storage assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular DISV meshes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../solvers/index.html">Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../solvers/flow/index.html">Flow Solvers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../solvers/flow/modflow-family.html">MODFLOW Flow Family</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-and-discretization-strategies.html">Mesh And Discretization Strategies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/field-to-cell-parameter-transfer.html">Field-To-Cell Parameter Transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/vertical-representation-and-storage-assumptions.html">Vertical Representation And Storage Assumptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/mesh-quality-and-acceptance-criteria.html">Mesh Quality And Acceptance Criteria</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow-governing-equation-and-cvfd-formulation.html">MODFLOW Governing Equation And CVFD Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow6-vs-modflownwt-scientific-comparison.html">MODFLOW 6 Versus MODFLOW-NWT: Scientific Comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/modflow-package-semantics-and-boundary-conditions.html">MODFLOW Package Semantics And Option Selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/xt3d-on-irregular-disv-meshes.html">XT3D On Irregular DISV Meshes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-dupuit-fixed-head-1d.html">Worked MODFLOW Case: Dupuit Fixed Head 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-linearized-unconfined-recharge-periodic-1d.html">Worked MODFLOW Case: Linearized Unconfined Periodic Recharge 1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/worked-modflow-case-nancon-transient-nwt-etp-evt.html">Worked MODFLOW Case: Nancon Transient NWT With ETP To EVT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/solver-capability-matrix.html">Solver Capability Matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../solvers/boussinesq-petsc-validation-results.html">Boussinesq PETSc Validation Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../boussinesq.html">Boussinesq</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Streams and seepage</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="conceptual-model.html">Conceptual Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="worked-examples.html">Worked examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="status-and-limitations.html">Status and limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nancon-k-sweep-results.html">Nancon K-sweep results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="network-metrics-and-extreme-k-sweep.html">Network metrics and extreme K-sweep</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Downslope-distance calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/stream-ocean-and-drainage-semantics.html">Boundary semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../hydrology/simulated-active-network.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/inverse-problem-formulation.html">Calibration Inverse Problem Formulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-methods.html">Calibration Methods Implemented In HydroModPy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/cli-reference.html">CLI reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user_guide/data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../user_guide/data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/results-and-exports.html">Results and exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/point-queries.html">Reading one point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/project-api.html">Project API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/initialization.html">Initialization and spin-up</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-lake.html">Lakes and Reservoirs (MODFLOW 6 LAK)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-sfr.html">Streams and Routing (MODFLOW 6 SFR)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/modflow6-flow-barrier.html">Flow Barriers and Dam Cutoff Walls (MODFLOW 6 HFB)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide/index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Streams And Seepage</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Downslope-distance calibration of the stream network</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="downslope-distance-calibration-of-the-stream-network">
+<h1>Downslope-distance calibration of the stream network<a class="headerlink" href="#downslope-distance-calibration-of-the-stream-network" title="Link to this heading">#</a></h1>
+<p>This page explains the criterion that calibrates a catchment against the
+spatial extent of its stream network rather than against a gauge
+<span class="bibtex-citation" id="id1">[<a class="reference internal" href="#id12" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span>, and how to read what it returns. It has a companion in
+<a class="reference internal" href="network-metrics-and-extreme-k-sweep.html"><span class="doc">Network Metrics And Extreme K-Sweep</span></a>, which covers the overlap metrics
+that answer a different question.</p>
+<p>Read it before running the method, and read the section on known biases before
+reusing a number it produced. Two sections are prerequisites rather than
+commentary: the surface the distances are measured on, and what the method
+needs from the flow model. Both are enforced, because both had been silently
+violated on a real catchment and both returned a plausible number while doing
+it.</p>
+<section id="what-it-does-and-why-it-is-worth-the-trouble">
+<h2>What it does, and why it is worth the trouble<a class="headerlink" href="#what-it-does-and-why-it-is-worth-the-trouble" title="Link to this heading">#</a></h2>
+<p>Most calibration needs a discharge series. This one needs a hydrographic
+network, which is free, dense and available almost everywhere, and it needs no
+gauging station at all. That is its value, and none of the caveats below
+removes it.</p>
+<p>The idea is that the extent of the stream network is itself an observation of
+the aquifer. A conductive aquifer drains fast, the water table stays low, few
+cells reach the surface and the network is short. A tight aquifer keeps the
+water table high, seepage appears far upslope, and the network is long. So the
+length of the simulated network is a reading of the ratio between what the
+aquifer can transmit and what it receives.</p>
+</section>
+<section id="the-downslope-topographic-distance">
+<h2>The downslope topographic distance<a class="headerlink" href="#the-downslope-topographic-distance" title="Link to this heading">#</a></h2>
+<p>Let <span class="math notranslate nohighlight">\(r\)</span> be the steepest-descent receiver graph over the mesh, so each
+active cell has exactly one receiver, and let <span class="math notranslate nohighlight">\(\ell(c)\)</span> be the distance
+from a cell to its receiver, measured centre to centre. For a target set
+<span class="math notranslate nohighlight">\(T\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}d_T(c) =
+\begin{cases}
+  0 &amp; c \in T \\
+  \ell(c) + d_T(r(c)) &amp; c \notin T,\; r(c) \neq \varnothing \\
+  +\infty &amp; c \notin T,\; r(c) = \varnothing
+\end{cases}\end{split}\]</div>
+<p>Three things follow, and each one rules out an implementation that looks
+reasonable.</p>
+<p>There is no shortest path to look for. In single-flow-direction routing exactly
+one descending path leaves a cell, so “the nearest downslope path” names the
+only one there is. Any implementation reaching for a Dijkstra has misread the
+definition.</p>
+<p>It is not a Euclidean nearest distance. A seepage cell fifty metres from a
+stream but on the far side of a divide is fifty metres away in the plane and
+kilometres away downslope, because its water leaves into the other valley. A
+criterion built on a planar nearest-neighbour tree measures something else.</p>
+<p>It is not symmetric, and the asymmetry is the mechanism. <span class="math notranslate nohighlight">\(d(a,b)\)</span> and
+<span class="math notranslate nohighlight">\(d(b,a)\)</span> differ; with a symmetric kernel the two averages below would
+become two means of the same kernel over two supports, and their difference
+would measure nothing but a difference of support.</p>
+</section>
+<section id="the-surface-the-distances-are-measured-on">
+<h2>The surface the distances are measured on<a class="headerlink" href="#the-surface-the-distances-are-measured-on" title="Link to this heading">#</a></h2>
+<p>A downslope distance is a length along a flow path, and a flow path only exists
+once the depressions are resolved. On a raw surface the descent stops in a pit
+that has no hydrological existence, and every cell behind that pit has no
+distance at all: it enters the average as an unreachable cell rather than as a
+length.</p>
+<p><strong>The conditioning has to happen on the graph the distances are measured on.</strong>
+A raster conditioned before delineation is pit-free on its own grid and under
+its own neighbourhood only. Read at mesh centroids it grows new pits, and it
+drops the cells whose centroid falls on nodata. That route was measured on the
+Nancon and left 51.9 per cent of the simulated support unreachable. The
+criterion therefore floods the mesh itself, by the priority flood of Barnes,
+Lehman and Mulla (2014) written over an explicit neighbour list instead of over
+a raster, so that it applies to cells of any arity
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/depression_filling.py</span></code>). Water is walked inwards from the
+outlet through the lowest reachable rim, anything below that rim is raised onto
+it, and one millimetre is added per step so the filled floor drains instead of
+lying flat, which a steepest-descent graph needs in order to leave it at all.</p>
+<p>Two objects have to be shared with the metric or the flood repairs nothing.
+The neighbour graph is the first: fed the eight-neighbour graph while the
+metric descends the four-neighbour one, every filled cell spills over a
+diagonal the metric cannot take, and 99.8 per cent of the catchment stops
+reaching the outlet instead of none of it. The outlet is the second: the flood
+only guarantees a path to the cell it was seeded on, so the criterion seals
+that same cell into the target rather than resolving an outlet of its own
+afterwards.</p>
+<p>Measured on the Nancon, a 60 395-cell MODFLOW-NWT mesh at 50 m: <strong>17 166 cells
+raised, by up to 48.7 m</strong>; the unreachable share of the simulated support fell
+from <strong>13.6 per cent to 0.0</strong>; and the outlet moved from an internal depression
+at 130.3 m to the true low point of the catchment at 106.4 m.</p>
+</section>
+<section id="the-two-mean-distances-and-the-criterion">
+<h2>The two mean distances and the criterion<a class="headerlink" href="#the-two-mean-distances-and-the-criterion" title="Link to this heading">#</a></h2>
+<p>Write <span class="math notranslate nohighlight">\(S\)</span> for the simulated stream network and <span class="math notranslate nohighlight">\(O\)</span> for the mapped
+one. The criterion is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}D_{so} &amp;= \langle d_O(c) \rangle_{c \in S} \\
+D_{os} &amp;= \langle d_S(c) \rangle_{c \in O} \\
+J &amp;= \lvert D_{so} - D_{os} \rvert \\
+D_{optim} &amp;= \tfrac{1}{2}\,(D_{so} + D_{os}) \\
+r_{optim} &amp;= D_{optim} / L_{ref}\end{split}\]</div>
+<p><span class="math notranslate nohighlight">\(D_{so}\)</span> large means a network spilling far outside the mapped one, an
+excess. <span class="math notranslate nohighlight">\(D_{os}\)</span> large means one that never grew, a deficit. The
+calibrated point is where they balance.</p>
+</section>
+<section id="the-criterion-is-not-the-diagnostic">
+<h2>The criterion is not the diagnostic<a class="headerlink" href="#the-criterion-is-not-the-diagnostic" title="Link to this heading">#</a></h2>
+<p>This is the single point where a hurried reader goes wrong, so it is worth
+stating twice.</p>
+<p><strong>The cost is</strong> <span class="math notranslate nohighlight">\(J\)</span>, <strong>and its zero is an intersection.</strong> The two curves
+<span class="math notranslate nohighlight">\(D_{so}(K/R)\)</span> and <span class="math notranslate nohighlight">\(D_{os}(K/R)\)</span> cross; the crossing is the answer.</p>
+<p><span class="math notranslate nohighlight">\(D_{optim}\)</span> is large at both ends of the sweep, so it does have an
+interior minimum, and minimising it is therefore a tempting substitute. It is
+a different estimator. Nothing places its minimum at the crossing, and a
+working implementation that made that substitution calibrated a different
+quantity for years without anything saying so.</p>
+<p>Both are needed, and they are not interchangeable. Inside one model structure,
+<span class="math notranslate nohighlight">\(J\)</span> finds the parameter and <span class="math notranslate nohighlight">\(D_{optim}\)</span> cannot separate two points
+that both balance. Between structures already balanced at <span class="math notranslate nohighlight">\(J = 0\)</span>, only
+<span class="math notranslate nohighlight">\(D_{optim}\)</span> separates them. HydroModPy names them distinctly,
+<code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> and <code class="docutils literal notranslate"><span class="pre">distance_mean</span></code>, precisely so that the substitution
+cannot be made by accident.</p>
+</section>
+<section id="what-counts-as-a-seepage-cell">
+<h2>What counts as a seepage cell<a class="headerlink" href="#what-counts-as-a-seepage-cell" title="Link to this heading">#</a></h2>
+<p>The simulated network starts from a mask: the cells where the aquifer returns
+water to the surface. That mask is a strict test on the <strong>release flux</strong>, never
+a test on <span class="math notranslate nohighlight">\(h \geq z_{top}\)</span>. The flux is anchored by the mass balance and
+the geometric reading is not; over eight decades of drain conductance the
+median cell flux holds to three decimals while the geometric mask loses most of
+its cells.</p>
+<p>Under that test sits a threshold <span class="math notranslate nohighlight">\(\tau\)</span>, there to reject what a boundary
+package leaves on a cell that is dry for every practical purpose. What
+<span class="math notranslate nohighlight">\(\tau\)</span> is read against decides whether it is a floor or a second
+calibration knob, and <strong>that reference is an open question of the method</strong>. Two
+answers have been written and measured on the same catchment. They miss in
+opposite directions, the shipped one is the inert one, and what follows reports
+both rather than announcing a winner the method does not have.</p>
+<p><strong>What the code applies is a share of the cell’s own recharge</strong>, <span class="math notranslate nohighlight">\(\tau(c)
+= \tau_{ratio} \cdot R \cdot a(c)\)</span>, with <span class="math notranslate nohighlight">\(a(c)\)</span> the area of that cell and
+<span class="math notranslate nohighlight">\(R\)</span> the mean recharge of the built model. It is one number per cell.
+Reading: a cell releasing less than <span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> of the water that falls
+on it is not a source. The ratio is declared as <code class="docutils literal notranslate"><span class="pre">tau_specific_ratio</span></code>, its
+default is <span class="math notranslate nohighlight">\(10^{-4}\)</span>, and zero removes the threshold entirely, which is
+the purely geometric criterion of the paper.</p>
+<p><strong>That reference is frozen over the search</strong>, which the method requires: a
+threshold moving with the trial would cost <span class="math notranslate nohighlight">\(D_{so}(K/R)\)</span> its monotonicity
+and the root search its meaning. Cell areas are static geometry and <span class="math notranslate nohighlight">\(R\)</span> is
+a property of the forcing, so <span class="math notranslate nohighlight">\(\tau\)</span> moves only if the recharge does, and
+that is checked rather than assumed: every trial publishes <code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code>, read
+back from the built model, and a move between two builds warns and names both
+values.</p>
+<p><strong>What the threshold excluded is not measured.</strong> The surviving cells INSIDE THE
+SCORED CATCHMENT are counted per trial as <code class="docutils literal notranslate"><span class="pre">n_seepage</span></code>, so the water bodies and
+the out-of-catchment cells are already gone from that count; no diagnostic
+carries the share of released water
+<span class="math notranslate nohighlight">\(\tau\)</span> rejected. Comparing <code class="docutils literal notranslate"><span class="pre">n_seepage</span></code> against a run at
+<span class="math notranslate nohighlight">\(\tau_{ratio} = 0\)</span> is the only reading of what a declared ratio cost.</p>
+<p><strong>As defined it excludes nothing, and that is measured.</strong> A cell does not
+release the recharge that fell on it. It releases the drainage it collects from
+everything upslope, a hundred to a thousand times its own recharge, so a small
+fraction of that recharge sits far below anything the model produces. On the
+Nancon at the calibrated conductivity, over the 380 cells releasing inside the catchment, <strong>not one had a
+flux below the default threshold</strong>, and raising <span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> to 100
+still kept 28. The default <span class="math notranslate nohighlight">\(\tau\)</span> is <span class="math notranslate nohighlight">\(3.5 \times 10^{-9}\)</span> m3/s on a
+50 m cell there, three decades below the smallest release the model produces, and
+nothing is excluded until <span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> passes 0.2. A knob documented as
+a small fraction whose usable band starts near one is not a filter with a
+conservative default, it is an inert declaration.</p>
+<p>There is also nothing for it to clear on that run. Its DRN cells release either
+exactly zero (59 640 of 60 395) or more than <span class="math notranslate nohighlight">\(1.9 \times 10^{-6}\)</span> m3/s:
+there is no population of near-zero releases between the two. A package that
+does dribble, which DRN here does not, is the case the floor is held in reserve
+for.</p>
+<p><strong>And the reference carries the mesh.</strong> The argument for a specific threshold is
+that a fixed m3/s cut is nine times harsher on a cell three times smaller, which
+assumes the release is a surface flux that converges under refinement. It is
+not: <span class="math notranslate nohighlight">\(q / (R\,a)\)</span> is a concentration factor with the discretisation in its
+denominator. Aggregating one solved field of the Nancon from 50 m to 400 m
+cells:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 16.0%" />
+<col style="width: 22.0%" />
+<col style="width: 24.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cell side</p></th>
+<th class="head"><p>seepage cells</p></th>
+<th class="head"><p>median <span class="math notranslate nohighlight">\(q / (R\,a)\)</span></p></th>
+<th class="head"><p>water kept at 100 times the cell’s own recharge</p></th>
+<th class="head"><p>water kept at <span class="math notranslate nohighlight">\(4.5 \times 10^{-4}\)</span> of what the model receives</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>50 m</p></td>
+<td><p>380</p></td>
+<td><p>49.6</p></td>
+<td><p>0.51</p></td>
+<td><p>0.94</p></td>
+</tr>
+<tr class="row-odd"><td><p>100 m</p></td>
+<td><p>230</p></td>
+<td><p>19.9</p></td>
+<td><p>0.18</p></td>
+<td><p>0.97</p></td>
+</tr>
+<tr class="row-even"><td><p>200 m</p></td>
+<td><p>138</p></td>
+<td><p>7.7</p></td>
+<td><p>0.00</p></td>
+<td><p>0.99</p></td>
+</tr>
+<tr class="row-odd"><td><p>400 m</p></td>
+<td><p>76</p></td>
+<td><p>4.1</p></td>
+<td><p>0.00</p></td>
+<td><p>0.996</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A converged surface flux would hold the third column constant. It falls by a
+factor 12, so a threshold read against it selects whatever the discretisation
+gives it: the same declared value keeps half the released water at 50 m and
+nothing at all at 200 m, while the same declared share of what the whole model
+receives stays within six points of itself over a factor eight in cell size.
+That last column is what motivated the other answer.</p>
+</section>
+<section id="the-other-answer-written-measured-and-reverted">
+<h2>The other answer, written, measured and reverted<a class="headerlink" href="#the-other-answer-written-measured-and-reverted" title="Link to this heading">#</a></h2>
+<p>Thresholding what the model receives instead, <span class="math notranslate nohighlight">\(\tau = \tau_{ratio} \cdot
+R \cdot A\)</span> with <span class="math notranslate nohighlight">\(A\)</span> the area the mesh covers, is one number for the whole
+mesh and does not move under refinement. It also holds still over the search on
+its own: a steady model whose only sink is seepage returns every drop it
+receives, so <span class="math notranslate nohighlight">\(R \cdot A\)</span> is the total release at every trial, measured on
+the Nancon at 2.1018 m3/s of recharge against 2.1025 of drain outflow,
+unchanged from <span class="math notranslate nohighlight">\(K = 10^{-7}\)</span> to <span class="math notranslate nohighlight">\(10^{-3}\)</span>.</p>
+<p><strong>It was implemented, swept, and rolled back the same evening. The code at HEAD
+does not carry it</strong>, and neither does the per-trial rejected-share warning that
+shipped with it: a reader who remembers that instrument will not find it among
+the diagnostics.</p>
+<p>It fails on the property the root search rests on. At <span class="math notranslate nohighlight">\(\tau_{ratio} =
+10^{-4}\)</span> the cut lands at <span class="math notranslate nohighlight">\(4.9 \times 10^{-4}\)</span> m3/s, above the many small
+releases a low conductivity spreads over the catchment and below the few large
+ones a high conductivity concentrates. The simulated network then <strong>grows</strong> with
+the conductivity instead of retracting: on the Nancon variant with the reaches
+in SFR the residual lost its monotonicity, running <span class="math notranslate nohighlight">\(-270\)</span>, <span class="math notranslate nohighlight">\(-7\)</span>,
+<span class="math notranslate nohighlight">\(+46\)</span>, <span class="math notranslate nohighlight">\(+929\)</span>, <span class="math notranslate nohighlight">\(+87\)</span>, <span class="math notranslate nohighlight">\(+40\)</span> over the sweep, and the root
+left for <span class="math notranslate nohighlight">\(2.8 \times 10^{-8}\)</span>, three decades under the expected value.</p>
+<p>Swept on the drain-only variant, where the direction of variation survives, the
+same threshold shows where it stops filtering and starts calibrating. On the
+Nancon, 60 395 cells at 50 m, 380 of them releasing inside the catchment, and
+<span class="math notranslate nohighlight">\(R \cdot A = 2.1\)</span> m3/s so that the second column is that product times the
+ratio:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 20.0%" />
+<col style="width: 18.0%" />
+<col style="width: 22.0%" />
+<col style="width: 26.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><span class="math notranslate nohighlight">\(\tau_{ratio}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(\tau\)</span> (m3/s)</p></th>
+<th class="head"><p>seepage cells</p></th>
+<th class="head"><p>released water rejected</p></th>
+<th class="head"><p>shift in the calibrated <span class="math notranslate nohighlight">\(K\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>380</p></td>
+<td><p>0 %</p></td>
+<td><p>reference</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(10^{-6}\)</span></p></td>
+<td><p>2.1e-6</p></td>
+<td><p>380</p></td>
+<td><p>0.000 %</p></td>
+<td><p>0.0 %</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(10^{-5}\)</span></p></td>
+<td><p>2.1e-5</p></td>
+<td><p>377</p></td>
+<td><p>0.002 %</p></td>
+<td><p>+0.9 %</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(3 \times 10^{-5}\)</span></p></td>
+<td><p>6.3e-5</p></td>
+<td><p>372</p></td>
+<td><p>0.013 %</p></td>
+<td><p>+1.3 %</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(10^{-4}\)</span></p></td>
+<td><p>2.1e-4</p></td>
+<td><p>349</p></td>
+<td><p>0.23 %</p></td>
+<td><p>+0.8 %</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(3 \times 10^{-4}\)</span></p></td>
+<td><p>6.3e-4</p></td>
+<td><p>310</p></td>
+<td><p>1.96 %</p></td>
+<td><p>+14 %</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(10^{-3}\)</span></p></td>
+<td><p>2.1e-3</p></td>
+<td><p>155</p></td>
+<td><p>19.2 %</p></td>
+<td><p>+29 %</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(3 \times 10^{-3}\)</span></p></td>
+<td><p>6.3e-3</p></td>
+<td><p>22</p></td>
+<td><p>67.4 %</p></td>
+<td><p>+188 %</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The last column is not a re-run bisection. Only the residual was recomputed, at
+the one conductivity the search had already closed on, and converted through
+the local slope of the residual, <span class="math notranslate nohighlight">\(-598\)</span> m per decade of <span class="math notranslate nohighlight">\(K\)</span>, the
+secant between the two bracketing trials of that session. Read it as an order
+of magnitude and not as a calibrated value: the secants of the tighter
+bracketing pairs are half again as steep, near <span class="math notranslate nohighlight">\(-970\)</span>, which would put
+the <span class="math notranslate nohighlight">\(3 \times 10^{-4}\)</span> row nearer eight per cent than fourteen, and the
+last row is an extrapolation far outside any range where one slope holds.</p>
+<p>The criterion is a staircase in the parameter, so the three figures under one
+per cent say one thing and not three: nothing moved. What moved is the last
+three rows, by an amount of the same order as the eleven per cent that
+separates two solvers on this same catchment. <strong>Past about two per cent of the
+released water, the threshold is no longer filtering the sources, it is
+shortening the network.</strong> Shortening the network is exactly what the calibrated
+ratio is there to do, so the two knobs then pull against each other and the
+calibrated value becomes conditional on a number nobody tuned.</p>
+</section>
+<section id="what-the-threshold-should-be-a-fraction-of">
+<h2>What the threshold should be a fraction of<a class="headerlink" href="#what-the-threshold-should-be-a-fraction-of" title="Link to this heading">#</a></h2>
+<p>Open. Neither reference is right, and the two miss in opposite ways. The cell’s
+own recharge is two orders of magnitude below the flux a releasing cell carries,
+so it never selects anything. What the whole model receives is a single number
+facing a population that spans decades, so it selects the wrong tail and inverts
+the response of the criterion to its own parameter, which is the one property
+the root search cannot do without.</p>
+<p>One scale has not been tried: what the upslope contributing area of a cell
+delivers to it, the accumulation, which is the only quantity that follows the
+flux that cell actually carries. The accumulation itself is already computed on
+the graph the criterion routes on, at every trial, to place the outlet and to
+close the seepage pattern downslope; what does not exist is anything reading a
+threshold against it, and nothing here claims that would work.</p>
+<p>Until the question is settled, leave <span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> at its default and
+read the simulated network as the unthresholded one, because on every run
+measured so far that is what it is. A run whose release package really does
+dribble needs this answered before its network means anything.</p>
+</section>
+<section id="which-cells-enter-which-average">
+<h2>Which cells enter which average<a class="headerlink" href="#which-cells-enter-which-average" title="Link to this heading">#</a></h2>
+<p>The two supports are treated differently, and this is a definition rather than
+a convenience.</p>
+<p><strong>The model does not produce a network, it produces sources.</strong> A seepage cell
+is a point where water appears, not a reach. The object comparable to a mapped
+stream network is what those sources generate downslope, so <span class="math notranslate nohighlight">\(S\)</span> is the
+downslope closure of the seepage pattern, traced to the outlet.</p>
+<p><strong>The mapped network is already a network</strong>, so nothing is generated from it:
+<span class="math notranslate nohighlight">\(O\)</span> is taken raw. Closing it too would build observation out of the DEM,
+which contradicts the premise that the network is independent of the DEM, and
+it would erase the signal the validity bound exists to detect. On a network
+displaced by a single cell, the closed reading returns <span class="math notranslate nohighlight">\(r_{optim} = 0.87\)</span>
+and accepts; the correct reading returns <span class="math notranslate nohighlight">\(9.44\)</span> and rejects.</p>
+<p><strong>One cell is added to the target of</strong> <span class="math notranslate nohighlight">\(D_{so}\)</span>: the outlet. If the
+mapped linework stops short of it, the distance is infinite downstream of the
+last reach, and since the simulated network retreats towards exactly that reach
+as the ratio grows, the criterion loses its sign change at the high end of the
+bracket and there is no root left to close. That cell is the low point of the
+catchment the geographic step closed on the declared gauge, and it is the cell
+the flood was seeded on, so writing that it belongs to the stream network is
+true by definition rather than a fudge.</p>
+<p><strong>Both supports are intersected with the catchment the geographic step
+delineated.</strong> Re-deriving one instead, by descending the model top to its own
+largest basin, fails for the reason given in the section above: the model top
+is never conditioned, so that descent ends in whichever internal depression is
+biggest. Measured on the Nancon, the re-derived catchment held 1 368 cells of
+the 60 395 in the mesh and <strong>not one cell of the mapped network</strong>, so every
+trial refused; the delineated catchment holds 26 907 cells and 1 119 of the
+mapped network. A run reaching the criterion without a delineated catchment
+falls back to the re-derived one and says so with a warning: a synthetic domain
+legitimately has no watershed, while a real run that lost one would otherwise
+produce a plausible number from the wrong support.</p>
+<p>The intersection itself is not a detail either. On a buffered model domain, ten
+to fifteen per cent of the cells drain outside the basin and never meet the
+mapped network; on the catchment alone the figure falls to a fraction of a per
+cent. Measured on one real mesh: 14.9 per cent against 0.11 per cent. The
+catchment is also what restricts the supports, never the solver’s active
+domain: cutting the graph on the model domain breaks the catchment into pieces
+the flood cannot cross, and the descent then stops at a domain boundary instead
+of at a stream.</p>
+<p><strong>Water bodies stay in the graph and in the target, and leave both supports.</strong>
+A hillslope cell upstream of a reservoir has to be able to descend through it,
+and open water must absorb a path that reaches it, but a line of hydrography
+drawn across a reservoir is not the observation of a stream. Keeping lake cells
+in the support of <span class="math notranslate nohighlight">\(D_{so}\)</span> would inject one zero per lake cell and move
+the root with the size of the reservoir.</p>
+</section>
+<section id="the-unreachable-fraction-and-the-one-direction-its-bound-guards">
+<h2>The unreachable fraction, and the one direction its bound guards<a class="headerlink" href="#the-unreachable-fraction-and-the-one-direction-its-bound-guards" title="Link to this heading">#</a></h2>
+<p>A cell whose descent never meets the target has no finite distance. The
+criterion never drops such a cell in silence: it saturates at <span class="math notranslate nohighlight">\(L_{cap}\)</span>,
+the longest descent to the outlet inside the catchment, computed once on the
+static geometry and published per trial as <code class="docutils literal notranslate"><span class="pre">L_cap</span></code>. Counting <span class="math notranslate nohighlight">\(+\infty\)</span>
+instead would make the mean infinite; censoring the cell instead would move the
+support with the parameter, which is a moving denominator.</p>
+<p>The fractions are counted on both sides and reported as
+<code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_unreachable_os</span></code>. <strong>The bound</strong>
+<code class="docutils literal notranslate"><span class="pre">max_unreachable_fraction</span></code> <strong>guards one of them, and only one.</strong></p>
+<p>It guards <span class="math notranslate nohighlight">\(D_{so}\)</span>, whose target is the mapped network with the outlet
+sealed in. That target is static: it does not move from trial to trial, and on
+a conditioned catchment every cell reaches it. Anything past a few per cent
+there means the surface is not conditioned, and the mean would be a fiction
+built on the saturation value. This is the direction the 0.03 to 2.5 per cent
+of the reference measurement belongs to.</p>
+<p>It does not guard <span class="math notranslate nohighlight">\(D_{os}\)</span>, and must not. That target is the <em>simulated</em>
+network, which is exactly what the calibration moves: at a high conductivity
+the simulated network retracts into the talwegs and the mapped cells
+legitimately have nothing left to descend into. At the high end of one Nancon
+sweep, <strong>81.4 per cent</strong> of the mapped support was unreachable. That is the
+measurement working, not failing, and it is the signal the root search reads to
+close its bracket from above.</p>
+</section>
+<section id="weighting-and-the-reference-length">
+<h2>Weighting, and the reference length<a class="headerlink" href="#weighting-and-the-reference-length" title="Link to this heading">#</a></h2>
+<p>The paper averages one pixel one vote, which on a regular grid is the same as
+weighting by area. It stops being the same as soon as the mesh is refined along
+the streams, which is the usual refinement: cell density is then highest
+exactly where distances are smallest, so an unweighted mean over-samples the
+river corridor. HydroModPy reports both weightings at every trial, as
+<code class="docutils literal notranslate"><span class="pre">D_so_cell</span></code> and <code class="docutils literal notranslate"><span class="pre">D_so_area</span></code> beside <code class="docutils literal notranslate"><span class="pre">D_os_cell</span></code> and <code class="docutils literal notranslate"><span class="pre">D_os_area</span></code>, and
+their gap measures the effect of the refinement directly. Which pair enters the
+criterion is what <code class="docutils literal notranslate"><span class="pre">weighting</span></code> selects, one cell one vote by default.</p>
+<p><span class="math notranslate nohighlight">\(L_{ref}\)</span> is the square root of the <strong>median</strong> cell area over the
+catchment, not the mean. On a mesh refined along the streams a handful of large
+buffer cells inflate the mean, and for a size ratio of three the two
+conventions differ enough to move <span class="math notranslate nohighlight">\(r_{optim}\)</span> across its bound. Declaring
+<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> raises <span class="math notranslate nohighlight">\(L_{ref}\)</span> to that accuracy when it
+is the larger of the two, because a finer mesh otherwise divides the
+denominator without improving the agreement. That is not a hypothetical: the
+known biases below carry a measured case of <span class="math notranslate nohighlight">\(r_{optim}\)</span> halving on a
+coarser grid with nothing else changed.</p>
+</section>
+<section id="the-validity-bound-and-what-it-does-not-mean">
+<h2>The validity bound and what it does not mean<a class="headerlink" href="#the-validity-bound-and-what-it-does-not-mean" title="Link to this heading">#</a></h2>
+<p>Equation 4 of the paper reads <span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span>. HydroModPy computes it
+against <code class="docutils literal notranslate"><span class="pre">roptim_max</span></code>, reports it as <code class="docutils literal notranslate"><span class="pre">roptim</span></code> and <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code>, and
+<strong>does not let it withhold the calibrated value</strong>: a violation logs a warning
+and the value comes back. A calibration is asked for a number; a coarse
+agreement qualifies that number, it does not replace it with nothing. Setting
+<code class="docutils literal notranslate"><span class="pre">on_roptim_violation</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code> turns that warning into a raise, which is an
+explicit choice to be handed nothing rather than a qualified value.</p>
+</section>
+<section id="why-the-criterion-has-a-root-and-why-the-search-brackets-it">
+<h2>Why the criterion has a root, and why the search brackets it<a class="headerlink" href="#why-the-criterion-has-a-root-and-why-the-search-brackets-it" title="Link to this heading">#</a></h2>
+<p>Three measured facts shape the search, and each is a line of the implementation.</p>
+<p><strong>The residual is a step function.</strong> The masks are discrete, so the two
+averages jump when a cell switches, and the residual steps over zero rather
+than reaching it. On one real catchment <span class="math notranslate nohighlight">\(\lvert J \rvert\)</span> never falls
+below 3.18 m while the root is bracketed to a factor 1.0015. <strong>The stopping
+rule is therefore the width of the bracket in the calibrated parameter, never
+the size of the residual</strong>; a search stopping on <span class="math notranslate nohighlight">\(\lvert J \rvert &lt;
+\varepsilon\)</span> may never stop. The search walks the base-ten logarithm of the
+parameter, and <code class="docutils literal notranslate"><span class="pre">rel_tol</span></code> becomes a width in that variable, so a <code class="docutils literal notranslate"><span class="pre">rel_tol</span></code>
+of 0.01 closes the bracket at one per cent on the parameter itself, which is
+the paper’s criterion read literally. On any other transform that width would read
+as an absolute one, and the adapter refuses a parameter that does not declare
+<code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">=</span> <span class="pre">&quot;log&quot;</span></code> rather than reporting convergence on a bracket orders of
+magnitude wide.</p>
+<p><strong>Monotonicity is not proven.</strong> The paper establishes the direction of
+variation on three points and generalises it over twenty-four catchments. A
+coarse logarithmic sweep of <code class="docutils literal notranslate"><span class="pre">sweep_points</span></code> points, seven by default, is run
+before the bisection: it checks the property instead of assuming it, it sees
+every crossing rather than one, and the crossing curves come out of the same
+solves. Several crossings warn and the tightest one is closed. Setting
+<code class="docutils literal notranslate"><span class="pre">sweep_points</span></code> to zero drops the sweep and brackets on the two bounds, which
+is the pure bisection of the paper.</p>
+<p><strong>A bracket without a sign change is a result.</strong> The search first widens the
+interval by a decade on each side, up to <code class="docutils literal notranslate"><span class="pre">bracket_expand</span></code> times, four by
+default; if the sign still does not change it raises and prints both residuals
+rather than returning the better of the two ends, because returning the better
+end is a minimised mean distance in disguise. When the widening does find a
+sign change, but only outside the declared bounds, the value comes back with a
+warning naming how many expansions it took: a root several decades outside a
+declared interval is rarely a surprising conductivity, it is usually the
+residual failing to respond to the parameter at all. The next section names one
+way that happens.</p>
+</section>
+<section id="why-the-ratio-is-what-gets-calibrated">
+<h2>Why the ratio is what gets calibrated<a class="headerlink" href="#why-the-ratio-is-what-gets-calibrated" title="Link to this heading">#</a></h2>
+<p>Under a drain conductance proportional to <span class="math notranslate nohighlight">\(K\)</span>, the steady balance of a
+water-table cell is</p>
+<div class="math notranslate nohighlight">
+\[\nabla \cdot (K\, d_{sat} \nabla h) + R = C\,(h - z_{top})
+\quad\text{with}\quad C = \frac{K A}{e}\]</div>
+<p>and dividing by <span class="math notranslate nohighlight">\(K\)</span> leaves a problem depending on <span class="math notranslate nohighlight">\(R/K\)</span> and on the
+geometry alone. So the head field, and therefore the seepage mask, depend only
+on the ratio. Measured on a real catchment of 3 449 cells: multiplying
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(R\)</span> by a common factor from 0.01 to 100 leaves the mask
+<strong>strictly identical, zero cells of difference</strong>, and the head invariant to
+5e-6 m. The same factor on <span class="math notranslate nohighlight">\(K\)</span> alone moves 135 cells.</p>
+<p>That proportionality is not a parasitic coupling to be corrected: it is what
+makes “calibrating <span class="math notranslate nohighlight">\(K/R\)</span>” well posed. A conductance fixed independently
+of <span class="math notranslate nohighlight">\(K\)</span> breaks the invariance from a factor 1.05 onwards.</p>
+<p>Two consequences follow. A test of the invariance must assert on <strong>the mask and
+the head, never on the discharge</strong>: mass balance forces the total discharge to
+follow the recharge whatever the conductance, so a discharge-based test passes
+on a model whose mask has half changed. And the seepage criterion is applied to
+the <strong>flux</strong>, not to <span class="math notranslate nohighlight">\(h \geq z_{top}\)</span>: the flux is anchored by the mass
+balance and its median cell value holds over eight decades of conductance,
+while <span class="math notranslate nohighlight">\(h - z_{top}\)</span> travels twelve.</p>
+</section>
+<section id="what-the-method-needs-from-the-flow-model">
+<h2>What the method needs from the flow model<a class="headerlink" href="#what-the-method-needs-from-the-flow-model" title="Link to this heading">#</a></h2>
+<p><strong>Every package that releases groundwater to the surface has to reach the
+criterion.</strong> The simulated network is built from the release flux, so a package
+whose outflow the criterion cannot read becomes a stretch of catchment read as
+dry land, and it reads as dry precisely where that package drains, which is
+where the criterion aims.</p>
+<p>MODFLOW 6 makes that easy to do by accident. An advanced package given a
+<code class="docutils literal notranslate"><span class="pre">budget_filerecord</span></code> writes its exchange to its own file beside the model
+budget, and the model budget then holds no record for it at all. Measured on
+the Nancon with the streams in SFR: the aquifer released 2.10 m3/s in total,
+1.33 of it through the stream package. Reading the model budget alone saw the
+drain and nothing else, which made <strong>63 per cent of the outgoing water
+invisible</strong> and left the criterion measuring a seepage network missing two
+thirds of its water. That network was then a skeleton of prescribed reaches
+that never retracted as the conductivity rose: the residual stayed positive
+across the whole declared interval, and the search closed three decades above
+it on a value that means nothing, with a validity indicator comfortably inside
+its bound.</p>
+<p>HydroModPy refuses rather than measure that. The requirement is read off the
+budget file and not off the model object, which can be silent about a package
+the run really built: a release record that no declared package covers, or a
+sibling package budget sitting next to the model one, raises and names the
+package. That is also what catches the next package the same way, without
+naming it in advance.</p>
+</section>
+<section id="what-the-criterion-reproduces-and-how-far-that-goes">
+<h2>What the criterion reproduces, and how far that goes<a class="headerlink" href="#what-the-criterion-reproduces-and-how-far-that-goes" title="Link to this heading">#</a></h2>
+<p>The Nancon was calibrated twice with nothing shared but the mapped network and
+the forcing: MODFLOW-NWT on the catchment mesh, and MODFLOW 6 on a structured
+grid. Over a parameter searched across four decades, the two roots are
+<span class="math notranslate nohighlight">\(K = 2.10 \times 10^{-4}\)</span> and <span class="math notranslate nohighlight">\(1.87 \times 10^{-4}\)</span> m/s, <strong>eleven
+per cent apart</strong>.</p>
+<p>Both runs find exactly one sign change over the sweep, and each balances its
+two error classes at the root, which is what the criterion is asked to do: 550
+cells of excess against 517 missing under MODFLOW-NWT, 196 against 212 under
+MODFLOW 6.</p>
+<p>Read that for what it is. Eleven per cent over four decades of search is the
+reproducibility of the criterion across a change of solver, of grid and of
+discretisation. It is not the accuracy of the calibrated conductivity, which
+the biases below bound far more loosely, and it says nothing about whether
+either number is right.</p>
+</section>
+<section id="known-biases-and-how-to-read-the-output">
+<h2>Known biases, and how to read the output<a class="headerlink" href="#known-biases-and-how-to-read-the-output" title="Link to this heading">#</a></h2>
+<p>This section is not a disclaimer. Each point below was measured, and each one
+changes how a number produced by this method may be reused.</p>
+<p><strong>The method over-estimates the ratio, with a known sign.</strong> Against a synthetic
+truth where the model is exact, giving the closure of the true network back as
+the observation recovers the ratio to 1.001. Giving a thinned network, which is
+what every real hydrographic map is, biases the ratio by a factor 2.7 to 7.5,
+and up to 23.7 when only a quarter of the true network is kept. The
+dose-response is monotone. Since every real map is less dense than the true
+network, the bias is present in every real application and it points the same
+way.</p>
+<p><strong>The validity ratio measures agreement, never correctness.</strong> Measured on
+synthetic truth, <span class="math notranslate nohighlight">\(r_{optim}\)</span> <strong>improves as the bias worsens</strong>: 0.33, then
+0.29, then 0.15 for biases of 7.5, 10.6 and 23.7. On eleven structural variants
+of one model, all accepted by Equation 4, the calibrated ratio spans a factor
+29, and the two best ratios belong to the two variants whose model top had been
+altered. Do not read <span class="math notranslate nohighlight">\(r_{optim}\)</span> as a quality indicator of the model.</p>
+<p><strong>The validity ratio also moves with the grid, and it flatters the coarser
+one.</strong> Between the two runs of the section above, <span class="math notranslate nohighlight">\(r_{optim}\)</span> went from
+4.58 to 2.21 with nothing about the model improved: the coarser grid carries
+larger cells, <span class="math notranslate nohighlight">\(L_{ref}\)</span> is the square root of the median cell area, and
+the denominator grew. Same catchment, same mapped network, indicator halved.
+Refining a mesh therefore degrades the indicator at constant agreement, which
+is what <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> is for: declaring the positional
+accuracy of the mapped network floors <span class="math notranslate nohighlight">\(L_{ref}\)</span> at a length the model
+resolution cannot shrink. Two <span class="math notranslate nohighlight">\(r_{optim}\)</span> values measured on different
+meshes are not comparable unless that floor is declared and identical.</p>
+<p><strong>Publish</strong> <span class="math notranslate nohighlight">\(T/R\)</span>, <strong>not</strong> <span class="math notranslate nohighlight">\(K\)</span>. The conductivity inherits the
+recharge series entirely: changing reanalysis moves it by +3, +25 and -28 per
+cent on three catchments. On a five-layer model, <span class="math notranslate nohighlight">\(T/R\)</span> is stable to 1.21
+where the mean distance no longer separates anything. The ratio is not computed
+for you: the calibration returns the conductivity raw in <code class="docutils literal notranslate"><span class="pre">best_parameters</span></code> and
+emits the recharge that divides it as <code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code> per trial, read back from
+the built model rather than from the TOML, so forming <span class="math notranslate nohighlight">\(T/R\)</span> and naming
+that recharge series beside it is the author’s work.</p>
+<p><strong>The positional uncertainty of the mapped network is oriented.</strong> Displacing it
+by one cell moves the ratio by a factor 3.7 to 8.9 depending on the catchment,
+and twelve estimates out of twelve came out at or above the nominal one. This
+is a bias, not only a variance, and it is consistent with the thinning bias
+above.</p>
+<p><strong>There is an irreducible floor.</strong> The mapped network is never contained in the
+simulated one at any parameter value: twelve to nineteen per cent of the
+linework stays dry for topographic reasons. On the one catchment rejected by
+Equation 4, that floor accounts for 46 per cent of the ratio, so the rejection
+measures a structural incapacity rather than a bad parameter.</p>
+<p><strong>The two averages are tail statistics.</strong> At the root, their median is exactly
+zero and forty per cent of their value is carried by five per cent of the
+cells, because the two networks share a common trunk. Reading
+<span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span> as “the typical gap is under two pixels” is wrong: the
+typical gap is zero and the criterion lives in the tail. HydroModPy therefore
+reports the median, the ninetieth percentile and the share carried by the top
+five per cent beside each mean, as <code class="docutils literal notranslate"><span class="pre">D_so_median</span></code>, <code class="docutils literal notranslate"><span class="pre">D_so_p90</span></code> and
+<code class="docutils literal notranslate"><span class="pre">D_so_top5_share</span></code>, and the same three for <span class="math notranslate nohighlight">\(D_{os}\)</span>.</p>
+<p><strong>A second phase calibrating storage identifies</strong> <span class="math notranslate nohighlight">\(S_y/T\)</span>, <strong>not</strong>
+<span class="math notranslate nohighlight">\(S_y\)</span>. For an unconfined Dupuit aquifer the recession constant behaves as
+<span class="math notranslate nohighlight">\(S_y L^2 / T\)</span>, so a log-NSE on the recessions constrains the ratio. Freeze
+a transmissivity biased by a factor <span class="math notranslate nohighlight">\(f\)</span> and the storage comes out biased
+by the same factor, with the objective function unchanged. What is wrong in
+both cases is the stored volume, which is exactly the quantity long-term
+projections rest on.</p>
+</section>
+<section id="domain-of-validity">
+<h2>Domain of validity<a class="headerlink" href="#domain-of-validity" title="Link to this heading">#</a></h2>
+<p>Unconfined aquifers, temperate humid climate, gentle topographic gradients,
+strong groundwater-stream connection, and a DEM whose resolution is compatible
+with the positional accuracy of the mapped network. Outside that envelope the
+criterion still computes, and it still means less.</p>
+</section>
+<section id="the-pre-treatment-the-method-requires">
+<h2>The pre-treatment the method requires<a class="headerlink" href="#the-pre-treatment-the-method-requires" title="Link to this heading">#</a></h2>
+<p>The distances are measured along the flow paths of the DEM. If the mapped
+linework does not sit in the talwegs of that DEM, they measure a disagreement
+between two datasets rather than hydrogeology. The repair is on the DEM side,
+by burning the network into the routing surface before conditioning, and it has
+to be redone at every change of resolution.</p>
+<p>The indicator is <span class="math notranslate nohighlight">\(\alpha\)</span>, the ratio between the mapped network and its
+own downslope closure. Measured with no pre-treatment on five catchments at
+75 m: 0.68 to 0.95, so on four of five, a quarter to a third of the D8 trace
+leaving the mapped cells exits the network at the first step. At 25 m it falls
+to 0.49 to 0.64. The disagreement is the rule, not the exception.</p>
+<p>HydroModPy measures <span class="math notranslate nohighlight">\(\alpha\)</span> on every run declaring
+<code class="docutils literal notranslate"><span class="pre">geographic.enforce_streams.stream_geometry_path</span></code>, whether or not <code class="docutils literal notranslate"><span class="pre">enabled</span></code>
+is set, which is what makes it usable to decide that the burning is needed. It
+is written to <code class="docutils literal notranslate"><span class="pre">stream_dem_agreement.json</span></code> in the geographic directory and
+logged with a warning below 0.90. A run declaring no network there measures
+nothing. A calibration declaring a network output recomputes the same ratio on
+the solver mesh and publishes it per trial as <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>.</p>
+<p>Burning and flooding are two different repairs, and neither replaces the other.
+Burning fixes the registration between two datasets, once, on the routing
+raster; the flood described above fixes the surface itself, on the mesh graph,
+at every trial. A network burned into a routing raster still descends into the
+pits the mesh grows when it reads that raster back, and a flooded mesh still
+measures a dataset disagreement if the linework was never in the talwegs to
+begin with.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<div class="docutils container" id="id2">
+<div role="list" class="citation-list">
+<div class="citation" id="id12" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">AbherveRG+23</a><span class="fn-bracket">]</span></span>
+<p>R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. <em>Hydrology and Earth System Sciences</em>, 27(17):3221–3239, 2023. <a class="reference external" href="https://doi.org/10.5194/hess-27-3221-2023">doi:10.5194/hess-27-3221-2023</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="network-metrics-and-extreme-k-sweep.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Network Metrics And Extreme K-Sweep</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../calibration/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Calibration</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-does-and-why-it-is-worth-the-trouble">What it does, and why it is worth the trouble</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-downslope-topographic-distance">The downslope topographic distance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-surface-the-distances-are-measured-on">The surface the distances are measured on</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-two-mean-distances-and-the-criterion">The two mean distances and the criterion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-criterion-is-not-the-diagnostic">The criterion is not the diagnostic</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-counts-as-a-seepage-cell">What counts as a seepage cell</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-other-answer-written-measured-and-reverted">The other answer, written, measured and reverted</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-threshold-should-be-a-fraction-of">What the threshold should be a fraction of</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-cells-enter-which-average">Which cells enter which average</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-unreachable-fraction-and-the-one-direction-its-bound-guards">The unreachable fraction, and the one direction its bound guards</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#weighting-and-the-reference-length">Weighting, and the reference length</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-validity-bound-and-what-it-does-not-mean">The validity bound and what it does not mean</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-criterion-has-a-root-and-why-the-search-brackets-it">Why the criterion has a root, and why the search brackets it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-ratio-is-what-gets-calibrated">Why the ratio is what gets calibrated</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-method-needs-from-the-flow-model">What the method needs from the flow model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-criterion-reproduces-and-how-far-that-goes">What the criterion reproduces, and how far that goes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#known-biases-and-how-to-read-the-output">Known biases, and how to read the output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-of-validity">Domain of validity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-pre-treatment-the-method-requires">The pre-treatment the method requires</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
