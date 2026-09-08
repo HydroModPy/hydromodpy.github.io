@@ -585,9 +585,9 @@ objective, dates, best trial) and <code class="docutils literal notranslate"><sp
 <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code>, rebuilt from the session journal.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">promote_trial</span></code> (top-N)</p></td>
-<td><p>Replays the chosen trials through the full pipeline. Writes
-Zarr + Parquet + <code class="docutils literal notranslate"><span class="pre">simulations</span></code> rows and back-fills
-<code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code>.</p></td>
+<td><p>Replays the chosen trials through the full pipeline. Reserves the
+run id and writes <code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code> first, then
+Zarr + Parquet + <code class="docutils literal notranslate"><span class="pre">simulations</span></code> rows.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Catalog (simulations + Zarr + Parquet)</p></td>
 <td><p>Read by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">report</span> <span class="pre">render</span></code> alongside the DuckDB iteration
@@ -635,8 +635,11 @@ from it.</p></li>
 chosen trials are replayed through the <em>full</em> pipeline (steps
 <code class="docutils literal notranslate"><span class="pre">00..11</span></code>) by <code class="docutils literal notranslate"><span class="pre">hydromodpy.Project(cfg_path).simulate(**values)</span></code>. Each
 promotion creates a Zarr store, a Parquet directory, and a
-<code class="docutils literal notranslate"><span class="pre">simulations</span></code> row, and back-fills the corresponding
-<code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">simulations</span></code> row. The corresponding
+<code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code> is written before the replay, not
+after it: the last step of the promoted run renders the figures, and
+the ones about the calibration only draw when an iteration row names
+that run. A promotion that fails clears the link again.</p></li>
 <li><p><strong>``hmp report render &lt;session_ref&gt;``</strong>: post-processing CLI that
 reads the session descriptor and its trial log, renders the six
 calibration figures, and emits a standalone HTML report at

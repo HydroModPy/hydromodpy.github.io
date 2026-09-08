@@ -791,11 +791,15 @@
 <h1>[solver] SolverConfig<a class="headerlink" href="#solver-solverconfig" title="Link to this heading">#</a></h1>
 <p>TOML section: <code class="docutils literal notranslate"><span class="pre">[solver]</span></code></p>
 <p>Pydantic model: <code class="docutils literal notranslate"><span class="pre">SolverConfig</span></code> defined in <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.solver_config</span></code>.</p>
-<p><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L82">Source on GitHub</a></p>
+<p><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L83">Source on GitHub</a></p>
 <p>Configuration block defining the active groundwater solver engine.</p>
 <p>The V1 TOML form is <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">{</span> <span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow6&quot;</span> <span class="pre">}</span></code> for a
 built-in backend, or <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">{</span> <span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;,</span> <span class="pre">name</span> <span class="pre">=</span> <span class="pre">&quot;x&quot;</span> <span class="pre">}</span></code>
 for a plugin-registered backend.</p>
+<p>It also carries the backend-agnostic preprocessing switches both MODFLOW
+backends read, so one TOML key drives both. <code class="docutils literal notranslate"><span class="pre">sink_fill</span></code> and
+<code class="docutils literal notranslate"><span class="pre">drain_band_depth_m</span></code> both act on the drains of a depressed model top and
+are mutually exclusive.</p>
 <div class="hmp-level-toggle" data-section="solver">
   <span class="hmp-level-toggle-label">Show fields:</span>
   <button type="button" data-level="user" class="hmp-level-btn is-active">User</button>
@@ -808,7 +812,7 @@ for a plugin-registered backend.</p>
   <code class="hmp-field-name">backend</code>
   <span class="hmp-field-arrow">in TOML:</span>
   <code class="hmp-field-toml">[solver.backend]</code>
-</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">backend = “modflow6” | “modflow_nwt” | “boussinesq” | “custom”</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L90">source</a></p>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">backend = “modflow6” | “modflow_nwt” | “boussinesq” | “custom”</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L96">source</a></p>
 <blockquote>
 <div><p>Active flow backend selector (discriminated union).</p>
 <p>Pick a tab below: setting <code class="docutils literal notranslate"><span class="pre">backend</span></code> selects the matching schema.</p>
@@ -817,31 +821,85 @@ for a plugin-registered backend.</p>
 <input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-0">
 modflow6</label><div class="sd-tab-content docutils">
-<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow6&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">Modflow6Backend</span></code> (set <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow6&quot;</span></code>).</p>
+<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow6&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">Modflow6Backend</span></code>.</p>
 </div>
 <input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-1">
 modflow_nwt</label><div class="sd-tab-content docutils">
-<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow_nwt&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">ModflowNwtBackend</span></code> (set <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow_nwt&quot;</span></code>).</p>
+<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;modflow_nwt&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">ModflowNwtBackend</span></code>.</p>
 </div>
 <input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-2">
 boussinesq</label><div class="sd-tab-content docutils">
-<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;boussinesq&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">BoussinesqBackend</span></code> (set <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;boussinesq&quot;</span></code>).</p>
+<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;boussinesq&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">BoussinesqBackend</span></code>.</p>
 </div>
 <input id="sd-tab-item-3" name="sd-tab-set-0" type="radio">
 <label class="sd-tab-label" for="sd-tab-item-3">
 custom</label><div class="sd-tab-content docutils">
-<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">CustomBackend</span></code> (set <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code>).</p>
+<p>TOML: <code class="docutils literal notranslate"><span class="pre">[solver.backend]</span></code> with <code class="docutils literal notranslate"><span class="pre">backend</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code> – model <code class="docutils literal notranslate"><span class="pre">CustomBackend</span></code>.</p>
 <div class="hmp-field hmp-field-level-user hmp-config-fields hmp-config-fields-nested docutils container" id="solver-backend-name">
 <div class="hmp-field-header" data-toml-path="solver.backend.name">
   <code class="hmp-field-name">name</code>
-</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">str</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">required</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L59">source</a></p>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">str</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">required</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L60">source</a></p>
 <blockquote>
 <div><p>Plugin-registered flow backend name (matches registry).</p>
 </div></blockquote>
 </div>
 </div>
+</div>
+</div>
+<div class="hmp-field hmp-field-level-user docutils container" id="solver-sink-fill">
+<div class="hmp-field-header" data-toml-path="solver.sink_fill">
+  <code class="hmp-field-name">sink_fill</code>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L100">source</a></p>
+<blockquote>
+<div><p>Dimensionless. Remove the drain from every cell sitting in a closed depression of the model top, by setting its DRN conductance to zero. A closed depression has no outlet, so water reaching it ponds instead of seeping into a stream, and a drain there invents a discharge point. The depressions are measured on the solver mesh, by a priority flood seeded on every cell water can leave the domain through; both MODFLOW backends read the same mask. This does NOT move the topography: no elevation is raised, no DEM is rewritten, and every other package sees the surface it would have seen. Refused when the mask cannot be built. The depressions are counted on the four shared faces MODFLOW connects, not on the eight neighbours a raster fill uses: measured on the Nancon, 4.56 per cent of the mesh against 2.12 per cent, a factor of two that is the neighbourhood and nothing else. NOT SANCTIONED BY ANY SOURCE: no manual, no USGS document and no guideline removes a discharge boundary where a pit is detected, and measured here it degrades both scores. The remedy the USGS does document for the same question is solver.drain_band_depth_m, which gives every cell a discharge band instead of taking the drain away. Default false, which drains every cell as before.</p>
+</div></blockquote>
+<div class="hmp-field-examples admonition">
+<p class="admonition-title">Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</div>
+</div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="solver-drain-bed-thickness-m">
+<div class="hmp-field-header" data-toml-path="solver.drain_bed_thickness_m">
+  <code class="hmp-field-name">drain_bed_thickness_m</code>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L125">source</a></p>
+<blockquote>
+<div><p>Metres. Thickness of the drain BED in the fallback conductance C = K * cell_area / bed_thickness, used when no drainage conductance is declared. A drain bed is the clogging layer at the bottom of a watercourse, decimetres to a metre; it is NOT the aquifer, and the layer thickness this used to borrow (30 m on the Nancon) has no physical relation to it. The value matters because it sets how much head the drain itself imposes to pass the recharge: dh = R * bed_thickness / K, independent of the cell size. On the Nancon at R = 439 mm/yr, 30 m gives 4.17 m of head at K = 1e-7 m/s and makes the drain the limiting resistance over two decades of a [1e-7, 1e-3] search; 1 m gives 13.9 cm and 0.1 m gives 1.4 cm. In this method the drain is a seepage face, so it must never limit: K and the recharge decide where water surfaces, not the boundary condition. Proportionality to K is preserved either way, so the K/R invariance the network criterion rests on is untouched.</p>
+</div></blockquote>
+<div class="hmp-field-examples admonition">
+<p class="admonition-title">Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></li>
+</ul>
+</div>
+</div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="solver-drain-conductance-floor-m2-s">
+<div class="hmp-field-header" data-toml-path="solver.drain_conductance_floor_m2_s">
+  <code class="hmp-field-name">drain_conductance_floor_m2_s</code>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1e-12</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L147">source</a></p>
+<blockquote>
+<div><p>m2/s. Floor applied to every DRN conductance, whether declared or derived from hk. It exists for degenerate cells only, a zero-thickness or zero-conductivity cell whose formula would divide by zero or emit a zero-conductance drain MODFLOW reads as absent. It is not a physical choice and moving it does not tune anything: a real conductance on a real cell is many orders of magnitude above it. Raise it only to make a degenerate mesh audible.</p>
+</div></blockquote>
+</div>
+<div class="hmp-field hmp-field-level-user docutils container" id="solver-drain-band-depth-m">
+<div class="hmp-field-header" data-toml-path="solver.drain_band_depth_m">
+  <code class="hmp-field-name">drain_band_depth_m</code>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.0</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/base/solver_config.py#L160">source</a></p>
+<blockquote>
+<div><p>Metres. Depth D of the sub-cell discharge band every drain cell gets instead of a single elevation: the drain sits at top - D/2 and its conductance is multiplied by top_layer_thickness / D. The multiplier is the thickness and not the cell area because the conductance it scales is already Kv*A/b, so scaling by b/D gives Kv*A/D, which is CDRN exactly; scaling by A/D would give an m3/s where a conductance is m2/s, too high by A/b. The cell therefore starts discharging before the head reaches its mean elevation, and discharges harder the higher the head climbs into the band. This answers the one question the USGS documents about a model top, that the land inside a cell is not flat: UZF1 exposes the same depth as SURFDEP, ‘the average undulation depth within a finite-difference cell’, and MODFLOW 6 carries it into DRN as DDRN, with HDRN = land surface - DDRN/2 and CDRN = Kv*A/DDRN. MODFLOW 6 solves its DDRN band with a smooth (linear then cubic) curve; the option here is the piecewise equivalent of the same idea, applied identically by both MODFLOW backends, so a later switch to the native smooth form is a documented refinement and not a surprise. It does NOT move the topography: no elevation is raised, no DEM is rewritten, and every other package sees the surface it would have seen. The seepage criterion is the one reader that cannot: a banded cell discharges at top - D/2 and never climbs back to top, so the mask follows the band and the run persists D in its store for every figure drawn afterwards. It classifies no cell: every drain cell gets the same band, so nothing has to be sorted into artefact and real. Pick D the way Feinstein et al. 2020 (Groundwater 58:524-534, doi:10.1111/gwat.12931) do, from the standard deviation of the fine land-surface elevations inside a cell; they obtain 0.61 m. Mutually exclusive with solver.sink_fill, which answers the same question by removing drains instead. Default 0.0: one elevation per drain, unchanged from every earlier run.</p>
+</div></blockquote>
+<div class="hmp-field-examples admonition">
+<p class="admonition-title">Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></li>
+</ul>
 </div>
 </div>
 </section>
@@ -854,6 +912,8 @@ custom</label><div class="sd-tab-content docutils">
 you want to set. Sub-tables (<code class="docutils literal notranslate"><span class="pre">[parent.subfield]</span></code>) appear in the
 order Pydantic expects them.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[solver]</span>
+<span class="c1"># sink_fill = false</span>
+<span class="c1"># drain_band_depth_m = 0.0</span>
 
 <span class="k">[solver.backend]</span>
 <span class="c1"># backend = "modflow6"</span>

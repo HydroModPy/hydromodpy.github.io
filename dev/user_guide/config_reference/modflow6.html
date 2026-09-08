@@ -791,7 +791,7 @@
 <h1>[modflow6] Modflow6Config<a class="headerlink" href="#modflow6-modflow6config" title="Link to this heading">#</a></h1>
 <p>TOML section: <code class="docutils literal notranslate"><span class="pre">[modflow6]</span></code></p>
 <p>Pydantic model: <code class="docutils literal notranslate"><span class="pre">Modflow6Config</span></code> defined in <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.modflow6.modflow6_config</span></code>.</p>
-<p><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L190">Source on GitHub</a></p>
+<p><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L238">Source on GitHub</a></p>
 <p>Expert-level MODFLOW 6 configuration organized by concern.</p>
 <div class="hmp-level-toggle" data-section="modflow6">
   <span class="hmp-level-toggle-label">Show fields:</span>
@@ -805,7 +805,7 @@
   <code class="hmp-field-name">runtime</code>
   <span class="hmp-field-arrow">in TOML:</span>
   <code class="hmp-field-toml">[modflow6.runtime]</code>
-</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Modflow6RuntimeConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L193">source</a></p>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Modflow6RuntimeConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L241">source</a></p>
 <blockquote>
 <div><p>MODFLOW 6 runtime options.</p>
 </div></blockquote>
@@ -820,10 +820,42 @@
 <div><p class="sd-card-text">MODFLOW 6 executable name or absolute path.</p>
 </div></blockquote>
 </div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-ims-print-option">
+<div class="hmp-field-header" data-toml-path="modflow6.runtime.ims_print_option">
+  <code class="hmp-field-name">ims_print_option</code>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘NONE’, ‘SUMMARY’, ‘ALL’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “NONE”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L24">source</a></p>
+<blockquote>
+<div><p class="sd-card-text">IMS PRINT_OPTION. ‘SUMMARY’ adds one line per time step to the listing with the outer and inner iteration counts, which is the only way to tell an expensive iteration from too many of them. Deliberately NOT tied to mf_verbose: that switch also sets print_input and print_flows on the whole model, and on a run with one drain per cell those print every boundary flux at every step. ‘NONE’ by default; ‘SUMMARY’ costs a line per step.</p>
+</div></blockquote>
+</div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-print-head">
+<div class="hmp-field-header" data-toml-path="modflow6.runtime.print_head">
+  <code class="hmp-field-name">print_head</code>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L36">source</a></p>
+<blockquote>
+<div><p class="sd-card-text">Re-print the whole head field, formatted as text, into the model listing at every output step. Nothing in the package reads it, and the binary head file already carries the same numbers. It costs DISK, not time: measured on the Nancon at 25 m, 243 552 cells over 1826 daily steps wrote a 2.96 GB listing, but a one-variable-at-a-time probe put its effect on the solve at -0.4 per cent, inside the noise. Default false to stop producing the file, not to go faster. The listing keeps its budget summaries and its convergence reports either way, and Mf6ListBudget reads those.</p>
+</div></blockquote>
+</div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-save-specific-discharge">
+<div class="hmp-field-header" data-toml-path="modflow6.runtime.save_specific_discharge">
+  <code class="hmp-field-name">save_specific_discharge</code>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L50">source</a></p>
+<blockquote>
+<div><p class="sd-card-text">Compute and write the cell-by-cell Darcy velocity (DATA-SPDIS). Required by particle tracking and by any velocity figure. The cost is the COMPUTATION, not the write: MODFLOW interpolates a velocity vector per cell at every step. Measured on the Nancon at 25 m by changing this switch alone, 4.64 -&gt; 3.68 s per step, 20.7 per cent of the solve. A calibration that only scores a discharge series should turn it off.</p>
+</div></blockquote>
+</div>
+<div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-save-saturation">
+<div class="hmp-field-header" data-toml-path="modflow6.runtime.save_saturation">
+  <code class="hmp-field-name">save_saturation</code>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L62">source</a></p>
+<blockquote>
+<div><p class="sd-card-text">Compute and write the cell saturation (DATA-SAT). Measured on the Nancon at 25 m by changing this switch alone, 4.64 -&gt; 4.13 s per step, 10.9 per cent of the solve. Same reasoning as save_specific_discharge: the cost is the per-cell computation, and the two together are worth 34.5 per cent.</p>
+</div></blockquote>
+</div>
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-runner">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_runner">
   <code class="hmp-field-name">mf6_runner</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘subprocess’, ‘api’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “subprocess”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L24">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘subprocess’, ‘api’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “subprocess”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L72">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">MODFLOW 6 solve dispatch: ‘subprocess’ runs the mf6 executable, ‘api’ drives libmf6 via the optional modflowapi package. Both write the same simulation, so output extraction is identical.</p>
 </div></blockquote>
@@ -831,7 +863,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-api-timeout-s">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_api_timeout_s">
   <code class="hmp-field-name">mf6_api_timeout_s</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[float]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L32">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[float]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L80">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Wall-clock budget (seconds) for an isolated libmf6 (‘api’ runner) solve in parallel calibration; the child is killed past it so one stuck trial cannot wedge the session. None keeps the built-in default (2400 s).</p>
 </div></blockquote>
@@ -839,7 +871,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-ims-complexity">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_ims_complexity">
   <code class="hmp-field-name">mf6_ims_complexity</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘SIMPLE’, ‘MODERATE’, ‘COMPLEX’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “COMPLEX”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L40">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘SIMPLE’, ‘MODERATE’, ‘COMPLEX’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “COMPLEX”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L88">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS complexity preset for MODFLOW 6: SIMPLE, MODERATE, or COMPLEX.</p>
 </div></blockquote>
@@ -847,7 +879,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf-verbose">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf_verbose">
   <code class="hmp-field-name">mf_verbose</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L44">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L92">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable verbose FloPy logging for MODFLOW 6 setup and execution.</p>
 </div></blockquote>
@@ -855,7 +887,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-outer-dvclose">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_outer_dvclose">
   <code class="hmp-field-name">mf6_outer_dvclose</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.0001</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L48">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.0001</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L96">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS outer-iteration head-change convergence criterion.</p>
 </div></blockquote>
@@ -863,7 +895,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-inner-dvclose">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_inner_dvclose">
   <code class="hmp-field-name">mf6_inner_dvclose</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.0001</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L52">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.0001</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L100">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS inner-iteration head-change convergence criterion.</p>
 </div></blockquote>
@@ -871,7 +903,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-outer-maximum">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_outer_maximum">
   <code class="hmp-field-name">mf6_outer_maximum</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 500</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L56">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 500</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L104">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Maximum number of IMS outer iterations.</p>
 </div></blockquote>
@@ -879,7 +911,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-inner-maximum">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_inner_maximum">
   <code class="hmp-field-name">mf6_inner_maximum</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 500</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L60">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 500</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L108">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Maximum number of IMS inner iterations.</p>
 </div></blockquote>
@@ -887,7 +919,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-inner-rclose">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_inner_rclose">
   <code class="hmp-field-name">mf6_inner_rclose</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[float]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L64">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[float]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L112">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS inner-iteration flow-residual closure (L^3/T in run units). None keeps the complexity-preset default.</p>
 </div></blockquote>
@@ -895,7 +927,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-linear-acceleration">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_linear_acceleration">
   <code class="hmp-field-name">mf6_linear_acceleration</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[Literal[‘CG’, ‘BICGSTAB’]]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L71">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[Literal[‘CG’, ‘BICGSTAB’]]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L119">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS linear acceleration: CG for symmetric matrices, BICGSTAB for the non-symmetric Newton formulation. None keeps the preset default.</p>
 </div></blockquote>
@@ -903,7 +935,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-under-relaxation">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_under_relaxation">
   <code class="hmp-field-name">mf6_under_relaxation</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[Literal[‘NONE’, ‘SIMPLE’, ‘COOLEY’, ‘DBD’]]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L78">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Optional[Literal[‘NONE’, ‘SIMPLE’, ‘COOLEY’, ‘DBD’]]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L126">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">IMS non-linear under-relaxation scheme. DBD is recommended with Newton. None keeps the preset default.</p>
 </div></blockquote>
@@ -911,7 +943,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-enable-rewet">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_enable_rewet">
   <code class="hmp-field-name">mf6_enable_rewet</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool | None</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L87">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool | None</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L135">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable NPF cell rewetting. When left to None, HydroModPy keeps rewetting disabled unless explicitly enabled.</p>
 </div></blockquote>
@@ -919,7 +951,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-newton">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_newton">
   <code class="hmp-field-name">mf6_newton</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L94">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L142">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable the MODFLOW 6 Newton-Raphson formulation. Catchment cells are always convertible (unconfined), so Newton with under-relaxation is the robust default and matches the MODFLOW-NWT backend.</p>
 </div></blockquote>
@@ -927,7 +959,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-newton-under-relaxation">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_newton_under_relaxation">
   <code class="hmp-field-name">mf6_newton_under_relaxation</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L102">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = True</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L150">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable MODFLOW 6 Newton under-relaxation when mf6_newton is true.</p>
 </div></blockquote>
@@ -935,7 +967,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-ats">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_ats">
   <code class="hmp-field-name">mf6_ats</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L106">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = False</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L154">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable MODFLOW 6 adaptive time stepping (ATS) on transient periods. Each stress period starts at its full length and MF6 subdivides only the periods the solver cannot converge in one step (e.g. littoral wet/dry under Newton), instead of carrying budget error at nstp=1. When on, OC saves per period end so the extraction still sees one record per period. Default off (baseline).</p>
 </div></blockquote>
@@ -943,7 +975,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-ats-dtmin-s">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_ats_dtmin_s">
   <code class="hmp-field-name">mf6_ats_dtmin_s</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 60.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L116">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 60.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L164">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Minimum ATS time step in seconds (only used when mf6_ats is true).</p>
 </div></blockquote>
@@ -951,7 +983,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-enable-xt3d">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_enable_xt3d">
   <code class="hmp-field-name">mf6_enable_xt3d</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool | None</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L120">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">bool | None</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = None</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L168">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Enable MF6 NPF XT3D terms. When left to None, XT3D is auto-enabled only when the mesh is significantly non-orthogonal or anisotropic K is configured; the default Voronoi/PEBI dual grid is near-orthogonal, so XT3D stays off there. It adds cost but improves accuracy on non-orthogonal or anisotropic grids.</p>
 </div></blockquote>
@@ -959,7 +991,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-rewet-wetfct">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_rewet_wetfct">
   <code class="hmp-field-name">mf6_rewet_wetfct</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L130">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L178">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">MF6 NPF rewet WETFCT factor.</p>
 </div></blockquote>
@@ -967,7 +999,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-rewet-iwetit">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_rewet_iwetit">
   <code class="hmp-field-name">mf6_rewet_iwetit</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L134">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L182">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">MF6 NPF rewet IWETIT interval.</p>
 </div></blockquote>
@@ -975,7 +1007,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-rewet-ihdwet">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_rewet_ihdwet">
   <code class="hmp-field-name">mf6_rewet_ihdwet</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L138">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L186">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">MF6 NPF rewet IHDWET flag.</p>
 </div></blockquote>
@@ -983,7 +1015,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-runtime-mf6-rewet-wetdry">
 <div class="hmp-field-header" data-toml-path="modflow6.runtime.mf6_rewet_wetdry">
   <code class="hmp-field-name">mf6_rewet_wetdry</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L142">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 0.1</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L190">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">MF6 NPF WETDRY threshold used when rewetting is active.</p>
 </div></blockquote>
@@ -995,7 +1027,7 @@
   <code class="hmp-field-name">process_specific</code>
   <span class="hmp-field-arrow">in TOML:</span>
   <code class="hmp-field-toml">[modflow6.process_specific]</code>
-</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Modflow6ProcessSpecificConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L197">source</a></p>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Modflow6ProcessSpecificConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L245">source</a></p>
 <blockquote>
 <div><p>Process-specific controls for MODFLOW 6 flow packages.</p>
 </div></blockquote>
@@ -1005,7 +1037,7 @@
 <div class="hmp-field hmp-field-level-expert hmp-config-fields hmp-config-fields-nested docutils container" id="modflow6-process-specific-vka">
 <div class="hmp-field-header" data-toml-path="modflow6.process_specific.vka">
   <code class="hmp-field-name">vka</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L151">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L199">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka. Default 1.0 is vertically isotropic. For spatial control declare a per-cell ‘Kv’ flow parameter instead, which is mutually exclusive with a non-unit vka and is a direct conductivity, never a mode-switched value. Vertical anisotropy is grid-aligned and needs no XT3D; a horizontal K22 field or an angle (not exposed here) would auto-activate XT3D.</p>
 </div></blockquote>
@@ -1013,7 +1045,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-process-specific-evt-extinction-depth">
 <div class="hmp-field-header" data-toml-path="modflow6.process_specific.evt_extinction_depth">
   <code class="hmp-field-name">evt_extinction_depth</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L162">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">float</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 1.0</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L210">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Meters; extinction depth for the EVT sink used when recharge negatives are routed to EVT. The routed deficit tapers linearly from the cell top to this depth and stops below it, so a sustained climatic deficit can saturate near this value.</p>
 </div></blockquote>
@@ -1021,7 +1053,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-process-specific-lak-forcing-mode">
 <div class="hmp-field-header" data-toml-path="modflow6.process_specific.lak_forcing_mode">
   <code class="hmp-field-name">lak_forcing_mode</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘auto’, ‘inline’, ‘ts6’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “auto”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L171">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">Literal[‘auto’, ‘inline’, ‘ts6’]</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = “auto”</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L219">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">How time-varying LAK forcings are written. ‘inline’ expands values into the LAK PERIOD block, emitting one row per stress period whenever the value changes. ‘ts6’ always routes non-constant forcings to external MF6 TS6 files. ‘auto’ keeps constant/short forcings inline and routes only genuinely long series (nper &gt; ts6_min_periods) to TS6.</p>
 </div></blockquote>
@@ -1029,7 +1061,7 @@
 <div class="hmp-field hmp-field-level-expert docutils container" id="modflow6-process-specific-ts6-min-periods">
 <div class="hmp-field-header" data-toml-path="modflow6.process_specific.ts6_min_periods">
   <code class="hmp-field-name">ts6_min_periods</code>
-</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 120</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L181">source</a></p>
+</div><p class="sd-card-text"><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">int</span> <span class="sd-sphinx-override sd-badge sd-bg-secondary sd-bg-text-secondary">default = 120</span> <span class="sd-sphinx-override sd-badge sd-bg-danger sd-bg-text-danger">expert</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L229">source</a></p>
 <blockquote>
 <div><p class="sd-card-text">Period count above which ‘auto’ mode offloads a non-constant LAK forcing to a TS6 file.</p>
 </div></blockquote>
@@ -1041,7 +1073,7 @@
   <code class="hmp-field-name">sgrid</code>
   <span class="hmp-field-arrow">in TOML:</span>
   <code class="hmp-field-toml">[modflow6.sgrid]</code>
-</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">SolverSGridConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L201">source</a></p>
+</div><p><span class="sd-sphinx-override sd-badge sd-bg-primary sd-bg-text-primary">SolverSGridConfig</span> <span class="sd-sphinx-override sd-badge sd-bg-info sd-bg-text-info">factory</span> <span class="sd-sphinx-override sd-badge sd-bg-success sd-bg-text-success">user</span> <a class="reference external" href="https://github.com/HydroModPy/HydroModPy/blob/main/hydromodpy/solver/modflow6/modflow6_config.py#L249">source</a></p>
 <blockquote>
 <div><p>Solver-grid payload split into planar and vertical sections.</p>
 </div></blockquote>

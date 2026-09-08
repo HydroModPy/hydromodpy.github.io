@@ -833,10 +833,13 @@ seeps along it by construction. The criterion measures its distances on that
 top, so the ratio it recomputes on the solver mesh and publishes per trial as
 <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code> describes a different surface. On the Nancon the routing
 DEM reaches <code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.994</span></code> after a 30 m burn while <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>
-sits at 0.306, below the 0.90 threshold, and every trial says so. Read both:
-the first says the delineation and the flow paths follow the map, the second
+sits at 0.306, and <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code> at 0.693. Read the three:
+the first says the delineation and the flow paths follow the map, the third
 says how much of the criterion’s own measurement is a top-versus-map
-disagreement.</p>
+disagreement, and the gap between the second and the third is the mapped
+linework the criterion carries outside the basin. <strong>A trial is judged on the
+third.</strong> The criterion never descends the burned surface, so a low value there
+is never a reason to burn deeper.</p>
 <p><strong>The drain conductance must stay proportional to the conductivity.</strong> Leave
 <code class="docutils literal notranslate"><span class="pre">[flow.bc.cauchy.drainage]</span> <span class="pre">value</span></code> at zero, or at anything not strictly
 positive, so the fallback applies: <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">=</span> <span class="pre">K</span> <span class="pre">*</span> <span class="pre">cell_area</span> <span class="pre">/</span> <span class="pre">top_thickness</span></code> on both
@@ -1081,6 +1084,17 @@ second item of “Before you start” says. They describe the geometry, not the
 trial, so they are identical across a session: the static geometry is
 rebuilt at every trial from the same topography and comes out the same.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_obs_outside_catchment</span></code></dt><dd><p>The same ratio on the support the criterion actually scores, and the share
+of the mapped cells that sit outside the delineated catchment. Outside the
+catchment the mesh is a buffer: nothing there is required to descend into
+the network, so a linework wider than the catchment inflates the closure of
+<code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code> without adding to its numerator. On the Nancon 55 per
+cent of the mapped cells are out, and the two ratios read 0.306 and 0.693.
+<strong>Read the catchment one to judge the agreement</strong>, and the whole-mesh one
+only to see how much linework the criterion carries beyond the basin. A run
+whose <code class="docutils literal notranslate"><span class="pre">reference</span></code> network is already clipped, which is what the data
+pipeline persists, has the two agree.</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_unreachable_os</span></code></dt><dd><p>The share of each support whose descent ends without meeting its target.
 The bound holds on <code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code> alone: its target is the mapped
 network with the outlet sealed in, which does not move between trials, so
@@ -1163,6 +1177,15 @@ distance, without touching code:</p>
 
 <span class="k">[display.overrides.downslope_distance_map]</span>
 <span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"to_simulated"</span>
+</pre></div>
+</div>
+<p>The three maps open on the delineated catchment, because that is where every
+class of the criterion lives: on the Nancon the partition holds 1 681 cells
+out of a mesh of 60 395, and a frame drawn around the mesh spends its page on
+ground that carries no answer. A reader checking what the model does outside
+the basin it was scored on asks for the whole domain instead:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[display.overrides.seepage_network_reference_overlay]</span>
+<span class="n">extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mesh"</span>
 </pre></div>
 </div>
 <p>A ninth figure, <code class="docutils literal notranslate"><span class="pre">roptim_validity_chart</span></code>, compares the calibrated agreement of
