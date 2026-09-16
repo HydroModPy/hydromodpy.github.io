@@ -588,9 +588,12 @@
 <span class="sd">    seed         = 42</span>
 
 <span class="sd">    [calibration.parameters]</span>
-<span class="sd">    K_aquifer  = { bounds = [1e-6, 1e-3], transform = "log" }</span>
-<span class="sd">    Sy_main    = { bounds = [0.02, 0.30] }</span>
-<span class="sd">    drain_cond = { bounds = [1e-4, 1e-1], transform = "log" }</span>
+<span class="sd">    K  = { bounds = [1e-6, 1e-3] }</span>
+<span class="sd">    Sy = { bounds = [0.02, 0.30] }</span>
+
+<span class="sd">The name of the section is the name of the quantity: ``K`` is resolved against</span>
+<span class="sd">what the project exposes, and ``hmp config targets`` prints the names a given</span>
+<span class="sd">project carries.</span>
 
 <span class="sd">Enriched TOML (twin-benchmark style)::</span>
 
@@ -677,9 +680,11 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibParameterDecl</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""User declaration for one calibrated parameter.</span>
 
-<span class="sd">    The declaration is read from ``[calibration.parameters.&lt;name&gt;]``. It</span>
-<span class="sd">    defines the physical bounds, the sampling transform, and optionally the</span>
-<span class="sd">    target path in ``HydroModPyConfig`` that receives each sampled value.</span>
+<span class="sd">    The declaration is read from ``[calibration.parameters.&lt;name&gt;]``, and the</span>
+<span class="sd">    section name is the quantity: it is resolved against the catalogue the</span>
+<span class="sd">    project exposes, so a file states the range and nothing else. Writing</span>
+<span class="sd">    ``path`` is the way out for whatever the catalogue does not reach, and it</span>
+<span class="sd">    wins without a lookup.</span>
 
 <span class="sd">    Use ``mode="replace"`` for direct parameter values and ``mode="scale"``</span>
 <span class="sd">    for multiplicative factors applied to an existing config value.</span>
@@ -689,12 +694,16 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">min_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"[low, high] physical bounds. Inherits from Pydantic annotation when omitted."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"[low, high] physical bounds, in the unit the target declares. "</span>
+        <span class="s2">"Falls back to what the field annotates when the file omits it, which most "</span>
+        <span class="s2">"fields deliberately leave unset because a range belongs to the site."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">transform</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"identity"</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">,</span> <span class="s2">"logit"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"identity"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Transform applied before sampling. 'log' for "</span>
-        <span class="s2">"strictly-positive quantities spanning orders of magnitude."</span><span class="p">,</span>
+        <span class="s2">"strictly-positive quantities spanning orders of magnitude. Unset, the "</span>
+        <span class="s2">"target's own field decides: a hydraulic conductivity declares 'log' where "</span>
+        <span class="s2">"it is defined, so a file states this only to depart from it."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">prior</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"uniform"</span><span class="p">,</span> <span class="s2">"log_uniform"</span><span class="p">,</span> <span class="s2">"normal"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"uniform"</span><span class="p">,</span>
@@ -702,8 +711,12 @@
     <span class="p">)</span>
     <span class="n">path</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Dotted path into HydroModPyConfig. Optional: when omitted, "</span>
-        <span class="s2">"the caller is responsible for injection."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dotted path into HydroModPyConfig. Optional, and the way out "</span>
+        <span class="s2">"rather than the way in: when omitted, the section name is resolved against "</span>
+        <span class="s2">"the project catalogue ('hmp config targets' lists it). Write one to reach a "</span>
+        <span class="s2">"value the catalogue does not carry, or to settle a name two targets answer "</span>
+        <span class="s2">"to. A path written here wins without a lookup, and a parameter that writes "</span>
+        <span class="s2">"one inherits nothing from the field it points at."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -949,8 +962,9 @@
 
 <span class="sd">    There is no ``observed_values`` here and there cannot be: the criterion</span>
 <span class="sd">    balances two simulated quantities against each other, so nothing in it is</span>
-<span class="sd">    fitted to a record. The mapped network enters through</span>
-<span class="sd">    ``stream_geometry_path``, as a geometry, not as a series.</span>
+<span class="sd">    fitted to a record. The mapped network enters as a geometry, not as a</span>
+<span class="sd">    series, and exactly one of ``observed_network`` and</span>
+<span class="sd">    ``stream_geometry_path`` names where it comes from.</span>
 <span class="sd">    """</span>
 
     <span class="n">variable</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -962,11 +976,67 @@
         <span class="n">default</span><span class="o">=</span><span class="s2">"network"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Discriminator: compare a simulated stream network to a mapped one."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">stream_geometry_path</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Vector file holding the mapped stream network. Required, and "</span>
-        <span class="s2">"read only from here: the criterion resolves no geometry of its own and "</span>
-        <span class="s2">"does not reuse the one the hydrography data family loaded."</span><span class="p">,</span>
+    <span class="n">observed_network</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+        <span class="n">Literal</span><span class="p">[</span><span class="s2">"data.hydrography"</span><span class="p">,</span> <span class="s2">"geographic.river_network"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Where the mapped network comes from when it is not an explicit "</span>
+        <span class="s2">"file. Exactly one of this and 'stream_geometry_path' must be set."</span><span class="p">,</span>
+        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"value_docs"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"data.hydrography"</span><span class="p">:</span> <span class="s2">"Reuses the network the hydrography data family "</span>
+                <span class="s2">"already loaded (a local file or an osm / bdtopage / euhydro "</span>
+                <span class="s2">"download), clipped to the delineated catchment. Costs nothing new "</span>
+                <span class="s2">"to configure but ties the criterion to whatever that section "</span>
+                <span class="s2">"resolved."</span><span class="p">,</span>
+                <span class="s2">"geographic.river_network"</span><span class="p">:</span> <span class="s2">"Derives the network from the DEM by a "</span>
+                <span class="s2">"drainage-area threshold. K/R shapes both where the water table "</span>
+                <span class="s2">"reaches the surface and the accumulation the threshold is cut on, so "</span>
+                <span class="s2">"the criterion partly fits a seepage density onto a geomorphological "</span>
+                <span class="s2">"one; warned once and recorded on every run that uses it."</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
     <span class="p">)</span>
+    <span class="n">stream_geometry_path</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Vector file holding the mapped stream network, read only from "</span>
+        <span class="s2">"here: the criterion resolves no geometry of its own and does not reuse the "</span>
+        <span class="s2">"one the hydrography data family loaded. The way out of 'observed_network' "</span>
+        <span class="s2">"when neither of its two sources is the one you want scored."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_observed_network_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputNetwork</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Exactly one of the two observation routes must be declared.</span>
+
+<span class="sd">        Keyed on the values and not on ``model_fields_set``: both fields default</span>
+<span class="sd">        to ``None``, so a value says everything a declaration would, and a</span>
+<span class="sd">        configuration that has been through ``model_dump`` still validates. A</span>
+<span class="sd">        dump writes every field, defaults included, and re-validating one marks</span>
+<span class="sd">        them all as declared; keying on that would refuse a session record, a</span>
+<span class="sd">        frozen run config and every test that round-trips an output.</span>
+
+<span class="sd">        TOML carries no null, so "declared and null" is not a case a file can</span>
+<span class="sd">        reach.</span>
+<span class="sd">        """</span>
+        <span class="n">declared_network</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_network</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">declared_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream_geometry_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">declared_network</span> <span class="ow">and</span> <span class="n">declared_path</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"calibration output declares both 'observed_network' "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">observed_network</span><span class="si">!r}</span><span class="s2">) and 'stream_geometry_path' "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stream_geometry_path</span><span class="si">!r}</span><span class="s2">): the criterion would score one "</span>
+                <span class="s2">"and the report would name the other. Declare exactly one."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">declared_network</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">declared_path</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"calibration output declares neither 'observed_network' nor "</span>
+                <span class="s2">"'stream_geometry_path': the mapped network has no source. Pick "</span>
+                <span class="s2">"one of 'data.hydrography', 'geographic.river_network', or set "</span>
+                <span class="s2">"'stream_geometry_path' to an explicit file."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
     <span class="n">tau_specific_ratio</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">STREAM_CRITERION_DEFAULTS</span><span class="o">.</span><span class="n">tau_specific_ratio</span><span class="p">,</span>
         <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
@@ -1664,6 +1734,20 @@
             <span class="s2">"table leaves that hash untouched and checkpoints stay resumable."</span>
         <span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">reuse_completed_phases</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Read a phase's frozen values back from a session that already completed "</span>
+            <span class="s2">"it in the resumed chain, instead of solving the phase again. What it "</span>
+            <span class="s2">"reuses: the physical values of the best trial that session's own record "</span>
+            <span class="s2">"shows for that phase's parameters. What it risks: a session whose model, "</span>
+            <span class="s2">"mesh or input files differed produced those values for a different "</span>
+            <span class="s2">"problem, so a reuse is only taken when the session's recorded "</span>
+            <span class="s2">"params_hash can be reproduced under this run's own cache context; a "</span>
+            <span class="s2">"mismatch solves the phase again instead of trusting it. Off by default: "</span>
+            <span class="s2">"re-solving is always correct, reusing without that proof is not."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">seed</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Random seed for reproducibility."</span><span class="p">,</span>
@@ -1927,12 +2011,11 @@
                     <span class="sa">f</span><span class="s2">"declared: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">declared_parameters</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
             <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">phase</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span><span class="o">.</span><span class="n">resolve_target</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> calibrates </span><span class="si">{</span><span class="n">parameter</span><span class="si">!r}</span><span class="s2">, which declares "</span>
-                        <span class="s2">"no path into the configuration, so nothing would be injected."</span>
-                    <span class="p">)</span>
+                <span class="c1"># A parameter may name its quantity instead of writing a path, and</span>
+                <span class="c1"># the name is resolved against the project catalogue once the whole</span>
+                <span class="c1"># configuration is loaded. Until then the parameter's own name is</span>
+                <span class="c1"># what two phases would be freezing.</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span><span class="o">.</span><span class="n">resolve_target</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&gt;"</span>
                 <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">freeze_on_success</span><span class="p">:</span>
                     <span class="n">owner</span> <span class="o">=</span> <span class="n">frozen_by</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page documents the internal contracts that HydroModPy honors before instantiating MODFLOW-NWT packages. Two contracts are covered: Spatial and temporal discretization (DIS package)., Boundary ..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-15T15:48:38+02:00" />
     <title>MODFLOW-NWT Contracts &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 15, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -590,7 +590,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../packages/physics.html">physics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/data.html">data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/spatial.html">spatial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../packages/discretization.html">discretization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/solver.html">solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/simulation.html">simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/calibration.html">calibration</a></li>
@@ -759,23 +758,27 @@ both MODFLOW backends.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
 <td><p>MODFLOW time-unit code passed to DIS</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nper</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_units</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p>Same unit as canonical text, read by the MODFLOW 6 TDIS builder</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nper</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
 <td><p>Number of stress periods, strictly positive</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">perlen</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">perlen</span></code></p></td>
 <td><p>1D float <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p></td>
 <td><p>Duration of each period in <code class="docutils literal notranslate"><span class="pre">itmuni</span></code> units</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nstp</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nstp</span></code></p></td>
 <td><p>1D int <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p></td>
 <td><p>Number of time steps per period</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">steady</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">steady</span></code></p></td>
 <td><p>1D bool <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p></td>
 <td><p>Steady-vs-transient flag per period</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_datetime</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_datetime</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">object</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>Optional start-date metadata</p></td>
 </tr>
@@ -788,7 +791,14 @@ both MODFLOW backends.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">nstp.size</span> <span class="pre">==</span> <span class="pre">nper</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">steady.size</span> <span class="pre">==</span> <span class="pre">nper</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nper</span> <span class="pre">&gt;</span> <span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">itmuni</span></code> and <code class="docutils literal notranslate"><span class="pre">time_units</span></code> denote the same unit</p></li>
 </ul>
+<p>Launcher runs are built in <code class="docutils literal notranslate"><span class="pre">hydromodpy.core.time.SIMULATION_TIME_UNIT</span></code>, that
+is SI seconds: <code class="docutils literal notranslate"><span class="pre">ResolvedSimulationTimeGrid</span></code> carries period lengths in
+seconds, so declaring anything else would rescale every extracted flux. Both
+backends take the declaration from this single field rather than restating it,
+and the extractors read it back from the run’s own TDIS or DIS file through
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.modflow_common.time_units</span></code>.</p>
 <p>Conversion to FloPy kwargs goes through
 <code class="docutils literal notranslate"><span class="pre">TemporalDiscretizationResult.as_dis_kwargs()</span></code>, which exposes the keys
 <code class="docutils literal notranslate"><span class="pre">itmuni</span></code>, <code class="docutils literal notranslate"><span class="pre">nper</span></code>, <code class="docutils literal notranslate"><span class="pre">perlen</span></code>, <code class="docutils literal notranslate"><span class="pre">nstp</span></code>, <code class="docutils literal notranslate"><span class="pre">steady</span></code>, <code class="docutils literal notranslate"><span class="pre">start_datetime</span></code>.</p>
@@ -844,9 +854,10 @@ planar mesh is a Cartesian grid, and is <code class="docutils literal notranslat
 <h3>1.3 Upstream inputs<a class="headerlink" href="#upstream-inputs" title="Link to this heading">#</a></h3>
 <p>The temporal builder consumes:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tgrid_config.to_builder_kwargs()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_grid</span></code>, the <code class="docutils literal notranslate"><span class="pre">ResolvedSimulationTimeGrid</span></code> derived from
+<code class="docutils literal notranslate"><span class="pre">[simulation.time]</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">flow_regime</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">default_itmuni</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first_period_steady</span></code></p></li>
 </ul>
 <p>The spatial builder consumes:</p>
 <ul class="simple">

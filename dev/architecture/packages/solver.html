@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.solver exposes the backend abstraction ( base/) plus three concrete backends: MODFLOW 6, MODFLOW-NWT, and Boussinesq. It also hosts shared helpers ( modflow_common, modflow_grid) that st..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-15T15:48:38+02:00" property="article:modified_time"/>
 <title>solver — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -76,11 +76,11 @@
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="../../search.html" rel="search" title="Search"/>
 <link href="simulation.html" rel="next" title="simulation"/>
-<link href="discretization.html" rel="prev" title="discretization"/>
+<link href="spatial.html" rel="prev" title="spatial"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 15, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -375,7 +375,6 @@
 <li class="toctree-l2"><a class="reference internal" href="physics.html">physics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data.html">data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spatial.html">spatial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="discretization.html">discretization</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration.html">calibration</a></li>
@@ -487,8 +486,8 @@
 <p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver</span></code> exposes the backend abstraction (<code class="docutils literal notranslate"><span class="pre">base/</span></code>)
 plus three concrete backends: MODFLOW 6, MODFLOW-NWT, and Boussinesq.
 It also hosts shared helpers (<code class="docutils literal notranslate"><span class="pre">modflow_common</span></code>, <code class="docutils literal notranslate"><span class="pre">modflow_grid</span></code>)
-that stay backend-agnostic. Time-grid primitives now live in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy.discretization.time</span></code>.</p>
+that stay backend-agnostic. Stress periods come from
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.core.time</span></code>: no backend carries a temporal section of its own.</p>
 <p>GR4J is not a fourth <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver</span></code> backend in V1. It is a
 calibration-side lumped catchment model under
 <code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.lumped</span></code>; it runs in memory and only promoted
@@ -524,9 +523,7 @@ lifecycle or solver binaries.</p></li>
 calibration extractors).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">solver/modflow_grid/</span></code> – backend-agnostic grid primitives:
 <code class="docutils literal notranslate"><span class="pre">SolverMesh</span></code>, <code class="docutils literal notranslate"><span class="pre">SolverGridContext</span></code>, <code class="docutils literal notranslate"><span class="pre">build_spatial_discretization</span></code>,
-<code class="docutils literal notranslate"><span class="pre">build_temporal_discretization</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">discretization/time/</span></code> – <code class="docutils literal notranslate"><span class="pre">TimeGrid</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TmeshGenerator</span></code>, <code class="docutils literal notranslate"><span class="pre">TMeshConfig</span></code> for stress-period generation.</p></li>
+<code class="docutils literal notranslate"><span class="pre">build_temporal_discretization_from_time_grid</span></code>.</p></li>
 </ul>
 </section>
 <section id="adapter-contract">
@@ -574,12 +571,10 @@ queryable through <code class="docutils literal notranslate"><span class="pre">c
 <span class="pre">register_extractor,</span> <span class="pre">get_extractor,</span> <span class="pre">list_pairs,</span> <span class="pre">capabilities,</span>
 <span class="pre">required_bindings,</span> <span class="pre">load_plugins}</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.modflow_grid.{SolverMesh,</span> <span class="pre">SolverGridContext,</span>
-<span class="pre">build_spatial_discretization,</span> <span class="pre">build_temporal_discretization}</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.discretization.time.{TimeGrid,</span> <span class="pre">TmeshGenerator,</span> <span class="pre">TMeshConfig,</span>
-<span class="pre">load_tmesh_toml,</span> <span class="pre">validate_tmesh_config_data}</span></code></p></li>
+<span class="pre">build_spatial_discretization,</span> <span class="pre">build_temporal_discretization_from_time_grid}</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.modflow_common.{flow_adapter_helpers,</span>
 <span class="pre">calibration_extractors,</span> <span class="pre">flow_translator,</span> <span class="pre">binaries,</span>
-<span class="pre">boundary_packages,</span> <span class="pre">executables,</span> <span class="pre">runtime_arrays}</span></code></p></li>
+<span class="pre">boundary_packages,</span> <span class="pre">executables,</span> <span class="pre">runtime_arrays,</span> <span class="pre">time_units}</span></code></p></li>
 </ul>
 </section>
 <section id="recommended-reading-path">
@@ -622,11 +617,11 @@ import <code class="docutils literal notranslate"><span class="pre">solver/modfl
 </article>
 <footer class="prev-next-footer d-print-none">
 <div class="prev-next-area">
-<a class="left-prev" href="discretization.html" title="previous page">
+<a class="left-prev" href="spatial.html" title="previous page">
 <i class="fa-solid fa-angle-left"></i>
 <div class="prev-next-info">
 <p class="prev-next-subtitle">previous</p>
-<p class="prev-next-title">discretization</p>
+<p class="prev-next-title">spatial</p>
 </div>
 </a>
 <a class="right-next" href="simulation.html" title="next page">

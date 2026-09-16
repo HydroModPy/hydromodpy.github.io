@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Where are my outputs? Inside the project, in runs/&lt;name&gt;/. One directory per run, named after the run. Nothing is hidden in a database, nothing is packed into an archive: the arrays are Zarr,..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-16T14:42:07+02:00" property="article:modified_time"/>
 <title>Results and exports — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 16, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -754,7 +754,8 @@ format from the destination suffix, or from an explicit <code class="docutils li
 </tr>
 <tr class="row-odd"><td><p>NetCDF</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.nc</span></code></p></td>
-<td><p>Gridded fields, every timestep unless <code class="docutils literal notranslate"><span class="pre">time</span></code> narrows it.</p></td>
+<td><p>NetCDF-4 with a UGRID-1.0 mesh, every timestep unless <code class="docutils literal notranslate"><span class="pre">time</span></code>
+narrows it. Opens in QGIS as a mesh layer; see the note below.</p></td>
 </tr>
 <tr class="row-even"><td><p>GeoTIFF</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.tif</span></code></p></td>
@@ -787,10 +788,28 @@ hmp<span class="w"> </span>data<span class="w"> </span><span class="nb">export</
 hmp<span class="w"> </span>data<span class="w"> </span><span class="nb">export</span><span class="w"> </span>&lt;project&gt;<span class="w"> </span>--raster<span class="w"> </span>watershed_dem<span class="w"> </span>--geotiff
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">--list</span></code> prints the field names <code class="docutils literal notranslate"><span class="pre">--var</span></code> accepts, the geographic rasters
+and features, then every run of the project. Fields, rasters and features are
+read from one run, named in each heading: the one <code class="docutils literal notranslate"><span class="pre">--sim</span></code> selects when given,
+otherwise the last live one. Two runs of the same project rarely expose the
+same fields, since <code class="docutils literal notranslate"><span class="pre">[simulation.results]</span></code> decides what each one persists.</p>
 <p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">export</span></code> writes into a <strong>directory</strong> (<code class="docutils literal notranslate"><span class="pre">--output</span></code>, default
 <code class="docutils literal notranslate"><span class="pre">share/&lt;name&gt;/</span></code>), one file per variable and per timestep. <code class="docutils literal notranslate"><span class="pre">--geotiff</span></code>
 requires <code class="docutils literal notranslate"><span class="pre">--resolution</span></code> here, unlike the Python call which derives the
 pixel size from the grid.</p>
+</section>
+<section id="opening-a-netcdf-export-in-qgis">
+<h2>Opening a NetCDF export in QGIS<a class="headerlink" href="#opening-a-netcdf-export-in-qgis" title="Link to this heading">#</a></h2>
+<p>Add the <code class="docutils literal notranslate"><span class="pre">.nc</span></code> as a <strong>mesh</strong> layer, not a raster or a vector one: QGIS reads
+it through MDAL, which understands the UGRID topology the file carries. Each
+field becomes one dataset group with its own time steps, and the layer comes
+georeferenced, so it lands on the catchment rather than in the project CRS.</p>
+<p>MDAL binds a dataset to the mesh faces and nothing else, so a field stored per
+layer is written one variable per layer: <code class="docutils literal notranslate"><span class="pre">head</span></code> on a single-layer model,
+<code class="docutils literal notranslate"><span class="pre">head_layer1</span></code> and <code class="docutils literal notranslate"><span class="pre">head_layer2</span></code> above it. Reading the file back with
+<code class="docutils literal notranslate"><span class="pre">hmp</span></code> puts the layers together again.</p>
+<p>Re-exporting over a file a QGIS layer still has open is safe, but QGIS keeps
+showing the version it opened: reload the layer to see the new one.</p>
 </section>
 <section id="packaging-a-run-for-exchange">
 <h2>Packaging a run for exchange<a class="headerlink" href="#packaging-a-run-for-exchange" title="Link to this heading">#</a></h2>
@@ -929,6 +948,7 @@ hierarchy and the path-resolution rules.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-from-the-command-line">Reading from the command line</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-from-python">Reading from Python</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting">Exporting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-netcdf-export-in-qgis">Opening a NetCDF export in QGIS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#packaging-a-run-for-exchange">Packaging a run for exchange</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rebuilding-the-index">Rebuilding the index</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#temporal-conventions-in-comparison-csv-exports">Temporal conventions in comparison CSV exports</a></li>

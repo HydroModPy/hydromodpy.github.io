@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Scope: These diagrams document the canonical time cycle driven by[simulation.time] inside the simulation orchestration layer. They focus on: normalization and validation of the simulation window,, ..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-15T15:48:23+02:00" />
     <title>Simulation Time Cycle Diagrams &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 15, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -590,7 +590,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../packages/physics.html">physics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/data.html">data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/spatial.html">spatial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../packages/discretization.html">discretization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/solver.html">solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/simulation.html">simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/calibration.html">calibration</a></li>
@@ -737,7 +736,7 @@
 <li><p>typed validation of <code class="docutils literal notranslate"><span class="pre">[recharge_chronicle]</span></code> payloads before runtime use,</p></li>
 <li><p>propagation toward forcing preparation and flow solvers,</p></li>
 <li><p>generator-based forcing built at fine resolution then aggregated to stress periods,</p></li>
-<li><p>runtime coordination between canonical <code class="docutils literal notranslate"><span class="pre">time_grid</span></code> and solver <code class="docutils literal notranslate"><span class="pre">tgrid</span></code>.</p></li>
+<li><p>how the canonical <code class="docutils literal notranslate"><span class="pre">time_grid</span></code> reaches each solver backend.</p></li>
 </ul>
 <p>The forcing path now separates three responsibilities:</p>
 <ul class="simple">
@@ -779,8 +778,8 @@ flow-side forcing preparation before adapter dispatch.</p></li>
 <section id="class-diagram">
 <h2>Class Diagram<a class="headerlink" href="#class-diagram" title="Link to this heading">#</a></h2>
 <p class="plantuml">
-<object data="../../_images/plantuml-28d7be30f9b098f9ada8ec53b7c547a7aad09c52.svg" type="image/svg+xml" style="width:3326px;height:1176px;">
-<img src="../../_images/plantuml-28d7be30f9b098f9ada8ec53b7c547a7aad09c52.png" alt="&#64;startuml
+<object data="../../_images/plantuml-ca1197f969cdec59d44944113c54c8406603ceda.svg" type="image/svg+xml" style="width:3326px;height:1163px;">
+<img src="../../_images/plantuml-ca1197f969cdec59d44944113c54c8406603ceda.png" alt="&#64;startuml
 title Simulation Time Cycle - Class Diagram
 
 package &quot;hydromodpy.simulation.planning.config&quot; {
@@ -817,7 +816,6 @@ package &quot;hydromodpy.core.time.window&quot; {
     +resolve_simulation_time_window(cfg)
     +resolve_simulation_time_grid(cfg)
     +require_flow_simulation_time_grid(cfg)
-    +apply_explicit_time_window_to_tgrids(cfg)
     +resolve_simulation_time_window_dates(cfg)
     +validate_recharge_coverage(recharge, window)
   }
@@ -950,8 +948,8 @@ Modflow6 ..&gt; ResolvedSimulationTimeGrid : consumes nper/perlen
 <section id="structure-diagram">
 <h2>Structure Diagram<a class="headerlink" href="#structure-diagram" title="Link to this heading">#</a></h2>
 <p class="plantuml">
-<object data="../../_images/plantuml-f7c718bfe4f256117c0d543ad5d62da3faf07ba4.svg" type="image/svg+xml" style="width:2199px;height:905px;">
-<img src="../../_images/plantuml-f7c718bfe4f256117c0d543ad5d62da3faf07ba4.png" alt="&#64;startuml
+<object data="../../_images/plantuml-23c3d5b04bd8b6152af58472a9a6131aaadd8c45.svg" type="image/svg+xml" style="width:2126px;height:905px;">
+<img src="../../_images/plantuml-23c3d5b04bd8b6152af58472a9a6131aaadd8c45.png" alt="&#64;startuml
 title Simulation Time Cycle - Structure Diagram
 skinparam componentStyle rectangle
 
@@ -960,7 +958,6 @@ component &quot;HydroModPyConfig\n(Pydantic tree)&quot; as TypedConfig
 component &quot;Time Core\nhydromodpy.core.time.window&quot; as TimeCore
 component &quot;Project Facade\nhydromodpy.Project&quot; as Project
 component &quot;Runtime State\nsetup.time_grid&quot; as RuntimeState
-component &quot;Solver TGrid Sections\nmodflownwt.tgrid / modflow6.tgrid&quot; as SolverTgrid
 component &quot;Data Managers Runtime Loader\nruntime_loader&quot; as DataLoader
 component &quot;Recharge Chronicle Config\nforcing.recharge_chronicle_config&quot; as RechargeConfig
 component &quot;Recharge Chronicle Builder\nforcing.recharge_chronicle&quot; as RechargeBuilder
@@ -975,9 +972,6 @@ TypedConfig --&gt; TimeCore : resolve_simulation_time_window/grid
 TimeCore --&gt; Project : ResolvedSimulationTimeGrid
 Project --&gt; TimeCore : require_flow_simulation_time_grid()
 Project --&gt; RuntimeState : persist canonical grid
-
-Project --&gt; TimeCore : apply_explicit_time_window_to_tgrids()
-TimeCore --&gt; SolverTgrid : sync nper,lenper,itmuni,genmtd,ntsp,tsmult
 
 Project --&gt; DataLoader : load_all(run_state)
 DataLoader --&gt; TimeCore : resolve_simulation_time_window_dates()
@@ -1002,8 +996,8 @@ FlowSolvers --&gt; FlowConfig : read flow_regime / first_period_steady
 <section id="activity-diagram">
 <h2>Activity Diagram<a class="headerlink" href="#activity-diagram" title="Link to this heading">#</a></h2>
 <p class="plantuml">
-<object data="../../_images/plantuml-b8afbbf4b815bf170855e806da8f8c6977b5b897.svg" type="image/svg+xml" style="width:1117px;height:2346px;">
-<img src="../../_images/plantuml-b8afbbf4b815bf170855e806da8f8c6977b5b897.png" alt="&#64;startuml
+<object data="../../_images/plantuml-a50747e62982d1fdd7152e4fd0ac15d7e1c1bd46.svg" type="image/svg+xml" style="width:1117px;height:2292px;">
+<img src="../../_images/plantuml-a50747e62982d1fdd7152e4fd0ac15d7e1c1bd46.png" alt="&#64;startuml
 title Simulation Time Cycle - Activity
 
 start
@@ -1024,7 +1018,6 @@ if (Has [simulation.time]?) then (yes)
     stop
   endif
 
-  :apply_explicit_time_window_to_tgrids();
   :require_flow_simulation_time_grid();
   :Store time_grid in run_state.setup.time_grid;
 else (no)

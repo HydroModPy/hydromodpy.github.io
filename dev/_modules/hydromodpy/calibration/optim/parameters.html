@@ -591,10 +591,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.calibrable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Calibrable</span>
-
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Annotation</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -867,26 +863,22 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">from_toml_mapping</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">declarations</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">annotations</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Calibrable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterSpace</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Build a space from ``[calibration.parameters]`` TOML section.</span>
 
-<span class="sd">        ``annotations`` may provide defaults harvested from Pydantic</span>
-<span class="sd">        ``Calibrable`` hints keyed by parameter name. TOML overrides win.</span>
+<span class="sd">        What a field declares about itself has already been written into the</span>
+<span class="sd">        declaration by :mod:`hydromodpy.calibration.parameter_resolution`, so</span>
+<span class="sd">        there is one place where a default can come from and it is upstream of</span>
+<span class="sd">        here.</span>
 <span class="sd">        """</span>
-        <span class="n">annotations</span> <span class="o">=</span> <span class="n">annotations</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CalibParameter</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">decl</span> <span class="ow">in</span> <span class="n">declarations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">ann</span> <span class="o">=</span> <span class="n">annotations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="n">bounds</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bounds"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ann</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">bounds</span> <span class="o">=</span> <span class="n">ann</span><span class="o">.</span><span class="n">bounds</span>
             <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no bounds (TOML or annotation)"</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no bounds"</span><span class="p">)</span>
             <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">transform</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transform"</span><span class="p">,</span> <span class="n">ann</span><span class="o">.</span><span class="n">transform</span> <span class="k">if</span> <span class="n">ann</span> <span class="k">else</span> <span class="s2">"identity"</span><span class="p">)</span>
-            <span class="n">prior</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">,</span> <span class="n">ann</span><span class="o">.</span><span class="n">prior</span> <span class="k">if</span> <span class="n">ann</span> <span class="k">else</span> <span class="s2">"uniform"</span><span class="p">)</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transform"</span><span class="p">,</span> <span class="s2">"identity"</span><span class="p">)</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">,</span> <span class="s2">"uniform"</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: lower bound must be &lt; upper bound"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">"log"</span> <span class="ow">and</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -895,14 +887,14 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: logit transform requires 0 &lt; lower &lt; upper &lt; 1"</span>
                 <span class="p">)</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"target"</span><span class="p">)</span>
             <span class="n">_assert_bounds_are_physical</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"units"</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">prior</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"uniform"</span><span class="p">,</span> <span class="s2">"log_uniform"</span><span class="p">,</span> <span class="s2">"normal"</span><span class="p">}:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: unknown prior </span><span class="si">{</span><span class="n">prior</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">prior</span> <span class="o">==</span> <span class="s2">"log_uniform"</span> <span class="ow">and</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: log_uniform prior requires lower &gt; 0"</span><span class="p">)</span>
-            <span class="n">units</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"units"</span><span class="p">,</span> <span class="n">ann</span><span class="o">.</span><span class="n">units</span> <span class="k">if</span> <span class="n">ann</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
-            <span class="n">target</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"target"</span><span class="p">)</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">decl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"units"</span><span class="p">)</span>
             <span class="n">_assert_path_is_not_the_mesh</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
             <span class="n">_assert_path_is_not_the_mesh</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
             <span class="n">_assert_path_is_not_a_stage_boundary</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
@@ -928,83 +920,6 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
 </div>
 
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Auto-discovery</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_iter_annotations</span><span class="p">(</span><span class="n">model_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Calibrable</span><span class="p">]]:</span>
-    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">json_schema_extra</span> <span class="ow">or</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">hint</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibrable"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">hint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hint</span><span class="p">,</span> <span class="n">Calibrable</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">hint</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hint</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="p">(</span>
-                <span class="n">field_name</span><span class="p">,</span>
-                <span class="n">Calibrable</span><span class="p">(</span>
-                    <span class="n">bounds</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">hint</span><span class="p">[</span><span class="s2">"bounds"</span><span class="p">])</span> <span class="k">if</span> <span class="n">hint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bounds"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">transform</span><span class="o">=</span><span class="n">hint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transform"</span><span class="p">,</span> <span class="s2">"identity"</span><span class="p">),</span>
-                    <span class="n">prior</span><span class="o">=</span><span class="n">hint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">,</span> <span class="s2">"uniform"</span><span class="p">),</span>
-                    <span class="n">units</span><span class="o">=</span><span class="n">hint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"units"</span><span class="p">),</span>
-                    <span class="n">description</span><span class="o">=</span><span class="n">hint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"description"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
-                <span class="p">),</span>
-            <span class="p">)</span>
-
-
-<div class="viewcode-block" id="discover_calibrable">
-<a class="viewcode-back" href="../../../../api/generated/hydromodpy.calibration.discover_calibrable.html#hydromodpy.calibration.discover_calibrable">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">discover_calibrable</span><span class="p">(</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">BaseModel</span> <span class="o">|</span> <span class="nb">type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Calibrable</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Walk a Pydantic config tree and collect Calibrable annotations.</span>
-
-<span class="sd">    Keys are dotted paths, e.g. ``"flow.properties.k_aquifer"``. Values are</span>
-<span class="sd">    ``Calibrable`` metadata harvested from ``Field.json_schema_extra``.</span>
-<span class="sd">    """</span>
-    <span class="bp">cls</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="p">{}</span>
-    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Calibrable</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">hint</span> <span class="ow">in</span> <span class="n">_iter_annotations</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_prefix</span><span class="si">}{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">"</span>
-        <span class="n">found</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">hint</span>
-    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">sub_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_prefix</span><span class="si">}{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">."</span>
-        <span class="n">sub_cls</span> <span class="o">=</span> <span class="n">_resolve_submodel</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">sub_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">sub</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="n">found</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">discover_calibrable</span><span class="p">(</span><span class="n">sub</span> <span class="ow">or</span> <span class="n">sub_cls</span><span class="p">,</span> <span class="n">_prefix</span><span class="o">=</span><span class="n">sub_path</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">found</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_submodel</span><span class="p">(</span><span class="n">annotation</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">types</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_args</span><span class="p">,</span> <span class="n">get_origin</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">annotation</span>
-    <span class="n">origin</span> <span class="o">=</span> <span class="n">get_origin</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">origin</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">UnionType</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="s2">"typing"</span><span class="p">),</span> <span class="s2">"Union"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
-        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">get_args</span><span class="p">(</span><span class="n">annotation</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">arg</span>
-    <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Apply resolved params to a config</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
 
 
 <div class="viewcode-block" id="apply_parameter_to_config">
@@ -1039,6 +954,11 @@
 <span class="sd">    where the sample is a multiplier: legal bounds on the multiplier say nothing</span>
 <span class="sd">    about where the product lands, so a scale of 8 on a specific yield of 0.1</span>
 <span class="sd">    writes 0.8, past the physical ceiling, and only the solver would notice.</span>
+
+<span class="sd">    Keyed on the parameter's own name. A value reached through a resolved name</span>
+<span class="sd">    is already faced with the range its catalogue entry carries, at load time,</span>
+<span class="sd">    in :mod:`hydromodpy.calibration.parameter_resolution`; what is left here is</span>
+<span class="sd">    the best a bare name can do.</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.spatial.field.core.physical_bounds</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">PhysicalBoundsError</span><span class="p">,</span>
@@ -1139,10 +1059,8 @@
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"Calibrable"</span><span class="p">,</span>
     <span class="s2">"CalibParameter"</span><span class="p">,</span>
     <span class="s2">"ParameterSpace"</span><span class="p">,</span>
-    <span class="s2">"discover_calibrable"</span><span class="p">,</span>
     <span class="s2">"apply_parameter_to_config"</span><span class="p">,</span>
     <span class="s2">"set_by_path"</span><span class="p">,</span>
 <span class="p">]</span>

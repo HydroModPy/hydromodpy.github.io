@@ -614,6 +614,13 @@
 <span class="n">_VALID_MODES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"explicit"</span><span class="p">}</span>
 <span class="n">_VALID_STEP_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"hour"</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">,</span> <span class="s2">"year"</span><span class="p">}</span>
 
+<span class="c1"># Both launcher time grids below carry their period lengths in seconds, so this</span>
+<span class="c1"># is the unit every solver backend declares to MODFLOW. Single-sourced here so</span>
+<span class="c1"># the MF6 TDIS token, the MODFLOW-NWT ITMUNI code and the tracking clock the</span>
+<span class="c1"># extractors store cannot drift apart: a mismatch between any two of them is a</span>
+<span class="c1"># silent factor 86400 on fluxes or travel times.</span>
+<span class="n">SIMULATION_TIME_UNIT</span> <span class="o">=</span> <span class="s2">"seconds"</span>
+
 
 <div class="viewcode-block" id="ResolvedSimulationTimeWindow">
 <a class="viewcode-back" href="../../../../api/generated/hydromodpy.core.ResolvedSimulationTimeWindow.html#hydromodpy.core.ResolvedSimulationTimeWindow">[docs]</a>
@@ -959,9 +966,8 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResolvedSimulationTimeGrid</span> <span class="o">|</span> <span class="n">ResolvedSteadySimulationTimeGrid</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return canonical launcher time-grid, enforcing it for flow runs.</span>
 
-<span class="sd">    Launcher flow solvers no longer accept solver ``tgrid`` sections as a</span>
-<span class="sd">    fallback source for stress periods. When at least one flow process is</span>
-<span class="sd">    declared, ``[simulation.time]`` must therefore resolve to one canonical</span>
+<span class="sd">    ``[simulation.time]`` is the only source of stress periods. When at least</span>
+<span class="sd">    one flow process is declared, it must resolve to one canonical</span>
 <span class="sd">    ``ResolvedSimulationTimeGrid``.</span>
 
 <span class="sd">    Exception</span>
@@ -978,8 +984,7 @@
     <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">"Launcher flow processes require a valid [simulation.time] section. "</span>
-            <span class="s2">"Steady flow runs may omit it, but transient runs still require it. "</span>
-            <span class="s2">"Solver tgrid fallback is no longer supported."</span>
+            <span class="s2">"Steady flow runs may omit it, but transient runs still require it."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">grid</span>
 
@@ -1031,8 +1036,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_simulation_time_window</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResolvedSimulationTimeWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Resolve and validate the canonical simulation window.</span>
 
-<span class="sd">    This function performs normalization only; it does not mutate solver tgrid</span>
-<span class="sd">    sections. Use :func:`apply_explicit_time_window_to_tgrids` for propagation.</span>
+<span class="sd">    Normalization only: no solver section is mutated. Both MODFLOW backends</span>
+<span class="sd">    read their stress periods from the grid this window feeds.</span>
 <span class="sd">    """</span>
     <span class="n">time_cfg</span> <span class="o">=</span> <span class="n">_simulation_time_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">time_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1062,49 +1067,6 @@
         <span class="n">step_unit</span><span class="o">=</span><span class="n">step_unit</span><span class="p">,</span>
         <span class="n">coverage_policy</span><span class="o">=</span><span class="n">coverage_policy</span><span class="p">,</span>
     <span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_explicit_time_window_to_tgrids</span><span class="p">(</span>
-    <span class="n">cfg</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResolvedSimulationTimeWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Apply resolved ``simulation.time`` to the MODFLOW-NWT ``tgrid`` section.</span>
-
-<span class="sd">    The launcher keeps temporal authority in ``[simulation.time]`` and writes</span>
-<span class="sd">    synchronized values into ``modflownwt.tgrid`` when present. The MODFLOW 6</span>
-<span class="sd">    build reads its stress periods from ``[simulation.time]`` directly and has no</span>
-<span class="sd">    ``tgrid`` section.</span>
-<span class="sd">    """</span>
-    <span class="n">time_cfg</span> <span class="o">=</span> <span class="n">_simulation_time_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">time_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">_normalize_mode</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">time_cfg</span><span class="p">,</span> <span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"explicit"</span><span class="p">))</span>
-    <span class="n">window</span> <span class="o">=</span> <span class="n">resolve_simulation_time_window</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">window</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="n">grid</span> <span class="o">=</span> <span class="n">resolve_simulation_time_grid</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">window</span>
-    <span class="n">perlen_seconds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">period_lengths_seconds</span><span class="p">)</span>
-    <span class="n">nper</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">nper</span>
-
-    <span class="k">for</span> <span class="n">solver_section_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"modflownwt"</span><span class="p">,):</span>
-        <span class="n">solver_cfg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">solver_section_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">tgrid_cfg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">solver_cfg</span><span class="p">,</span> <span class="s2">"tgrid"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">solver_cfg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">tgrid_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="c1"># Persist the same canonical window in each active flow solver section.</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">start_datetime</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">()</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">end_datetime</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">()</span>
-        <span class="c1"># Launcher temporal mesh is materialized in seconds for SI consistency.</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">itmuni</span> <span class="o">=</span> <span class="s2">"seconds"</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">genmtd</span> <span class="o">=</span> <span class="s2">"synthetic_regular"</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">nper</span> <span class="o">=</span> <span class="n">nper</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">lenper</span> <span class="o">=</span> <span class="n">perlen_seconds</span>
-        <span class="c1"># Keep launcher temporal control centralized in [simulation.time].</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">ntsp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">time_cfg</span><span class="p">,</span> <span class="s2">"substeps_per_period"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">tgrid_cfg</span><span class="o">.</span><span class="n">tsmult</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="k">return</span> <span class="n">window</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_simulation_time_window_dates</span><span class="p">(</span>
