@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
 
-    <meta property="article:modified_time" content="2026-06-07T11:57:43+02:00" />
+    <meta property="article:modified_time" content="2026-09-18T21:46:03+02:00" />
     <title>RunExecutionResult &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -88,7 +88,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Jun 07, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 18, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -623,8 +623,6 @@
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="hydromodpy.analysis.html">hydromodpy.analysis</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="hydromodpy.core.html">hydromodpy.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.clear_whitebox_backend_cache.html">clear_whitebox_backend_cache</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.get_whitebox_backend.html">get_whitebox_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.Workspace.html">Workspace</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.WorkspacePathRegistry.html">WorkspacePathRegistry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.ExecutionRegistry.html">ExecutionRegistry</a></li>
@@ -632,7 +630,6 @@
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.LoadedDataContext.html">LoadedDataContext</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.SetupContext.html">SetupContext</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.ResolvedSimulationTimeWindow.html">ResolvedSimulationTimeWindow</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.WhiteboxWorkflowsBackend.html">WhiteboxWorkflowsBackend</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="hydromodpy.data.html">hydromodpy.data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,18 +776,23 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hydromodpy.simulation.</span></span><span class="sig-name descname"><span class="pre">RunExecutionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">primary_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_output_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hydromodpy/simulation/planning/plan.html#RunExecutionResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hydromodpy.simulation.RunExecutionResult" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Payload returned by a solver adapter after one run completes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">primary_model</span></code> is the exact model produced by the run and is always
-stored under <code class="docutils literal notranslate"><span class="pre">state.execution.models_by_run_id[run.id]</span></code> by the runner.</p>
+<p><code class="docutils literal notranslate"><span class="pre">primary_model</span></code> is the model produced by the run, recorded by the runner
+so it can resolve it for a run that declares this one in <code class="docutils literal notranslate"><span class="pre">depends_on</span></code>. It
+is <code class="docutils literal notranslate"><span class="pre">None</span></code> for a run that produces no model: a mesh run materialises a
+mesh, not a model, and the summary of what it built travels in <code class="docutils literal notranslate"><span class="pre">metrics</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">solver_output_dir</span></code> is the directory where the solver wrote its raw
 output files (e.g. <code class="docutils literal notranslate"><span class="pre">.hds</span></code>, <code class="docutils literal notranslate"><span class="pre">.cbc</span></code>). May be <code class="docutils literal notranslate"><span class="pre">None</span></code> for in-memory
 solvers.</p>
-<p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> carries lightweight scalar execution metadata produced by
-the solver itself. It is intentionally optional so older/custom adapters
-can keep returning only a model and an output directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> carries execution metadata the run produced about itself. The
+catalog only persists what converts to a finite float and skips the rest,
+which is why a mesh run can put its nested build summary here: it is what
+that run has to say about what it made, and no consumer of a scalar sees
+it. It is intentionally optional so an adapter can keep returning only a
+model and an output directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>primary_model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>)</p></li>
+<li><p><strong>primary_model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">SolverModel</span></code> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span>)</p></li>
 <li><p><strong>solver_output_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span>)</p></li>
 <li><p><strong>metrics</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>)</p></li>
 </ul>

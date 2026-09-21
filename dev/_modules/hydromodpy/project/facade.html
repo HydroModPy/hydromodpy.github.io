@@ -728,7 +728,15 @@
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_catalog"</span><span class="p">,</span> <span class="n">ProjectCatalog</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_model_built</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Build the model phase once, lazily, on first run or accessor use."""</span>
+<span class="w">        </span><span class="sd">"""Build the model phase once, lazily, on first run or accessor use.</span>
+
+<span class="sd">        Only an untouched Project is built here. A phase marker that already</span>
+<span class="sd">        names a step means something built it - the facade verbs, or a run</span>
+<span class="sd">        bounded before ``setup_process`` - and the Pipeline completes what is</span>
+<span class="sd">        missing through ``is_prebuilt``. Completing it here instead would make</span>
+<span class="sd">        ``reload_data``, which moves the marker back to ``"data"`` on purpose,</span>
+<span class="sd">        regenerate a mesh that Gmsh does not reproduce run to run.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase</span> <span class="o">==</span> <span class="s2">"uninitialized"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_geographic</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
@@ -993,6 +1001,9 @@
 <span class="w">        </span><span class="sd">"""Run one simulation through the configured workflow and return its result.</span>
 
 <span class="sd">        Builds the model phase on first call (lazy), then runs the Pipeline.</span>
+<span class="sd">        A run bounded by ``until_step`` before ``setup_process`` needs no shared</span>
+<span class="sd">        model phase: it executes its own steps and builds nothing else, which is</span>
+<span class="sd">        how a catchment is delineated without loading data or meshing.</span>
 <span class="sd">        Flow parameter overrides (``Sy``, ``K``, ``Ss``) and the special keys</span>
 <span class="sd">        ``thickness``, ``first_clim``, ``properties`` are applied to the plan</span>
 <span class="sd">        before the Pipeline runs. Call once per point to sweep a parameter.</span>
@@ -1004,7 +1015,8 @@
 <span class="sd">        resume</span>
 <span class="sd">            Existing run identifier to resume from the workflow journal.</span>
 <span class="sd">        from_step, until_step</span>
-<span class="sd">            Optional step bounds for partial workflow execution.</span>
+<span class="sd">            Optional step bounds for partial workflow execution. A step name,</span>
+<span class="sd">            a class name, or an index inside the pipeline.</span>
 <span class="sd">        dry_run</span>
 <span class="sd">            Build and validate the workflow without executing solver work.</span>
 <span class="sd">        frozen</span>
@@ -1028,6 +1040,8 @@
 <span class="sd">            If the configured solver crashes or fails to converge.</span>
 <span class="sd">        ResumeError</span>
 <span class="sd">            If ``resume`` references an incompatible journal state.</span>
+<span class="sd">        ConfigError</span>
+<span class="sd">            If ``from_step`` or ``until_step`` names no pipeline step.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1041,7 +1055,6 @@
 <span class="sd">        hydromodpy.results.run.Run</span>
 <span class="sd">            Per-simulation result view returned by successful runs.</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_model_built</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
             <span class="n">resume</span><span class="o">=</span><span class="n">resume</span><span class="p">,</span>

@@ -611,6 +611,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.contracts.solver_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_solver_registry_provider</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.run_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunState</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.physics.flow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.physics.transport</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transport</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.simulation.planning.plan</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -727,6 +728,7 @@
         <span class="n">state</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">callbacks</span><span class="p">:</span> <span class="n">ProcessCallbacks</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ProcessRun</span><span class="p">,</span> <span class="n">RunExecutionResult</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Execute each planned run in order against ``state``.</span>
 
@@ -772,7 +774,7 @@
                         <span class="n">current_process_type</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">process_type</span>
                         <span class="n">process_open</span> <span class="o">=</span> <span class="kc">True</span>
 
-                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_process_run</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_process_run</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
                     <span class="n">executed_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">run</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
             <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">process_open</span> <span class="ow">and</span> <span class="n">current_process_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -816,6 +818,8 @@
         <span class="n">plan</span><span class="p">:</span> <span class="n">SimulationPlan</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">run</span><span class="p">:</span> <span class="n">ProcessRun</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunExecutionResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Execute one resolved process run through its registered adapter."""</span>
 
@@ -827,12 +831,16 @@
 
         <span class="n">dependency_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_dependency_models</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
         <span class="n">adapter</span> <span class="o">=</span> <span class="n">get_solver_registry_provider</span><span class="p">()</span><span class="o">.</span><span class="n">get_solver_adapter</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">process_type</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">solver</span><span class="p">)</span>
+        <span class="c1"># No ``model`` and no ``output_dir``: this run has produced neither yet,</span>
+        <span class="c1"># and it is the adapter's own ``execute`` that is about to produce them.</span>
+        <span class="c1"># Every context built after this one goes through ``RunContext.of``.</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
             <span class="n">RunContext</span><span class="p">(</span>
                 <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">,</span>
                 <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">,</span>
-                <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                <span class="n">state</span><span class="o">=</span><span class="n">RunState</span><span class="o">.</span><span class="n">of</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
                 <span class="n">dependency_models</span><span class="o">=</span><span class="n">dependency_models</span><span class="p">,</span>
+                <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_record_run_output</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
@@ -840,16 +848,24 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_mesh_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">ProcessRun</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunExecutionResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Record the mesh artifacts already materialized by the mesh phase."""</span>
+<span class="w">        </span><span class="sd">"""Record the mesh artifacts already materialized by the mesh phase.</span>
+
+<span class="sd">        A mesh run produces no model. What it has to say about what it built is</span>
+<span class="sd">        execution metadata, and it travels as such: the summary used to sit in</span>
+<span class="sd">        ``primary_model``, where it was the one value in that field that was not</span>
+<span class="sd">        a model, and where nothing ever read it back.</span>
+<span class="sd">        """</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">backend</span> <span class="ow">or</span> <span class="n">run</span><span class="o">.</span><span class="n">solver</span>
         <span class="k">if</span> <span class="n">backend</span> <span class="o">!=</span> <span class="s2">"catchment"</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported mesh process backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">mesh_summary</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s2">"setup"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"mesh_summary"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">primary_model</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"backend"</span><span class="p">:</span> <span class="n">backend</span><span class="p">,</span>
-            <span class="s2">"summary"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mesh_summary</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">mesh_summary</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="n">RunExecutionResult</span><span class="p">(</span><span class="n">primary_model</span><span class="o">=</span><span class="n">primary_model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">RunExecutionResult</span><span class="p">(</span>
+            <span class="n">primary_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"backend"</span><span class="p">:</span> <span class="n">backend</span><span class="p">,</span>
+                <span class="s2">"summary"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mesh_summary</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">mesh_summary</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_dependency_models</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -860,12 +876,16 @@
 
         <span class="n">models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">dependency_id</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">depends_on</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">dependency_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="p">:</span>
+            <span class="c1"># A recorded ``None`` is a run that produced no model, which is not</span>
+            <span class="c1"># the same thing as a run that has not executed; both are refused</span>
+            <span class="c1"># here, and for the same reason: there is nothing to hand over.</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dependency_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Process run '</span><span class="si">{</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">' depends on '</span><span class="si">{</span><span class="n">dependency_id</span><span class="si">}</span><span class="s2">', "</span>
-                    <span class="s2">"but that run has not produced a model yet."</span>
+                    <span class="s2">"but that run has produced no model."</span>
                 <span class="p">)</span>
-            <span class="n">models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="p">[</span><span class="n">dependency_id</span><span class="p">])</span>
+            <span class="n">models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">models</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_record_run_output</span><span class="p">(</span>
@@ -876,13 +896,20 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Persist one completed run output back into the shared runtime state.</span>
 
-<span class="sd">        ``execution.models_by_run_id`` is the canonical per-run registry used for future</span>
-<span class="sd">        dependency resolution. ``execution.output_dirs_by_run_id`` mirrors it with the</span>
-<span class="sd">        solver scratch directory so RAM-only metric extractors (calibration trials) can</span>
-<span class="sd">        locate the raw solver binaries without going through the catalog.</span>
+<span class="sd">        ``execution.models_by_run_id`` is the registry this runner resolves against</span>
+<span class="sd">        when a later run declares a dependency; a run absent from it produced no</span>
+<span class="sd">        model, and a mesh run is the one case in the repository. ``execution.output_dirs_by_run_id``</span>
+<span class="sd">        mirrors it with the solver scratch directory so RAM-only metric extractors</span>
+<span class="sd">        (calibration trials) locate the raw solver binaries without going through</span>
+<span class="sd">        the catalog. Neither is read outside this class: a consumer of what one run</span>
+<span class="sd">        produced receives it on the ``RunContext`` of that run.</span>
 <span class="sd">        """</span>
 
-        <span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">primary_model</span>
+        <span class="c1"># A run that produced no model records none. Writing ``None`` under its</span>
+        <span class="c1"># id would make the registry answer "yes, and it is nothing" to every</span>
+        <span class="c1"># consumer that iterates its values.</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">primary_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">primary_model</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">solver_output_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">output_dirs_by_run_id</span><span class="p">[</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">solver_output_dir</span>
 </pre></div>

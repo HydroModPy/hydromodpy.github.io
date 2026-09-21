@@ -649,6 +649,41 @@
     <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown pipeline step: </span><span class="si">{</span><span class="n">step</span><span class="si">!r}</span><span class="s2">. Known steps: </span><span class="si">{</span><span class="n">known</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_bounded_step_index</span><span class="p">(</span>
+    <span class="n">step</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve a step bound and refuse one that lands outside the pipeline.</span>
+
+<span class="sd">    An index past either end used to run a truncated or empty window and</span>
+<span class="sd">    report success, which is indistinguishable from a run that did its work.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">_resolve_step_index</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">step</span><span class="si">!r}</span><span class="s2"> resolves to index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">, outside the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="si">}</span><span class="s2">-step "</span>
+            <span class="sa">f</span><span class="s2">"pipeline. Name a step or give an index in 0..</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_model_phase_index</span><span class="p">(</span><span class="n">steps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the index of the first step that consumes the shared model phase.</span>
+
+<span class="sd">    ``0`` when the pipeline declares no ``setup_process``: an ad-hoc step list</span>
+<span class="sd">    makes no claim about a model phase, so every window is treated as needing</span>
+<span class="sd">    one, which is what the canonical pipeline did before the bound existed.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"setup_process"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">index</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_resume_step_index</span><span class="p">(</span>
     <span class="n">workspace</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -730,7 +765,6 @@
     <span class="n">store</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">_store</span>
     <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
-    <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">store</span>
     <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">_run_history</span><span class="p">:</span>
         <span class="n">run</span><span class="o">.</span><span class="n">_catalog</span> <span class="o">=</span> <span class="n">store</span>
 
@@ -775,7 +809,8 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.internals.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineState</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.orchestrator</span><span class="w"> </span><span class="kn">import</span> <span class="n">standard_steps</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.steps.planning</span><span class="w"> </span><span class="kn">import</span> <span class="n">step_build_plan</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.steps.planning</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_run_config</span><span class="p">,</span> <span class="n">step_build_plan</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.workflow.steps.setup</span><span class="w"> </span><span class="kn">import</span> <span class="n">rebuild_domain_if_stale</span>
 
         <span class="n">project</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project</span>
 
@@ -791,9 +826,44 @@
 
         <span class="n">all_steps</span> <span class="o">=</span> <span class="n">standard_steps</span><span class="p">()</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="n">all_steps</span>
-        <span class="k">if</span> <span class="n">until_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">until_idx</span> <span class="o">=</span> <span class="n">_resolve_step_index</span><span class="p">(</span><span class="n">until_step</span><span class="p">,</span> <span class="n">all_steps</span><span class="p">)</span>
+        <span class="n">until_idx</span> <span class="o">=</span> <span class="n">_bounded_step_index</span><span class="p">(</span><span class="n">until_step</span><span class="p">,</span> <span class="n">all_steps</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"until_step"</span><span class="p">)</span>
+        <span class="n">from_idx</span> <span class="o">=</span> <span class="n">_bounded_step_index</span><span class="p">(</span><span class="n">from_step</span><span class="p">,</span> <span class="n">all_steps</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"from_step"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">until_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">from_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">from_idx</span> <span class="o">&gt;</span> <span class="n">until_idx</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"from_step </span><span class="si">{</span><span class="n">from_step</span><span class="si">!r}</span><span class="s2"> (index </span><span class="si">{</span><span class="n">from_idx</span><span class="si">}</span><span class="s2">) is past until_step "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">until_step</span><span class="si">!r}</span><span class="s2"> (index </span><span class="si">{</span><span class="n">until_idx</span><span class="si">}</span><span class="s2">): the window is empty."</span>
+                <span class="p">)</span>
             <span class="n">steps</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">all_steps</span><span class="p">[:</span> <span class="n">until_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># A window that stops before ``setup_process`` reaches no step able to</span>
+        <span class="c1"># register a simulation, so it is not a run and writes no run record -</span>
+        <span class="c1"># see the Pipeline workspace below.</span>
+        <span class="n">model_phase_index</span> <span class="o">=</span> <span class="n">_model_phase_index</span><span class="p">(</span><span class="n">all_steps</span><span class="p">)</span>
+        <span class="n">head_only</span> <span class="o">=</span> <span class="n">until_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">until_idx</span> <span class="o">&lt;</span> <span class="n">model_phase_index</span>
+        <span class="k">if</span> <span class="n">head_only</span> <span class="ow">and</span> <span class="n">resume</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"until_step </span><span class="si">{</span><span class="n">until_step</span><span class="si">!r}</span><span class="s2"> stops before 'setup_process', so the run keeps no "</span>
+                <span class="sa">f</span><span class="s2">"journal to resume from. Drop --resume, or widen the window."</span>
+            <span class="p">)</span>
+        <span class="n">needs_model_phase</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">head_only</span>
+        <span class="c1"># The Pipeline owns the model phase: it executes ``build_geographic``,</span>
+        <span class="c1"># ``load_data`` and ``build_mesh`` itself, so each of them gets a</span>
+        <span class="c1"># journal row and a process death inside one of them leaves a trace.</span>
+        <span class="c1"># Building them here first would put that work before the Pipeline has</span>
+        <span class="c1"># started, where nothing records it.</span>
+        <span class="c1">#</span>
+        <span class="c1"># One run still needs the model built up front: ``step_build_plan``</span>
+        <span class="c1"># below patches an existing model when the caller overrides it - it</span>
+        <span class="c1"># rebuilds the domain on a new thickness and replays the data binders</span>
+        <span class="c1"># on the loaded forcings. Such a run is always a repeat on a Project</span>
+        <span class="c1"># whose model phase is already there (``sweep`` builds it explicitly),</span>
+        <span class="c1"># so this only covers a hand-written override on an untouched Project.</span>
+        <span class="n">plan_patches_model_phase</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">bool</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span> <span class="ow">or</span> <span class="n">thickness</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">first_clim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">needs_model_phase</span> <span class="ow">and</span> <span class="n">plan_patches_model_phase</span><span class="p">:</span>
+            <span class="n">project</span><span class="o">.</span><span class="n">_ensure_model_built</span><span class="p">()</span>
 
         <span class="n">workspace_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_workspace_path</span><span class="p">()</span>
 
@@ -801,8 +871,8 @@
         <span class="c1"># resume_from &gt; 0 is an in-process skip, not a journal resume of a prior</span>
         <span class="c1"># same-name run (which would otherwise abort on an edited config).</span>
         <span class="n">model_phase_ready</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">from_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">resume_from</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">_resolve_step_index</span><span class="p">(</span><span class="n">from_step</span><span class="p">,</span> <span class="n">all_steps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">from_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">resume_from</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">from_idx</span>
             <span class="n">run_id</span> <span class="o">=</span> <span class="n">resume</span> <span class="ow">or</span> <span class="n">name</span>
         <span class="k">elif</span> <span class="n">resume</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">resume_from</span> <span class="o">=</span> <span class="n">_resolve_resume_step_index</span><span class="p">(</span>
@@ -811,8 +881,8 @@
                 <span class="n">steps_blueprint</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">all_steps</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="n">run_id</span> <span class="o">=</span> <span class="n">resume</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_model_phase_ready</span><span class="p">():</span>
-            <span class="n">resume_from</span> <span class="o">=</span> <span class="n">_resolve_step_index</span><span class="p">(</span><span class="s2">"setup_process"</span><span class="p">,</span> <span class="n">all_steps</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">needs_model_phase</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_model_phase_ready</span><span class="p">():</span>
+            <span class="n">resume_from</span> <span class="o">=</span> <span class="n">model_phase_index</span>
             <span class="n">run_id</span> <span class="o">=</span> <span class="n">name</span>
             <span class="n">model_phase_ready</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
@@ -826,6 +896,18 @@
                 <span class="n">resume_from</span><span class="o">=</span><span class="n">resume_from</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># The configuration this run is defined by, overrides included. It is</span>
+        <span class="c1"># what the Pipeline signs, what the run archives, and what every</span>
+        <span class="c1"># builder reads, including the prefix a resume reconstructs in another</span>
+        <span class="c1"># process. ``project._cfg`` stays the configuration the project</span>
+        <span class="c1"># declares; the context carries the one of the run in flight. A dry run</span>
+        <span class="c1"># never gets here: a preview changes nothing.</span>
+        <span class="n">cfg_run</span> <span class="o">=</span> <span class="n">resolve_run_config</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">thickness</span><span class="p">)</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg_run</span>
+        <span class="c1"># A Project builds its model phase once; this run may be defined by</span>
+        <span class="c1"># another configuration than the one that built it.</span>
+        <span class="n">rebuild_domain_if_stale</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="p">)</span>
 
         <span class="n">step_build_plan</span><span class="p">(</span>
             <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span>
@@ -849,13 +931,12 @@
         <span class="k">if</span> <span class="n">project</span><span class="o">.</span><span class="n">_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">project</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">project</span><span class="o">.</span><span class="n">_store</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">initial</span> <span class="o">=</span> <span class="n">PipelineState</span><span class="p">(</span>
             <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"ctx"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span>
-                <span class="s2">"cfg"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span>
+                <span class="s2">"cfg"</span><span class="p">:</span> <span class="n">cfg_run</span><span class="p">,</span>
                 <span class="s2">"config_path"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_config_path</span><span class="p">,</span>
                 <span class="s2">"raw_toml"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="s2">"raw_toml"</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{},</span>
                 <span class="s2">"skip_display"</span><span class="p">:</span> <span class="n">skip_display</span><span class="p">,</span>
@@ -866,10 +947,24 @@
                 <span class="s2">"spatial_support_registry"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_spatial_support_registry</span><span class="p">,</span>
                 <span class="s2">"requested_spatial_support_ids"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_requested_support_ids</span><span class="p">,</span>
                 <span class="s2">"requested_domain_supports"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_requested_domain_supports</span><span class="p">,</span>
+                <span class="c1"># ``BuildMeshStep`` reads its mesh sections from the state; the</span>
+                <span class="c1"># facade verb reads the same three off the Project. A Pipeline</span>
+                <span class="c1"># that builds the mesh without them would ignore</span>
+                <span class="c1"># [mesh_catchment] and [mesh_input] entirely.</span>
+                <span class="s2">"mesh_section_data"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_mesh_section_data</span><span class="p">,</span>
+                <span class="s2">"constraints_mode"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_mesh_constraints_mode</span><span class="p">,</span>
+                <span class="s2">"external_mesh_input"</span><span class="p">:</span> <span class="n">project</span><span class="o">.</span><span class="n">_external_mesh_input</span><span class="p">,</span>
+                <span class="c1"># This run is already named. ``run_setup`` derives a name from</span>
+                <span class="c1"># the config when nobody gives it one, which would rename a run</span>
+                <span class="c1"># the caller named differently.</span>
+                <span class="s2">"run_name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span>
 
-        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="n">workspace_path</span><span class="p">)</span>
+        <span class="c1"># A head-only window registers no simulation, so it owns no run record.</span>
+        <span class="c1"># Handing it the workspace would let it overwrite the manifest of the</span>
+        <span class="c1"># run that carries this name and invalidate that run's journal.</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">head_only</span> <span class="k">else</span> <span class="n">workspace_path</span><span class="p">)</span>
         <span class="n">restore_frozen_root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">frozen</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.data_freeze</span><span class="w"> </span><span class="kn">import</span> <span class="n">frozen_project_root</span><span class="p">,</span> <span class="n">set_frozen_mode</span>
@@ -912,6 +1007,17 @@
                     <span class="n">restore_frozen_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">project_root</span><span class="o">=</span><span class="n">restore_frozen_root</span><span class="p">,</span>
                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_phase_ready</span><span class="p">:</span>
+            <span class="c1"># The Pipeline built the model phase on the Project's own ctx - a</span>
+            <span class="c1"># head-only window, a fresh run, or a resume that reconstructed its</span>
+            <span class="c1"># prefix. The phase marker has to say so or the next call rebuilds</span>
+            <span class="c1"># what is already there.</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">phases</span> <span class="k">as</span> <span class="n">adopt_phases</span>
+
+            <span class="n">adopt_phases</span><span class="o">.</span><span class="n">adopt_pipeline_phase</span><span class="p">(</span>
+                <span class="n">project</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">final_ctx</span> <span class="o">=</span> <span class="n">final</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ctx"</span><span class="p">)</span> <span class="k">if</span> <span class="n">final</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">sim_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">final_ctx</span><span class="p">,</span> <span class="s2">"sim_id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">final_ctx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
@@ -967,11 +1073,20 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_workspace_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the project runtime root used for checkpoints and ledger."""</span>
+<span class="w">        </span><span class="sd">"""Return the project runtime root used for checkpoints and ledger.</span>
+
+<span class="sd">        The runtime workspace only exists once the model phase has been built.</span>
+<span class="sd">        A run that stops before ``setup_process`` never builds it, so the</span>
+<span class="sd">        declared ``[workspace] project_root`` answers instead - the loader has</span>
+<span class="sd">        already made it absolute. The TOML directory stays the last resort.</span>
+<span class="sd">        """</span>
         <span class="n">project</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project</span>
         <span class="n">workspace</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">_ctx</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">workspace</span>
         <span class="k">if</span> <span class="n">workspace</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">workspace</span><span class="o">.</span><span class="n">project_root</span><span class="p">)</span>
+        <span class="n">declared_root</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="s2">"workspace"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"project_root"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">declared_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">declared_root</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">project</span><span class="o">.</span><span class="n">_config_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">project</span><span class="o">.</span><span class="n">_config_path</span><span class="o">.</span><span class="n">parent</span>
         <span class="k">return</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span></div>

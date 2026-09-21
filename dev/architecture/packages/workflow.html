@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.workflow provides composable steps and an immutable PipelineState payload that flows from one step to the next. The Project facade and every workflow launcher (simulation, calibration, b..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-18T22:42:15+02:00" property="article:modified_time"/>
 <title>workflow — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 18, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">cli</a></li>
@@ -491,15 +492,17 @@ same TOML always drives the same lifecycle.</p>
 <section id="sub-modules">
 <h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/state.py</span></code> – <code class="docutils literal notranslate"><span class="pre">PipelineState[TPayload]</span></code>
-generic dataclass, immutable, specialised by step
-(<code class="docutils literal notranslate"><span class="pre">ValidatedState</span></code>, <code class="docutils literal notranslate"><span class="pre">ResolvedState</span></code>, <code class="docutils literal notranslate"><span class="pre">GeographicState</span></code>,
-<code class="docutils literal notranslate"><span class="pre">LoadedState</span></code>, <code class="docutils literal notranslate"><span class="pre">MeshedState</span></code>, <code class="docutils literal notranslate"><span class="pre">SetupState</span></code>,
-<code class="docutils literal notranslate"><span class="pre">OpenStoreState</span></code>, <code class="docutils literal notranslate"><span class="pre">SolverRanState</span></code>, <code class="docutils literal notranslate"><span class="pre">ExtractedState</span></code>,
-<code class="docutils literal notranslate"><span class="pre">DerivedState</span></code>, <code class="docutils literal notranslate"><span class="pre">ExportedState</span></code>). Transit through
-<code class="docutils literal notranslate"><span class="pre">state.advance(...)</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/step.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Step[TIn,</span> <span class="pre">TOut]</span></code> Protocol
-(<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">run(state)</span> <span class="pre">-&gt;</span> <span class="pre">state</span></code>, optional <code class="docutils literal notranslate"><span class="pre">config_sections</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/state.py</span></code> – <code class="docutils literal notranslate"><span class="pre">PipelineState</span></code>, an immutable
+dataclass carrying a <code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code> payload. Transit through
+<code class="docutils literal notranslate"><span class="pre">state.advance(...)</span></code>. The payload is one mapping shared by every
+step, and its dominant member is <code class="docutils literal notranslate"><span class="pre">ctx</span></code>, the <code class="docutils literal notranslate"><span class="pre">WorkflowContext</span></code>:
+eleven of the twelve steps read it and write it back.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow/internals/step.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Step</span></code> Protocol (<code class="docutils literal notranslate"><span class="pre">name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">run(state)</span> <span class="pre">-&gt;</span> <span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">reads</span></code> / <code class="docutils literal notranslate"><span class="pre">writes</span></code> payload keys,
+optional <code class="docutils literal notranslate"><span class="pre">config_sections</span></code>). <code class="docutils literal notranslate"><span class="pre">reads</span></code> and <code class="docutils literal notranslate"><span class="pre">writes</span></code> are exact:
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_step_payload_keys.py</span></code> derives both
+from each step’s source and fails on a declaration that drifts in
+either direction.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">workflow/tracking/journal.py</span></code> – <code class="docutils literal notranslate"><span class="pre">WorkflowJournal</span></code>, the DuckDB
 journal of executed steps; <code class="docutils literal notranslate"><span class="pre">workflow/tracking/resume.py</span></code> and
 <code class="docutils literal notranslate"><span class="pre">workflow/tracking/heartbeat.py</span></code> sit beside it. There is no
@@ -540,23 +543,36 @@ are still there. <code class="docutils literal notranslate"><span class="pre">Ex
 <h2>Step contract<a class="headerlink" href="#step-contract" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">XyzStep</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span> <span class="o">=</span> <span class="s2">"xyz"</span>
-    <span class="n">tin</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#type"><span class="nb">type</span></a><span class="p">]</span> <span class="o">=</span> <span class="n">InputPayloadType</span>
-    <span class="n">tout</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#type"><span class="nb">type</span></a><span class="p">]</span> <span class="o">=</span> <span class="n">OutputPayloadType</span>
+    <span class="n">reads</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ctx"</span><span class="p">,)</span>
+    <span class="n">writes</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ctx"</span><span class="p">,</span> <span class="s2">"xyz_summary"</span><span class="p">)</span>
     <span class="n">config_sections</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"flow.param"</span><span class="p">,)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">:</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ctx"</span><span class="p">)</span>
         <span class="o">...</span>
         <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">advance</span><span class="p">(</span>
             <span class="n">step_index</span><span class="o">=...</span><span class="p">,</span>
             <span class="n">step_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">payload</span><span class="o">=...</span><span class="p">,</span>
+            <span class="n">xyz_summary</span><span class="o">=...</span><span class="p">,</span>
         <span class="p">)</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">config_sections</span></code> annotation declares which TOML subtrees the
-step reads. <code class="docutils literal notranslate"><span class="pre">earliest_affected_step</span></code> walks every step’s
-declarations to decide which phases can be skipped per calibration
-trial.</p>
+<p>Three declarations, and each one is consumed by something.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reads</span></code> and <code class="docutils literal notranslate"><span class="pre">writes</span></code> name the payload keys the step touches.
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_step_payload_keys.py</span></code> derives both from
+the step’s own source - the class body plus any module-level function of
+the workflow package that takes a <code class="docutils literal notranslate"><span class="pre">PipelineState</span></code> and that the step
+reaches - and fails when a declaration and the code disagree in either
+direction. A step that starts reading a member of the shared payload
+says so in the same commit.</p>
+<p><code class="docutils literal notranslate"><span class="pre">config_sections</span></code> declares which TOML subtrees the step reads.
+<code class="docutils literal notranslate"><span class="pre">earliest_affected_step</span></code> walks every step’s declarations to decide
+which phases can be skipped per calibration trial.</p>
+<p>The pair these replaced, <code class="docutils literal notranslate"><span class="pre">tin</span></code> and <code class="docutils literal notranslate"><span class="pre">tout</span></code>, named eleven frozen
+payload classes chained by inheritance. Nothing ever built one, no
+production code read the declaration, and ten of their sixteen fields
+named no payload key any step wrote - while <code class="docutils literal notranslate"><span class="pre">ctx</span></code>, the key eleven of
+the twelve steps write back, appeared in none of them. They are removed.</p>
 </section>
 <section id="key-public-symbols">
 <h2>Key public symbols<a class="headerlink" href="#key-public-symbols" title="Link to this heading">#</a></h2>

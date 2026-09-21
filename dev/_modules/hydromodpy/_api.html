@@ -609,6 +609,8 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.global_index</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlobalIndex</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">InstallReport</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExampleEntry</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.spinup</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpinupResult</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span>
@@ -1467,6 +1469,98 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">"solvers"</span><span class="p">][</span><span class="n">exe</span><span class="p">]</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">exe</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">info</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">example_list</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ExampleEntry</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""List the examples this build ships.</span>
+
+<span class="sd">    Read from ``hydromodpy/examples/catalog.toml`` inside the wheel, so it</span>
+<span class="sd">    answers offline and cannot promise what the installed version does not</span>
+<span class="sd">    know about.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of ExampleEntry</span>
+<span class="sd">        One entry per catalogued example, in catalog order.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
+<span class="sd">    &gt;&gt;&gt; [entry.id for entry in hmp.example_list()]  # doctest: +SKIP</span>
+<span class="sd">    ['04']</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_catalog</span>
+
+    <span class="k">return</span> <span class="n">load_catalog</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">example_show</span><span class="p">(</span><span class="n">example_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExampleEntry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return one catalogued example, file by file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    example_id:</span>
+<span class="sd">        Example id as listed by :func:`example_list`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        When no entry carries that id. The message names the ids that exist.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.manifest</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_entry</span><span class="p">,</span> <span class="n">load_catalog</span>
+
+    <span class="k">return</span> <span class="n">find_entry</span><span class="p">(</span><span class="n">example_id</span><span class="p">,</span> <span class="n">load_catalog</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">example_add</span><span class="p">(</span>
+    <span class="n">example_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">workspace</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InstallReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Install one shipped example into a workspace.</span>
+
+<span class="sd">    Fetches whatever is missing from the content-addressed cache, verifies</span>
+<span class="sd">    every file against the sha256 the manifest declares, and writes the</span>
+<span class="sd">    authored configs under ``projects/&lt;directory&gt;/`` and the data under</span>
+<span class="sd">    ``data/&lt;variable&gt;/``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    example_id:</span>
+<span class="sd">        Example id as listed by :func:`example_list`.</span>
+<span class="sd">    workspace:</span>
+<span class="sd">        Workspace root. Defaults to ``~/hydromodpy``.</span>
+<span class="sd">    ref:</span>
+<span class="sd">        Git ref to fetch from. Defaults to ``v`` plus the installed version.</span>
+<span class="sd">        Ignored when ``HMP_EXAMPLES_SOURCE`` names another source.</span>
+<span class="sd">    force:</span>
+<span class="sd">        Overwrite destination files whose content differs from the manifest.</span>
+<span class="sd">        Without it such a file is kept, so a local edit survives a re-install.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    InstallReport</span>
+<span class="sd">        What was written, what was already there, and what was downloaded.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
+<span class="sd">    &gt;&gt;&gt; hmp.example_add("04").project_dir  # doctest: +SKIP</span>
+<span class="sd">    PosixPath('/home/user/hydromodpy/projects/04_streamflow_intermittence_in_transient')</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.scaffold</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_ROOT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.blobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_source</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_example</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="k">if</span> <span class="n">workspace</span> <span class="k">else</span> <span class="n">DEFAULT_ROOT</span>
+    <span class="k">return</span> <span class="n">install_example</span><span class="p">(</span>
+        <span class="n">example_show</span><span class="p">(</span><span class="n">example_id</span><span class="p">),</span>
+        <span class="n">workspace</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">resolve_source</span><span class="p">(</span><span class="n">ref</span><span class="p">),</span>
+        <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
+    <span class="p">)</span>
 </pre></div>
 
                 </article>

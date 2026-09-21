@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-18T21:05:25+02:00" />
     <title>SolverAdapter &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -88,7 +88,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 18, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -623,8 +623,6 @@
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="hydromodpy.analysis.html">hydromodpy.analysis</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="hydromodpy.core.html">hydromodpy.core</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.clear_whitebox_backend_cache.html">clear_whitebox_backend_cache</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.get_whitebox_backend.html">get_whitebox_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.Workspace.html">Workspace</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.WorkspacePathRegistry.html">WorkspacePathRegistry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.ExecutionRegistry.html">ExecutionRegistry</a></li>
@@ -632,7 +630,6 @@
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.LoadedDataContext.html">LoadedDataContext</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.SetupContext.html">SetupContext</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.ResolvedSimulationTimeWindow.html">ResolvedSimulationTimeWindow</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hydromodpy.core.WhiteboxWorkflowsBackend.html">WhiteboxWorkflowsBackend</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="hydromodpy.data.html">hydromodpy.data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,6 +776,11 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hydromodpy.solver.</span></span><span class="sig-name descname"><span class="pre">SolverAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hydromodpy/solver/base/adapter_protocol.html#SolverAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hydromodpy.solver.SolverAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
 <p>One adapter binds one <code class="docutils literal notranslate"><span class="pre">(process_type,</span> <span class="pre">solver_name)</span></code> pair.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ctx.state</span></code> is a <code class="xref py py-class docutils literal notranslate"><span class="pre">RunState</span></code>: the
+setup scope, the configuration, the execution registry and the run
+identity, and nothing else of the pipeline the run belongs to. An adapter
+that needs something the view does not carry is asking for something a run
+invoked from outside would not have.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hydromodpy.solver.SolverAdapter.validate">
 <span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hydromodpy/solver/base/adapter_protocol.html#SolverAdapter.validate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hydromodpy.solver.SolverAdapter.validate" title="Link to this definition">#</a></dt>
@@ -829,9 +831,9 @@
 once instead of once per request, and a backend driven through an API
 knows before the solve which timesteps it has to keep.</p>
 <p>Lightweight calibration trials read straight from the solver scratch
-dir via <code class="docutils literal notranslate"><span class="pre">ctx.state.execution.output_dirs_by_run_id</span></code>; <code class="docutils literal notranslate"><span class="pre">store</span></code> is the
-cold-path <code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code> reserved for backends that already wrote
-results to it.</p>
+dir via <code class="docutils literal notranslate"><span class="pre">ctx.output_dir</span></code>; <code class="docutils literal notranslate"><span class="pre">store</span></code> is the cold-path
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code> reserved for backends that already wrote results
+to it.</p>
 <p>An adapter that cannot produce a requested observable raises
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableNotAvailableError</span></code> naming
 it. That refusal is the contract: a caller never reads a signature to

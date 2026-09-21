@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories, one per run. The DuckDB file under.hmp/ is a query index over those directories: ..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-17T22:06:17+02:00" property="article:modified_time"/>
 <title>Storage Layout — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 17, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="packages/reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/workflow.html">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages/examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/cli.html">cli</a></li>
@@ -656,12 +657,28 @@ for life, and the next run registered under the same stem becomes
 <code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;.v2</span></code> in a sibling directory. Renaming a run moves its
 directory, through the single <code class="docutils literal notranslate"><span class="pre">StoragePathResolver.move</span></code> call site, so
 the index and the tree never disagree.</p>
+<p><strong>A run directory name is unique in the catalog, not in the project.</strong> A
+catalog owns exactly one <code class="docutils literal notranslate"><span class="pre">runs/</span></code> tree and no path carries the project,
+so <code class="docutils literal notranslate"><span class="pre">project</span></code> is a label on a row and never a path segment: two projects
+registered in one catalog that pick the same run name get one directory
+each, the second versioned to <code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;.v2</span></code>. The column that carries the
+invariant is <code class="docutils literal notranslate"><span class="pre">storage_basename</span></code>, the directory name itself, under the
+<code class="docutils literal notranslate"><span class="pre">ux_sim_storage_basename</span></code> unique index; <code class="docutils literal notranslate"><span class="pre">name</span></code> cannot, since two
+different names can fold to one directory. <code class="docutils literal notranslate"><span class="pre">if_exists</span></code> decides which
+run gets displaced, and that stays a question about the caller’s
+project: <code class="docutils literal notranslate"><span class="pre">replace</span></code> never trashes a neighbour project’s run because the
+two picked the same word. <code class="docutils literal notranslate"><span class="pre">fail</span></code> is the exception and it is deliberate:
+it exists to forbid a substitute name, so it refuses on any occupied
+directory, whatever the project holding it and whether that run is live
+or trashed.</p>
 <p>Trashing a run does not move bytes. It flips the index status and writes
 <code class="docutils literal notranslate"><span class="pre">runs/&lt;name&gt;/trash.json</span></code>, which holds the name and status the run must
 come back as. The marker is what makes the trash survive a rebuild: the
 directory is the truth, so a rebuilt index finds the run trashed instead
 of quietly resurrecting it. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">trash</span> <span class="pre">--empty</span></code> is what
-actually frees the bytes.</p>
+actually frees the bytes. Trashing frees the name in the index and not
+on disk, so a newcomer asking for the name of a trashed run is versioned
+behind it rather than landing in its directory.</p>
 </section>
 <section id="three-classes-of-data">
 <h2>Three classes of data<a class="headerlink" href="#three-classes-of-data" title="Link to this heading">#</a></h2>

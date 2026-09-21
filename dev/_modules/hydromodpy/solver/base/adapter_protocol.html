@@ -623,7 +623,14 @@
 <a class="viewcode-back" href="../../../../api/generated/hydromodpy.solver.SolverAdapter.html#hydromodpy.solver.SolverAdapter">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SolverAdapter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""One adapter binds one ``(process_type, solver_name)`` pair."""</span>
+<span class="w">    </span><span class="sd">"""One adapter binds one ``(process_type, solver_name)`` pair.</span>
+
+<span class="sd">    ``ctx.state`` is a :class:`~hydromodpy.core.state.run_state.RunState`: the</span>
+<span class="sd">    setup scope, the configuration, the execution registry and the run</span>
+<span class="sd">    identity, and nothing else of the pipeline the run belongs to. An adapter</span>
+<span class="sd">    that needs something the view does not carry is asking for something a run</span>
+<span class="sd">    invoked from outside would not have.</span>
+<span class="sd">    """</span>
 
     <span class="n">process_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">solver_name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
@@ -664,9 +671,9 @@
 <span class="sd">        knows before the solve which timesteps it has to keep.</span>
 
 <span class="sd">        Lightweight calibration trials read straight from the solver scratch</span>
-<span class="sd">        dir via ``ctx.state.execution.output_dirs_by_run_id``; ``store`` is the</span>
-<span class="sd">        cold-path :class:`Catalog` reserved for backends that already wrote</span>
-<span class="sd">        results to it.</span>
+<span class="sd">        dir via ``ctx.output_dir``; ``store`` is the cold-path</span>
+<span class="sd">        :class:`Catalog` reserved for backends that already wrote results</span>
+<span class="sd">        to it.</span>
 
 <span class="sd">        An adapter that cannot produce a requested observable raises</span>
 <span class="sd">        :class:`~hydromodpy.core.exceptions.ObservableNotAvailableError` naming</span>
@@ -703,7 +710,42 @@
         <span class="o">...</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CellLocator"</span><span class="p">,</span> <span class="s2">"RunResult"</span><span class="p">,</span> <span class="s2">"SolverAdapter"</span><span class="p">]</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">adapter_members</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the member names :class:`SolverAdapter` requires.</span>
+
+<span class="sd">    Derived from the Protocol itself so a member added there is named by the</span>
+<span class="sd">    refusal message without a second list to maintain. ``__protocol_attrs__``</span>
+<span class="sd">    would say the same thing in one attribute, and only from Python 3.12;</span>
+<span class="sd">    this package still ships on 3.11.</span>
+<span class="sd">    """</span>
+    <span class="n">annotated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">SolverAdapter</span><span class="o">.</span><span class="vm">__annotations__</span><span class="p">)</span>
+    <span class="n">defined</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">name</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">SolverAdapter</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">annotated</span> <span class="o">|</span> <span class="n">defined</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">missing_adapter_members</span><span class="p">(</span><span class="n">candidate</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the members *candidate* has no attribute for.</span>
+
+<span class="sd">    Presence only, for a refusal message. Conformance is decided by</span>
+<span class="sd">    ``isinstance(candidate, SolverAdapter)``, which is strictly stronger: it</span>
+<span class="sd">    also rejects a member bound to ``None``, and a class whose metaclass</span>
+<span class="sd">    answers every attribute. An empty tuple therefore does not mean the</span>
+<span class="sd">    candidate conforms.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">adapter_members</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CellLocator"</span><span class="p">,</span>
+    <span class="s2">"RunResult"</span><span class="p">,</span>
+    <span class="s2">"SolverAdapter"</span><span class="p">,</span>
+    <span class="s2">"adapter_members"</span><span class="p">,</span>
+    <span class="s2">"missing_adapter_members"</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 
                 </article>

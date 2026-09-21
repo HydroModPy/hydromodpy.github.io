@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.data orchestrates input data acquisition, validation, and integration. Seventeen variables share the same Variable / Manager / Source pattern, with a DuckDB cache that records every fetc..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-18T07:08:43+02:00" property="article:modified_time"/>
 <title>data — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 18, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflow.html">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">cli</a></li>
@@ -490,18 +491,25 @@ artefact for cache-hit detection and reproducibility.</p>
 <section id="sub-modules">
 <h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data/base_manager_variable.py</span></code> – <code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code> ABC
-for point variables (gauges, observations).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/base_manager_field.py</span></code> – <code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> ABC for
-field variables (rasters, gridded forcing).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/_base_manager_common.py</span></code> – shared cache and persistence
-logic.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/sources.py</span></code> – source registry with <code class="docutils literal notranslate"><span class="pre">@register_source</span></code>
-decorator and <code class="docutils literal notranslate"><span class="pre">get_source(variable_type,</span> <span class="pre">source_name)</span></code> lookup.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/planner.py</span></code> and <code class="docutils literal notranslate"><span class="pre">data/plan.py</span></code> – <code class="docutils literal notranslate"><span class="pre">DataPlanner</span></code> and
-immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>. The planner merges <code class="docutils literal notranslate"><span class="pre">[data].types</span></code>
-with rules that infer extra variables from foreign sections (for
-example geology if <code class="docutils literal notranslate"><span class="pre">domain.zone_ids</span></code> mentions geology).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/managers/base_manager_variable.py</span></code> – <code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code>
+ABC for point variables (gauges, observations).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/managers/base_manager_field.py</span></code> – <code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> ABC
+for field variables (rasters, gridded forcing).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/managers/_base_manager_common.py</span></code> – shared cache and
+persistence logic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/source/</span></code> – the <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> port, its adapters and the
+registry that resolves a <code class="docutils literal notranslate"><span class="pre">source_id</span></code> to one of them, see below.
+<code class="docutils literal notranslate"><span class="pre">hydrography</span></code> resolves through it; the other variables still dispatch
+on a provider name with an <code class="docutils literal notranslate"><span class="pre">if</span></code>/<code class="docutils literal notranslate"><span class="pre">elif</span></code> in their manager.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/fetch/</span></code> – the <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> capability: its declaration, the
+body that runs it and the four artefact writers, see below. It is the
+caller of the port, kept out of <code class="docutils literal notranslate"><span class="pre">data/source/</span></code> so the port stays
+importable without pydantic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data/managers/planner.py</span></code> and <code class="docutils literal notranslate"><span class="pre">data/managers/plan.py</span></code> –
+<code class="docutils literal notranslate"><span class="pre">DataPlanner</span></code> and immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>. The planner merges
+<code class="docutils literal notranslate"><span class="pre">[data].types</span></code> with rules that infer extra variables from foreign
+sections (for example geology if <code class="docutils literal notranslate"><span class="pre">domain.zone_ids</span></code> mentions
+geology).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">data/registry/catalog_duckdb.py</span></code> – <code class="docutils literal notranslate"><span class="pre">DataCatalogDuckDB</span></code>
 persisting (variable, source, station_id, bbox, dates,
 file_path, mtime, sha256) for cache hits and external-mod
@@ -570,6 +578,138 @@ OpenStreetMap (<code class="docutils literal notranslate"><span class="pre">osm<
 </table>
 </div>
 </section>
+<section id="the-datasource-port">
+<h2>The DataSource port<a class="headerlink" href="#the-datasource-port" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">data/source/port.py</span></code> holds a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> Protocol that reconciles
+the seventeen distinct signatures the twenty-five fetch functions under
+<code class="docutils literal notranslate"><span class="pre">data/variables/*/apis/</span></code> carry. A source answers one question about
+one provider, and declares eight things about itself: <code class="docutils literal notranslate"><span class="pre">source_id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">variables</span></code>, <code class="docutils literal notranslate"><span class="pre">payload_kind</span></code>, <code class="docutils literal notranslate"><span class="pre">extent_crs</span></code>, <code class="docutils literal notranslate"><span class="pre">selectors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">period_need</span></code>, <code class="docutils literal notranslate"><span class="pre">hosts</span></code> and <code class="docutils literal notranslate"><span class="pre">writes_out_dir</span></code>. Every one of them is
+compared against a real call by
+<code class="docutils literal notranslate"><span class="pre">tests/contract/test_data_source_contract.py</span></code>.</p>
+<p>The member that carries the phase is <code class="docutils literal notranslate"><span class="pre">extent_crs</span></code>. An <code class="docutils literal notranslate"><span class="pre">Extent</span></code> is a
+bounding box <strong>and</strong> the CRS it is expressed in, <code class="docutils literal notranslate"><span class="pre">extent_for()</span></code>
+converts it into the one the source declares, and the conversion
+densifies the edges rather than transforming four corners. A caller
+asking for a DEM and a river network over one basin passes one extent:
+it reaches the IGN Geoplateforme in Lambert-93 and the Sandre WFS in
+WGS84 without the caller knowing either.</p>
+<p>Six adapters ship. Four of them are the conformance spread, one per
+payload kind and picked for how much they disagree:
+<code class="docutils literal notranslate"><span class="pre">HubeauPiezometrySource</span></code> (point records, WGS84, a period is required),
+<code class="docutils literal notranslate"><span class="pre">BdTopageSource</span></code> (a feature table, WGS84, no time axis),
+<code class="docutils literal notranslate"><span class="pre">IgnDemSource</span></code> (files, <strong>EPSG:2154</strong>, writes under the directory the
+request names) and <code class="docutils literal notranslate"><span class="pre">Sim2PrecipitationSource</span></code> (gridded fields,
+<strong>EPSG:2154</strong>, a period is required). <code class="docutils literal notranslate"><span class="pre">EuHydroSource</span></code> and
+<code class="docutils literal notranslate"><span class="pre">OsmSource</span></code> are the two the hydrography migration brought over.</p>
+<p><code class="docutils literal notranslate"><span class="pre">data/source/registry.py</span></code> maps <code class="docutils literal notranslate"><span class="pre">source_id</span></code> to class. In-tree sources
+are declared once, in <code class="docutils literal notranslate"><span class="pre">_BUILTIN_PATHS</span></code>, and imported on first lookup;
+out-of-tree ones join through the <code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code> entry-point
+group, with no <code class="docutils literal notranslate"><span class="pre">[project.entry-points]</span></code> table here and no patch to this
+repository. Two questions are kept apart on purpose: <code class="docutils literal notranslate"><span class="pre">builtin_source_ids()</span></code>
+answers what this build <strong>describes</strong>, <code class="docutils literal notranslate"><span class="pre">list_source_ids()</span></code> what this
+installation <strong>resolves</strong>. A published, byte-gated description must read
+the first, because the wheel was built before any plugin existed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_data_source_port_stands_alone.py</span></code>
+refuses any import out of <code class="docutils literal notranslate"><span class="pre">data/source/</span></code> that is not <code class="docutils literal notranslate"><span class="pre">core</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data.contracts</span></code> or the port itself, beyond the declared exceptions
+– the provider entry point each adapter defers into its <code class="docutils literal notranslate"><span class="pre">fetch</span></code>.
+The layer matrix cannot see that edge, <code class="docutils literal notranslate"><span class="pre">data</span></code> being one layer.</p>
+</section>
+<section id="the-data-fetch-capability">
+<h2>The data-fetch capability<a class="headerlink" href="#the-data-fetch-capability" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">data/fetch/</span></code> turns the port into something invocable from outside:
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">process</span> <span class="pre">run</span> <span class="pre">data-fetch</span> <span class="pre">--job</span> <span class="pre">&lt;dir&gt;</span></code> reads one <code class="docutils literal notranslate"><span class="pre">request.json</span></code>,
+asks one source, and seals what came back. It opens no workspace, no
+catalog and no DuckDB, and it never sees a <code class="docutils literal notranslate"><span class="pre">geographic</span></code> object – the
+extent is an input, a bounding box carrying its CRS or a vector mask
+another job produced.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">capability.py</span></code> – the <code class="docutils literal notranslate"><span class="pre">CapabilityDecl</span></code> and the Pydantic request
+model. The <code class="docutils literal notranslate"><span class="pre">source</span></code> input is a union tagged on <code class="docutils literal notranslate"><span class="pre">source.id</span></code>, and it
+is <strong>the</strong> list: <code class="docutils literal notranslate"><span class="pre">SERVED_SOURCES</span></code> is read off its own discriminator
+and resolved through the registry, and <code class="docutils literal notranslate"><span class="pre">reaches_network</span></code> is the union
+of those sources’ <code class="docutils literal notranslate"><span class="pre">hosts</span></code>. One member of the union tags no source –
+<code class="docutils literal notranslate"><span class="pre">{"id":</span> <span class="pre">"installed",</span> <span class="pre">"name":</span> <span class="pre">...}</span></code> reaches anything the installation
+resolves, including a source this build does not describe, and it is
+excluded from every derivation for that reason. The derivations are
+compared to what they came from by
+<code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_data_fetch_declaration.py</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">worker.py</span></code> – resolution, refusal, fetch, seal and the reuse
+short-circuit, on the pattern <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> set. Every fetch
+gets a <code class="docutils literal notranslate"><span class="pre">TemporaryDirectory</span></code> as its <code class="docutils literal notranslate"><span class="pre">out_dir</span></code>, so what a provider
+leaves beside its result never lands under <code class="docutils literal notranslate"><span class="pre">outputs/</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">artefacts.py</span></code> – how each payload kind becomes one sealable file:
+one GeoPackage layer for <code class="docutils literal notranslate"><span class="pre">features</span></code>, one moved GeoTIFF for
+<code class="docutils literal notranslate"><span class="pre">files</span></code>, one long Parquet table for <code class="docutils literal notranslate"><span class="pre">points</span></code>, one merged NetCDF-4
+for <code class="docutils literal notranslate"><span class="pre">fields</span></code>. Zarr is what a run directory uses for field arrays and
+it is a directory: a seal inventories files, so a job artefact cannot
+be one.</p></li>
+</ul>
+<p>Exactly one payload artefact is written per run, and
+<code class="docutils literal notranslate"><span class="pre">outputs/fetch.json</span></code> is always written: it names which one, the extent
+that was really queried and the CRS it was really queried in.</p>
+</section>
+<section id="where-a-manager-s-extent-comes-from">
+<h2>Where a manager’s extent comes from<a class="headerlink" href="#where-a-manager-s-extent-comes-from" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DemManager</span></code> and <code class="docutils literal notranslate"><span class="pre">GeologyManager</span></code> resolve the box they ask a
+provider over from <strong>the source config alone</strong>, through
+<code class="docutils literal notranslate"><span class="pre">data/common/source_extent.py</span></code>: <code class="docutils literal notranslate"><span class="pre">mask_path</span></code> first, then <code class="docutils literal notranslate"><span class="pre">extent</span></code>
+together with <code class="docutils literal notranslate"><span class="pre">project_extent</span></code>. Neither takes a <code class="docutils literal notranslate"><span class="pre">geographic</span></code>
+parameter any more, and neither does <code class="docutils literal notranslate"><span class="pre">DataStore.load_dem</span></code> or
+<code class="docutils literal notranslate"><span class="pre">load_geology</span></code>.</p>
+<p>The seam that replaces the object already existed and had not been
+named: <code class="docutils literal notranslate"><span class="pre">DataManagersRuntimeLoader</span></code> sets
+<code class="docutils literal notranslate"><span class="pre">src.mask_path</span> <span class="pre">=</span> <span class="pre">Path(geographic.watershed_shp)</span></code> before handing the
+config to the store, so the path where “the watershed” is a <strong>file</strong> was
+already the one a project run took. The two managers read
+<code class="docutils literal notranslate"><span class="pre">self.geographic</span></code> <em>in addition to</em> that injection, never instead of
+it, which is why this is a mechanism removed rather than one added.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mask_extent()</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Extent</span></code> – the port’s, bounds plus the
+CRS the file declares – and the reprojection to the CRS a provider
+publishes in is <code class="docutils literal notranslate"><span class="pre">Extent.to_crs</span></code>. A mask that declares no CRS is
+refused; it used to inherit the watershed’s, which is right exactly as
+often as the two files are the same one.</p>
+<p>A raster mask goes through the valid-cell hull and not
+<code class="docutils literal notranslate"><span class="pre">rasterio.bounds</span></code>: a catchment mask is <code class="docutils literal notranslate"><span class="pre">1</span></code> on the catchment and
+nodata everywhere else in a rectangle sized to the accumulation grid,
+so its footprint is not its catchment. Measured on a 10x10 mask whose
+valid region is the central 4x4, that is <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">100,</span> <span class="pre">100)</span></code> against
+<code class="docutils literal notranslate"><span class="pre">(30,</span> <span class="pre">30,</span> <span class="pre">70,</span> <span class="pre">70)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mask_extent_in(path,</span> <span class="pre">crs)</span></code> is the tighter answer when the shape is in
+hand, and hydrography’s request box takes it: the bounds of a
+reprojected polygon are the image of its own vertices, while the bounds
+of a reprojected box are the image of a rectangle that contains it.
+Measured on a Nancon-sized basin from EPSG:2154 to EPSG:4326, the box
+route is 680 m to 1 030 m wider on each side – and the catalog serves a
+cached download only when its entry is a superset of the request, so
+that width is a download that did not have to happen.</p>
+<p><code class="docutils literal notranslate"><span class="pre">HydrographyManager</span></code> and <code class="docutils literal notranslate"><span class="pre">OceanicManager</span></code> lost the object too, and
+they needed more than a box for it. Hydrography read it for three
+things: the project CRS, the polygon it clips to and <code class="docutils literal notranslate"><span class="pre">watershed_dem</span></code>.
+Its mask is declared on the <strong>section</strong> and not on a source, because it
+concatenates every source before clipping once; the frame the clip
+happens in is the mask’s own, so the project CRS stopped being an input
+at all; and the reference grid is a <code class="docutils literal notranslate"><span class="pre">base_raster</span></code> constructor
+argument, because it is not an extent and not a user’s choice.
+<code class="docutils literal notranslate"><span class="pre">OceanicManager</span></code> selects a SHOM gauge by <code class="docutils literal notranslate"><span class="pre">station_ids</span></code> or, failing
+that, by the point at the centre of its extent – the named station
+wins, because the loader fills a mask into every source that declares
+the field whether or not it asked for one.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MANAGERS_STILL_TAKING_GEOGRAPHIC</span></code> is now empty, and
+<code class="docutils literal notranslate"><span class="pre">DataStore.load_variable</span></code> lost the <code class="docutils literal notranslate"><span class="pre">**extra_kwargs</span></code> that used to
+carry the object to the one manager that took it. No manager on the
+generic path receives a project-scoped object, and there is no longer a
+door through which one could.</p>
+<p><code class="docutils literal notranslate"><span class="pre">project_extent</span></code> is still a bare tuple and is <strong>not in one CRS</strong>: the
+site-selection pipeline builds it in Lambert-93 for the DEM and in WGS84
+for the observation managers, and hands <code class="docutils literal notranslate"><span class="pre">GeologyManager</span></code> nothing at
+all today. <code class="docutils literal notranslate"><span class="pre">PROJECT_EXTENT_CRS</span></code> declares what the raster side
+receives, and <code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_source_extent.py</span></code> pins it against
+<code class="docutils literal notranslate"><span class="pre">bbox_for_departments</span></code> – one branch of <code class="docutils literal notranslate"><span class="pre">_dem_request_bbox</span></code> out of
+four, which is what the test measures and all it claims.</p>
+</section>
 <section id="loadresult-contract">
 <h2>LoadResult contract<a class="headerlink" href="#loadresult-contract" title="Link to this heading">#</a></h2>
 <p>Every manager returns a <code class="docutils literal notranslate"><span class="pre">LoadResult</span></code>:</p>
@@ -600,6 +740,15 @@ OpenStreetMap (<code class="docutils literal notranslate"><span class="pre">osm<
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.registry.catalog_duckdb.DataCatalogDuckDB</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.contracts.load_result.LoadResult</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.contracts.timeseries.{PointRecord,</span> <span class="pre">FieldRecord}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.{DataSource,</span> <span class="pre">Extent,</span> <span class="pre">Period,</span> <span class="pre">FetchRequest,</span>
+<span class="pre">FetchResult}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.{HubeauPiezometrySource,</span> <span class="pre">BdTopageSource,</span>
+<span class="pre">EuHydroSource,</span> <span class="pre">IgnDemSource,</span> <span class="pre">OsmSource,</span> <span class="pre">Sim2PrecipitationSource}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.registry.{get,</span> <span class="pre">get_serving,</span> <span class="pre">register,</span>
+<span class="pre">list_source_ids,</span> <span class="pre">builtin_source_ids}</span></code> – <code class="docutils literal notranslate"><span class="pre">source_id</span></code> to class, and
+the <code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code> entry-point group a third party joins</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.fetch.capability.{DATA_FETCH,</span> <span class="pre">DataFetchRequest}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.fetch.worker.run</span></code></p></li>
 </ul>
 </section>
 <section id="recommended-reading-path">
@@ -607,7 +756,12 @@ OpenStreetMap (<code class="docutils literal notranslate"><span class="pre">osm<
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/README.md</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/base_manager_variable.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code> for the dispatch model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code> for the dispatch model.
+Its only surface is <code class="docutils literal notranslate"><span class="pre">DataManagersRuntimeLoader</span></code>: the second,
+module-level <code class="docutils literal notranslate"><span class="pre">load_variable</span></code> that used to sit at the bottom had
+no importer and a divergent copy of the dem / geology /
+hydrography branch, and it went with the <code class="docutils literal notranslate"><span class="pre">geographic</span></code>
+fallback it was the last caller of.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/hydrometry/</span></code> for a complete point
 variable.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/dem/</span></code> for a complete field variable.</p></li>
@@ -667,6 +821,9 @@ guide and provider matrix.</p></li>
 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sub-modules">Sub-modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-inventory">Variable inventory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-datasource-port">The DataSource port</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-data-fetch-capability">The data-fetch capability</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-a-manager-s-extent-comes-from">Where a manager’s extent comes from</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loadresult-contract">LoadResult contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-public-symbols">Key public symbols</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recommended-reading-path">Recommended reading path</a></li>

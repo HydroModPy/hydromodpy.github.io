@@ -602,6 +602,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.contracts.solver_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SolverModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.run_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunState</span>
+
 
 <div class="viewcode-block" id="ProcessRun">
 <a class="viewcode-back" href="../../../../api/generated/hydromodpy.simulation.ProcessRun.html#hydromodpy.simulation.ProcessRun">[docs]</a>
@@ -705,12 +708,72 @@
 <span class="sd">    By the time an adapter receives this object, the planner has already fixed</span>
 <span class="sd">    the run order and the runner has already resolved the concrete upstream</span>
 <span class="sd">    models referenced by ``run.depends_on``.</span>
+
+<span class="sd">    ``state`` is the reduced view of the workflow runtime an adapter may read</span>
+<span class="sd">    (:class:`hydromodpy.core.state.run_state.RunState`), never the workflow</span>
+<span class="sd">    context itself.</span>
+
+<span class="sd">    ``store`` is the catalog handle of the enclosing run, or ``None`` when the</span>
+<span class="sd">    run writes no index (a calibration trial). It is a borrowed handle whose</span>
+<span class="sd">    owner closes it: an adapter reads or writes through it during its own</span>
+<span class="sd">    ``execute`` and keeps no reference past the call.</span>
+
+<span class="sd">    ``model``, ``output_dir`` and ``lumped_cache`` are what *this* run produced:</span>
+<span class="sd">    the solver model the adapter built, the directory the solver wrote into,</span>
+<span class="sd">    and the series a lightweight lumped run kept in RAM instead of writing.</span>
+<span class="sd">    All three are ``None`` while the run executes, because it has produced</span>
+<span class="sd">    nothing yet, and they are set on the contexts built after it completed.</span>
+<span class="sd">    They are carried here rather than looked up in a registry: every consumer</span>
+<span class="sd">    asked the registry for the entry keyed by its own ``run.id``, which is not</span>
+<span class="sd">    a registry lookup but a self-reference routed through shared mutable state.</span>
 <span class="sd">    """</span>
 
     <span class="n">plan</span><span class="p">:</span> <span class="n">SimulationPlan</span>
     <span class="n">run</span><span class="p">:</span> <span class="n">ProcessRun</span>
-    <span class="n">state</span><span class="p">:</span> <span class="n">Any</span>
-    <span class="n">dependency_models</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
+    <span class="n">state</span><span class="p">:</span> <span class="n">RunState</span>
+    <span class="n">dependency_models</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">lumped_cache</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">RunState</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"RunContext.state must be a RunState view of the workflow runtime, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="RunContext.of">
+<a class="viewcode-back" href="../../../../api/generated/hydromodpy.simulation.RunContext.html#hydromodpy.simulation.RunContext.of">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">of</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">plan</span><span class="p">:</span> <span class="n">SimulationPlan</span><span class="p">,</span>
+        <span class="n">run</span><span class="p">:</span> <span class="n">ProcessRun</span><span class="p">,</span>
+        <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunContext</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the context of ``run`` inside the pipeline runtime ``ctx``.</span>
+
+<span class="sd">        The single construction path for every consumer that runs *after* the</span>
+<span class="sd">        solver: it reads the produced model and the solver output directory the</span>
+<span class="sd">        runner recorded for ``run``, and hands them over explicitly. The runner</span>
+<span class="sd">        itself does not use it, because at the time it builds a context the run</span>
+<span class="sd">        has produced neither.</span>
+<span class="sd">        """</span>
+        <span class="n">execution</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">execution</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">,</span>
+            <span class="n">run</span><span class="o">=</span><span class="n">run</span><span class="p">,</span>
+            <span class="n">state</span><span class="o">=</span><span class="n">RunState</span><span class="o">.</span><span class="n">of</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span>
+            <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="n">execution</span><span class="o">.</span><span class="n">output_dirs_by_run_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">lumped_cache</span><span class="o">=</span><span class="n">execution</span><span class="o">.</span><span class="n">lumped_ram_cache</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
 
 
 
@@ -720,19 +783,24 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">RunExecutionResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Payload returned by a solver adapter after one run completes.</span>
 
-<span class="sd">    ``primary_model`` is the exact model produced by the run and is always</span>
-<span class="sd">    stored under ``state.execution.models_by_run_id[run.id]`` by the runner.</span>
+<span class="sd">    ``primary_model`` is the model produced by the run, recorded by the runner</span>
+<span class="sd">    so it can resolve it for a run that declares this one in ``depends_on``. It</span>
+<span class="sd">    is ``None`` for a run that produces no model: a mesh run materialises a</span>
+<span class="sd">    mesh, not a model, and the summary of what it built travels in ``metrics``.</span>
 
 <span class="sd">    ``solver_output_dir`` is the directory where the solver wrote its raw</span>
 <span class="sd">    output files (e.g. ``.hds``, ``.cbc``). May be ``None`` for in-memory</span>
 <span class="sd">    solvers.</span>
 
-<span class="sd">    ``metrics`` carries lightweight scalar execution metadata produced by</span>
-<span class="sd">    the solver itself. It is intentionally optional so older/custom adapters</span>
-<span class="sd">    can keep returning only a model and an output directory.</span>
+<span class="sd">    ``metrics`` carries execution metadata the run produced about itself. The</span>
+<span class="sd">    catalog only persists what converts to a finite float and skips the rest,</span>
+<span class="sd">    which is why a mesh run can put its nested build summary here: it is what</span>
+<span class="sd">    that run has to say about what it made, and no consumer of a scalar sees</span>
+<span class="sd">    it. It is intentionally optional so an adapter can keep returning only a</span>
+<span class="sd">    model and an output directory.</span>
 <span class="sd">    """</span>
 
-    <span class="n">primary_model</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">primary_model</span><span class="p">:</span> <span class="n">SolverModel</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">solver_output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 

@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.spatial carries the spatial-support stack: catchment delineation, geographic context, domain definition, mesh generation, and the field abstractions that bridge geology to solver inputs...." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-19T01:53:19+02:00" property="article:modified_time"/>
 <title>spatial — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 19, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflow.html">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">cli</a></li>
@@ -489,10 +490,25 @@ and the field abstractions that bridge geology to solver inputs.</p>
 <section id="sub-modules">
 <h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">spatial/delineation/</span></code> – backend-agnostic delineation. Default
-backends: <code class="docutils literal notranslate"><span class="pre">WhiteboxWorkflowsBackend</span></code> (D8 on a DEM raster) and
-<code class="docutils literal notranslate"><span class="pre">SyntheticBackend</span></code>. Other backends register through
-<code class="docutils literal notranslate"><span class="pre">register_backend()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial/delineation/</span></code> – backend-agnostic delineation. One shipped
+backend, <code class="docutils literal notranslate"><span class="pre">WhiteboxWorkflowsBackend</span></code> (D8 on a DEM raster). Other
+backends register through <code class="docutils literal notranslate"><span class="pre">register_backend()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial/terrain/</span></code> – the <code class="docutils literal notranslate"><span class="pre">TerrainEngine</span></code> port: five methods and two
+identifying strings, sized by what the flow chain asks for rather than by
+the 66-method Whitebox facade. Products declare what cannot be read back
+from their values (pointer convention, accumulation units and transform,
+conditioning method and extent, CRS). Two implementations ship,
+<code class="docutils literal notranslate"><span class="pre">WhiteboxTerrainEngine</span></code> and <code class="docutils literal notranslate"><span class="pre">NumpyTerrainEngine</span></code>, and <code class="docutils literal notranslate"><span class="pre">registry.py</span></code>
+resolves one by name – from <code class="docutils literal notranslate"><span class="pre">request.json</span></code> for the <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code>
+capability, or from the <code class="docutils literal notranslate"><span class="pre">hydromodpy.terrain.engine</span></code> entry-point group for an
+engine installed beside this build. The conformance suite
+(<code class="docutils literal notranslate"><span class="pre">tests/contract/test_terrain_engine_contract.py</span></code>) is parametrized on what
+that registry resolves, so it runs against an outside engine without naming
+it; <code class="docutils literal notranslate"><span class="pre">tests/contract/test_terrain_conformance_reaches_an_installed_engine.py</span></code>
+holds it to that, negative control included. Registration certifies the
+members a class declares, and the port also requires files on disk that no
+declaration mentions – an engine is usable when the suite passes, not when
+<code class="docutils literal notranslate"><span class="pre">register()</span></code> accepts it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spatial/geographic/</span></code> – pre-simulation pipeline:
 <code class="docutils literal notranslate"><span class="pre">flow_products</span></code> (D8 correction and accumulation rasters),
 <code class="docutils literal notranslate"><span class="pre">catchment_from_point</span></code> and <code class="docutils literal notranslate"><span class="pre">catchment_from_polygon</span></code>,
@@ -503,7 +519,16 @@ orchestration).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spatial/domain/</span></code> – <code class="docutils literal notranslate"><span class="pre">Domain</span></code> aggregates <code class="docutils literal notranslate"><span class="pre">surface_topo</span></code>,
 <code class="docutils literal notranslate"><span class="pre">substratum</span></code> (via depth model), and <code class="docutils literal notranslate"><span class="pre">zones</span></code>. Two depth models
 ship: <code class="docutils literal notranslate"><span class="pre">ConstantThicknessDepthModel</span></code> (homogeneous offset),
-<code class="docutils literal notranslate"><span class="pre">FlatSubstratumDepthModel</span></code> (fixed elevation).</p></li>
+<code class="docutils literal notranslate"><span class="pre">FlatSubstratumDepthModel</span></code> (fixed elevation). <code class="docutils literal notranslate"><span class="pre">build.py</span></code> is the one
+constructor of that geometry – it copies the declared section before arming
+the binder zone ids on it – and the setup step, the rebuild a second run on a
+live project triggers, the domain case script and the bundle exporter all go
+through it. Beside it, the <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> capability: <code class="docutils literal notranslate"><span class="pre">capability.py</span></code>
+declares it (<code class="docutils literal notranslate"><span class="pre">DOMAIN_BUILD</span></code>, <code class="docutils literal notranslate"><span class="pre">DomainBuildRequest</span></code>) and <code class="docutils literal notranslate"><span class="pre">worker.py</span></code> runs
+it, sealing a bottom, a thickness, an active-cell mask and one
+<code class="docutils literal notranslate"><span class="pre">domain.json</span></code> from a terrain and a depth model. It declares
+<code class="docutils literal notranslate"><span class="pre">reaches_network=()</span></code> and <code class="docutils literal notranslate"><span class="pre">writes_outside_jobdir=()</span></code>, and a gate holds it
+to both.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spatial/mesh/cartesian_grid/</span></code> – DIS / structured path. Pydantic
 <code class="docutils literal notranslate"><span class="pre">SGridConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">StructuredGridBuilder</span></code>, FloPy <code class="docutils literal notranslate"><span class="pre">StructuredGrid</span></code>
 output.</p></li>
@@ -515,21 +540,38 @@ Gmsh meshing from polygons (geology, river network),
 <code class="docutils literal notranslate"><span class="pre">FieldParam</span></code> (homogeneous or per-zone values with vertical
 profile), and the <code class="docutils literal notranslate"><span class="pre">HydroMesh</span></code> pivot that unifies every mesh
 representation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial/site_selection/hydrology/</span></code> – besides the site-selection
+adapters, the <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> capability: <code class="docutils literal notranslate"><span class="pre">capability.py</span></code>
+declares it (<code class="docutils literal notranslate"><span class="pre">TERRAIN_DELINEATE</span></code>, <code class="docutils literal notranslate"><span class="pre">TerrainDelineateRequest</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">worker.py</span></code> runs it. <code class="docutils literal notranslate"><span class="pre">run(job,</span> <span class="pre">exit_code_for=...)</span></code> takes a job
+directory, reads the one document the caller wrote, writes its six
+artefacts inside it and seals it. It opens no workspace, no catalog
+and no database, and registers nothing in the user’s state directory.
+It declares <code class="docutils literal notranslate"><span class="pre">reaches_network=()</span></code> and a gate checks it against a real
+run, so “no network” is the declaration and not a hope. The exit-code
+mapper is an argument because
+<code class="docutils literal notranslate"><span class="pre">spatial</span></code> cannot import <code class="docutils literal notranslate"><span class="pre">cli</span></code>, and because the exception a
+capability raises and the status a shim reads are two contracts.</p></li>
 </ul>
 </section>
 <section id="key-public-symbols">
 <h2>Key public symbols<a class="headerlink" href="#key-public-symbols" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.delineation.whitebox_workflows_backend.WhiteboxWorkflowsBackend</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.terrain.{TerrainEngine,</span> <span class="pre">WhiteboxTerrainEngine,</span> <span class="pre">NumpyTerrainEngine}</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.geographic.core.flow_products</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.geographic.core.river_network</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.geographic.core.hydrographic_network.HydrographicNetwork</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.domain.Domain</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.domain.build.build_domain</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.domain.capability.DOMAIN_BUILD</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.mesh.cartesian_grid.{SGridConfig,</span> <span class="pre">StructuredGridBuilder}</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.mesh.gmsh_grid.gmsh_planar_mesh.GmshPlanarMesh2D</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.mesh.gmsh_grid.extruded_prism_mesh.ExtrudedPrismMesh3D</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.mesh.HydroMesh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.field.core.{FieldSpatial,</span> <span class="pre">FieldParam}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.site_selection.hydrology.capability.TERRAIN_DELINEATE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.spatial.site_selection.hydrology.worker.run</span></code></p></li>
 </ul>
 </section>
 <section id="hydromesh-pivot">

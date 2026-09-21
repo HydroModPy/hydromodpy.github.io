@@ -584,14 +584,20 @@
 <span class="sd">- ``loaded_data``: loaded support data (climatic, oceanic, hydrometry, ...);</span>
 <span class="sd">- ``execution``: run outputs and registries (planned runs, produced models).</span>
 
-<span class="sd">Plus result-store lifecycle fields (``store``, ``sim_id``,</span>
-<span class="sd">``postprocess_runner``) used by the workflow layer.</span>
+<span class="sd">Plus the identity of the run being executed: ``sim_id``, the ``parent_sim_id``</span>
+<span class="sd">a run is pinned to, and the ``reserved_sim_id`` minted before the pipeline</span>
+<span class="sd">starts. The project layer pins the lineage, the workflow layer reads it.</span>
 
 <span class="sd">Canonical access is explicit:</span>
 
 <span class="sd">- ``state.setup.&lt;...&gt;`` for structural runtime context,</span>
 <span class="sd">- ``state.loaded_data.&lt;...&gt;`` for loaded datasets,</span>
-<span class="sd">- ``state.execution.&lt;...&gt;`` for run outputs and execution registries.</span>
+<span class="sd">- ``state.execution.&lt;...&gt;`` for run outputs and execution registries</span>
+<span class="sd">  (workflow scope only: a solver adapter reads neither).</span>
+
+<span class="sd">:class:`RunState` is the reduced view of that context a solver adapter is</span>
+<span class="sd">handed. The workflow context is the state of a whole pipeline; an adapter</span>
+<span class="sd">executes one run inside it and must not be able to reach the rest.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -606,16 +612,26 @@
 
 
 <div class="viewcode-block" id="WorkflowContext">
-<a class="viewcode-back" href="../../../../api/generated/hydromodpy.core.WorkflowContext.html#hydromodpy.core.WorkflowContext">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/hydromodpy.simulation.WorkflowContext.html#hydromodpy.simulation.WorkflowContext">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WorkflowContext</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Mutable workflow state split into setup/loaded_data/execution scopes.</span>
 
-<span class="sd">    ``models_by_run_id`` is the source of truth for produced solver models.</span>
-<span class="sd">    Concrete solver instances are resolved explicitly from that registry.</span>
+<span class="sd">    ``execution.models_by_run_id`` is where the runner records the model each</span>
+<span class="sd">    run produced, and the runner is its only reader: it resolves the upstream</span>
+<span class="sd">    models a run declares in ``depends_on``. Every other consumer reads what</span>
+<span class="sd">    one run produced, and receives it through ``RunContext``.</span>
 
-<span class="sd">    Also carries result-store lifecycle fields needed by the workflow layer:</span>
-<span class="sd">    ``store``, ``sim_id``, and ``postprocess_runner``.</span>
+<span class="sd">    Also carries the identity of the run being executed: ``sim_id``, the</span>
+<span class="sd">    ``parent_sim_id`` a run is pinned to - whether it descends from a</span>
+<span class="sd">    calibration promotion or from a rerun, which pin it the same way - and the</span>
+<span class="sd">    ``reserved_sim_id`` minted before the pipeline starts.</span>
+
+<span class="sd">    It carries no live handle. The catalog a run writes to is opened by</span>
+<span class="sd">    whoever writes, for the span of that write, through</span>
+<span class="sd">    :func:`hydromodpy.workflow.run_catalog.run_catalog`: a DuckDB connection</span>
+<span class="sd">    and its lock are a resource, and a context that held one could not cross</span>
+<span class="sd">    a process boundary.</span>
 
 <span class="sd">    ``cfg`` and ``data_plan`` are typed as ``Any`` because ``core`` cannot</span>
 <span class="sd">    import from sibling layers. Concrete types are</span>
@@ -630,8 +646,6 @@
     <span class="n">loaded_data</span><span class="p">:</span> <span class="n">LoadedDataContext</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">LoadedDataContext</span><span class="p">)</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionRegistry</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ExecutionRegistry</span><span class="p">)</span>
 
-    <span class="c1"># Result-store lifecycle (formerly in WorkflowContext only).</span>
-    <span class="n">store</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">parent_sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -639,45 +653,53 @@
     <span class="c1"># the store-opening step. Calibration promotion reserves it so the row</span>
     <span class="c1"># linking the run to its session exists before the run draws its figures.</span>
     <span class="n">reserved_sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">postprocess_runner</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">effective_results_config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Dotted results-config paths the planning reconciliation turned on by</span>
     <span class="c1"># itself (never a user choice). Finalization reads them to tell a computed</span>
     <span class="c1"># intermediate apart from a requested output.</span>
-    <span class="n">forced_results_flags</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-
-<div class="viewcode-block" id="WorkflowContext.get_model">
-<a class="viewcode-back" href="../../../../api/generated/hydromodpy.core.WorkflowContext.html#hydromodpy.core.WorkflowContext.get_model">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the exact model produced by a concrete process run."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="p">[</span><span class="n">run_id</span><span class="p">]</span></div>
+    <span class="n">forced_results_flags</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="WorkflowContext.get_run_for_solver">
-<a class="viewcode-back" href="../../../../api/generated/hydromodpy.core.WorkflowContext.html#hydromodpy.core.WorkflowContext.get_run_for_solver">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_run_for_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the unique planned run matching ``solver_name``, if any."""</span>
-        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">run</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">process_runs_by_id</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">run</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="n">solver_name</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Expected at most one run for solver '</span><span class="si">{</span><span class="n">solver_name</span><span class="si">}</span><span class="s2">', got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">matches</span> <span class="k">else</span> <span class="kc">None</span></div>
 
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RunState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What a solver adapter reads of the workflow runtime, and nothing else.</span>
 
-<div class="viewcode-block" id="WorkflowContext.get_model_for_solver">
-<a class="viewcode-back" href="../../../../api/generated/hydromodpy.core.WorkflowContext.html#hydromodpy.core.WorkflowContext.get_model_for_solver">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_for_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the produced model for ``solver_name``, if that run completed."""</span>
-        <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_run_for_solver</span><span class="p">(</span><span class="n">solver_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">run</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">models_by_run_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
-</div>
+<span class="sd">    A :class:`WorkflowContext` is the state of a whole pipeline: the loaded support</span>
+<span class="sd">    data, the raw TOML, the data plan, the flags the planner forced. An adapter executes</span>
+<span class="sd">    one run and reads two scopes of it. Handing it the context made everything else</span>
+<span class="sd">    reachable, and the field that carried it was typed ``Any``, so nothing said what an</span>
+<span class="sd">    adapter was allowed to read. This view says it: the three members below are the</span>
+<span class="sd">    whole surface, and reaching for anything else raises ``AttributeError``.</span>
 
+<span class="sd">    ``setup`` is the context's own scope, shared by reference and mutable. The</span>
+<span class="sd">    view owns it, and it carries no live handle - the catalog of the enclosing</span>
+<span class="sd">    run reaches an adapter through ``RunContext.store``.</span>
+
+<span class="sd">    The view carries no execution registry either. Every read an adapter made</span>
+<span class="sd">    of it asked for the entry keyed by its own ``run.id``: the model that run</span>
+<span class="sd">    produced and the directory its solver wrote into. Both now reach the</span>
+<span class="sd">    adapter through ``RunContext.model`` and ``RunContext.output_dir``, so</span>
+<span class="sd">    reaching for another run's product is not forbidden by convention, it</span>
+<span class="sd">    raises ``AttributeError``.</span>
+
+<span class="sd">    ``cfg`` is typed ``Any`` because ``core`` cannot import from sibling</span>
+<span class="sd">    layers; the concrete type is ``config.hydromodpy_config.HydroModPyConfig``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">setup</span><span class="p">:</span> <span class="n">SetupContext</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SetupContext</span><span class="p">)</span>
+    <span class="n">cfg</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">of</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">WorkflowContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the view of ``ctx`` a solver adapter is allowed to read."""</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">setup</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">setup</span><span class="p">,</span>
+            <span class="n">cfg</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span>
+            <span class="n">sim_id</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">sim_id</span><span class="p">,</span>
+        <span class="p">)</span>
 </pre></div>
 
                 </article>

@@ -620,6 +620,7 @@
     <span class="n">dem_out_dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">dem_correc_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">engine_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Build the 3 core regional rasters needed by watershed delineation.</span>
@@ -643,6 +644,11 @@
 <span class="sd">        - ``"fill"``</span>
 <span class="sd">        - ``"breach"``</span>
 <span class="sd">        Any other value raises a ``ValueError``.</span>
+<span class="sd">    engine_id : str, optional</span>
+<span class="sd">        Flow-routing engine to route with. Unset uses the default of this build.</span>
+<span class="sd">        Carried through because this function is a facade over</span>
+<span class="sd">        ``build_regional_flow_products``, and a wrapper that cannot pass on the</span>
+<span class="sd">        engine is a wrapper through which no engine can be substituted.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -656,6 +662,7 @@
         <span class="n">dem_out_dir_path</span><span class="o">=</span><span class="n">dem_out_dir_path</span><span class="p">,</span>
         <span class="n">dem_correc_type</span><span class="o">=</span><span class="n">dem_correc_type</span><span class="p">,</span>
         <span class="n">backend</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
+        <span class="n">engine_id</span><span class="o">=</span><span class="n">engine_id</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"correc"</span><span class="p">:</span> <span class="n">products</span><span class="o">.</span><span class="n">correc</span><span class="p">,</span>
@@ -695,7 +702,13 @@
 <span class="sd">        Run geographic preprocessing and hydrate the runtime attributes.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">GeographicConfig</span><span class="p">,</span> <span class="n">initializing</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">GeographicConfig</span><span class="p">,</span>
+        <span class="n">initializing</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">reuse_existing_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Initialize and run geographic preprocessing.</span>
 
 <span class="sd">        Parameters</span>
@@ -707,8 +720,13 @@
 <span class="sd">        initializing</span>
 <span class="sd">            Workspace-like object exposing ``project_root``. Generated</span>
 <span class="sd">            geographic artifacts are written below this project root.</span>
+<span class="sd">        reuse_existing_outputs</span>
+<span class="sd">            Overrides ``config.reuse_existing_outputs`` when not None. A</span>
+<span class="sd">            pipeline rebuilding a step it already completed passes True so the</span>
+<span class="sd">            products on disk are read instead of delineated again.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reuse_existing_outputs</span> <span class="o">=</span> <span class="n">reuse_existing_outputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_dir_path</span> <span class="o">=</span> <span class="n">initializing</span><span class="o">.</span><span class="n">project_root</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">catch_def</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">catch_def</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dem_init_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dem_init_path</span><span class="p">)</span>
@@ -720,6 +738,14 @@
             <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">polyg_shp_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">polyg_shp_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dem_correc_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">dem_correc_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terrain_engine</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">terrain_engine</span>
+<span class="w">        </span><span class="sd">"""Engine the delineation routed with, carried for whoever routes after it.</span>
+
+<span class="sd">        A solver builds its own routing rasters over its own DEM, and it reads</span>
+<span class="sd">        them off this object rather than off the configuration. Without this</span>
+<span class="sd">        line the two sides of one run route with two different engines, and</span>
+<span class="sd">        nothing downstream can say so.</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">processing</span><span class="p">()</span>
 
@@ -859,6 +885,7 @@
             <span class="n">out_dir_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir_path</span><span class="p">,</span>
             <span class="n">backend</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
             <span class="n">locator_factory</span><span class="o">=</span><span class="n">Nominatim</span><span class="p">,</span>
+            <span class="n">reuse_existing_outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reuse_existing_outputs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">runtime_attributes</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>

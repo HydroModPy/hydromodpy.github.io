@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="How to calibrate a catchment against the extent of its hydrographic network rather than against a gauge, in two stages: the transmissivity-to-recharge ratio against the network in steady state, the..." />
 
-    <meta property="article:modified_time" content="2026-09-16T10:34:32+02:00" />
+    <meta property="article:modified_time" content="2026-09-21T03:37:12+02:00" />
     <title>Calibrating on the stream network &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -87,11 +87,11 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Comparison Workflow" href="comparison.html" />
-    <link rel="prev" title="Three calibrations to start from" href="calibration-recipes.html" />
+    <link rel="prev" title="Four calibrations to start from" href="calibration-recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 16, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 21, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -582,7 +582,7 @@
 <li class="toctree-l2"><a class="reference internal" href="regional_lab.html">Regional Lab Profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="site_selection.html">Site Selection Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration.html">Calibration Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html">Three calibrations to start from</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html">Four calibrations to start from</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Calibrating on the stream network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="comparison.html">Comparison Workflow</a></li>
 </ul>
@@ -827,15 +827,19 @@ searched in has to be written. <code class="docutils literal notranslate"><span 
 project carries. Writing <code class="docutils literal notranslate"><span class="pre">path</span></code> is still allowed and still wins, for a value
 the catalogue does not reach.</p>
 <p>What stays in the file is the two search ranges and the mapped network.
-<a class="reference internal" href="calibration-recipes.html"><span class="doc">Three calibrations to start from</span></a> shows the whole thing, with every option written out
+<a class="reference internal" href="calibration-recipes.html"><span class="doc">Four calibrations to start from</span></a> shows the whole thing, with every option written out
 and its default explained. The engines are free: <code class="docutils literal notranslate"><span class="pre">steady_method</span></code> and
 <code class="docutils literal notranslate"><span class="pre">transient_method</span></code> take any registered optimizer, so the same two criteria can
 be walked by a bisection, by Nelder-Mead or by Optuna without changing what is
 calibrated. The run records the method and its citation, so a value that came
 out of it says what it rests on.</p>
-<p>A file cannot both name a protocol and declare its own phases or objective
-blocks. That is two answers to one question, and it is refused rather than
-silently resolved.</p>
+<p>A file cannot both name a protocol and declare phases or objective blocks of
+its own. That is two answers to one question, and it is refused rather than
+silently resolved, naming the section it found them in. Stages identical to
+the ones the protocol would write are the exception, and not a loophole: it is
+how a run re-read from its own sealed configuration replays. A child
+inheriting a parent that names a protocol drops the name with
+<code class="docutils literal notranslate"><span class="pre">protocol__delete</span> <span class="pre">=</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">[calibration]</span></code>.</p>
 </section>
 <section id="declaring-the-two-stages-by-hand">
 <h2>Declaring the two stages by hand<a class="headerlink" href="#declaring-the-two-stages-by-hand" title="Link to this heading">#</a></h2>
@@ -917,6 +921,104 @@ silently resolved.</p>
 </div>
 <p>Declaring the <code class="docutils literal notranslate"><span class="pre">[[calibration.phases]]</span></code> table is what switches the runner to
 staged mode. Without it nothing changes for an existing configuration.</p>
+<p>The shipped version of that file is
+<code class="docutils literal notranslate"><span class="pre">examples/projects/04_streamflow_intermittence_in_transient/run_calibration_by_hand.toml</span></code>.
+It inherits the project next door, which names the protocol, so it starts by
+dropping the name:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">base_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"project.toml"</span>
+
+<span class="k">[calibration]</span>
+<span class="n">protocol__delete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</pre></div>
+</div>
+<p>Run <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">project.toml</span> <span class="pre">--list-phases</span></code> in that directory and the two
+stages the name expands to are the two stages that file writes out. Nothing
+downstream can tell them apart: the runner records <code class="docutils literal notranslate"><span class="pre">phase_name</span></code> and
+<code class="docutils literal notranslate"><span class="pre">phase_index</span></code> from the declarations whichever way they were written, and the
+four calibration figures read those records rather than the protocol. What the
+name still carries is the citation, the version pin and the list of deviations
+from the publication, which a hand-written assembly records nothing of.</p>
+</section>
+<section id="scoring-the-second-stage-on-two-criteria">
+<h2>Scoring the second stage on two criteria<a class="headerlink" href="#scoring-the-second-stage-on-two-criteria" title="Link to this heading">#</a></h2>
+<p>The reason to write the long form is the variant the name cannot express. The
+published method scores the storage stage on the hydrograph alone; this scores
+it on the hydrograph and on the extent of the simulated network, as two
+weighted blocks in one phase.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration.outputs.gauged_discharge]</span>
+<span class="n">support</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"point"</span>
+<span class="n">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"discharge"</span>
+<span class="n">observes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"NANCON"</span>
+<span class="n">x</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="mf">389285.910</span>
+<span class="n">y</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="mf">6816518.749</span>
+
+<span class="k">[[calibration.objective_blocks]]</span>
+<span class="n">name</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"network_extension"</span>
+<span class="n">metric</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"distance_gap"</span>
+<span class="n">uses_outputs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"seepage_network"</span><span class="p">]</span>
+<span class="n">weight</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span>
+
+<span class="k">[[calibration.objective_blocks]]</span>
+<span class="n">name</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"hydrograph"</span>
+<span class="n">metric</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"nse_log"</span>
+<span class="n">uses_outputs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"gauged_discharge"</span><span class="p">]</span>
+<span class="n">weight</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="n">warmup</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient_storage"</span>
+<span class="n">method</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">"scipy_nelder_mead"</span>
+<span class="n">max_iter</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span>
+<span class="n">tolerance</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="mf">0.05</span>
+<span class="n">parameters</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Sy"</span><span class="p">]</span>
+<span class="n">objective_blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"hydrograph"</span><span class="p">,</span><span class="w"> </span><span class="s2">"network_extension"</span><span class="p">]</span>
+<span class="n">depends_on</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"steady_conductivity"</span>
+
+<span class="k">[calibration.phases.overrides]</span>
+<span class="s2">"flow.flow_regime"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient"</span>
+</pre></div>
+</div>
+<p>Four things in there are not free choices.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;point&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">observes</span></code>, for the gauge</dt><dd><p>The single-metric route declares no output, so a stage that scores two
+criteria has to name the gauge as one. That form reads what the
+single-metric route reads, which is what keeps the two costs comparable:
+the station’s own cell where the loader placed one, with the runoff of
+<code class="docutils literal notranslate"><span class="pre">[data.runoff]</span></code> added over the area that cell drains, and the
+whole-catchment series where it placed none, with the basin’s runoff added.
+A discharge station is deliberately never placed by the coordinates written
+beside it, so the second case is the ordinary one, and the run logs one line
+naming the station when it takes it. The same target written
+<code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;boundary&quot;</span></code> on the drain
+validates and scores the drain budget instead, which is baseflow without
+runoff and not what a gauge records.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">warmup</span></code> rather than <code class="docutils literal notranslate"><span class="pre">scoring_window</span></code>, for the spin-up</dt><dd><p>A window cuts a loaded record on its dates. A network output is scored on
+the pair <code class="docutils literal notranslate"><span class="pre">(D_so,</span> <span class="pre">D_os)</span></code>, which carries none, so a phase declaring a window
+beside a network block is refused rather than scored over the whole run
+under the name of a windowed one. A count of samples applies to the block
+that has a record, and twelve monthly samples are the same span the window
+would have named.</p>
+</dd>
+<dt>The network block, in transient, scores one instant</dt><dd><p>A network output is read at the <strong>last stress period</strong> of the run, whatever
+its <code class="docutils literal notranslate"><span class="pre">time</span></code> field says: <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> and a list of ISO dates both reach the
+criterion as the whole stack, which is then taken at its last state. The
+block therefore compares one month to the mapped network, the last of the
+simulated record. Pick that month with the phase’s <code class="docutils literal notranslate"><span class="pre">end_datetime</span></code>, not
+with <code class="docutils literal notranslate"><span class="pre">time</span></code>. Scoring the seasonal extension itself rather than one instant
+is the method of <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../../theory/bibliography.html#id20" title="R. Abhervé, C. Roques, J.-R. de Dreuzy, T. Datry, P. Brunner, L. Longuevergne, and L. Aquilina. Improving calibration of groundwater flow models using headwater streamflow intermittence. Hydrological Processes, 2024. doi:10.1002/hyp.15167.">Abhervé <em>et al.</em>, 2024</a>]</span>, and it needs an intermittence
+record.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">weight</span></code> is the exchange rate, and nothing else sets it</dt><dd><p>The two costs are in different units: <code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> is metres and
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">nse_log</span></code> is a pure number. <code class="docutils literal notranslate"><span class="pre">normalize_cost</span></code> is refused on both, for
+opposite reasons, the first fitting no record to take a spread from and the
+second being already dimensionless. The weights are normalized to sum to
+one, so the trial cost above is <code class="docutils literal notranslate"><span class="pre">0.0099</span> <span class="pre">*</span> <span class="pre">|gap|</span> <span class="pre">+</span> <span class="pre">0.990</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">NSElog)</span></code>.
+Set it against the magnitudes the first stage published rather than by
+halves, and read <code class="docutils literal notranslate"><span class="pre">network_extension.total</span></code> and <code class="docutils literal notranslate"><span class="pre">hydrograph.total</span></code>, which
+every trial reports, to see what it bought.</p>
+</dd>
+</dl>
 </section>
 <section id="what-each-choice-buys-you">
 <h2>What each choice buys you<a class="headerlink" href="#what-each-choice-buys-you" title="Link to this heading">#</a></h2>
@@ -1192,7 +1294,7 @@ times the prior the project declares, inside the documented factor of 2.7 to
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Three calibrations to start from</p>
+        <p class="prev-next-title">Four calibrations to start from</p>
       </div>
     </a>
     <a class="right-next"
@@ -1226,6 +1328,7 @@ times the prior the project declares, inside the documented factor of 2.7 to
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#naming-the-method">Naming the method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declaring-the-two-stages-by-hand">Declaring the two stages by hand</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scoring-the-second-stage-on-two-criteria">Scoring the second stage on two criteria</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-choice-buys-you">What each choice buys you</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-it">Running it</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-output">Reading the output</a></li>

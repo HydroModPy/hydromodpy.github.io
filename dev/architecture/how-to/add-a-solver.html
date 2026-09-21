@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="A solver in HydroModPy is one(process_type, solver_name) pair bound to a concrete backend. Today three backends ship: modflow6, modflow_nwt, and boussinesq. This page documents how to add a fourth ..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-18T19:52:24+02:00" property="article:modified_time"/>
 <title>Add a Solver — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 18, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../packages/reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/workflow.html">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../packages/examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../packages/cli.html">cli</a></li>
@@ -512,6 +513,16 @@ fourth flow backend or, equivalently, a new <code class="docutils literal notran
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">RunExecutionResult</span></code> is a small dataclass exposing
 <code class="docutils literal notranslate"><span class="pre">success:</span> <span class="pre">bool</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs:</span> <span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ctx.state</span></code> is a <code class="docutils literal notranslate"><span class="pre">RunState</span></code>: the reduced view of the workflow runtime
+an adapter is allowed to read, and not the pipeline state itself. It
+carries four members and no more - <code class="docutils literal notranslate"><span class="pre">setup</span></code> (workspace, domain, flow,
+mesh …), <code class="docutils literal notranslate"><span class="pre">cfg</span></code>, <code class="docutils literal notranslate"><span class="pre">execution</span></code> (the produced models and the solver
+output directory of each run), and <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>. Reading anything else
+raises <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>, and a static gate in
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/</span></code> says so before the solver ever runs. The
+catalog handle of the enclosing run is not in there: it arrives as
+<code class="docutils literal notranslate"><span class="pre">ctx.store</span></code>, borrowed for the span of the call, and an adapter keeps no
+reference to it past <code class="docutils literal notranslate"><span class="pre">execute</span></code>.</p>
 <p>A separate <strong>output adapter</strong> (the <em>extractor</em>) ingests the persisted
 outputs into the catalog. It is registered on the same
 <code class="docutils literal notranslate"><span class="pre">(process_type,</span> <span class="pre">solver_name)</span></code> pair as the adapter and implements:</p>

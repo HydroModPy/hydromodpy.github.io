@@ -811,6 +811,15 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"Hard-coded observed values, positional and dateless. Name a "</span>
         <span class="s2">"station in 'observes' to score a record the project loaded instead."</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">diagonal_neighbors</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Route this cell's discharge, and the area it drains, over shared "</span>
+        <span class="s2">"nodes rather than shared edges, which recovers a talweg that runs diagonally "</span>
+        <span class="s2">"across a square grid. Only reaches 'variable' = 'discharge'; a head or a lake "</span>
+        <span class="s2">"state read at this point ignores it. The same knob as the network output's own "</span>
+        <span class="s2">"'diagonal_neighbors', declared here too because a point output belongs to no "</span>
+        <span class="s2">"network block."</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_point_selectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputPoint</span><span class="p">:</span>
@@ -896,6 +905,14 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Hard-coded observed values, positional and dateless. Name a "</span>
         <span class="s2">"station in 'observes' to score a record the project loaded instead."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">diagonal_neighbors</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Route this cell's discharge, and the area it drains, over shared "</span>
+        <span class="s2">"nodes rather than shared edges, which recovers a talweg that runs diagonally "</span>
+        <span class="s2">"across a square grid. Only reaches 'variable' = 'discharge'; a head read at this "</span>
+        <span class="s2">"cell ignores it. The same knob as the network output's own 'diagonal_neighbors', "</span>
+        <span class="s2">"declared here too because a cell output belongs to no network block."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
@@ -1657,6 +1674,36 @@
             <span class="s2">"cma_es and Optuna's cmaes sampler."</span>
         <span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">evaluator</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"What turns one parameter sample into a cost. Unset runs the HydroModPy "</span>
+            <span class="s2">"pipeline, which is what every calibrated number in this repository was "</span>
+            <span class="s2">"produced with. A string and not an enumeration: the values that resolve "</span>
+            <span class="s2">"depend on what is installed beside HydroModPy, which is how a surrogate "</span>
+            <span class="s2">"or a foreign model is named without a patch. This build also ships "</span>
+            <span class="s2">"'analytic_bowl', which runs no model and scores a closed-form surface "</span>
+            <span class="s2">"whose minimum is the midpoint of each parameter's interval: it rehearses "</span>
+            <span class="s2">"a whole search -- space, optimizer, stopping rule, report -- in "</span>
+            <span class="s2">"milliseconds, against an answer known in advance."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">forward_model</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"What produces the simulated observables when the evaluator is the one "</span>
+            <span class="s2">"that scores a model with the criteria of this file "</span>
+            <span class="s2">"('scored_forward_model'). The model answers the outputs declared under "</span>
+            <span class="s2">"[calibration.outputs] and the objective blocks weigh them, so changing a "</span>
+            <span class="s2">"metric or a weight is a change to this document and never a patch to the "</span>
+            <span class="s2">"model. A string and not an enumeration: what resolves depends on what is "</span>
+            <span class="s2">"installed beside HydroModPy, through the "</span>
+            <span class="s2">"'hydromodpy.calibration.forward_model' entry-point group. Unset runs "</span>
+            <span class="s2">"'linear_reservoir', the closed-form reservoir this build ships, which is "</span>
+            <span class="s2">"how a set of criteria is rehearsed before a model is installed. Read by "</span>
+            <span class="s2">"no other evaluator."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -1845,6 +1892,57 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"Single switch governing every persistence sink "</span>
         <span class="s2">"(catalog, Zarr, Parquet, lockfile) for calibration outputs."</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"evaluator"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_evaluator_resolves</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an evaluator this installation cannot serve, while reading the document.</span>
+
+<span class="sd">        Here rather than at the first trial because a file naming an evaluator</span>
+<span class="sd">        nobody installed is a broken document, and learning that after</span>
+<span class="sd">        ``prepare_trials`` has run the whole geographic, mesh and data prefix</span>
+<span class="sd">        costs that prefix.</span>
+
+<span class="sd">        ``None`` is not checked: it means "whatever this build defaults to", and a</span>
+<span class="sd">        default that does not resolve is an environment fault the registry reports</span>
+<span class="sd">        with its own message.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span> <span class="k">as</span> <span class="n">evaluator_registry</span>
+
+        <span class="k">if</span> <span class="n">evaluator_registry</span><span class="o">.</span><span class="n">is_registered</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="n">served</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">evaluator_registry</span><span class="o">.</span><span class="n">list_evaluator_ids</span><span class="p">())</span> <span class="ow">or</span> <span class="s2">"none"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"calibration.evaluator names </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">, and this installation serves </span><span class="si">{</span><span class="n">served</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"A third-party evaluator joins that list through the "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">evaluator_registry</span><span class="o">.</span><span class="n">ENTRY_POINT_GROUP</span><span class="si">!r}</span><span class="s2"> entry-point group, without a patch to "</span>
+            <span class="s2">"HydroModPy."</span>
+        <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"forward_model"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_forward_model_resolves</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a model this installation cannot serve, while reading the document.</span>
+
+<span class="sd">        Same place and same reason as the evaluator above: a file naming a model</span>
+<span class="sd">        nobody installed is a broken document, and finding out at the first trial</span>
+<span class="sd">        costs everything the search set up before it.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">hydromodpy.calibration.evaluation.forward_registry</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">forward_registry</span>
+
+        <span class="k">if</span> <span class="n">forward_registry</span><span class="o">.</span><span class="n">is_registered</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="n">served</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">forward_registry</span><span class="o">.</span><span class="n">list_model_ids</span><span class="p">())</span> <span class="ow">or</span> <span class="s2">"none"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"calibration.forward_model names </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">, and this installation serves "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">served</span><span class="si">}</span><span class="s2">. A third-party model joins that list through the "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">forward_registry</span><span class="o">.</span><span class="n">ENTRY_POINT_GROUP</span><span class="si">!r}</span><span class="s2"> entry-point group, without a patch to "</span>
+            <span class="s2">"HydroModPy."</span>
+        <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_the_error_weighting_has_something_to_divide_by</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
@@ -2132,39 +2230,96 @@
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_network_criterion_is_paired</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""A network output and a distance metric only make sense together.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_a_block_reads_a_support_its_criterion_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a block whose criterion cannot read what its outputs produce.</span>
+
+<span class="sd">        The criterion names the supports it scores, so one answer covers both</span>
+<span class="sd">        directions of the mismatch: a distance metric pointed at a gauge, and a</span>
+<span class="sd">        series metric pointed at a network. Neither crashes on its own. The</span>
+<span class="sd">        first would read two values of a chronicle as two distances, the second</span>
+<span class="sd">        would score the pair ``(D_so, D_os)`` against an observed vector, and</span>
+<span class="sd">        both return a number a reader has no way to doubt.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria</span><span class="w"> </span><span class="kn">import</span> <span class="n">criterion_for</span>
+
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">needs</span> <span class="o">=</span> <span class="n">criterion_for</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">))</span><span class="o">.</span><span class="n">requirements</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">readable</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">needs</span><span class="o">.</span><span class="n">reads_supports</span><span class="p">)</span>
+            <span class="n">wrong</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">support</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">uses_outputs</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">support</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">readable</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">wrong</span><span class="p">:</span>
+                <span class="n">listed</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (support </span><span class="si">{</span><span class="n">support</span><span class="si">!r}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">support</span> <span class="ow">in</span> <span class="n">wrong</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"block </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> scores </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">listed</span><span class="si">}</span><span class="s2">, and that "</span>
+                    <span class="sa">f</span><span class="s2">"criterion reads </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">readable</span><span class="p">)</span><span class="si">}</span><span class="s2">. A network output produces the "</span>
+                    <span class="s2">"pair (D_so, D_os), two distances and no time; every other support "</span>
+                    <span class="s2">"produces a series. One criterion cannot read both."</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_no_output_is_beyond_every_declared_criterion</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an output no criterion in this file is able to read.</span>
 
 <span class="sd">        Runs after the implicit block is built, so the ``(objective, variable)``</span>
-<span class="sd">        route counts as a declaration. An unpaired network output would fall</span>
-<span class="sd">        through to the single-metric head route, which reads none of the</span>
-<span class="sd">        network fields and still returns a plausible number.</span>
+<span class="sd">        route counts as a declaration. Such an output is extracted at every</span>
+<span class="sd">        trial and can enter no cost, whatever block one adds: the calibration</span>
+<span class="sd">        runs, returns a plausible number, and the constraint the file meant to</span>
+<span class="sd">        apply is absent from it. A network output alone among series metrics is</span>
+<span class="sd">        the case that made it visible -- it falls through to the single-metric</span>
+<span class="sd">        head route, which reads none of its fields -- and the verdict comes from</span>
+<span class="sd">        the criteria rather than from its support being named here.</span>
+
+<span class="sd">        An output some declared criterion could read but that no block happens</span>
+<span class="sd">        to name is left alone. It is a narrower waste and a different fix: a</span>
+<span class="sd">        phase of a staged run inherits the outputs of the whole file and scores</span>
+<span class="sd">        the blocks of its own stage, so that shape is built by this package.</span>
 <span class="sd">        """</span>
-        <span class="n">network_outputs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">support</span> <span class="o">==</span> <span class="s2">"network"</span>
-        <span class="p">}</span>
-        <span class="n">distance_metrics</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"distance_gap"</span><span class="p">,</span> <span class="s2">"distance_mean"</span><span class="p">)</span>
-        <span class="n">scored</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distance_metrics</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria</span><span class="w"> </span><span class="kn">import</span> <span class="n">available_criteria</span><span class="p">,</span> <span class="n">criterion_for</span>
+
+        <span class="c1"># With no block, the head route scores (objective, variable): that</span>
+        <span class="c1"># criterion is the only one in play, and it is the route a lone network</span>
+        <span class="c1"># output falls through while reading none of its fields.</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)]</span>
+        <span class="n">readable</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">declared</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">readable</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">criterion_for</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span><span class="o">.</span><span class="n">requirements</span><span class="p">()</span><span class="o">.</span><span class="n">reads_supports</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">without</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">uses_outputs</span><span class="p">)</span> <span class="o">-</span> <span class="n">network_outputs</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">without</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"block </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> scores </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> on </span><span class="si">{</span><span class="n">without</span><span class="si">}</span><span class="s2">, which "</span>
-                    <span class="s2">"is not a network output. That metric reads the pair (D_so, D_os) "</span>
-                    <span class="s2">"only a network output produces."</span>
-                <span class="p">)</span>
-            <span class="n">scored</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">uses_outputs</span><span class="p">)</span>
-        <span class="n">unpaired</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">network_outputs</span> <span class="o">-</span> <span class="n">scored</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">unpaired</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"the network output(s) </span><span class="si">{</span><span class="n">unpaired</span><span class="si">}</span><span class="s2"> produce the pair (D_so, D_os), which "</span>
-                <span class="s2">"only the metrics 'distance_gap' and 'distance_mean' can read; no block "</span>
-                <span class="s2">"declares either on them. Left unscored they are silently ignored and "</span>
-                <span class="s2">"the calibration falls back to its single metric."</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">readable</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">stranded</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">support</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">support</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">readable</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stranded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">wanted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">criterion</span>
+                <span class="k">for</span> <span class="n">criterion</span> <span class="ow">in</span> <span class="n">available_criteria</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">criterion_for</span><span class="p">(</span><span class="n">criterion</span><span class="p">)</span><span class="o">.</span><span class="n">requirements</span><span class="p">()</span><span class="o">.</span><span class="n">reads_supports</span><span class="p">)</span>
+                <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">stranded</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">listed</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (support </span><span class="si">{</span><span class="n">support</span><span class="si">!r}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">support</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">stranded</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"the output(s) </span><span class="si">{</span><span class="n">listed</span><span class="si">}</span><span class="s2"> can be read by none of the criteria this calibration "</span>
+            <span class="sa">f</span><span class="s2">"declares, which score </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">readable</span><span class="p">)</span><span class="si">}</span><span class="s2">. They are computed at every trial "</span>
+            <span class="sa">f</span><span class="s2">"and weigh nothing. Declare a block on them with one of: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_uses_outputs_reference_declared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>

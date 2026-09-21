@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="The simulation pipeline rebuilds its in-memory state exclusively from durable artefacts and the TOML config. There is no pickle layer, no CheckpointStore, and no signed-blob deserialisation. Resume..." name="description"/>
-<meta content="2026-06-07T11:57:43+02:00" property="article:modified_time"/>
+<meta content="2026-09-18T22:42:15+02:00" property="article:modified_time"/>
 <title>Pipeline resume from artefacts — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Jun 07, 2026" name="docbuild:last-update"/>
+<meta content="Sep 18, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -385,6 +385,7 @@
 <li class="toctree-l2"><a class="reference internal" href="packages/reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/workflow.html">workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/project.html">project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="packages/examples.html">examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/validity_frame.html">validity_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/schema.html">schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="packages/cli.html">cli</a></li>
@@ -539,26 +540,52 @@ so a stale journal from a reused <code class="docutils literal notranslate"><spa
 </section>
 <section id="step-contract-recap">
 <h2>Step contract recap<a class="headerlink" href="#step-contract-recap" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Step</span><span class="p">(</span><span class="n">Protocol</span><span class="p">[</span><span class="n">TIn</span><span class="p">,</span> <span class="n">TOut</span><span class="p">]):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Step</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a>
+    <span class="n">reads</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+    <span class="n">writes</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_in</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">[</span><span class="n">TIn</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">[</span><span class="n">TOut</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_in</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">:</span> <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_out</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">[</span><span class="n">TOut</span><span class="p">])</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_out</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Workspace-relative paths of durable outputs. Empty tuple = in-memory."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">rebuild_state</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">prior_state</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">[</span><span class="n">TIn</span><span class="p">],</span>
+        <span class="n">prior_state</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">,</span>
         <span class="n">workspace</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
         <span class="n">run_id</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">[</span><span class="n">TOut</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Restore the output state from disk. Must not re-run the heavy op."""</span>
 </pre></div>
 </div>
 <p>In-memory steps (no <code class="docutils literal notranslate"><span class="pre">artifacts</span></code>) are simply re-executed at resume:
 they must stay idempotent and fast.</p>
+</section>
+<section id="surviving-a-process-death">
+<h2>Surviving a process death<a class="headerlink" href="#surviving-a-process-death" title="Link to this heading">#</a></h2>
+<p>A resume exists for the deaths that run no handler: a lost machine, the
+OOM killer, a cancelled job. Nothing is flushed on the way out, so what
+the next process can do is decided entirely by what the disk already
+holds.</p>
+<p>Two consequences follow, and both are gated by
+<code class="docutils literal notranslate"><span class="pre">tests/e2e/test_resume_through_a_process_death.py</span></code>, which kills its own
+child with <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code> twice.</p>
+<ul class="simple">
+<li><p>The step that was running when the process died keeps the status
+<code class="docutils literal notranslate"><span class="pre">running</span></code>, not <code class="docutils literal notranslate"><span class="pre">failed</span></code>. <code class="docutils literal notranslate"><span class="pre">failed</span></code> is what an exception writes.
+<code class="docutils literal notranslate"><span class="pre">ResumePlanner</span></code> restarts at that step either way.</p></li>
+<li><p>The project index has to be openable afterwards. DuckDB commits into
+<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb.wal</span></code> and only folds it into the database file at a
+clean close, and a journal carrying schema DDL is not replayable: the
+replay runs inside <code class="docutils literal notranslate"><span class="pre">duckdb.connect</span></code>, so a poisoned journal locks
+every reader out, <code class="docutils literal notranslate"><span class="pre">hmp</span></code> and the DuckDB CLI alike. The migration
+runner therefore checkpoints after each applied migration
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/migrations/runner.py</span></code>), which leaves the journal
+holding plain row changes. Those replay, and
+<code class="docutils literal notranslate"><span class="pre">connect_with_retry</span></code> checkpoints them back at the next open.</p></li>
+</ul>
 </section>
 </section>
 </article>
@@ -593,6 +620,7 @@ they must stay idempotent and fast.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-phase-execution">Two-phase execution</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resume-integrity">Resume integrity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-contract-recap">Step contract recap</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surviving-a-process-death">Surviving a process death</a></li>
 </ul>
 </nav></div>
 </div></div>

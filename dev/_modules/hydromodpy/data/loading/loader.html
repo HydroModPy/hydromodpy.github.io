@@ -579,9 +579,13 @@
 <span></span><span class="sd">"""Runtime data loading orchestrator driven by a resolved data plan.</span>
 
 <span class="sd">This module centralizes launcher data-phase loading logic so that the launcher</span>
-<span class="sd">stays focused on orchestration order. It exposes :class:`DataManagersRuntimeLoader`</span>
-<span class="sd">for stateful orchestration and :func:`load_variable` as a thin pure helper for</span>
-<span class="sd">per-variable dispatch.</span>
+<span class="sd">stays focused on orchestration order. It exposes :class:`DataManagersRuntimeLoader`,</span>
+<span class="sd">and that is the whole surface: a second, module-level ``load_variable`` used to</span>
+<span class="sd">sit at the bottom as "a thin pure helper for per-variable dispatch", with no</span>
+<span class="sd">importer anywhere in the tree and its own divergent copy of the dem / geology /</span>
+<span class="sd">hydrography branch. It was the last caller that passed ``geographic`` to a</span>
+<span class="sd">raster manager without first filling ``mask_path`` in, and it went with that</span>
+<span class="sd">parameter rather than being repaired.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -754,9 +758,6 @@
             <span class="n">period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_period_for_spec</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_apply_default_masks</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
-            <span class="n">extra_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="n">variable</span> <span class="o">==</span> <span class="s2">"oceanic"</span><span class="p">:</span>
-                <span class="n">extra_kwargs</span><span class="p">[</span><span class="s2">"geographic"</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span>
             <span class="n">export_dir</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">export_stable_subdir</span><span class="p">:</span>
                 <span class="n">workspace_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workspace_paths</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -770,7 +771,6 @@
                 <span class="n">project_period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
                 <span class="n">project_extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">export_dir</span><span class="o">=</span><span class="n">export_dir</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">extra_kwargs</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">loaded_data</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">load_result</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -778,14 +778,28 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_default_masks</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">WorkflowContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fill every ``mask_path`` the model declares from the delineated watershed.</span>
+
+<span class="sd">        A section declares one when the extent is a property of the request and</span>
+<span class="sd">        not of a source -- hydrography concatenates its sources before clipping</span>
+<span class="sd">        once. Everything else declares it per source.</span>
+<span class="sd">        """</span>
         <span class="n">geographic</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span>
         <span class="k">if</span> <span class="n">geographic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
+        <span class="n">watershed_shp</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geographic</span><span class="p">,</span> <span class="s2">"watershed_shp"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">watershed_shp</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">watershed</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">watershed_shp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"mask_path"</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cfg</span><span class="p">),</span> <span class="s2">"model_fields"</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span> <span class="s2">"mask_path"</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="n">watershed</span>
         <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">"sources"</span><span class="p">,</span> <span class="p">()):</span>
             <span class="k">if</span> <span class="s2">"mask_path"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">src</span><span class="p">),</span> <span class="s2">"model_fields"</span><span class="p">,</span> <span class="p">{}):</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s2">"mask_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-                <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">geographic</span><span class="o">.</span><span class="n">watershed_shp</span><span class="p">)</span>
+                <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="n">watershed</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_period_for_spec</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -836,7 +850,6 @@
 
             <span class="n">result</span><span class="o">.</span><span class="n">loaded_data</span><span class="o">.</span><span class="n">dem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_store</span><span class="p">()</span><span class="o">.</span><span class="n">load_dem</span><span class="p">(</span>
                 <span class="n">dem_cfg</span><span class="p">,</span>
-                <span class="n">geographic</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span><span class="p">,</span>
                 <span class="n">project_extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -867,7 +880,6 @@
 
             <span class="n">load_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_store</span><span class="p">()</span><span class="o">.</span><span class="n">load_geology</span><span class="p">(</span>
                 <span class="n">geology_cfg</span><span class="p">,</span>
-                <span class="n">geographic</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span><span class="p">,</span>
                 <span class="n">project_extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -999,11 +1011,15 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">hydro_cfg</span> <span class="o">=</span> <span class="n">HydrographyConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">raw_section</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_default_masks</span><span class="p">(</span><span class="n">hydro_cfg</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
             <span class="n">workspace_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workspace_paths</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="n">geographic</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span>
             <span class="n">result</span><span class="o">.</span><span class="n">loaded_data</span><span class="o">.</span><span class="n">hydrography</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_store</span><span class="p">()</span><span class="o">.</span><span class="n">load_hydrography</span><span class="p">(</span>
                 <span class="n">hydro_cfg</span><span class="p">,</span>
-                <span class="n">geographic</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span><span class="p">,</span>
                 <span class="n">out_path</span><span class="o">=</span><span class="n">workspace_paths</span><span class="o">.</span><span class="n">project_root</span><span class="p">,</span>
+                <span class="n">base_raster</span><span class="o">=</span><span class="p">(</span>
+                    <span class="kc">None</span> <span class="k">if</span> <span class="n">geographic</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geographic</span><span class="p">,</span> <span class="s2">"watershed_dem"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="p">),</span>
                 <span class="n">stable_folder</span><span class="o">=</span><span class="n">workspace_paths</span><span class="o">.</span><span class="n">project_root</span> <span class="o">/</span> <span class="n">PREPROCESSING_DIR</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -1127,44 +1143,6 @@
             <span class="k">return</span> <span class="n">out</span>
         <span class="k">return</span> <span class="p">[]</span></div>
 
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">load_variable</span><span class="p">(</span>
-    <span class="n">variable_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">catalog</span><span class="p">:</span> <span class="n">DataCatalogDuckDB</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">context</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Load one resolved variable config through DataStore."""</span>
-    <span class="n">spec</span> <span class="o">=</span> <span class="n">VARIABLE_SPECS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown variable: </span><span class="si">{</span><span class="n">variable_name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-
-    <span class="n">workspace_paths</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">workspace</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">"setup"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"workspace"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">workspace</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">workspace</span><span class="p">,</span> <span class="s2">"paths"</span><span class="p">):</span>
-        <span class="n">workspace_paths</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">paths</span>
-    <span class="n">data_root</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">workspace_paths</span><span class="p">,</span> <span class="s2">"data_dir"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">store</span> <span class="o">=</span> <span class="n">DataStore</span><span class="p">(</span><span class="n">catalog</span><span class="o">=</span><span class="n">catalog</span><span class="p">,</span> <span class="n">data_root</span><span class="o">=</span><span class="n">data_root</span><span class="p">)</span>
-
-    <span class="n">geographic</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">"setup"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"geographic"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">variable_name</span> <span class="o">==</span> <span class="s2">"dem"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">load_dem</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">geographic</span><span class="o">=</span><span class="n">geographic</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">variable_name</span> <span class="o">==</span> <span class="s2">"geology"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">load_geology</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">geographic</span><span class="o">=</span><span class="n">geographic</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">variable_name</span> <span class="o">==</span> <span class="s2">"hydrography"</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">workspace_paths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Hydrography loading requires workspace paths."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">load_hydrography</span><span class="p">(</span>
-            <span class="n">config</span><span class="p">,</span>
-            <span class="n">geographic</span><span class="o">=</span><span class="n">geographic</span><span class="p">,</span>
-            <span class="n">out_path</span><span class="o">=</span><span class="n">workspace_paths</span><span class="o">.</span><span class="n">project_root</span><span class="p">,</span>
-            <span class="n">stable_folder</span><span class="o">=</span><span class="n">workspace_paths</span><span class="o">.</span><span class="n">project_root</span> <span class="o">/</span> <span class="n">PREPROCESSING_DIR</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">variable_name</span> <span class="o">==</span> <span class="s2">"oceanic"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">load_oceanic</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">geographic</span><span class="o">=</span><span class="n">geographic</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">store</span><span class="o">.</span><span class="n">load_variable</span><span class="p">(</span><span class="n">variable_name</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
 
                 </article>
