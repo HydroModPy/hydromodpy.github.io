@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="A transient run needs a representative antecedent state: the value of every variable that persists between stress periods at the start of the simulation. For a flow model that is the hydraulic head..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
-    <title>Initialization and spin-up &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <meta property="article:modified_time" content="2026-09-28T08:00:17+02:00" />
+    <title>Initialization and spin-up &#8212; HydroModPy 2.0.0a2 documentation</title>
   
   
   
@@ -60,7 +60,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../_static/documentation_options.js?v=1ba6305b"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 28, 2026"/>
   
     
     <script src="../_static/searchtools.js"></script>
@@ -165,8 +165,8 @@
       
     
     
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a2 documentation - Home"/>
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a2 documentation - Home"/>
   
   
 </a></div>
@@ -560,7 +560,7 @@
 <li class="toctree-l2"><a class="reference internal" href="config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_reference/display.html">[display] DisplayConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config_reference/export.html">[export] ExportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_reference/export.html">[export] ExportRequest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_reference/observation.html">[observation] ObservationConfig</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
@@ -740,16 +740,18 @@ window from the objective (next section).</p>
 </section>
 <section id="burn-in-excluded-from-calibration">
 <h2>Burn-in excluded from calibration<a class="headerlink" href="#burn-in-excluded-from-calibration" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">[calibration]</span> <span class="pre">warmup_periods</span> <span class="pre">=</span> <span class="pre">N</span></code> (see
-<a class="reference internal" href="config_reference/calibration.html"><span class="doc">[calibration] CalibrationConfig</span></a>) drops the first <code class="docutils literal notranslate"><span class="pre">N</span></code> periods of every
-observed and simulated series before the objective metric is computed. The
-window where the state still depends on the initial condition then does not
-enter the calibration. The default is <code class="docutils literal notranslate"><span class="pre">0</span></code> (no exclusion).</p>
-<p>Size <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code> by <strong>initial-condition insensitivity</strong>: increase it until
-the objective stops changing. The correct length is the point past which the
-metric no longer depends on how the run was started, not a fixed guess.</p>
-<p>The exclusion is applied per output, so a multi-output objective block drops the
-first <code class="docutils literal notranslate"><span class="pre">N</span></code> periods of each series independently.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[calibration.scoring_window]</span> <span class="pre">start</span> <span class="pre">=</span> <span class="pre">&quot;&lt;date&gt;&quot;</span></code> (see
+<a class="reference internal" href="config_reference/calibration.html"><span class="doc">[calibration] CalibrationConfig</span></a>) is the first date scored: every
+series keeps only its stamps from that date on, and a network output read in one
+state has to be dated inside the window. The stretch where the state still
+depends on the initial condition then does not enter the calibration. A phase
+writes its own <code class="docutils literal notranslate"><span class="pre">[calibration.phases.scoring_window]</span></code>, which replaces the
+section’s. Unset, nothing is excluded.</p>
+<p>Place <code class="docutils literal notranslate"><span class="pre">start</span></code> by <strong>initial-condition insensitivity</strong>: move it later until the
+objective stops changing. The correct date is the point past which the metric no
+longer depends on how the run was started, not a fixed guess. A date names the
+same span at any time step. <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code>, a count of samples whose span
+follows the step, still loads for older files.</p>
 </section>
 <section id="adaptive-time-stepping">
 <h2>Adaptive time stepping<a class="headerlink" href="#adaptive-time-stepping" title="Link to this heading">#</a></h2>
@@ -782,10 +784,10 @@ wet is the robust choice for an unconfined model. There is no need to change it.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Flow only, insensitive to the start</p></td>
-<td><p>Steady warm-up (default); <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code> optional.</p></td>
+<td><p>Steady warm-up (default); <code class="docutils literal notranslate"><span class="pre">scoring_window.start</span></code> optional.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Long chronicle, calibrated</p></td>
-<td><p>Steady warm-up plus a <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code> sized by initial-condition
+<td><p>Steady warm-up plus a <code class="docutils literal notranslate"><span class="pre">scoring_window.start</span></code> placed by initial-condition
 insensitivity.</p></td>
 </tr>
 <tr class="row-even"><td><p>Reservoir with a fluctuating pool</p></td>

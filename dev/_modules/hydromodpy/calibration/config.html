@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hydromodpy.calibration.config &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <title>hydromodpy.calibration.config &#8212; HydroModPy 2.0.0a2 documentation</title>
   
   
   
@@ -49,7 +49,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../../_static/documentation_options.js?v=1ba6305b"></script>
     <script src="../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -151,8 +151,8 @@
       
     
     
-    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a2 documentation - Home"/>
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a2 documentation - Home"/>
   
   
 </a></div>
@@ -623,11 +623,19 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">TypeAdapter</span><span class="p">,</span> <span class="n">ValidationError</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AfterValidator</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">,</span>
+    <span class="n">TypeAdapter</span><span class="p">,</span>
+    <span class="n">ValidationError</span><span class="p">,</span>
+    <span class="n">field_validator</span><span class="p">,</span>
+    <span class="n">model_validator</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">HydroModelBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.persistence</span><span class="w"> </span><span class="kn">import</span> <span class="n">PersistenceConfig</span>
@@ -642,6 +650,7 @@
     <span class="n">STREAM_CRITERION_DEFAULTS</span><span class="p">,</span>
     <span class="n">ObservedRasterization</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.stream_extent</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_VISIBLE_FLOW</span><span class="p">,</span> <span class="n">parse_visible_flow</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Length</span>
 
 <span class="n">SaveRunsMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"best_n"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">]</span>
@@ -673,6 +682,38 @@
 <span class="n">OutputTime</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"all"</span><span class="p">,</span> <span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_a_window_of_dates</span><span class="p">(</span><span class="n">window</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Read a ``{start, end}`` table as a :class:`CalibScoringWindow`.</span>
+
+<span class="sd">    The value stays a table: the protocol copies it into the phase it writes,</span>
+<span class="sd">    and its record prints it. Reading it here makes a bad date fail when the</span>
+<span class="sd">    file is loaded, not when the stage it bounds starts.</span>
+<span class="sd">    """</span>
+    <span class="n">CalibScoringWindow</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_a_steady_span</span><span class="p">(</span><span class="n">window</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Read a steady span, which needs both of its bounds."""</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"start"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">window</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"steady_window needs both 'start' and 'end'; missing </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_a_window_of_dates</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+
+
+<span class="n">ProtocolScoringWindow</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
+    <span class="nb">dict</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"start"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="n">AfterValidator</span><span class="p">(</span><span class="n">_a_window_of_dates</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="sd">"""A ``{start, end}`` table of ISO dates, either bound optional."""</span>
+
+<span class="n">ProtocolSteadySpan</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
+    <span class="nb">dict</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"start"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="n">AfterValidator</span><span class="p">(</span><span class="n">_a_steady_span</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="sd">"""A ``{start, end}`` table of ISO dates, both bounds required."""</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">MatchingHydrographicNetworkOptions</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""What a file may say about the protocol beyond naming it.</span>
 
@@ -681,6 +722,11 @@
 <span class="sd">    engines are free: the method is the pair of criteria and the order they run</span>
 <span class="sd">    in, not the optimizer that walks them.</span>
 <span class="sd">    """</span>
+
+    <span class="n">model_legacy_keys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"steady_engine_options"</span><span class="p">:</span> <span class="s2">"steady_method_options"</span><span class="p">,</span>
+        <span class="s2">"transient_engine_options"</span><span class="p">:</span> <span class="s2">"transient_method_options"</span><span class="p">,</span>
+    <span class="p">}</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"matching_hydrographic_network"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Protocol identifier."</span><span class="p">,</span>
@@ -738,19 +784,19 @@
         <span class="s2">"per cent. Unset takes the engine's default, which for the bisection is that "</span>
         <span class="s2">"same one per cent."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">steady_engine_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">steady_method_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-one engine itself, named as that engine "</span>
-        <span class="s2">"names them. Which ones exist depends on steady_method, and the model of "</span>
-        <span class="s2">"each engine is in calibration.optim.method_config. A key the engine does not "</span>
-        <span class="s2">"know is refused before the first solver call. The escape hatch for "</span>
-        <span class="s2">"reproducing a published call; a "</span>
-        <span class="s2">"precision is said once, in steady_tolerance."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-one method, named as that method names "</span>
+        <span class="s2">"them: for the bisection, sweep_points, bracket_expand, rel_tol and "</span>
+        <span class="s2">"signed_component. Which ones exist depends on steady_method; a key the "</span>
+        <span class="s2">"method does not know is refused when the file loads. Used to reproduce a "</span>
+        <span class="s2">"published call; a precision is said once, in steady_tolerance."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">steady_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">steady_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">ProtocolSteadySpan</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates the steady stage averages, as {start, end}. Unset takes the "</span>
-        <span class="s2">"whole [simulation.time] window."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates the steady stage averages, as {start, end}, both ISO 8601 "</span>
+        <span class="s2">"and both required. A date that does not parse is refused when the file is "</span>
+        <span class="s2">"read. Unset takes the whole [simulation.time] window."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">transient_metric</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"nse_log"</span><span class="p">,</span>
@@ -774,11 +820,11 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"How precisely stage two has to pin the storage before it stops, "</span>
         <span class="s2">"as a relative precision on the storage coefficient."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">transient_engine_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">transient_method_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-two engine itself, named as that engine "</span>
-        <span class="s2">"names them, and refused when it does not know them. Which ones exist depends "</span>
-        <span class="s2">"on transient_method."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-two method, named as that method names "</span>
+        <span class="s2">"them, and refused when the file loads if it does not know them. Which ones "</span>
+        <span class="s2">"exist depends on transient_method."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">discharge_variable</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"discharge"</span><span class="p">,</span>
@@ -788,10 +834,15 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Gauge whose cost drives stage two. Required when several stations are loaded."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">ProtocolScoringWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates bounding the samples stage two scores on, as {start, end}. "</span>
-        <span class="s2">"Use it to drop the spin-up year the transient stage still has to simulate."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates bounding the samples stage two scores on, as {start, end} in "</span>
+        <span class="s2">"ISO 8601, either one optional, for every block it scores, a network one "</span>
+        <span class="s2">"included. A date that does not parse is refused when the file is read. Unset, "</span>
+        <span class="s2">"and with no scoring_window on [calibration], stage two scores from one year "</span>
+        <span class="s2">"after [simulation.time].start_datetime: the first year is spin-up. A run of "</span>
+        <span class="s2">"one year or less is scored whole. Write start = the run's own start to score "</span>
+        <span class="s2">"the spin-up year too."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
@@ -801,6 +852,48 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">data</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_each_stage_method_takes_its_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatchingHydrographicNetworkOptions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a stage option its method does not take, under the key the file wrote.</span>
+
+<span class="sd">        The phase the protocol writes would refuse it too, but under the name of</span>
+<span class="sd">        a phase the file never wrote.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"steady"</span><span class="p">,</span> <span class="s2">"transient"</span><span class="p">):</span>
+            <span class="n">_check_the_method_takes_its_options</span><span class="p">(</span>
+                <span class="s2">"[calibration.protocol]"</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method"</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method_options"</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method_options"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">stage_options_run_as_their_method_does</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the stage options written to what their method runs anyway.</span>
+
+<span class="sd">        The recipe leaves a stage's method options and its precision to the</span>
+<span class="sd">        method. ``steady_method_options = {sweep_points = 7}`` or</span>
+<span class="sd">        ``steady_tolerance = 0.01`` beside a bisection, whose defaults are seven</span>
+<span class="sd">        points and one per cent, restate the recipe and do not move off it.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.method_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">default_relative_precision</span><span class="p">,</span>
+            <span class="n">method_options_are_its_defaults</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">same</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"steady"</span><span class="p">,</span> <span class="s2">"transient"</span><span class="p">):</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method"</span><span class="p">))</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method_options"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">method_options_are_its_defaults</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+                <span class="n">same</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_method_options"</span><span class="p">)</span>
+            <span class="n">precision</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_tolerance"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">default_relative_precision</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">precision</span>
+            <span class="p">):</span>
+                <span class="n">same</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">_tolerance"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">same</span><span class="p">)</span>
 
 
 <span class="n">CalibrationProtocolDecl</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">MatchingHydrographicNetworkOptions</span>
@@ -943,11 +1036,14 @@
     <span class="p">)</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"X coordinate. Accepts a bare number (metres) or a pint string like '100 m'."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"X coordinate. Accepts a bare number (metres) or a pint string like "</span>
+        <span class="s2">"'100 m'. Beside 'observes' it is not read, and loading warns so, unless "</span>
+        <span class="s2">"snap_radius is set and the station's record carries no coordinate."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Y coordinate. Accepts a bare number (metres) or a pint string like '100 m'."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Y coordinate. Accepts a bare number (metres) or a pint string like "</span>
+        <span class="s2">"'100 m'. Beside 'observes' it is not read, as for 'x'."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OutputTime</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span>
@@ -994,7 +1090,33 @@
                 <span class="s2">"'observes' names a station: its own record locates the point instead."</span>
             <span class="p">)</span>
         <span class="n">_check_snap_radius</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snap_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="s2">"point"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warn_about_a_position_nobody_reads</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warn_about_a_position_nobody_reads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Warn when x, y or geometry sit beside 'observes' and nothing reads them.</span>
+
+<span class="sd">        A station named in 'observes' is located by its own record, so a</span>
+<span class="sd">        position written beside it is ignored. Only a snap reads it, and only</span>
+<span class="sd">        when the record carries no coordinate of its own. A warning and not a</span>
+<span class="sd">        refusal: files written before this check still load.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">observes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">snap_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">written</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"geometry"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">written</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"an output observes station </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">observes</span><span class="si">!r}</span><span class="s2"> and also writes "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="si">}</span><span class="s2">. The station's own record locates it, so "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'they are'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'it is'</span><span class="si">}</span><span class="s2"> not read. Drop "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'them'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">written</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'it'</span><span class="si">}</span><span class="s2">, or set snap_radius, the one "</span>
+            <span class="s2">"option that falls back on a written position."</span><span class="p">,</span>
+            <span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibOutputBoundary</span><span class="p">(</span><span class="n">ScoresAnObservedRecord</span><span class="p">,</span> <span class="n">HydroModelBase</span><span class="p">):</span>
@@ -1150,6 +1272,100 @@
     <span class="p">)</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">CalibNetworkBoundWeights</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""How the two bounds of a network output share one calibrated value.</span>
+
+<span class="sd">    A root search closes one root per bound and returns the weighted geometric</span>
+<span class="sd">    mean, ``log K = minimal * log K*_minimal + maximal * log K*_maximal``. A</span>
+<span class="sd">    minimiser has no root to combine and minimises</span>
+<span class="sd">    ``minimal * |J_minimal| + maximal * |J_maximal|`` instead, which tends to</span>
+<span class="sd">    land on one of the two roots rather than between them.</span>
+<span class="sd">    """</span>
+
+    <span class="n">minimal</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Weight of the minimal (permanent) bound. 1 with maximal = 0 "</span>
+        <span class="s2">"calibrates on the permanent map alone, the practice of Abherve et al. (2025)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">maximal</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Weight of the maximal (complete) bound."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sum_to_one</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibNetworkBoundWeights</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse weights that do not sum to one: they interpolate between two roots."""</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimal</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maximal</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the bound weights sum to </span><span class="si">{</span><span class="n">total</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> (minimal = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minimal</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">, maximal = "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maximal</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">). They place the returned value between the two roots in "</span>
+                <span class="s2">"log space, so they must sum to one."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CalibNetworkExtent</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The transient two-bound mode of a network output.</span>
+
+<span class="sd">    Declared, the output stops reading one state. For every complete calendar</span>
+<span class="sd">    year of the run, the maximal simulated mask holds the cells flowing at</span>
+<span class="sd">    least ``maximal_flowing_steps`` timesteps, and the minimal one the cells</span>
+<span class="sd">    flowing at every timestep but at most ``minimal_dry_steps``. A cell enters</span>
+<span class="sd">    the mask scored when it meets the rule in at least ``year_quorum`` of the</span>
+<span class="sd">    scored years. Each bound is scored once by the distance criterion: the</span>
+<span class="sd">    maximal mask against the maximal map, the minimal mask against the minimal</span>
+<span class="sd">    map when one is declared. Durations count timesteps, not days.</span>
+<span class="sd">    """</span>
+
+    <span class="n">maximal_flowing_steps</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Timesteps a cell has to flow in a year to enter the maximal mask. "</span>
+        <span class="s2">"At most the timestep count of the shortest complete year, checked on the run."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">minimal_dry_steps</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Timesteps a cell may be dry in a year and stay in the minimal mask. "</span>
+        <span class="s2">"The year's timestep count minus this has to stay at least "</span>
+        <span class="s2">"maximal_flowing_steps, checked on the run, so the minimal mask sits inside the "</span>
+        <span class="s2">"maximal one."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">year_quorum</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Share of the scored years in which a cell has to meet a bound's rule "</span>
+        <span class="s2">"to enter it: ceil(year_quorum * n_years) years. Warned under three scored years, "</span>
+        <span class="s2">"where one half is a union of two."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">visible_flow</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_VISIBLE_FLOW</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Routed discharge a cell of the downstream closure has to carry to "</span>
+        <span class="s2">"flow: a discharge with its unit ('1 L/s') or a share of the outlet discharge at "</span>
+        <span class="s2">"the same timestep ('1%'). '0 L/s' is the geometric definition. Never scaled with "</span>
+        <span class="s2">"the cell size. No value is agreed: Zanetti et al. (2024) threshold a simulated "</span>
+        <span class="s2">"discharge at 10 L/s, field zero-flow thresholds of 1 to 3 L/s are in use."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">weights</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibNetworkBoundWeights</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">CalibNetworkBoundWeights</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Share of each bound in the value returned when both maps are "</span>
+        <span class="s2">"declared. Only the maximal bound is scored without a minimal map."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"visible_flow"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_readable_visible_flow</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a threshold the criterion could not read at the first trial."""</span>
+        <span class="n">parse_visible_flow</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibOutputNetwork</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The mapped stream network as a calibration target.</span>
 
@@ -1170,6 +1386,12 @@
 <span class="sd">    fitted to a record. The mapped network enters as a geometry, not as a</span>
 <span class="sd">    series, and exactly one of ``observed_network`` and</span>
 <span class="sd">    ``stream_geometry_path`` names where it comes from.</span>
+
+<span class="sd">    That map is the maximal one, every mapped reach. A minimal map, the</span>
+<span class="sd">    permanent reaches, may be declared beside it. In one state the state is</span>
+<span class="sd">    then scored on the minimal map and the maximal map is a validation. With</span>
+<span class="sd">    ``extent``, a transient run is scored on two bounds, the yearly maximal</span>
+<span class="sd">    mask against the maximal map and the minimal mask against the minimal map.</span>
 <span class="sd">    """</span>
 
     <span class="n">variable</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1209,6 +1431,43 @@
         <span class="s2">"one the hydrography data family loaded. The way out of 'observed_network' "</span>
         <span class="s2">"when neither of its two sources is the one you want scored."</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">minimal_stream_geometry_path</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Vector file holding the minimal map: the permanent network, which "</span>
+        <span class="s2">"the map named by 'observed_network' or 'stream_geometry_path' (the maximal map, "</span>
+        <span class="s2">"every mapped reach) contains. Read as it is, never filtered by attribute. The "</span>
+        <span class="s2">"maximal map scored is the union of the two, and the share of the minimal map "</span>
+        <span class="s2">"outside the maximal one is published. In one state, the state is compared to "</span>
+        <span class="s2">"this map and the maximal map is scored beside it as a validation outside the "</span>
+        <span class="s2">"cost, as Abherve et al. (2025) do; with 'extent', it is the minimal bound. At "</span>
+        <span class="s2">"most one of this and 'minimal_observed_network'."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">minimal_observed_network</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"data.hydrography"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Where the minimal map comes from when it is not an explicit file. "</span>
+        <span class="s2">"'data.hydrography' reads the permanent reaches the hydrography data family "</span>
+        <span class="s2">"wrote beside its network, which it does only when its source says which "</span>
+        <span class="s2">"reaches flow all year. Same role as 'minimal_stream_geometry_path'; at most "</span>
+        <span class="s2">"one of the two."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_minimal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether a minimal (permanent) map is declared, by either route."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimal_stream_geometry_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minimal_observed_network</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_one_minimal_map_at_most</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputNetwork</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse two sources for the minimal map: one would be scored, the other named."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimal_stream_geometry_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimal_observed_network</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"calibration output declares both 'minimal_observed_network' "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minimal_observed_network</span><span class="si">!r}</span><span class="s2">) and 'minimal_stream_geometry_path' "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minimal_stream_geometry_path</span><span class="si">!r}</span><span class="s2">). Declare at most one."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_observed_network_source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputNetwork</span><span class="p">:</span>
@@ -1281,26 +1540,47 @@
     <span class="p">)</span>
     <span class="n">observed_position_accuracy</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Positional accuracy of the mapped network. The validity ratio is "</span>
-        <span class="s2">"normalised by max(cell size, this), because the error floor is set by the "</span>
-        <span class="s2">"network's own precision and not by the model resolution. Unset is the "</span>
-        <span class="s2">"literal reading of the paper."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Positional accuracy of the mapped network. It enters the automatic "</span>
+        <span class="s2">"validity length only: the cell size h there is max(h_obs, this), because a map "</span>
+        <span class="s2">"is not placed better when the mesh is refined. roptim stays Doptim / h_obs, the "</span>
+        <span class="s2">"paper's Eq. 3. Unset is the literal reading of the paper."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">roptim_max</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Validity bound of Eq. 4. It qualifies the result and never "</span>
-        <span class="s2">"penalises the cost: a bad ratio says the agreement is coarse, not that the "</span>
-        <span class="s2">"calibrated value should be discarded."</span><span class="p">,</span>
+    <span class="n">validity_length</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"auto"</span><span class="p">]</span> <span class="o">|</span> <span class="n">Length</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Validity bound of Eq. 4, a length: the calibration is valid when "</span>
+        <span class="s2">"Doptim &lt;= this. 'auto' is 2 h, the paper's two cells, where h is h_obs, the cell "</span>
+        <span class="s2">"size on the mapped network, raised to 'observed_position_accuracy' when one is "</span>
+        <span class="s2">"declared. With [geographic.snap_streams] in 'diagnose' or 'apply', it is "</span>
+        <span class="s2">"h + max(h, F), F the floor the snap measured: one cell for the hydrogeology, one "</span>
+        <span class="s2">"for the map error, replaced by F when F is larger. A length such as '150 m' is "</span>
+        <span class="s2">"used as it is. The bound qualifies the result and never penalises the cost."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">on_roptim_violation</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"warn"</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"warn"</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"What a violation of the validity bound does. The bound is read once, "</span>
-        <span class="s2">"on the trial the search returns, as the paper reads it at the optimum; every "</span>
-        <span class="s2">"trial still records 'roptim' and 'roptim_valid'. 'warn' logs it and returns the "</span>
-        <span class="s2">"value, because a calibration is asked for a number. 'error' raises after the "</span>
-        <span class="s2">"session is saved, so a staged calibration freezes nothing and runs no phase that "</span>
-        <span class="s2">"depends on this one."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"What a violation of Eq. 4 does: Doptim above 'validity_length', or, "</span>
+        <span class="s2">"with [geographic.snap_streams] mode = 'apply', a snap that moved the map further "</span>
+        <span class="s2">"than its displacement bound. The bound is read once, on the trial the search "</span>
+        <span class="s2">"returns, as the paper reads it at the optimum, and on each bound in the cost of "</span>
+        <span class="s2">"the two-bound mode; every trial still records 'roptim', 'roptim_valid' and "</span>
+        <span class="s2">"'validity_length_m'. 'warn' logs it and returns the value, because a calibration "</span>
+        <span class="s2">"is asked for a number. 'error' raises after the session is saved, so a staged "</span>
+        <span class="s2">"calibration freezes nothing and runs no phase that depends on this one."</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"validity_length"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_positive_validity_length</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a validity length that is zero or negative."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="n">magnitude</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"m"</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">magnitude</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"validity_length = </span><span class="si">{</span><span class="n">magnitude</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> m: a validity length is a positive "</span>
+                <span class="s2">"distance, or 'auto'."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
     <span class="n">max_unreachable_fraction</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
         <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
@@ -1342,40 +1622,84 @@
         <span class="s2">"catchment over ground that routes the same way leaves the two ratios equal, "</span>
         <span class="s2">"and reporting it there would be noise on every ordinary project."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">time</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"last"</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Which single state the release flux is read at: 'last' (default) "</span>
-        <span class="s2">"or 'first'. Phase one runs a single steady period, so 'last' is the whole "</span>
-        <span class="s2">"run. 'all' and a list of dates are refused: the network branch always keeps "</span>
-        <span class="s2">"one state (the last one it is served), so either would silently score that "</span>
-        <span class="s2">"state instead of the one named."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Which single state the release flux is read at: 'last' (default), "</span>
+        <span class="s2">"'first', or an ISO date such as '2002-10-15', which reads the state of the "</span>
+        <span class="s2">"period that holds it, [start, end). That state is dated at its period's end, "</span>
+        <span class="s2">"which is the date a scoring_window is compared with. A steady phase runs one "</span>
+        <span class="s2">"period over its window, so every date of that window reads its one state and "</span>
+        <span class="s2">"one output serves both regimes. 'all' and a list of dates are refused: a "</span>
+        <span class="s2">"network output reads one state."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_single_state</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Refuse a selector that reads more than the one declared state.</span>
+<span class="w">        </span><span class="sd">"""Refuse a selector that reads more than one state, and read a date.</span>
 
-<span class="sd">        ``build_simulated_network`` (``hydromodpy/core/stream_network.py``) always</span>
-<span class="sd">        keeps the last row of whatever stack it is served. Requesting 'last' or</span>
-<span class="sd">        'first' serves it exactly one row, so both are read correctly. Requesting</span>
-<span class="sd">        'all' or a list of dates serves it the whole stack, still scored at the</span>
-<span class="sd">        last row: the network would be scored at a state other than the one the</span>
-<span class="sd">        file names, without warning.</span>
+<span class="sd">        The extraction serves ``build_simulated_network``</span>
+<span class="sd">        (``hydromodpy/core/stream_network.py``) the one row this names, so 'last',</span>
+<span class="sd">        'first' and a date are each scored at the state the file names. 'all' or</span>
+<span class="sd">        a list would name several states for one mask.</span>
 
-<span class="sd">        Runs before the field's own type check so this message, not the generic</span>
-<span class="sd">        "not a valid enumeration member" one, is what a 'all' or a list of dates</span>
-<span class="sd">        gets. The type itself is narrowed to ``Literal["last", "first"]`` so the</span>
-<span class="sd">        generated schema and OpenAPI export never advertise the values refused here.</span>
+<span class="sd">        Runs before the field's own type check so this message, not a generic</span>
+<span class="sd">        type error, is what 'all' or a list of dates gets. A TOML date written</span>
+<span class="sd">        bare reads as a date and is kept as its ISO spelling.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">"all"</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"calibration output for the stream network has time=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">: a "</span>
-                <span class="s2">"network output reads exactly one state, 'last' or 'first'. A "</span>
-                <span class="s2">"transient comparison of the minimal and maximal extents is a "</span>
-                <span class="s2">"separate mode being designed, not this field."</span>
+                <span class="s2">"network output reads exactly one state, 'last', 'first' or one date. A "</span>
+                <span class="s2">"transient comparison of the minimal and maximal extents is the "</span>
+                <span class="s2">"'extent' table of the output, not this field."</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"calibration output for the stream network has time=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">: write "</span>
+                    <span class="s2">"'last', 'first' or an ISO date such as '2002-10-15'."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">extent</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibNetworkExtent</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The transient two-bound mode. Unset, the output reads one state, the "</span>
+        <span class="s2">"method of the papers. Set, it reads every timestep of a transient run and scores "</span>
+        <span class="s2">"the maximal simulated mask against the maximal map and, when "</span>
+        <span class="s2">"'minimal_stream_geometry_path' is declared, the minimal mask against the minimal "</span>
+        <span class="s2">"map. Refused on a run with a single period or no complete calendar year."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_say_the_extent_once</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputNetwork</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an extent table that contradicts the rest of the output.</span>
+
+<span class="sd">        ``time`` names one state, and the two-bound mode reads them all, so only</span>
+<span class="sd">        its default may stand beside it. Weights other than the default without</span>
+<span class="sd">        a minimal map would weigh a bound that is never scored.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">!=</span> <span class="s2">"last"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the network output declares an extent table and time = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="si">!r}</span><span class="s2">. "</span>
+                <span class="s2">"The two-bound mode reads every timestep of the run; drop 'time'."</span>
+            <span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extent</span><span class="o">.</span><span class="n">weights</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_minimal_map</span> <span class="ow">and</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">minimal</span> <span class="o">!=</span> <span class="mf">0.5</span> <span class="ow">or</span> <span class="n">weights</span><span class="o">.</span><span class="n">maximal</span> <span class="o">!=</span> <span class="mf">0.5</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"the extent table weighs the bounds (minimal = </span><span class="si">{</span><span class="n">weights</span><span class="o">.</span><span class="n">minimal</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">, maximal "</span>
+                <span class="sa">f</span><span class="s2">"= </span><span class="si">{</span><span class="n">weights</span><span class="o">.</span><span class="n">maximal</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">) and no minimal map is declared, so only the maximal "</span>
+                <span class="s2">"bound is scored. Declare 'minimal_stream_geometry_path' or "</span>
+                <span class="s2">"'minimal_observed_network', or drop the weights."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
 
 <span class="n">CalibOutputDecl</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
@@ -1526,8 +1850,13 @@
     <span class="p">)</span>
     <span class="n">normalize_cost</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"When True, divide the block cost by a reference scale "</span>
-        <span class="s2">"(observed std fallback mean absolute value)."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"When True, divide the block cost by a reference scale, so it adds "</span>
+        <span class="s2">"to other blocks as a pure number and a share means a share. On a residual "</span>
+        <span class="s2">"metric (rmse, mae) the scale is the standard deviation of the observations, "</span>
+        <span class="s2">"their mean absolute value when that is zero. On a network distance "</span>
+        <span class="s2">"(distance_gap, distance_mean) it is the output's validity_length, 2 h_obs "</span>
+        <span class="s2">"under 'auto': a gap of one validity length costs 1, as much as an NSE of 0 on "</span>
+        <span class="s2">"nse_log. Refused on an efficiency score, already a pure number."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">transform</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">ObjectiveTransform</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"identity"</span><span class="p">,</span>
@@ -1544,12 +1873,14 @@
             <span class="p">}</span>
         <span class="p">},</span>
     <span class="p">)</span>
-    <span class="n">warmup</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">NonNegativeInt</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">warmup</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">NonNegativeInt</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">EXPERT</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Burn-in periods dropped from this block only, overriding "</span>
-            <span class="s2">"[calibration].warmup_periods. Leave unset to inherit it; set it to 0 to "</span>
-            <span class="s2">"switch the burn-in off for this block."</span>
+            <span class="s2">"Burn-in samples dropped from this block only, overriding "</span>
+            <span class="s2">"[calibration].warmup_periods. A count of samples, so twelve means a year "</span>
+            <span class="s2">"at a monthly step and twelve days at a daily one. Write "</span>
+            <span class="s2">"scoring_window.start instead, a date that means the same span at any step "</span>
+            <span class="s2">"and bounds a network state too. Kept so older files load unchanged."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -1639,11 +1970,31 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"</span><span class="si">{where}</span><span class="s2"> gives optimizer_kwargs and no method. They are options of one engine, "</span>
+<span class="n">_OPTIONS_WITHOUT_A_METHOD</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"</span><span class="si">{where}</span><span class="s2"> gives method_options and no method. They are options of one method, "</span>
     <span class="s2">"and a search that names no method gets the one its criteria call for. Write "</span>
     <span class="s2">"method beside them, or drop them."</span>
 <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_the_method_takes_its_options</span><span class="p">(</span>
+    <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"method_options"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse options with no method, and options the method written does not take.</span>
+
+<span class="sd">    Checked when the file loads, so a phase-two option its method does not know</span>
+<span class="sd">    is refused before phase one spends its budget. A method this package has no</span>
+<span class="sd">    model for, a plugin's, is left to its own constructor.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_OPTIONS_WITHOUT_A_METHOD</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="n">where</span><span class="p">))</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.method_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">method_options_problem</span>
+
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">method_options_problem</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="n">UncertaintyMethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"cost_profile"</span><span class="p">,</span> <span class="s2">"multistart"</span><span class="p">,</span> <span class="s2">"linearized"</span><span class="p">]</span>
@@ -1737,6 +2088,8 @@
 <span class="sd">    all the way out.</span>
 <span class="sd">    """</span>
 
+    <span class="n">model_legacy_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"optimizer_kwargs"</span><span class="p">:</span> <span class="s2">"method_options"</span><span class="p">}</span>
+
     <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">NonEmptyStr</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Phase identifier, unique in the calibration and used in the "</span>
         <span class="s2">"session directory and in the report."</span><span class="p">,</span>
@@ -1753,9 +2106,9 @@
             <span class="s2">"and every one of its blocks is signed (distance_gap), since the answer is "</span>
             <span class="s2">"then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. "</span>
             <span class="s2">"hmp calibrate --list-phases prints the method and why. Write it to "</span>
-            <span class="s2">"depart from that choice, and whenever optimizer_kwargs are given. "</span>
+            <span class="s2">"depart from that choice, and whenever method_options are given. "</span>
             <span class="s2">"Built-ins: 'grid' (regular sweep, sized by "</span>
-            <span class="s2">"optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of "</span>
+            <span class="s2">"method_options.points_per_dim), 'random_search', 'bisection' (root of "</span>
             <span class="s2">"a signed criterion on one parameter, the stream-network stage), 'optuna' "</span>
             <span class="s2">"(TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', "</span>
             <span class="s2">"'da_mh_gp'. An unknown name is refused when the optimizer is built, "</span>
@@ -1828,10 +2181,13 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Observed station whose cost the optimizer minimises. Every loaded gauge is already scored at its own mesh cell, on the discharge routed to that cell, and every cost is reported; naming one says which of them drives the search. Required when several stations are loaded, optional with one. Overrides the calibration-level value for this phase."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">optimizer_kwargs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">method_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to this phase's optimizer. They "</span>
-        <span class="s2">"belong to one engine, so a phase that gives them names its method."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of this phase's method, named as that method names "</span>
+        <span class="s2">"them: sweep_points for 'bisection', points_per_dim for 'grid', sampler for "</span>
+        <span class="s2">"'optuna'. They belong to one method, so a phase that gives them writes "</span>
+        <span class="s2">"method beside them. A key the method does not take is refused when the "</span>
+        <span class="s2">"file loads. hmp calibrate --check names the phase."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">regime</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"steady"</span><span class="p">,</span> <span class="s2">"transient"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1860,7 +2216,10 @@
     <span class="p">)</span>
     <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibScoringWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates bounding the samples this phase scores on."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates bounding the samples this phase scores on, replacing "</span>
+        <span class="s2">"[calibration].scoring_window. start = the first date scored leaves a spin-up "</span>
+        <span class="s2">"out of every block alike. A network output read in one state is dated at the "</span>
+        <span class="s2">"stamp of that state, which has to lie inside the window."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">depends_on</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1898,14 +2257,16 @@
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_name_the_engine_the_options_belong_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibPhaseDecl</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Refuse optimizer_kwargs on a phase that names no method.</span>
+<span class="w">        </span><span class="sd">"""Refuse method_options on a phase that names no method, or that its method refuses.</span>
 
-<span class="sd">        The options belong to one engine, and a phase that names none gets the</span>
-<span class="sd">        one its criteria call for. The options would then reach an engine the</span>
-<span class="sd">        file never chose.</span>
+<span class="sd">        The options belong to one method, and a phase that names none gets the</span>
+<span class="sd">        one its criteria call for. The options would then reach a method the</span>
+<span class="sd">        file never chose. An option the method does not take is refused here,</span>
+<span class="sd">        when the file loads, and not when this phase starts.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">))</span>
+        <span class="n">_check_the_method_takes_its_options</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_options</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
@@ -2122,6 +2483,8 @@
 <span class="sd">    from ``objective`` and ``variable`` if the matching output exists.</span>
 <span class="sd">    """</span>
 
+    <span class="n">model_legacy_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"optimizer_kwargs"</span><span class="p">:</span> <span class="s2">"method_options"</span><span class="p">}</span>
+
     <span class="n">protocol</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibrationProtocolDecl</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
@@ -2142,10 +2505,10 @@
             <span class="s2">"'bisection' when it moves one parameter in log space and every one of its "</span>
             <span class="s2">"blocks is signed (distance_gap), since the answer is then a zero to find; "</span>
             <span class="s2">"'scipy_nelder_mead' otherwise, a cost to minimise. Write it to depart from "</span>
-            <span class="s2">"that choice, and whenever optimizer_kwargs are given. A phase of "</span>
+            <span class="s2">"that choice, and whenever method_options are given. A phase of "</span>
             <span class="s2">"[[calibration.phases]] names its own. "</span>
             <span class="s2">"Built-ins: 'grid' (regular sweep, sized by "</span>
-            <span class="s2">"optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of "</span>
+            <span class="s2">"method_options.points_per_dim), 'random_search', 'bisection' (root of "</span>
             <span class="s2">"a signed criterion on one parameter, the stream-network stage), 'optuna' "</span>
             <span class="s2">"(TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', "</span>
             <span class="s2">"'da_mh_gp'. An unknown name is refused when the optimizer is built, "</span>
@@ -2245,23 +2608,25 @@
             <span class="s2">"with a lake and a routed network legitimately sits higher."</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">warmup_periods</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">warmup_periods</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">EXPERT</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Spin-up (burn-in) periods excluded from every objective block. The first "</span>
-            <span class="s2">"warmup_periods of each observed/simulated series are dropped before the "</span>
-            <span class="s2">"metric, so the window where the state still depends on the initial condition "</span>
-            <span class="s2">"does not bias the calibration. Default 0 (no exclusion). Size it by "</span>
-            <span class="s2">"increasing it until the objective stops changing (initial-condition "</span>
-            <span class="s2">"insensitivity), not a fixed guess."</span>
+            <span class="s2">"Spin-up samples dropped from the start of every series before its metric. "</span>
+            <span class="s2">"A count of samples, so its span follows the time step. Write "</span>
+            <span class="s2">"scoring_window.start instead, a date that means the same span at any step "</span>
+            <span class="s2">"and bounds a network state too. Kept so older files load unchanged. "</span>
+            <span class="s2">"Default 0 (no exclusion)."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibScoringWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Dates bounding the samples every metric is computed on. Mutually "</span>
-            <span class="s2">"exclusive with warmup_periods, which counts samples instead of dates."</span>
+            <span class="s2">"Dates bounding the samples every metric is computed on: the way to leave a "</span>
+            <span class="s2">"spin-up out, with start = the first date scored. A series keeps its stamps "</span>
+            <span class="s2">"inside the window; a network output read in one state is dated at the stamp "</span>
+            <span class="s2">"of that state, which has to lie inside it. A phase's own window replaces "</span>
+            <span class="s2">"this one. Mutually exclusive with warmup_periods."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">phases</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">CalibPhaseDecl</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -2331,10 +2696,13 @@
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Observed station whose cost the optimizer minimises. Every loaded gauge is already scored at its own mesh cell, on the discharge routed to that cell, and every cost is reported; naming one says which of them drives the search. Required when several stations are loaded, optional with one."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">optimizer_kwargs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">method_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to the optimizer adapter. They "</span>
-        <span class="s2">"belong to one engine, so a calibration that gives them names its method."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the method, named as that method names them: "</span>
+        <span class="s2">"points_per_dim for 'grid', sampler for 'optuna', sweep_points for "</span>
+        <span class="s2">"'bisection'. They belong to one method, so a calibration that gives them "</span>
+        <span class="s2">"writes method beside them. A key the method does not take is refused when "</span>
+        <span class="s2">"the file loads."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CalibParameterDecl</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
@@ -2488,9 +2856,12 @@
 <span class="sd">        whatever share their own magnitude happened to buy.</span>
 
 <span class="sd">        The criterion declares whether its cost carries a unit; the outputs a</span>
-<span class="sd">        block reads say which unit that is. A member is addable when it is</span>
-<span class="sd">        dimensionless or normalised, and a sum of two that are neither, in</span>
-<span class="sd">        different families, is refused.</span>
+<span class="sd">        block reads say which unit that is. A network distance is its own</span>
+<span class="sd">        family, a length between two networks, whatever variable the release</span>
+<span class="sd">        field is read from. A member is addable when it is dimensionless or</span>
+<span class="sd">        normalised, and a sum of two that are neither, in different families,</span>
+<span class="sd">        is refused. A network distance normalises by the output's validity</span>
+<span class="sd">        length, a residual by the spread of its observations.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria</span><span class="w"> </span><span class="kn">import</span> <span class="n">criterion_for</span>
 
@@ -2505,6 +2876,9 @@
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">needs</span><span class="o">.</span><span class="n">cost_is_dimensionless</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">needs</span><span class="o">.</span><span class="n">needs_observations</span> <span class="ow">and</span> <span class="s2">"network"</span> <span class="ow">in</span> <span class="n">needs</span><span class="o">.</span><span class="n">reads_supports</span><span class="p">:</span>
+                <span class="n">raw</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"network distance in </span><span class="si">{</span><span class="n">needs</span><span class="o">.</span><span class="n">cost_unit</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'m'</span><span class="si">}</span><span class="s2">"</span><span class="p">,)</span>
                 <span class="k">continue</span>
             <span class="n">families</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="nb">sorted</span><span class="p">(</span>
@@ -2524,20 +2898,21 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"these blocks add costs that carry different units: </span><span class="si">{</span><span class="n">listed</span><span class="si">}</span><span class="s2">. The sum "</span>
                 <span class="s2">"would let the unit set the weighting instead of 'weight'. Declare "</span>
-                <span class="s2">"normalize_cost = true on each of them, or score them on a metric whose "</span>
-                <span class="s2">"cost is already a pure number."</span>
+                <span class="s2">"normalize_cost = true on each of them (a network distance is then "</span>
+                <span class="s2">"counted in validity lengths, a residual in the spread of its "</span>
+                <span class="s2">"observations), or score them on a metric whose cost is already a pure "</span>
+                <span class="s2">"number."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_name_the_engine_the_options_belong_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Refuse optimizer_kwargs on a section that names no method.</span>
+<span class="w">        </span><span class="sd">"""Refuse method_options on a section that names no method, or that its method refuses.</span>
 
-<span class="sd">        Same reason as on a phase: the options belong to one engine, and the one a</span>
+<span class="sd">        Same reason as on a phase: the options belong to one method, and the one a</span>
 <span class="sd">        section gets when it names none follows from its criteria.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="s2">"[calibration]"</span><span class="p">))</span>
+        <span class="n">_check_the_method_takes_its_options</span><span class="p">(</span><span class="s2">"[calibration]"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_options</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
@@ -2564,7 +2939,7 @@
 <span class="w">        </span><span class="sd">"""Verify the method this calibration runs is registered and its kwargs validate.</span>
 
 <span class="sd">        The discriminated union :data:`CalibrationMethodConfig` raises eagerly</span>
-<span class="sd">        when ``optimizer_kwargs`` carries keys foreign to ``method`` so the</span>
+<span class="sd">        when ``method_options`` carries keys foreign to ``method`` so the</span>
 <span class="sd">        failure happens at config-load time instead of inside the adapter</span>
 <span class="sd">        constructor. A method left unwritten is checked as :meth:`method_for`</span>
 <span class="sd">        chooses it.</span>
@@ -2578,7 +2953,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Unknown calibration method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">. Available methods: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
-        <span class="n">validate_method_kwargs</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span><span class="p">)</span>
+        <span class="n">validate_method_kwargs</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_options</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">method_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Return the method this calibration, or one of its phases, runs, and why.</span>
@@ -2696,8 +3071,9 @@
 <span class="sd">        Read as :meth:`_criteria_scored_by` reads the criteria: a single-metric</span>
 <span class="sd">        phase scores its own ``objective`` or the section's, and a search with</span>
 <span class="sd">        no block scores the section's ``objective``. A block with a transform is</span>
-<span class="sd">        no longer in metres. A distance cannot be normalised, so that case does</span>
-<span class="sd">        not arise, and the single-metric route has no transform.</span>
+<span class="sd">        no longer in metres, and neither is one with ``normalize_cost``, whose</span>
+<span class="sd">        distance is counted in validity lengths. The single-metric route has</span>
+<span class="sd">        neither.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">NETWORK_ESTIMATORS</span>
 
@@ -2707,7 +3083,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">blocks</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span> <span class="ow">and</span> <span class="n">block</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s2">"identity"</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span>
+            <span class="ow">and</span> <span class="n">block</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s2">"identity"</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">normalize_cost</span>
             <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span>
         <span class="p">)</span>
 

@@ -14,8 +14,8 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories, one per run. The DuckDB file under.hmp/ is a query index over those directories: ..." name="description"/>
-<meta content="2026-09-25T00:10:02+02:00" property="article:modified_time"/>
-<title>Storage Layout — HydroModPy 2.0.0a1 documentation</title>
+<meta content="2026-09-28T08:00:17+02:00" property="article:modified_time"/>
+<title>Storage Layout — HydroModPy 2.0.0a2 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
@@ -50,7 +50,7 @@
 <!-- Pre-loaded scripts that we'll load fully later -->
 <link as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
 <link as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
-<script src="../_static/documentation_options.js?v=3b17aab0"></script>
+<script src="../_static/documentation_options.js?v=1ba6305b"></script>
 <script src="../_static/doctools.js?v=9a2dae69"></script>
 <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 25, 2026" name="docbuild:last-update"/>
+<meta content="Sep 28, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -111,8 +111,8 @@
 <div class="col-lg-3 navbar-header-items__start">
 <div class="navbar-item">
 <a class="navbar-brand logo" href="../index.html">
-<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-light" src="../_static/logoHydroModPy_long.png"/>
-<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-dark pst-js-only" src="../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a2 documentation - Home" class="logo__image only-light" src="../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a2 documentation - Home" class="logo__image only-dark pst-js-only" src="../_static/logoHydroModPy_long.png"/>
 </a></div>
 </div>
 <div class="col-lg-9 navbar-header-items">
@@ -561,6 +561,7 @@ decompresses every chunk its time axis crosses. See
     |-- index.duckdb     the index rebuilt from runs/ and sessions/
     |-- logs/            hydromodpy_debug.log
     |-- checkpoints/     resolved workflow manifests, for resume
+    |-- identity_notice.json  what the creator and licence warning told
     |-- running/         live-run heartbeat sidecars
     |-- scratch/         solver working directory
     `-- trash/           orphan stores and figures quarantined by gc
@@ -571,7 +572,12 @@ decompresses every chunk its time axis crosses. See
 <code class="xref py py-func docutils literal notranslate"><span class="pre">resolve_project_root()</span></code> anchors on it,
 never on a database file: a project stays a project after its index is
 deleted. A workspace-level <code class="docutils literal notranslate"><span class="pre">workspace.toml</span></code> is optional metadata
-written by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">init</span></code>; it carries no part of this contract.</p>
+written by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">init</span></code>; it carries no part of this contract.
+A run sealed without <code class="docutils literal notranslate"><span class="pre">creator_name</span></code>, <code class="docutils literal notranslate"><span class="pre">creator_institution</span></code> or a known
+licence warns once per workspace. <code class="docutils literal notranslate"><span class="pre">.hmp/identity_notice.json</span></code>, beside
+<code class="docutils literal notranslate"><span class="pre">workspace.toml</span></code> or at the project root when there is none, records the
+warning, and later runs report the gap at <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> only. Deleting the
+file brings the warning back once.</p>
 <p><code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> is a declared project-root entry, covered by
 <code class="docutils literal notranslate"><span class="pre">test_the_reproducibility_lock_is_a_declared_project_entry</span></code> in
 <code class="docutils literal notranslate"><span class="pre">tests/unit/results/test_run_layout_contract.py</span></code>. It is an input of the
@@ -1211,15 +1217,16 @@ with a rationale.</p>
 </section>
 <section id="portable-hmp-packages">
 <h2>Portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> packages<a class="headerlink" href="#portable-hmp-packages" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">-o</span> <span class="pre">run.hmp</span></code> bundles the run seal (manifest,
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export</span> <span class="pre">&lt;ref&gt;</span> <span class="pre">all</span> <span class="pre">--format</span> <span class="pre">package</span></code> bundles the run seal (manifest,
 provenance, frozen config), a one-simulation DuckDB snapshot and the
 Zarr and Parquet stores into one <code class="docutils literal notranslate"><span class="pre">tar.zst</span></code> archive with a SHA-256 per
-file; several references produce a single multi-run container. The Zarr
-store is packed to <code class="docutils literal notranslate"><span class="pre">fields.zarr.zip</span></code> <strong>inside the archive only</strong>, and
-import unpacks it back to a directory store, so nothing on disk ever
-stays zipped. Without <code class="docutils literal notranslate"><span class="pre">-o</span></code> the archive lands in the current directory,
-named after the run. A run whose config enables <code class="docutils literal notranslate"><span class="pre">[export]</span> <span class="pre">package</span></code>
-writes its archive under <code class="docutils literal notranslate"><span class="pre">share/&lt;label&gt;/</span></code> instead.
+file. The Zarr store is packed to <code class="docutils literal notranslate"><span class="pre">fields.zarr.zip</span></code> <strong>inside the archive
+only</strong>, and import unpacks it back to a directory store, so nothing on disk
+ever stays zipped. The archive lands in <code class="docutils literal notranslate"><span class="pre">share/&lt;run&gt;/&lt;run&gt;.hmp</span></code> unless
+<code class="docutils literal notranslate"><span class="pre">--folder</span></code> or <code class="docutils literal notranslate"><span class="pre">--file</span></code> names another place. A run whose config holds an
+<code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> block with <code class="docutils literal notranslate"><span class="pre">format</span> <span class="pre">=</span> <span class="pre">"package"</span></code> writes the same archive at
+the end of the run, after the seal. <code class="docutils literal notranslate"><span class="pre">Catalog.export_package_multi</span></code> still
+writes a multi-run container from Python; no verb exposes it.
 <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">import</span> <span class="pre">run.hmp</span></code> verifies the magic and every checksum,
 then re-materialises the runs in the target project.</p>
 </section>

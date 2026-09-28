@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="One reference list for every symbol used in the HydroModPy theory pages. SI units are the default. Per-page math notes link back here via the labels at the end of each row, so the same variable is ..." />
 
-    <meta property="article:modified_time" content="2026-09-27T17:14:50+02:00" />
-    <title>Unified notation &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <meta property="article:modified_time" content="2026-09-28T03:21:34+02:00" />
+    <title>Unified notation &#8212; HydroModPy 2.0.0a2 documentation</title>
   
   
   
@@ -60,7 +60,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../_static/documentation_options.js?v=1ba6305b"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 27, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 28, 2026"/>
   
     
     <script src="../_static/searchtools.js"></script>
@@ -165,8 +165,8 @@
       
     
     
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a2 documentation - Home"/>
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a2 documentation - Home"/>
   
   
 </a></div>
@@ -935,38 +935,49 @@ between structures already balanced at <code class="docutils literal notranslate
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">roptim</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">/</span> <span class="pre">L_ref</span></code></p></td>
 <td><p>dimensionless</p></td>
-<td><p>Validity indicator. It measures agreement, never correctness: measured
-on synthetic truth it improves as the bias worsens, and it improved from
+<td><p>Validity indicator, Equation 3 of the paper, kept to compare with its
+Table 1. It measures agreement, never correctness: measured on
+synthetic truth it improves as the bias worsens, and it improved from
 4.58 to 2.21 on one catchment purely because the grid was coarser. Two
 values from different meshes are not comparable.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L_ref</span></code></p></td>
-<td><p>Square root of the median cell area over the catchment</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">h_obs</span></code>, the median distance between neighbouring cell centres over
+the mapped cells of the catchment</p></td>
 <td><p>m</p></td>
-<td><p>The median and not the mean: a few large buffer cells would otherwise
-set the scale. Declaring <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> floors it, so
-that refining the mesh stops shrinking the denominator on its own.</p></td>
+<td><p>The cell size where the mapped network lies, the DEM pixel on a
+regular grid. The median and not the mean: a few large cells would
+otherwise set the scale. A declared <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code>
+does not change it; it enters <code class="docutils literal notranslate"><span class="pre">validity_length</span></code> only.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">L_cap</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validity_length</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">h</span></code>, or <code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">+</span> <span class="pre">max(h,</span> <span class="pre">F)</span></code> when the snap measured its floor <code class="docutils literal notranslate"><span class="pre">F</span></code>;
+<code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">=</span> <span class="pre">max(h_obs,</span> <span class="pre">observed_position_accuracy)</span></code></p></td>
+<td><p>m</p></td>
+<td><p>Equation 4 as a length: valid when <code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">&lt;=</span> <span class="pre">validity_length</span></code>.
+<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> by default, the paper’s <code class="docutils literal notranslate"><span class="pre">roptim</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code> on a regular grid
+without the snap; a declared length replaces it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L_cap</span></code></p></td>
 <td><p>Longest downslope descent to the outlet inside the catchment</p></td>
 <td><p>m</p></td>
 <td><p>The value a cell whose descent never meets its target saturates at.
 Counting it as <code class="docutils literal notranslate"><span class="pre">+inf</span></code> makes the mean infinite; dropping it moves the
 support with the calibrated parameter.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
 <td><p>Ratio of the mapped network to its own downslope closure</p></td>
 <td><p>dimensionless</p></td>
 <td><p>Measures the agreement between the routing surface and the mapped
 network. Below 0.90, the distances read a dataset disagreement rather
 than hydrogeology.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dsat</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dsat</span></code></p></td>
 <td><p>Saturated thickness averaged by area over the catchment</p></td>
 <td><p>m</p></td>
 <td><p>Published per trial as <code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code>. Turns <code class="docutils literal notranslate"><span class="pre">K/R</span></code> into <code class="docutils literal notranslate"><span class="pre">T/R</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">T/R</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">T/R</span></code></p></td>
 <td><p>Transmissivity over recharge, <code class="docutils literal notranslate"><span class="pre">(K/R)</span> <span class="pre">dsat</span></code></p></td>
 <td><p>m</p></td>
 <td><p>The output to publish, as <code class="docutils literal notranslate"><span class="pre">t_over_r_m</span></code> beside <code class="docutils literal notranslate"><span class="pre">k_over_r</span></code> and

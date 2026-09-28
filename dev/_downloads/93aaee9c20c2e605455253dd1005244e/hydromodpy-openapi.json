@@ -79,12 +79,16 @@
           },
           "display": {
             "$ref": "#/components/schemas/DisplayConfig",
-            "description": "Optional display and export toggles loaded from the [display] section.",
+            "description": "The figures a run draws, loaded from the [display] section.",
             "x-hmp-profile": "user"
           },
           "export": {
-            "$ref": "#/components/schemas/ExportConfig",
-            "description": "Automated export configuration loaded from the top-level [export] section. Controls which formats (CSV time series, GeoTIFF, NetCDF, VTU, shapefile), which variables and timesteps are written after a run, and whether a portable '.hmp' archive is produced.",
+            "description": "The exports written at the end of a run, one [[export]] block per request, in the order of the file. Each block says what (variables), when (time or period) and where (folder or file); the format follows the data.",
+            "items": {
+              "$ref": "#/components/schemas/ExportRequest"
+            },
+            "title": "Export",
+            "type": "array",
             "x-hmp-profile": "user"
           },
           "persistence": {
@@ -748,6 +752,95 @@
         "title": "CalibAggregateDecl",
         "type": "object"
       },
+      "CalibNetworkBoundWeights": {
+        "additionalProperties": false,
+        "description": "How the two bounds of a network output share one calibrated value.\n\nA root search closes one root per bound and returns the weighted geometric\nmean, ``log K = minimal * log K*_minimal + maximal * log K*_maximal``. A\nminimiser has no root to combine and minimises\n``minimal * |J_minimal| + maximal * |J_maximal|`` instead, which tends to\nland on one of the two roots rather than between them.",
+        "properties": {
+          "minimal": {
+            "default": 0.5,
+            "description": "Weight of the minimal (permanent) bound. 1 with maximal = 0 calibrates on the permanent map alone, the practice of Abherve et al. (2025).",
+            "examples": [
+              0.5
+            ],
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Minimal",
+            "type": "number",
+            "x-hmp-profile": "user"
+          },
+          "maximal": {
+            "default": 0.5,
+            "description": "Weight of the maximal (complete) bound.",
+            "examples": [
+              0.5
+            ],
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Maximal",
+            "type": "number",
+            "x-hmp-profile": "user"
+          }
+        },
+        "title": "CalibNetworkBoundWeights",
+        "type": "object"
+      },
+      "CalibNetworkExtent": {
+        "additionalProperties": false,
+        "description": "The transient two-bound mode of a network output.\n\nDeclared, the output stops reading one state. For every complete calendar\nyear of the run, the maximal simulated mask holds the cells flowing at\nleast ``maximal_flowing_steps`` timesteps, and the minimal one the cells\nflowing at every timestep but at most ``minimal_dry_steps``. A cell enters\nthe mask scored when it meets the rule in at least ``year_quorum`` of the\nscored years. Each bound is scored once by the distance criterion: the\nmaximal mask against the maximal map, the minimal mask against the minimal\nmap when one is declared. Durations count timesteps, not days.",
+        "properties": {
+          "maximal_flowing_steps": {
+            "default": 1,
+            "description": "Timesteps a cell has to flow in a year to enter the maximal mask. At most the timestep count of the shortest complete year, checked on the run.",
+            "examples": [
+              1
+            ],
+            "minimum": 1,
+            "title": "Maximal Flowing Steps",
+            "type": "integer",
+            "x-hmp-profile": "user"
+          },
+          "minimal_dry_steps": {
+            "default": 1,
+            "description": "Timesteps a cell may be dry in a year and stay in the minimal mask. The year's timestep count minus this has to stay at least maximal_flowing_steps, checked on the run, so the minimal mask sits inside the maximal one.",
+            "examples": [
+              1
+            ],
+            "minimum": 0,
+            "title": "Minimal Dry Steps",
+            "type": "integer",
+            "x-hmp-profile": "user"
+          },
+          "year_quorum": {
+            "default": 0.5,
+            "description": "Share of the scored years in which a cell has to meet a bound's rule to enter it: ceil(year_quorum * n_years) years. Warned under three scored years, where one half is a union of two.",
+            "examples": [
+              0.5
+            ],
+            "exclusiveMinimum": 0.0,
+            "maximum": 1.0,
+            "title": "Year Quorum",
+            "type": "number",
+            "x-hmp-profile": "user"
+          },
+          "visible_flow": {
+            "default": "1 L/s",
+            "description": "Routed discharge a cell of the downstream closure has to carry to flow: a discharge with its unit ('1 L/s') or a share of the outlet discharge at the same timestep ('1%'). '0 L/s' is the geometric definition. Never scaled with the cell size. No value is agreed: Zanetti et al. (2024) threshold a simulated discharge at 10 L/s, field zero-flow thresholds of 1 to 3 L/s are in use.",
+            "examples": [
+              "1 L/s"
+            ],
+            "title": "Visible Flow",
+            "type": "string",
+            "x-hmp-profile": "user"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/CalibNetworkBoundWeights",
+            "description": "Share of each bound in the value returned when both maps are declared. Only the maximal bound is scored without a minimal map.",
+            "x-hmp-profile": "user"
+          }
+        },
+        "title": "CalibNetworkExtent",
+        "type": "object"
+      },
       "CalibObjectiveBlockDecl": {
         "additionalProperties": false,
         "description": "Weighted metric block used by a composite objective.\n\nA block consumes one or more named outputs, applies one metric, and\ncontributes ``weight`` to the final minimization cost. Blocks make mixed\nobjectives explicit, for example combining heads, discharge, and transport\nsignals in one calibration session.",
@@ -818,7 +911,7 @@
           },
           "normalize_cost": {
             "default": false,
-            "description": "When True, divide the block cost by a reference scale (observed std fallback mean absolute value).",
+            "description": "When True, divide the block cost by a reference scale, so it adds to other blocks as a pure number and a share means a share. On a residual metric (rmse, mae) the scale is the standard deviation of the observations, their mean absolute value when that is zero. On a network distance (distance_gap, distance_mean) it is the output's validity_length, 2 h_obs under 'auto': a gap of one validity length costs 1, as much as an NSE of 0 on nse_log. Refused on an efficiency score, already a pure number.",
             "examples": [
               false
             ],
@@ -858,9 +951,9 @@
               }
             ],
             "default": null,
-            "description": "Burn-in periods dropped from this block only, overriding [calibration].warmup_periods. Leave unset to inherit it; set it to 0 to switch the burn-in off for this block.",
+            "description": "Burn-in samples dropped from this block only, overriding [calibration].warmup_periods. A count of samples, so twelve means a year at a monthly step and twelve days at a daily one. Write scoring_window.start instead, a date that means the same span at any step and bounds a network state too. Kept so older files load unchanged.",
             "title": "Warmup",
-            "x-hmp-profile": "user"
+            "x-hmp-profile": "expert"
           }
         },
         "required": [
@@ -1305,7 +1398,7 @@
       },
       "CalibOutputNetwork": {
         "additionalProperties": false,
-        "description": "The mapped stream network as a calibration target.\n\nThe criterion compares a simulated stream network to a mapped one. For\nevery cell of the simulated network the descent to the mapped network is\nmeasured, and reciprocally. The output produces the pair ``(D_so, D_os)``;\nthe metric on top of it is ``distance_gap``, their signed difference in\nabsolute value, whose zero is the balance between an excess of simulated\nstream and a missing one.\n\nIt can drive any parameter that moves where the water table meets the\nsurface. What it identifies depends on what moves: with the homogeneous\nconductivity alone, at fixed geometry and recharge, it identifies ``K/R``,\nthe ratio of Abherve et al. (2023), and not ``K`` itself.\n\nThere is no ``observed_values`` here and there cannot be: the criterion\nbalances two simulated quantities against each other, so nothing in it is\nfitted to a record. The mapped network enters as a geometry, not as a\nseries, and exactly one of ``observed_network`` and\n``stream_geometry_path`` names where it comes from.",
+        "description": "The mapped stream network as a calibration target.\n\nThe criterion compares a simulated stream network to a mapped one. For\nevery cell of the simulated network the descent to the mapped network is\nmeasured, and reciprocally. The output produces the pair ``(D_so, D_os)``;\nthe metric on top of it is ``distance_gap``, their signed difference in\nabsolute value, whose zero is the balance between an excess of simulated\nstream and a missing one.\n\nIt can drive any parameter that moves where the water table meets the\nsurface. What it identifies depends on what moves: with the homogeneous\nconductivity alone, at fixed geometry and recharge, it identifies ``K/R``,\nthe ratio of Abherve et al. (2023), and not ``K`` itself.\n\nThere is no ``observed_values`` here and there cannot be: the criterion\nbalances two simulated quantities against each other, so nothing in it is\nfitted to a record. The mapped network enters as a geometry, not as a\nseries, and exactly one of ``observed_network`` and\n``stream_geometry_path`` names where it comes from.\n\nThat map is the maximal one, every mapped reach. A minimal map, the\npermanent reaches, may be declared beside it. In one state the state is\nthen scored on the minimal map and the maximal map is a validation. With\n``extent``, a transient run is scored on two bounds, the yearly maximal\nmask against the maximal map and the minimal mask against the minimal map.",
         "properties": {
           "variable": {
             "default": "release_flux",
@@ -1362,6 +1455,35 @@
             "default": null,
             "description": "Vector file holding the mapped stream network, read only from here: the criterion resolves no geometry of its own and does not reuse the one the hydrography data family loaded. The way out of 'observed_network' when neither of its two sources is the one you want scored.",
             "title": "Stream Geometry Path",
+            "x-hmp-profile": "user"
+          },
+          "minimal_stream_geometry_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Vector file holding the minimal map: the permanent network, which the map named by 'observed_network' or 'stream_geometry_path' (the maximal map, every mapped reach) contains. Read as it is, never filtered by attribute. The maximal map scored is the union of the two, and the share of the minimal map outside the maximal one is published. In one state, the state is compared to this map and the maximal map is scored beside it as a validation outside the cost, as Abherve et al. (2025) do; with 'extent', it is the minimal bound. At most one of this and 'minimal_observed_network'.",
+            "title": "Minimal Stream Geometry Path",
+            "x-hmp-profile": "user"
+          },
+          "minimal_observed_network": {
+            "anyOf": [
+              {
+                "const": "data.hydrography",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Where the minimal map comes from when it is not an explicit file. 'data.hydrography' reads the permanent reaches the hydrography data family wrote beside its network, which it does only when its source says which reaches flow all year. Same role as 'minimal_stream_geometry_path'; at most one of the two.",
+            "title": "Minimal Observed Network",
             "x-hmp-profile": "user"
           },
           "tau_specific_ratio": {
@@ -1439,24 +1561,47 @@
               }
             ],
             "default": null,
-            "description": "Positional accuracy of the mapped network. The validity ratio is normalised by max(cell size, this), because the error floor is set by the network's own precision and not by the model resolution. Unset is the literal reading of the paper.",
+            "description": "Positional accuracy of the mapped network. It enters the automatic validity length only: the cell size h there is max(h_obs, this), because a map is not placed better when the mesh is refined. roptim stays Doptim / h_obs, the paper's Eq. 3. Unset is the literal reading of the paper.",
             "title": "Observed Position Accuracy",
             "x-hmp-profile": "user"
           },
-          "roptim_max": {
-            "default": 2.0,
-            "description": "Validity bound of Eq. 4. It qualifies the result and never penalises the cost: a bad ratio says the agreement is coarse, not that the calibrated value should be discarded.",
-            "examples": [
-              2.0
+          "validity_length": {
+            "anyOf": [
+              {
+                "const": "auto",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "properties": {
+                  "magnitude": {
+                    "title": "Magnitude",
+                    "type": "string"
+                  },
+                  "units": {
+                    "title": "Units",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "magnitude"
+                ],
+                "type": "object"
+              }
             ],
-            "exclusiveMinimum": 0.0,
-            "title": "Roptim Max",
-            "type": "number",
+            "default": "auto",
+            "description": "Validity bound of Eq. 4, a length: the calibration is valid when Doptim <= this. 'auto' is 2 h, the paper's two cells, where h is h_obs, the cell size on the mapped network, raised to 'observed_position_accuracy' when one is declared. With [geographic.snap_streams] in 'diagnose' or 'apply', it is h + max(h, F), F the floor the snap measured: one cell for the hydrogeology, one for the map error, replaced by F when F is larger. A length such as '150 m' is used as it is. The bound qualifies the result and never penalises the cost.",
+            "examples": [
+              "auto"
+            ],
+            "title": "Validity Length",
             "x-hmp-profile": "user"
           },
           "on_roptim_violation": {
             "default": "warn",
-            "description": "What a violation of the validity bound does. The bound is read once, on the trial the search returns, as the paper reads it at the optimum; every trial still records 'roptim' and 'roptim_valid'. 'warn' logs it and returns the value, because a calibration is asked for a number. 'error' raises after the session is saved, so a staged calibration freezes nothing and runs no phase that depends on this one.",
+            "description": "What a violation of Eq. 4 does: Doptim above 'validity_length', or, with [geographic.snap_streams] mode = 'apply', a snap that moved the map further than its displacement bound. The bound is read once, on the trial the search returns, as the paper reads it at the optimum, and on each bound in the cost of the two-bound mode; every trial still records 'roptim', 'roptim_valid' and 'validity_length_m'. 'warn' logs it and returns the value, because a calibration is asked for a number. 'error' raises after the session is saved, so a staged calibration freezes nothing and runs no phase that depends on this one.",
             "enum": [
               "warn",
               "error"
@@ -1517,17 +1662,37 @@
             "x-hmp-profile": "expert"
           },
           "time": {
-            "default": "last",
-            "description": "Which single state the release flux is read at: 'last' (default) or 'first'. Phase one runs a single steady period, so 'last' is the whole run. 'all' and a list of dates are refused: the network branch always keeps one state (the last one it is served), so either would silently score that state instead of the one named.",
-            "enum": [
-              "last",
-              "first"
+            "anyOf": [
+              {
+                "enum": [
+                  "last",
+                  "first"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
             ],
+            "default": "last",
+            "description": "Which single state the release flux is read at: 'last' (default), 'first', or an ISO date such as '2002-10-15', which reads the state of the period that holds it, [start, end). That state is dated at its period's end, which is the date a scoring_window is compared with. A steady phase runs one period over its window, so every date of that window reads its one state and one output serves both regimes. 'all' and a list of dates are refused: a network output reads one state.",
             "examples": [
               "last"
             ],
             "title": "Time",
-            "type": "string",
+            "x-hmp-profile": "user"
+          },
+          "extent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalibNetworkExtent"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The transient two-bound mode. Unset, the output reads one state, the method of the papers. Set, it reads every timestep of a transient run and scores the maximal simulated mask against the maximal map and, when 'minimal_stream_geometry_path' is declared, the minimal mask against the minimal map. Refused on a run with a single period or no complete calendar year.",
             "x-hmp-profile": "user"
           }
         },
@@ -1613,7 +1778,7 @@
               }
             ],
             "default": null,
-            "description": "X coordinate. Accepts a bare number (metres) or a pint string like '100 m'.",
+            "description": "X coordinate. Accepts a bare number (metres) or a pint string like '100 m'. Beside 'observes' it is not read, and loading warns so, unless snap_radius is set and the station's record carries no coordinate.",
             "title": "X",
             "x-hmp-profile": "user"
           },
@@ -1643,7 +1808,7 @@
               }
             ],
             "default": null,
-            "description": "Y coordinate. Accepts a bare number (metres) or a pint string like '100 m'.",
+            "description": "Y coordinate. Accepts a bare number (metres) or a pint string like '100 m'. Beside 'observes' it is not read, as for 'x'.",
             "title": "Y",
             "x-hmp-profile": "user"
           },
@@ -1898,7 +2063,7 @@
               }
             ],
             "default": null,
-            "description": "Optimization method for this phase only. Unset, it follows from what the phase scores: 'bisection' when the phase moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. hmp calibrate --list-phases prints the method and why. Write it to depart from that choice, and whenever optimizer_kwargs are given. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.",
+            "description": "Optimization method for this phase only. Unset, it follows from what the phase scores: 'bisection' when the phase moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. hmp calibrate --list-phases prints the method and why. Write it to depart from that choice, and whenever method_options are given. Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.",
             "title": "Method",
             "x-hmp-profile": "user"
           },
@@ -2054,12 +2219,12 @@
             "title": "Observed Station Id",
             "x-hmp-profile": "user"
           },
-          "optimizer_kwargs": {
+          "method_options": {
             "additionalProperties": true,
-            "description": "Extra keyword arguments forwarded to this phase's optimizer. They belong to one engine, so a phase that gives them names its method.",
-            "title": "Optimizer Kwargs",
+            "description": "Options of this phase's method, named as that method names them: sweep_points for 'bisection', points_per_dim for 'grid', sampler for 'optuna'. They belong to one method, so a phase that gives them writes method beside them. A key the method does not take is refused when the file loads. hmp calibrate --check names the phase.",
+            "title": "Method Options",
             "type": "object",
-            "x-hmp-profile": "dev"
+            "x-hmp-profile": "user"
           },
           "regime": {
             "anyOf": [
@@ -2117,7 +2282,7 @@
               }
             ],
             "default": null,
-            "description": "Dates bounding the samples this phase scores on.",
+            "description": "Dates bounding the samples this phase scores on, replacing [calibration].scoring_window. start = the first date scored leaves a spin-up out of every block alike. A network output read in one state is dated at the stamp of that state, which has to lie inside the window.",
             "x-hmp-profile": "user"
           },
           "depends_on": {
@@ -2408,7 +2573,7 @@
               }
             ],
             "default": null,
-            "description": "Optimization method. Unset, it follows from what the calibration scores: 'bisection' when it moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. Write it to depart from that choice, and whenever optimizer_kwargs are given. A phase of [[calibration.phases]] names its own. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.",
+            "description": "Optimization method. Unset, it follows from what the calibration scores: 'bisection' when it moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. Write it to depart from that choice, and whenever method_options are given. A phase of [[calibration.phases]] names its own. Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.",
             "title": "Method",
             "x-hmp-profile": "user"
           },
@@ -2515,14 +2680,14 @@
           },
           "warmup_periods": {
             "default": 0,
-            "description": "Spin-up (burn-in) periods excluded from every objective block. The first warmup_periods of each observed/simulated series are dropped before the metric, so the window where the state still depends on the initial condition does not bias the calibration. Default 0 (no exclusion). Size it by increasing it until the objective stops changing (initial-condition insensitivity), not a fixed guess.",
+            "description": "Spin-up samples dropped from the start of every series before its metric. A count of samples, so its span follows the time step. Write scoring_window.start instead, a date that means the same span at any step and bounds a network state too. Kept so older files load unchanged. Default 0 (no exclusion).",
             "examples": [
               0
             ],
             "minimum": 0,
             "title": "Warmup Periods",
             "type": "integer",
-            "x-hmp-profile": "user"
+            "x-hmp-profile": "expert"
           },
           "scoring_window": {
             "anyOf": [
@@ -2534,7 +2699,7 @@
               }
             ],
             "default": null,
-            "description": "Dates bounding the samples every metric is computed on. Mutually exclusive with warmup_periods, which counts samples instead of dates.",
+            "description": "Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored. A series keeps its stamps inside the window; a network output read in one state is dated at the stamp of that state, which has to lie inside it. A phase's own window replaces this one. Mutually exclusive with warmup_periods.",
             "x-hmp-profile": "user"
           },
           "phases": {
@@ -2670,12 +2835,12 @@
             "title": "Observed Station Id",
             "x-hmp-profile": "user"
           },
-          "optimizer_kwargs": {
+          "method_options": {
             "additionalProperties": true,
-            "description": "Extra keyword arguments forwarded to the optimizer adapter. They belong to one engine, so a calibration that gives them names its method.",
-            "title": "Optimizer Kwargs",
+            "description": "Options of the method, named as that method names them: points_per_dim for 'grid', sampler for 'optuna', sweep_points for 'bisection'. They belong to one method, so a calibration that gives them writes method beside them. A key the method does not take is refused when the file loads.",
+            "title": "Method Options",
             "type": "object",
-            "x-hmp-profile": "dev"
+            "x-hmp-profile": "user"
           },
           "parameters": {
             "additionalProperties": {
@@ -5325,12 +5490,29 @@
             "type": "string",
             "x-hmp-profile": "user"
           },
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The instant every figure that draws one instant shows: a date (\"2002-10-15\"), \"first\" or \"last\". Each such figure draws the stress period that holds the date, so the same date names the same month on a monthly, a daily or a one-period steady run. A `time` in `[display.overrides.<figure>]` wins over it. Unset, each figure picks its own instant: the last period, or for the stream-network maps the state their calibration criterion read. A date outside a run skips the figure with the reason.",
+            "title": "Time",
+            "x-hmp-profile": "user"
+          },
           "overrides": {
             "additionalProperties": {
               "additionalProperties": true,
               "type": "object"
             },
-            "description": "Per-figure keyword overrides, keyed by figure name (e.g. ``{'piezometric_map': {'cmap': 'cividis', 'vmin': 0}}``).",
+            "description": "Per-figure options, keyed by figure name (e.g. ``{'piezometric_map': {'cmap': 'cividis', 'vmin': 0}}``). A key the figure does not take is refused at load, with the list of the keys it takes. A figure that draws one instant takes `time`.",
             "title": "Overrides",
             "type": "object",
             "x-hmp-profile": "user"
@@ -5733,185 +5915,28 @@
         "title": "EvtConfig",
         "type": "object"
       },
-      "ExportConfig": {
-        "additionalProperties": false,
-        "description": "Automated export configuration loaded from the top-level ``[export]`` section.",
-        "properties": {
-          "netcdf": {
-            "default": false,
-            "description": "Export to NetCDF-4/UGRID.",
-            "examples": [
-              false
-            ],
-            "title": "Netcdf",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "csv_timeseries": {
-            "default": false,
-            "description": "Export time series to CSV at the end of the run. Off by default: the canonical time series lives in tables.parquet; CSV is an on-demand export. The only toggle that ignores 'variables'.",
-            "examples": [
-              false
-            ],
-            "title": "Csv Timeseries",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "vtu": {
-            "default": false,
-            "description": "Export to VTU (ParaView). One timestep per file.",
-            "examples": [
-              false
-            ],
-            "title": "Vtu",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "geotiff": {
-            "default": false,
-            "description": "Export to GeoTIFF. One timestep per file.",
-            "examples": [
-              false
-            ],
-            "title": "Geotiff",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "shapefile": {
-            "default": false,
-            "description": "Export to Shapefile. One timestep per file.",
-            "examples": [
-              false
-            ],
-            "title": "Shapefile",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "geopackage": {
-            "default": false,
-            "description": "Export to GeoPackage. One timestep per file.",
-            "examples": [
-              false
-            ],
-            "title": "Geopackage",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "package": {
-            "default": false,
-            "description": "Also write a portable '<run>.hmp' archive (config, provenance, fields, timeseries, RO-Crate) after the run finalizes. The one-line switch for 'this run must be shareable forever'.",
-            "examples": [
-              false
-            ],
-            "title": "Package",
-            "type": "boolean",
-            "x-hmp-profile": "user"
-          },
-          "output_dir": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Output directory for exports. Defaults to project results folder.",
-            "title": "Output Dir",
-            "x-hmp-profile": "user"
-          },
-          "variables": {
-            "default": [
-              "head"
-            ],
-            "description": "Field names to export, e.g. ['head', 'watertable_depth']. These are the run's own field names: 'hmp data export <project> --sim <name> --list' prints the ones a given run holds. A name the field registry does not know is refused before the solve, not by this schema. One file is written per name for vtu, geotiff and shapefile; the NetCDF export holds them all. Ignored by csv_timeseries.",
-            "examples": [
-              [
-                "head"
-              ]
-            ],
-            "items": {
-              "type": "string"
-            },
-            "title": "Variables",
-            "type": "array",
-            "x-hmp-profile": "user"
-          },
-          "time": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "enum": [
-                  "first",
-                  "last",
-                  "all"
-                ],
-                "type": "string"
-              }
-            ],
-            "default": "last",
-            "description": "Timestep selector for field/raster exports: 'first', 'last', 'all', a timestep index, or a list of indices. Time-series CSV always covers all steps. A vtu, a geotiff and a shapefile hold ONE timestep per file, so a selector naming several is refused while any of them is on; only the NetCDF export carries the whole selection. Same spelling as [[export.artifacts]] time.",
-            "examples": [
-              "last"
-            ],
-            "title": "Time",
-            "x-hmp-profile": "user"
-          },
-          "resolution": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "GeoTIFF pixel size in CRS units for toggle exports. Auto-derived from the grid when omitted.",
-            "title": "Resolution",
-            "x-hmp-profile": "user"
-          },
-          "artifacts": {
-            "description": "Explicit export artifacts: full control over variable, format, timestep and destination, beyond the format toggles above.",
-            "items": {
-              "$ref": "#/components/schemas/ExportSpec"
-            },
-            "title": "Artifacts",
-            "type": "array",
-            "x-hmp-profile": "user"
-          }
-        },
-        "title": "ExportConfig",
-        "type": "object"
-      },
       "ExportFormat": {
-        "description": "Output formats reachable through the unified export engine.",
+        "description": "What an export writes.",
         "enum": [
-          "csv",
           "netcdf",
           "geotiff",
-          "shapefile",
+          "csv",
           "geopackage",
+          "shapefile",
           "vtu",
-          "hmp"
+          "package",
+          "stac",
+          "rocrate",
+          "prov"
         ],
         "title": "ExportFormat",
         "type": "string"
       },
-      "ExportSpec": {
+      "ExportRequest": {
         "additionalProperties": false,
-        "description": "One export artifact: what to select, in which format, where to write.\n\n``fmt`` is optional when ``dest`` carries a known extension\n(``.nc`` -> netcdf, ``.tif`` -> geotiff, ``.csv`` -> csv ...).",
+        "description": "One export: what to write, when, in which format, where.\n\nOnly ``variables`` is required. ``time`` names instants and ``period`` a\nwindow; without either the whole simulation is written. ``format`` is\noptional: each data goes to its natural format (a field at one date to\nGeoTIFF, over several dates to NetCDF, a series or a table to CSV, a vector\nlayer to GeoPackage, a raster layer to GeoTIFF), and a ``file`` extension\nnames the format too.",
         "properties": {
-          "var": {
+          "variables": {
             "anyOf": [
               {
                 "type": "string"
@@ -5923,21 +5948,65 @@
                 "type": "array"
               }
             ],
-            "description": "Variable name, list of names, or '*' (all timeseries, csv only).",
-            "title": "Var",
+            "description": "What to export: a name, a list of names, or \"all\" for everything the run holds. One namespace covers the mesh fields (head, watertable_depth, seepage_mask...), the series (discharge, discharge_obs...), the vector layers (watershed, hydrographic_network_reference...), the raster layers (watershed_dem...) and the table budget; 'hmp export <run> --list' prints what a run holds. A name no run can hold is refused before the solve.",
+            "title": "Variables",
             "x-hmp-profile": "user"
           },
-          "dest": {
-            "description": "Output file path. Its extension can imply 'fmt'.",
-            "examples": [
-              "data/input.csv"
+          "time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "format": "path",
-            "title": "Dest",
-            "type": "string",
+            "default": null,
+            "description": "The instants to write: a date \"YYYY-MM-DD\", \"first\", \"last\", or a list of them. A date takes the stress period that holds it. A format that holds one instant (GeoTIFF, Shapefile, GeoPackage, VTU) writes one file per date. Left out, the whole simulation is written. Cannot be given with period.",
+            "title": "Time",
             "x-hmp-profile": "user"
           },
-          "fmt": {
+          "period": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "A window of the simulation, [start, end], two dates \"YYYY-MM-DD\". Every stress period it overlaps is written. Cannot be given with time.",
+            "title": "Period",
+            "x-hmp-profile": "user"
+          },
+          "format": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ExportFormat"
@@ -5947,26 +6016,13 @@
               }
             ],
             "default": null,
-            "description": "Output format. Inferred from the 'dest' extension when omitted.",
+            "description": "The file format. Left out, each data takes its natural format, or the one the extension of 'file' names. 'package' writes the portable .hmp archive of the run; 'stac', 'rocrate' and 'prov' write its metadata. Those four describe the whole run and take variables = \"all\" only.",
             "x-hmp-profile": "user"
           },
-          "time": {
+          "folder": {
             "anyOf": [
               {
-                "type": "integer"
-              },
-              {
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              },
-              {
-                "enum": [
-                  "first",
-                  "last",
-                  "all"
-                ],
+                "format": "path",
                 "type": "string"
               },
               {
@@ -5974,36 +6030,23 @@
               }
             ],
             "default": null,
-            "description": "Timestep selector: index, list of indices, 'first', 'last', 'all', or None (per-format default: all timesteps for netcdf, last for rasters).",
-            "title": "Time",
+            "description": "The folder the files are written to, with automatic names. A relative folder is read from the project's share/ directory. Defaults to share/<run>/.",
+            "title": "Folder",
             "x-hmp-profile": "user"
           },
-          "layer": {
+          "file": {
             "anyOf": [
               {
-                "type": "integer"
+                "format": "path",
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
             "default": null,
-            "description": "Layer index for 3D fields.",
-            "title": "Layer",
-            "x-hmp-profile": "dev"
-          },
-          "resolution": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "GeoTIFF pixel size in CRS units. Auto-derived from the grid when omitted.",
-            "title": "Resolution",
+            "description": "One exact file to write; its extension gives the format. A relative file is read from 'folder'. Only for a request that writes one file: several files need 'folder' and automatic names.",
+            "title": "File",
             "x-hmp-profile": "user"
           },
           "crs": {
@@ -6016,26 +6059,55 @@
               }
             ],
             "default": null,
-            "description": "Output CRS (e.g. 'EPSG:4326'). The raster and vector exporters reproject from the simulation's native CRS. Omitted keeps that native CRS.",
+            "description": "Output CRS, e.g. 'EPSG:4326'. Rasters and vector layers are reprojected from the model CRS. NetCDF, VTU and CSV do not reproject and refuse it. Left out, the model CRS is kept.",
             "title": "Crs",
+            "x-hmp-profile": "user"
+          },
+          "resolution": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Pixel size of a GeoTIFF of a field, in units of the output CRS. Derived from the mesh when left out. Refused on a request that writes no raster.",
+            "title": "Resolution",
+            "x-hmp-profile": "user"
+          },
+          "layer": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Model layer of a 3D field. Left out, every layer a format can hold.",
+            "title": "Layer",
             "x-hmp-profile": "dev"
           },
           "nodata": {
             "default": -9999.0,
-            "description": "Nodata fill value for raster formats.",
+            "description": "Fill value of the cells a raster has no data for.",
             "examples": [
               -9999.0
             ],
             "title": "Nodata",
             "type": "number",
-            "x-hmp-profile": "dev"
+            "x-hmp-profile": "expert"
           }
         },
         "required": [
-          "var",
-          "dest"
+          "variables"
         ],
-        "title": "ExportSpec",
+        "title": "ExportRequest",
         "type": "object"
       },
       "FieldHeterogeneousSection": {
@@ -10782,8 +10854,8 @@
             "x-hmp-profile": "user"
           },
           "dem_correc_type": {
-            "default": "breach",
-            "description": "DEM depression correction method. 'breach' (recommended) preserves natural flow paths. 'fill' raises sinks to their pour point.",
+            "default": "fill",
+            "description": "How the DEM is conditioned before the catchment is delineated. 'fill' (default) raises each closed depression to its spill level, then puts a small gradient on the flats so every cell drains. 'breach' carves a path through the barrier that closes a depression instead, and changes far fewer cells (least-cost breaching, Lindsay 2016). 'fill' is the default because it is the tool of the paper behind the network criterion (FillDepressions, Abherve et al. 2023), and the criterion itself fills the model top on the mesh by a priority flood: one conditioning rule from the DEM to the score.",
             "enum": [
               "breach",
               "fill"
@@ -10852,6 +10924,11 @@
           "enforce_streams": {
             "$ref": "#/components/schemas/StreamEnforcementConfig",
             "description": "Optional stream burning of the routing DEM: lower the mapped network cells so the computed D8 paths follow the observed network, without touching the model grid top. Applied before the lake carve.",
+            "x-hmp-profile": "user"
+          },
+          "snap_streams": {
+            "$ref": "#/components/schemas/SnapStreamsConfig",
+            "description": "Optional snapping of the mapped stream network onto the talwegs of the model top, read on the network criterion graph. Off by default. 'diagnose' publishes the displacement, the rejected cells and the floor F while the raw map is scored; 'apply' scores the snapped map. It sits here, beside enforce_streams, because it is common to every consumer of the mapped network (criterion, figures, burning), not to one calibration output.",
             "x-hmp-profile": "user"
           },
           "enforce_lakes": {
@@ -13965,18 +14042,24 @@
             "title": "Steady Tolerance",
             "x-hmp-profile": "user"
           },
-          "steady_engine_options": {
+          "steady_method_options": {
             "additionalProperties": true,
-            "description": "Options of the stage-one engine itself, named as that engine names them. Which ones exist depends on steady_method, and the model of each engine is in calibration.optim.method_config. A key the engine does not know is refused before the first solver call. The escape hatch for reproducing a published call; a precision is said once, in steady_tolerance.",
-            "title": "Steady Engine Options",
+            "description": "Options of the stage-one method, named as that method names them: for the bisection, sweep_points, bracket_expand, rel_tol and signed_component. Which ones exist depends on steady_method; a key the method does not know is refused when the file loads. Used to reproduce a published call; a precision is said once, in steady_tolerance.",
+            "title": "Steady Method Options",
             "type": "object",
-            "x-hmp-profile": "dev"
+            "x-hmp-profile": "user"
           },
           "steady_window": {
             "anyOf": [
               {
                 "additionalProperties": {
                   "type": "string"
+                },
+                "propertyNames": {
+                  "enum": [
+                    "start",
+                    "end"
+                  ]
                 },
                 "type": "object"
               },
@@ -13985,7 +14068,7 @@
               }
             ],
             "default": null,
-            "description": "Dates the steady stage averages, as {start, end}. Unset takes the whole [simulation.time] window.",
+            "description": "Dates the steady stage averages, as {start, end}, both ISO 8601 and both required. A date that does not parse is refused when the file is read. Unset takes the whole [simulation.time] window.",
             "title": "Steady Window",
             "x-hmp-profile": "user"
           },
@@ -14036,12 +14119,12 @@
             "title": "Transient Tolerance",
             "x-hmp-profile": "user"
           },
-          "transient_engine_options": {
+          "transient_method_options": {
             "additionalProperties": true,
-            "description": "Options of the stage-two engine itself, named as that engine names them, and refused when it does not know them. Which ones exist depends on transient_method.",
-            "title": "Transient Engine Options",
+            "description": "Options of the stage-two method, named as that method names them, and refused when the file loads if it does not know them. Which ones exist depends on transient_method.",
+            "title": "Transient Method Options",
             "type": "object",
-            "x-hmp-profile": "dev"
+            "x-hmp-profile": "user"
           },
           "discharge_variable": {
             "default": "discharge",
@@ -14073,6 +14156,12 @@
                 "additionalProperties": {
                   "type": "string"
                 },
+                "propertyNames": {
+                  "enum": [
+                    "start",
+                    "end"
+                  ]
+                },
                 "type": "object"
               },
               {
@@ -14080,7 +14169,7 @@
               }
             ],
             "default": null,
-            "description": "Dates bounding the samples stage two scores on, as {start, end}. Use it to drop the spin-up year the transient stage still has to simulate.",
+            "description": "Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional, for every block it scores, a network one included. A date that does not parse is refused when the file is read. Unset, and with no scoring_window on [calibration], stage two scores from one year after [simulation.time].start_datetime: the first year is spin-up. A run of one year or less is scored whole. Write start = the run's own start to score the spin-up year too.",
             "title": "Scoring Window",
             "x-hmp-profile": "user"
           }
@@ -20800,6 +20889,61 @@
           }
         },
         "title": "SiteSelectionInputConfig",
+        "type": "object"
+      },
+      "SnapStreamsConfig": {
+        "additionalProperties": false,
+        "description": "Snap the mapped stream network onto the talwegs of the criterion graph.\n\nOff by default. ``diagnose`` computes the snapped map, its indices and the\nfloor ``F`` and publishes them, while every consumer still reads the raw\nmap. ``apply`` makes every consumer read the snapped map: the criterion,\nthe figures, the stream burn of the routing DEM, a mesh river constraint\nread from the mapped file, and the network metrics of a run. Eq. 4 then\nalso bounds the displacement and the rejected share.",
+        "properties": {
+          "mode": {
+            "default": "off",
+            "description": "'off' computes nothing. 'diagnose' snaps the mapped network, publishes the displacement, the rejected cells, the length change and the floor F, and every consumer reads the raw map. 'apply' makes every consumer read the snapped map: the criterion, the figures, the stream burn, a mesh river constraint read from the mapped file and the network metrics of a run; Eq. 4 then also asks the p90 displacement and the rejected share to stay within their bounds.",
+            "enum": [
+              "off",
+              "diagnose",
+              "apply"
+            ],
+            "examples": [
+              "off"
+            ],
+            "title": "Mode",
+            "type": "string",
+            "x-hmp-profile": "user"
+          },
+          "radius": {
+            "default": "2 cells",
+            "description": "How far a mapped cell may move. A length ('200 m') or a number of cells ('2 cells'), a cell being h_obs, the median distance between neighbouring cell centres over the mapped cells of the catchment. Two cells is the outlet snapping distance of the paper.",
+            "examples": [
+              "2 cells"
+            ],
+            "title": "Radius",
+            "type": "string",
+            "x-hmp-profile": "user"
+          },
+          "max_displacement_p90": {
+            "default": "1 cell",
+            "description": "Bound on the 90th percentile of the displacement, read by Eq. 4 in 'apply' mode. A length or a number of cells of h_obs. Keep it under the radius: a bound equal to the radius never fires.",
+            "examples": [
+              "1 cell"
+            ],
+            "title": "Max Displacement P90",
+            "type": "string",
+            "x-hmp-profile": "user"
+          },
+          "max_rejected_share": {
+            "default": 0.1,
+            "description": "Bound on the share of mapped cells of the catchment the snap could not place, read by Eq. 4 in 'apply' mode.",
+            "examples": [
+              0.1
+            ],
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Rejected Share",
+            "type": "number",
+            "x-hmp-profile": "user"
+          }
+        },
+        "title": "SnapStreamsConfig",
         "type": "object"
       },
       "SoilMoistureConfig": {

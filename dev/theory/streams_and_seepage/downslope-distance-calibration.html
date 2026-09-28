@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page explains the criterion that calibrates a catchment against the spatial extent of its stream network rather than against a gauge[ Abhervé et al., 2023], and how to read what it returns. It..." />
 
-    <meta property="article:modified_time" content="2026-09-28T00:40:14+02:00" />
-    <title>Downslope-distance calibration of the stream network &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <meta property="article:modified_time" content="2026-09-28T05:06:22+02:00" />
+    <title>Downslope-distance calibration of the stream network &#8212; HydroModPy 2.0.0a2 documentation</title>
   
   
   
@@ -60,7 +60,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/documentation_options.js?v=1ba6305b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -166,8 +166,8 @@
       
     
     
-    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a2 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a2 documentation - Home"/>
   
   
 </a></div>
@@ -706,6 +706,15 @@ cells reach the surface and the network is short. A tight aquifer keeps the
 water table high, seepage appears far upslope, and the network is long. So the
 length of the simulated network is a reading of the ratio between what the
 aquifer can transmit and what it receives.</p>
+<p>This page derives and qualifies the criterion itself, <code class="docutils literal notranslate"><span class="pre">(D_so,</span> <span class="pre">D_os)</span></code> and
+everything computed from the pair; it is a metric like any other, so what it
+identifies depends on what parameter drives it, not on the criterion. Two
+extensions built on top of it, in <a class="reference internal" href="../../user_guide/workflows/stream-network-calibration.html"><span class="doc">the calibration workflow</span></a> rather than here: a
+<strong>minimal (permanent) map</strong> scored beside the maximal one, and a <strong>transient
+two-bound mode</strong> that compares a run’s simulated flow duration, over whole
+calendar years, to both maps at once, instead of the one steady state this
+page derives everything against. Both reuse this same pair, evaluated once
+per bound; nothing on this page changes underneath them.</p>
 </section>
 <section id="the-downslope-topographic-distance">
 <h2>The downslope topographic distance<a class="headerlink" href="#the-downslope-topographic-distance" title="Link to this heading">#</a></h2>
@@ -1055,6 +1064,12 @@ threshold against it, and nothing here claims that would work.</p>
 read the simulated network as the unthresholded one, because on every run
 measured so far that is what it is. A run whose release package really does
 dribble needs this answered before its network means anything.</p>
+<p><span class="math notranslate nohighlight">\(\tau\)</span> decides who <em>seeps</em>; it does not decide who is <em>visible</em>
+downstream of a seep. The transient two-bound mode adds a second, independent
+threshold, <code class="docutils literal notranslate"><span class="pre">visible_flow</span></code>, on the routed discharge a cell of the downstream
+closure carries: see <a class="reference internal" href="../../user_guide/workflows/stream-network-calibration.html"><span class="doc">the calibration workflow</span></a> (“Two maps and two
+bounds”). The steady, one-state criterion this page derives never reads it:
+it stays purely geometric, the closure of the seeping cells and nothing more.</p>
 </section>
 <section id="which-cells-enter-which-average">
 <h2>Which cells enter which average<a class="headerlink" href="#which-cells-enter-which-average" title="Link to this heading">#</a></h2>
@@ -1144,30 +1159,65 @@ river corridor. HydroModPy reports both weightings at every trial, as
 their gap measures the effect of the refinement directly. Which pair enters the
 criterion is what <code class="docutils literal notranslate"><span class="pre">weighting</span></code> selects; see
 <a class="reference internal" href="../../user_guide/config_reference/calibration.html"><span class="doc">[calibration] CalibrationConfig</span></a> for its default.</p>
-<p><span class="math notranslate nohighlight">\(L_{ref}\)</span> is the square root of the <strong>median</strong> cell area over the
-catchment, not the mean. On a mesh refined along the streams a handful of large
-buffer cells inflate the mean, and for a size ratio of three the two
-conventions differ enough to move <span class="math notranslate nohighlight">\(r_{optim}\)</span> across its bound. Declaring
-<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> raises <span class="math notranslate nohighlight">\(L_{ref}\)</span> to that accuracy when it
-is the larger of the two, because a finer mesh otherwise divides the
-denominator without improving the agreement. That is not a hypothetical: the
-known biases below carry a measured case of <span class="math notranslate nohighlight">\(r_{optim}\)</span> halving on a
-coarser grid with nothing else changed.</p>
+<p><span class="math notranslate nohighlight">\(L_{ref}\)</span> is <span class="math notranslate nohighlight">\(h_{obs}\)</span>: the median distance between the centres of
+neighbouring cells that share an edge, taken over the mapped cells of the
+catchment (falling back to the catchment itself when it holds none). It
+replaces an earlier convention, the square root of the median cell area over
+the <em>whole</em> catchment: on a regular grid the two agree, since every cell has
+the same size, but on a mesh refined along the streams a catchment-wide
+median can land on the coarse hillslope cells rather than the fine ones the
+mapped network actually sits on, and for a size ratio of three the two
+conventions differ enough to move <span class="math notranslate nohighlight">\(r_{optim}\)</span> across its bound.
+<span class="math notranslate nohighlight">\(h_{obs}\)</span> is read on the <em>mapped</em> cells specifically, so it tracks the
+resolution where <span class="math notranslate nohighlight">\(D_{os}\)</span> starts, not a catchment average one large
+buffer cell can pull away from it. It is measured once, on the raw map, and
+does not move under a snap of that map onto the model’s talwegs (below).
+<span class="math notranslate nohighlight">\(r_{optim} = D_{optim} / h_{obs}\)</span> is Equation 3 as printed, whatever
+the output declares, so it stays comparable with Table 1 of the paper.
+Declaring <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> no longer raises <span class="math notranslate nohighlight">\(L_{ref}\)</span>: it
+raises the cell size the validity length is built on (next section), because
+a finer mesh shrinks two cells without improving the agreement. That is not a
+hypothetical: the known biases below carry a measured case of
+<span class="math notranslate nohighlight">\(r_{optim}\)</span> halving on a coarser grid with nothing else changed, under
+the convention in force when it was measured.</p>
 </section>
 <section id="the-validity-bound-and-what-it-does-not-mean">
 <h2>The validity bound and what it does not mean<a class="headerlink" href="#the-validity-bound-and-what-it-does-not-mean" title="Link to this heading">#</a></h2>
-<p>Equation 4 of the paper reads <span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span>. HydroModPy computes it
-against <code class="docutils literal notranslate"><span class="pre">roptim_max</span></code>, reports it as <code class="docutils literal notranslate"><span class="pre">roptim</span></code> and <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code>, and
-<strong>does not let it withhold the calibrated value</strong>: a violation logs a warning
-and the value comes back. A calibration is asked for a number; a coarse
+<p>Equation 4 of the paper reads <span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span>, two pixels, one of
+which the paper budgets for the error of the mapped network (“an error of the
+order of 1 pixel is considered”, HESS p. 3224). HydroModPy writes it as a
+length, <span class="math notranslate nohighlight">\(D_{optim} \leq V\)</span>, with <code class="docutils literal notranslate"><span class="pre">validity_length</span></code> <span class="math notranslate nohighlight">\(V\)</span> in metres.
+<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, the default, reads a cell size <span class="math notranslate nohighlight">\(h = \max(h_{obs}, \sigma)\)</span>,
+<span class="math notranslate nohighlight">\(\sigma\)</span> the declared <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> (<span class="math notranslate nohighlight">\(h =
+h_{obs}\)</span> when none is declared), then</p>
+<div class="math notranslate nohighlight">
+\[V = 2 h \quad \text{without the snap}, \qquad
+V = h + \max(h, F) \quad \text{with the snap floor } F.\]</div>
+<p>The first is the paper’s bound on a regular grid. The second exists only when
+<code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> runs in <code class="docutils literal notranslate"><span class="pre">diagnose</span></code> or <code class="docutils literal notranslate"><span class="pre">apply</span></code>: one cell for
+the hydrogeology, and the map’s cell replaced by <span class="math notranslate nohighlight">\(F\)</span>, the
+<span class="math notranslate nohighlight">\(D_{optim}\)</span> a model reproducing the snapped talwegs exactly still scores
+against the raw map, when <span class="math notranslate nohighlight">\(F\)</span> is larger. That split of the two pixels
+is a reading, which the paper never writes, and the protocol declares it as a
+departure. It gives back the paper at its own resolution while <span class="math notranslate nohighlight">\(F\)</span>
+stays under one cell (Nançon 75 m, proxies of <span class="math notranslate nohighlight">\(F\)</span> from 25 to 41 m,
+<span class="math notranslate nohighlight">\(V\)</span> = 150 m), and keeps one cell of margin above the representation
+error on a fine mesh (Nançon 25 m, a proxy of <span class="math notranslate nohighlight">\(F\)</span> near 76 m,
+<span class="math notranslate nohighlight">\(V\)</span> near 101 m instead of 50 m). A declared length replaces all of it. Each trial publishes
+<code class="docutils literal notranslate"><span class="pre">validity_length_m</span></code> and <code class="docutils literal notranslate"><span class="pre">validity_length_provenance</span></code> beside <code class="docutils literal notranslate"><span class="pre">roptim</span></code>
+and <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code>, and the runner reads the bound once, at the returned
+trial, on each bound of the two-bound mode. It <strong>does not let the bound
+withhold the calibrated value</strong>: a violation logs a warning and the value
+comes back. A calibration is asked for a number; a coarse
 agreement qualifies that number, it does not replace it with nothing. Setting
 <code class="docutils literal notranslate"><span class="pre">on_roptim_violation</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code> turns that warning into a raise, which is an
 explicit choice to be handed nothing rather than a qualified value.</p>
 <p>A companion absolute threshold, <span class="math notranslate nohighlight">\(D_{optim} &lt; 300\)</span> m, appears in Gauvain,
 Abherve, Boivin, Roques et al., EGUsphere preprint 2026-868 (a HydroModPy
 technical note, section 3.2), justified there as four pixels of a 75 m DEM,
-so resolution-dependent rather than a fixed physical bound; <code class="docutils literal notranslate"><span class="pre">roptim_max</span> <span class="pre">=</span> <span class="pre">2</span></code>
-already generalises it to any cell size through <span class="math notranslate nohighlight">\(L_{ref}\)</span>. The same
+so resolution-dependent rather than a fixed physical bound; it is
+<code class="docutils literal notranslate"><span class="pre">validity_length</span> <span class="pre">=</span> <span class="pre">&quot;300</span> <span class="pre">m&quot;</span></code> here, and <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> generalises two pixels to
+any cell size through <span class="math notranslate nohighlight">\(h_{obs}\)</span>. The same
 note gives <code class="docutils literal notranslate"><span class="pre">NSElog</span> <span class="pre">&gt;</span> <span class="pre">0.75</span></code> as the transient stage’s own acceptance
 threshold, on ten values of <span class="math notranslate nohighlight">\(S_y\)</span> explored over a fixed grid rather than
 by dichotomy. Both are stated for context; neither is enforced here, and
@@ -1311,17 +1361,18 @@ either number is right.</p>
 </section>
 <section id="declared-deviations-from-the-paper-and-from-the-authors-own-code">
 <h2>Declared deviations from the paper and from the authors’ own code<a class="headerlink" href="#declared-deviations-from-the-paper-and-from-the-authors-own-code" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">MatchingHydrographicNetwork.deviations</span></code> (version 1.1) declares each of
+<p><code class="docutils literal notranslate"><span class="pre">MatchingHydrographicNetwork.deviations</span></code> (version 1.2) declares each of
 these departures in code, with the same key, paper value and reasoning as
 below; this section restates them so a reader is not sent to the code for a
 one-line answer. Where the key is a real option and its default is the
 paper’s (<code class="docutils literal notranslate"><span class="pre">diagonal_neighbors</span></code>, <code class="docutils literal notranslate"><span class="pre">weighting</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code>,
-<code class="docutils literal notranslate"><span class="pre">observed_rasterization</span></code>), the entry is an offered departure: the Methods
-paragraph a run writes names it only when the file moves it off the paper’s
-value. Three departures already
-have their own section above because the reasoning does not fit in one line:
+<code class="docutils literal notranslate"><span class="pre">validity_length</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_rasterization</span></code>, <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span></code>), the
+entry is an offered departure: the Methods paragraph a run writes names it
+only when the file moves it off the paper’s value. Four departures already have their own
+section above because the reasoning does not fit in one line:
 <span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> under “What counts as a seepage cell”, <code class="docutils literal notranslate"><span class="pre">weighting</span></code> and
-<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> under “Weighting, and the reference length”.
+<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> under “Weighting, and the reference length”,
+and <code class="docutils literal notranslate"><span class="pre">validity_length</span></code> under “The validity bound and what it does not mean”.
 The rest:</p>
 <dl class="simple">
 <dt>Descent, D8 or D4</dt><dd><p>True (D8) is the paper: the authors trace their distances with
@@ -1368,15 +1419,17 @@ detect. Tested on a synthetic V-valley
 target instead moves <span class="math notranslate nohighlight">\(r_{optim}\)</span>’s root by more than a factor of ten.</p>
 </dd>
 <dt>Depression handling, breach or fill</dt><dd><p>The paper’s tool is <code class="docutils literal notranslate"><span class="pre">FillDepressions</span></code>, which raises every depression to
-its pour point, and the filled DEM serves both the delineation and the
-distances. The default here is <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;breach&quot;</span></code> for the
-raster delineation, which carves a channel through the barrier at the
-depression’s own minimal elevation change and moves far fewer cells. The
-criterion does not descend that raster: it fills the model top on the mesh
-graph, seeded on the domain border, which is the paper’s fill, and reads
-its catchment there. The departure reaches the criterion only through the
-domain and the outlet, and <code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code> measures it per trial.
-Setting <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;fill&quot;</span></code> reproduces the paper’s own tool.</p>
+its spill level, and the filled DEM serves both the delineation and the
+distances. The default here is the same, <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;fill&quot;</span></code>, so
+one conditioning rule runs from the DEM to the score. The criterion does
+not descend that raster: it fills the model top on the mesh graph, seeded
+on the domain border, which is the paper’s fill again, and reads its
+catchment there. <code class="docutils literal notranslate"><span class="pre">&quot;breach&quot;</span></code> is offered and departs: it carves a channel
+through the barrier at the least elevation change (Lindsay, 2016) and moves
+far fewer cells, which a fine DEM crossed by road embankments can need.
+A breached raster reaches the criterion only through the domain and the
+outlet, and <code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code> measures that gap per trial. The key
+lives in <code class="docutils literal notranslate"><span class="pre">[geographic]</span></code>, not in the network output.</p>
 </dd>
 <dt>The mapped network’s rasterisation</dt><dd><p>The paper rasterises the mapped network onto the model grid with
 WhiteboxTools’ <code class="docutils literal notranslate"><span class="pre">VectorLinesToRaster</span></code>, whose own assignment rule the text
@@ -1422,10 +1475,11 @@ one.</strong> Between the two runs of the section above, <span class="math notra
 larger cells, <span class="math notranslate nohighlight">\(L_{ref}\)</span> is the square root of the median cell area, and
 the denominator grew. Same catchment, same mapped network, indicator halved.
 Refining a mesh therefore degrades the indicator at constant agreement, which
-is what <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> is for: declaring the positional
-accuracy of the mapped network floors <span class="math notranslate nohighlight">\(L_{ref}\)</span> at a length the model
-resolution cannot shrink. Two <span class="math notranslate nohighlight">\(r_{optim}\)</span> values measured on different
-meshes are not comparable unless that floor is declared and identical.</p>
+is why the bound is a length: declaring the positional accuracy of the mapped
+network, or letting the snap measure its floor <span class="math notranslate nohighlight">\(F\)</span>, widens the validity
+length to what the model resolution cannot shrink, while <span class="math notranslate nohighlight">\(r_{optim}\)</span>
+stays the paper’s ratio. Two <span class="math notranslate nohighlight">\(r_{optim}\)</span> values measured on different
+meshes are not comparable; two verdicts are, when their validity lengths are.</p>
 <p><strong>Publish</strong> <span class="math notranslate nohighlight">\(T/R\)</span>, <strong>not</strong> <span class="math notranslate nohighlight">\(K\)</span>. The conductivity inherits the
 recharge series entirely: changing reanalysis moves it by +3, +25 and -28 per
 cent on three catchments. On a five-layer model, <span class="math notranslate nohighlight">\(T/R\)</span> is stable to 1.21
@@ -1488,6 +1542,21 @@ nothing. A calibration declaring a network output recomputes the same ratio on
 the solver mesh and publishes it per trial as <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>, together
 with <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code>, the same ratio restricted to the
 scored catchment.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> on, the map is first snapped on the talwegs
+of the conditioned raw DEM, on the raster grid, by the same algorithm the
+criterion uses on the mesh. In <code class="docutils literal notranslate"><span class="pre">apply</span></code> the trench is cut along the snapped
+cells rather than the raw lines, and <span class="math notranslate nohighlight">\(\alpha\)</span> is measured against the
+snapped map the burn followed (<code class="docutils literal notranslate"><span class="pre">&quot;snapped&quot;:</span> <span class="pre">true</span></code> in the JSON). In
+<code class="docutils literal notranslate"><span class="pre">diagnose</span></code> the raw lines are burned and measured, and the snap is only
+published, in <code class="docutils literal notranslate"><span class="pre">stream_snap_raster.json</span></code>.</p>
+<p>That raster snap is not the one Eq. 4 scores. The criterion snaps the raw map
+again on the mesh graph, filled from the unburned model top, with a radius
+counted in mesh cells. On a mesh coarser than the DEM the two passes can put
+one reach on different talwegs near a meander or a confluence. In <code class="docutils literal notranslate"><span class="pre">apply</span></code>
+the burn and the mesh river trace then follow the raster snap while the
+criterion scores its own. No agreement between the two is computed yet:
+compare <code class="docutils literal notranslate"><span class="pre">stream_snap_raster.tif</span></code> with the snapped map of the network card
+before trusting <code class="docutils literal notranslate"><span class="pre">apply</span></code> on a coarse mesh.</p>
 <p>The restriction is not cosmetic. Outside the catchment the mesh is a buffer, so
 no cell there is required to descend into the mapped network, and every reach
 of the linework lying beyond the basin adds to the closure without adding to

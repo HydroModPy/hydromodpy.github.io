@@ -14,8 +14,8 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Calibration in HydroModPy runs an ask/tell loop: an optimizer proposes a parameter point, the engine evaluates it, the optimizer ingests the result. Optimizers are plugged through adapters under hy..." name="description"/>
-<meta content="2026-09-26T04:32:33+02:00" property="article:modified_time"/>
-<title>Add a Calibration Method — HydroModPy 2.0.0a1 documentation</title>
+<meta content="2026-09-28T08:00:17+02:00" property="article:modified_time"/>
+<title>Add a Calibration Method — HydroModPy 2.0.0a2 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
@@ -50,7 +50,7 @@
 <!-- Pre-loaded scripts that we'll load fully later -->
 <link as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
 <link as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" rel="preload"/>
-<script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+<script src="../../_static/documentation_options.js?v=1ba6305b"></script>
 <script src="../../_static/doctools.js?v=9a2dae69"></script>
 <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
 <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 26, 2026" name="docbuild:last-update"/>
+<meta content="Sep 28, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -111,8 +111,8 @@
 <div class="col-lg-3 navbar-header-items__start">
 <div class="navbar-item">
 <a class="navbar-brand logo" href="../../index.html">
-<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-light" src="../../_static/logoHydroModPy_long.png"/>
-<img alt="HydroModPy 2.0.0a1 documentation - Home" class="logo__image only-dark pst-js-only" src="../../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a2 documentation - Home" class="logo__image only-light" src="../../_static/logoHydroModPy_long.png"/>
+<img alt="HydroModPy 2.0.0a2 documentation - Home" class="logo__image only-dark pst-js-only" src="../../_static/logoHydroModPy_long.png"/>
 </a></div>
 </div>
 <div class="col-lg-9 navbar-header-items">
@@ -575,15 +575,16 @@ the wiring required.</p>
 </section>
 <section id="declaring-the-options">
 <h2>Declaring the options<a class="headerlink" href="#declaring-the-options" title="Link to this heading">#</a></h2>
-<p>Registering the class is not enough: <code class="docutils literal notranslate"><span class="pre">optimizer_kwargs</span></code> is validated
+<p>Registering the class is not enough: <code class="docutils literal notranslate"><span class="pre">method_options</span></code> is validated
 against a typed model before it ever reaches the adapter constructor. Add a
 <code class="docutils literal notranslate"><span class="pre">BaseModel</span></code> for <code class="docutils literal notranslate"><span class="pre">mymethod</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/method_config.py</span></code>,
 with <code class="docutils literal notranslate"><span class="pre">method:</span> <span class="pre">Literal["mymethod"]</span></code> and one field per accepted constructor
 keyword, and list it in the <code class="docutils literal notranslate"><span class="pre">CalibrationMethodConfig</span></code> union at the bottom
-of that module. <code class="docutils literal notranslate"><span class="pre">CalibrationConfig.validate_registry</span></code> calls
-<code class="docutils literal notranslate"><span class="pre">validate_method_kwargs</span></code>, which raises on an unknown key or a wrong type
-at config-load time, instead of inside the adapter where the message is
-much less helpful.</p>
+of that module. A phase, <code class="docutils literal notranslate"><span class="pre">[calibration]</span></code> and the protocol’s
+<code class="docutils literal notranslate"><span class="pre">steady_method_options</span></code> / <code class="docutils literal notranslate"><span class="pre">transient_method_options</span></code> are checked against
+it when the file loads, by <code class="docutils literal notranslate"><span class="pre">method_options_problem</span></code>: an unknown key or a
+wrong type is refused there, naming the phase, instead of inside the adapter
+when that phase starts. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--check</span></code> runs the same check.</p>
 <p>Search methods ship with HydroModPy and are not plugged from outside. A
 search of your own does not go through this registry: write an object
 that satisfies <code class="docutils literal notranslate"><span class="pre">Optimizer</span></code> (<code class="docutils literal notranslate"><span class="pre">ask</span></code>, <code class="docutils literal notranslate"><span class="pre">tell</span></code>, <code class="docutils literal notranslate"><span class="pre">suggest_next</span></code>,
@@ -634,7 +635,7 @@ is then refused with a message naming what does bound it, rather than accepted
 and dropped: a run reporting that it honoured a request it never read is worse
 than a run refusing the request.</p>
 <p>Everything a stopping rule needs beyond that precision stays in
-<code class="docutils literal notranslate"><span class="pre">optimizer_kwargs</span></code>, in the engine’s own units, which is how a published call is
+<code class="docutils literal notranslate"><span class="pre">method_options</span></code>, in the engine’s own units, which is how a published call is
 reproduced verbatim. Stating both the precision and the option it writes is
 refused, before the first solve.</p>
 </section>

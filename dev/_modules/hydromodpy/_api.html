@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hydromodpy._api &#8212; HydroModPy 2.0.0a1 documentation</title>
+    <title>hydromodpy._api &#8212; HydroModPy 2.0.0a2 documentation</title>
   
   
   
@@ -49,7 +49,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=3b17aab0"></script>
+    <script src="../../_static/documentation_options.js?v=1ba6305b"></script>
     <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -151,8 +151,8 @@
       
     
     
-    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a1 documentation - Home"/>
-    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a1 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a2 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a2 documentation - Home"/>
   
   
 </a></div>
@@ -950,10 +950,10 @@
 <span class="sd">    expand</span>
 <span class="sd">        Return the ``[calibration]`` section a protocol unfolds into, instead</span>
 <span class="sd">        of running anything. Needs ``config`` to be a TOML path. A file naming</span>
-<span class="sd">        a protocol gets only ``objective_blocks`` and ``phases``, the keys the</span>
-<span class="sd">        protocol writes; a file naming none gets its own section back</span>
-<span class="sd">        unchanged. Refused together with ``phase`` or ``list_phases``: expand</span>
-<span class="sd">        answers what would run, it does not run it.</span>
+<span class="sd">        a protocol gets the whole section it unfolds into, without the</span>
+<span class="sd">        ``protocol`` key, so it can be pasted in its place; a file naming none</span>
+<span class="sd">        gets its own section back unchanged. Refused together with ``phase``</span>
+<span class="sd">        or ``list_phases``: expand answers what would run, it does not run it.</span>
 <span class="sd">    kwargs</span>
 <span class="sd">        Options forwarded to the underlying calibration runner. The</span>
 <span class="sd">        ``headless`` keyword controls the project initialization for the</span>
@@ -967,8 +967,9 @@
 <span class="sd">        descriptions when ``list_phases`` is set. A ``dict`` with</span>
 <span class="sd">        ``"calibration"`` and ``"protocol"`` keys when ``expand`` is set:</span>
 <span class="sd">        ``"protocol"`` is ``None`` for a file naming no protocol, else a</span>
-<span class="sd">        ``dict`` with ``"name"``, ``"version"`` and ``"citation"`` (the first</span>
-<span class="sd">        reference, short form).</span>
+<span class="sd">        ``dict`` with ``"name"``, ``"version"``, ``"citation"`` (the first</span>
+<span class="sd">        reference, short form) and ``"inherited"`` (true when the protocol</span>
+<span class="sd">        comes from the ``base_config``).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1075,19 +1076,18 @@
 <span class="sd">    :func:`hydromodpy.calibration.protocols.expand_calibration_protocol`. A</span>
 <span class="sd">    file naming no protocol gets its own section back, ``protocol`` key</span>
 <span class="sd">    aside: nothing was unfolded, so there is nothing else to say. A file</span>
-<span class="sd">    naming one gets :data:`~hydromodpy.calibration.protocols.WRITTEN_SECTIONS`</span>
-<span class="sd">    (``objective_blocks``, ``phases``) in full, plus any output the protocol</span>
-<span class="sd">    introduced under ``outputs`` that the file did not already declare (a</span>
-<span class="sd">    protocol may add one, such as the point output its transient stage reads,</span>
-<span class="sd">    beside the network output the file supplies itself): the rest of the</span>
-<span class="sd">    section -- parameters, the file's own outputs, seed -- already sits in</span>
-<span class="sd">    the file or its ``base_config`` and does not need restating.</span>
+<span class="sd">    naming one gets the whole section the protocol unfolds into, ``protocol``</span>
+<span class="sd">    key aside: parameters, outputs, the blocks and phases it writes, and every</span>
+<span class="sd">    other key the file or its ``base_config`` set. Pasted in place of the</span>
+<span class="sd">    protocol, it runs the same stages.</span>
+
+<span class="sd">    ``protocol["inherited"]`` says whether the protocol comes from the</span>
+<span class="sd">    ``base_config`` rather than from ``target`` itself. A file that pastes the</span>
+<span class="sd">    section under that same base then has to drop the inherited protocol.</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-        <span class="n">WRITTEN_SECTIONS</span><span class="p">,</span>
-        <span class="n">expand_calibration_protocol</span><span class="p">,</span>
-        <span class="n">get_protocol</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">expand_calibration_protocol</span><span class="p">,</span> <span class="n">get_protocol</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigError</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.toml_io.loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_toml_with_base_config</span>
 
@@ -1112,21 +1112,13 @@
     <span class="n">name</span> <span class="o">=</span> <span class="n">declaration</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declaration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">declaration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
     <span class="n">protocol</span> <span class="o">=</span> <span class="n">get_protocol</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
     <span class="n">expanded_calibration</span> <span class="o">=</span> <span class="n">expanded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="n">section</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">key</span><span class="p">:</span> <span class="n">expanded_calibration</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">WRITTEN_SECTIONS</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expanded_calibration</span>
-    <span class="p">}</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">outputs_agree</span>
-
-    <span class="n">declared_outputs</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"outputs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="n">produced_outputs</span> <span class="o">=</span> <span class="n">expanded_calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"outputs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-    <span class="n">new_outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">output_name</span><span class="p">:</span> <span class="n">decl</span>
-        <span class="k">for</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">decl</span> <span class="ow">in</span> <span class="n">produced_outputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">output_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared_outputs</span>
-        <span class="ow">or</span> <span class="ow">not</span> <span class="n">outputs_agree</span><span class="p">(</span><span class="n">declared_outputs</span><span class="p">[</span><span class="n">output_name</span><span class="p">],</span> <span class="n">decl</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="n">new_outputs</span><span class="p">:</span>
-        <span class="n">section</span><span class="p">[</span><span class="s2">"outputs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_outputs</span>
+    <span class="n">section</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expanded_calibration</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">"protocol"</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">own</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8-sig"</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">TOMLDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> cannot be read: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="n">own_calibration</span> <span class="o">=</span> <span class="n">own</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration"</span><span class="p">)</span>
+    <span class="n">inherited</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">own_calibration</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"protocol"</span> <span class="ow">in</span> <span class="n">own_calibration</span><span class="p">)</span>
     <span class="n">citation</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">protocol</span><span class="o">.</span><span class="n">references</span><span class="p">:</span>
         <span class="n">reference</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">references</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1135,7 +1127,12 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"calibration"</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span>
-        <span class="s2">"protocol"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="s2">"citation"</span><span class="p">:</span> <span class="n">citation</span><span class="p">},</span>
+        <span class="s2">"protocol"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="s2">"citation"</span><span class="p">:</span> <span class="n">citation</span><span class="p">,</span>
+            <span class="s2">"inherited"</span><span class="p">:</span> <span class="n">inherited</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">}</span>
 
 
@@ -1382,7 +1379,7 @@
 <span class="sd">    &gt;&gt;&gt; da = hmp.read(run, "head")  # lazy DataArray  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; arr = hmp.read(run, "head", time=-1, layer=0)  # ndarray  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; ts = hmp.read(run, "discharge", sel={"station": "outlet"})  # doctest: +SKIP</span>
-<span class="sd">    &gt;&gt;&gt; gdf = hmp.read(run, "watershed_polygon")  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; gdf = hmp.read(run, "watershed")  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.derive.reading</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_variable</span>
 
@@ -1396,6 +1393,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">save</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render one registered figure for a simulation Run.</span>
@@ -1404,7 +1402,8 @@
 <span class="sd">    same names, the same options, so a figure produced by ``hmp run`` can be</span>
 <span class="sd">    reproduced (or re-styled) from a script without importing anything from</span>
 <span class="sd">    the display internals. List the names with</span>
-<span class="sd">    :func:`hydromodpy.display.list_figures`.</span>
+<span class="sd">    :func:`hydromodpy.display.list_figures`. The options are the figure's</span>
+<span class="sd">    own; the run's ``[display]`` is not applied (``hmp viz show`` applies it).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1417,9 +1416,15 @@
 <span class="sd">        ``&lt;name&gt;.png`` appended.</span>
 <span class="sd">    dpi</span>
 <span class="sd">        Raster resolution used when saving.</span>
+<span class="sd">    time</span>
+<span class="sd">        The instant a figure that draws one instant shows: a date</span>
+<span class="sd">        (``"2002-10-15"``, or a ``datetime.date``), ``"first"`` or ``"last"``.</span>
+<span class="sd">        The figure draws the stress period that holds the date. ``None``</span>
+<span class="sd">        leaves the figure its own default, usually the last period.</span>
 <span class="sd">    **opts</span>
 <span class="sd">        Figure-specific options, identical to the ``[display.overrides]``</span>
-<span class="sd">        entries (``timestep``, ``overlays``, ``cmap``, ``units``, ...).</span>
+<span class="sd">        entries (``overlays``, ``cmap``, ``orientation``, ...). A key the</span>
+<span class="sd">        figure does not take is refused with the list of the keys it takes.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1431,7 +1436,8 @@
 <span class="sd">    KeyError</span>
 <span class="sd">        If ``name`` is not registered.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the run does not carry what the figure needs.</span>
+<span class="sd">        If an option is not one the figure takes, if the run does not carry</span>
+<span class="sd">        what the figure needs, or if ``time`` names no period of the run.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -1439,9 +1445,12 @@
 <span class="sd">    &gt;&gt;&gt; cat = hmp.open("~/ws/projects/aber")  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; run = cat.latest()  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.figure(run, "cross_section", orientation="sn")  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; hmp.figure(run, "seepage_map", time="2002-10-15")  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.runs</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_figure</span>
 
+    <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">opts</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span>
     <span class="k">return</span> <span class="n">render_figure</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
 
 
@@ -1449,37 +1458,45 @@
 <a class="viewcode-back" href="../../api/generated/hydromodpy.export.html#hydromodpy.export">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span>
     <span class="n">sim</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">var</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">dest</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">variables</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">time</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">layer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">period</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">folder</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">crs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">layer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodata</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">9999.0</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Export a variable from a simulation to a standalone file.</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Export data of a simulation to files; return the files written.</span>
 
-<span class="sd">    Functional mirror of :func:`read`: same selector (``sim`` / ``var`` /</span>
-<span class="sd">    ``time`` / ``layer``) plus an output format and destination. ``sim`` must</span>
-<span class="sd">    be a :class:`~hydromodpy.results.run.Run`, as returned by</span>
+<span class="sd">    The words of an ``[[export]]`` block and of ``hmp export``: ``variables``</span>
+<span class="sd">    says what (a name, a list, or ``"all"``: ``hmp export &lt;run&gt; --list``</span>
+<span class="sd">    prints what a run holds), ``time`` or ``period`` when, ``folder`` or</span>
+<span class="sd">    ``file`` where. The format follows the data unless ``format`` or the</span>
+<span class="sd">    extension of ``file`` names one: a field at one date goes to GeoTIFF, one</span>
+<span class="sd">    file per variable; over several dates to one NetCDF; a series or the</span>
+<span class="sd">    budget to CSV; a vector layer (``watershed``, a network) to GeoPackage; a</span>
+<span class="sd">    raster layer (``watershed_dem``) to GeoTIFF. ``format="package"`` writes</span>
+<span class="sd">    the portable ``.hmp`` archive of the run. Files land in ``share/&lt;run&gt;/``.</span>
+
+<span class="sd">    ``sim`` must be a :class:`~hydromodpy.results.run.Run`, as returned by</span>
 <span class="sd">    ``hmp.open(workspace)[ref]`` or ``catalog.latest()``.</span>
-
-<span class="sd">    ``fmt`` is optional when ``dest`` carries a known extension</span>
-<span class="sd">    (``.nc`` -&gt; netcdf, ``.tif`` -&gt; geotiff, ``.csv`` -&gt; csv, ``.shp`` -&gt;</span>
-<span class="sd">    shapefile, ``.vtu`` -&gt; vtu, ``.hmp`` -&gt; portable package).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import hydromodpy as hmp</span>
 <span class="sd">    &gt;&gt;&gt; run = hmp.open("~/hmp_workspace")["transient_nwt"]  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; hmp.export(run, "all")  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.export(</span>
-<span class="sd">    ...     run, "head", "head.tif", time="last", resolution=50</span>
+<span class="sd">    ...     run, ["head", "watertable_depth"], time="2001-08-15"</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.export(</span>
-<span class="sd">    ...     run, ["head", "watertable_depth"], "fields.nc", time="all"</span>
+<span class="sd">    ...     run, "discharge", period=("2001-01-01", "2002-12-31")</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; hmp.export(run, "all", format="package")  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span>
 
@@ -1489,13 +1506,15 @@
             <span class="sa">f</span><span class="s2">"Obtain one with hmp.open(workspace)[ref] or catalog.latest()."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">sim</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
-        <span class="n">var</span><span class="p">,</span>
-        <span class="n">dest</span><span class="p">,</span>
-        <span class="n">fmt</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span>
+        <span class="n">variables</span><span class="p">,</span>
         <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
-        <span class="n">layer</span><span class="o">=</span><span class="n">layer</span><span class="p">,</span>
-        <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+        <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="nb">format</span><span class="p">,</span>
+        <span class="n">folder</span><span class="o">=</span><span class="n">folder</span><span class="p">,</span>
+        <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
         <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+        <span class="n">layer</span><span class="o">=</span><span class="n">layer</span><span class="p">,</span>
         <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
     <span class="p">)</span></div>
 
