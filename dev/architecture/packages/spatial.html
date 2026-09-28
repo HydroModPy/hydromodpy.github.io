@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="hydromodpy.spatial carries the spatial-support stack: catchment delineation, geographic context, domain definition, mesh generation, and the field abstractions that bridge geology to solver inputs...." name="description"/>
-<meta content="2026-09-19T01:53:19+02:00" property="article:modified_time"/>
+<meta content="2026-09-25T11:25:21+02:00" property="article:modified_time"/>
 <title>spatial — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 19, 2026" name="docbuild:last-update"/>
+<meta content="Sep 25, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -517,13 +517,17 @@ declaration mentions – an engine is usable when the suite passes, not when
 and display layers), <code class="docutils literal notranslate"><span class="pre">domain_geographic_pipeline</span></code> (high-level
 orchestration).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spatial/domain/</span></code> – <code class="docutils literal notranslate"><span class="pre">Domain</span></code> aggregates <code class="docutils literal notranslate"><span class="pre">surface_topo</span></code>,
-<code class="docutils literal notranslate"><span class="pre">substratum</span></code> (via depth model), and <code class="docutils literal notranslate"><span class="pre">zones</span></code>. Two depth models
+<code class="docutils literal notranslate"><span class="pre">substratum</span></code> (via depth model), and <code class="docutils literal notranslate"><span class="pre">zones</span></code>. Four depth models
 ship: <code class="docutils literal notranslate"><span class="pre">ConstantThicknessDepthModel</span></code> (homogeneous offset),
-<code class="docutils literal notranslate"><span class="pre">FlatSubstratumDepthModel</span></code> (fixed elevation). <code class="docutils literal notranslate"><span class="pre">build.py</span></code> is the one
-constructor of that geometry – it copies the declared section before arming
-the binder zone ids on it – and the setup step, the rebuild a second run on a
-live project triggers, the domain case script and the bundle exporter all go
-through it. Beside it, the <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> capability: <code class="docutils literal notranslate"><span class="pre">capability.py</span></code>
+<code class="docutils literal notranslate"><span class="pre">FlatSubstratumDepthModel</span></code> (fixed elevation), and their raster twins
+<code class="docutils literal notranslate"><span class="pre">RasterThicknessDepthModel</span></code> and <code class="docutils literal notranslate"><span class="pre">RasterSubstratumDepthModel</span></code>, which read
+a thickness or an elevation from the <code class="docutils literal notranslate"><span class="pre">[data.substratum]</span></code> raster,
+reprojected onto the top and required over every cell of the domain. <code class="docutils literal notranslate"><span class="pre">build.py</span></code> is the one constructor of that geometry –
+it copies the declared section before arming the binder zone ids on it –
+and the setup step, the rebuild a second run on a live project triggers, the
+domain case script and the bundle exporter all go through it.
+<code class="docutils literal notranslate"><span class="pre">read_substratum_source</span></code> beside it is the one reader of that raster: the
+domain is built during setup, before the data step loads anything. Beside it, the <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> capability: <code class="docutils literal notranslate"><span class="pre">capability.py</span></code>
 declares it (<code class="docutils literal notranslate"><span class="pre">DOMAIN_BUILD</span></code>, <code class="docutils literal notranslate"><span class="pre">DomainBuildRequest</span></code>) and <code class="docutils literal notranslate"><span class="pre">worker.py</span></code> runs
 it, sealing a bottom, a thickness, an active-cell mask and one
 <code class="docutils literal notranslate"><span class="pre">domain.json</span></code> from a terrain and a depth model. It declares

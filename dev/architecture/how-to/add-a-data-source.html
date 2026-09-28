@@ -10,11 +10,11 @@
 <meta content="website" property="og:type"/>
 <meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-data-source.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
-<meta content="A source is a concrete origin (public API, custom file, synthetic generator, or constant) bound to an existing data variable such as hydrometry, geology, dem, or recharge. This page covers the thre..." property="og:description"/>
+<meta content="A source is one value a user may write in source = for an existing variable: a public API, the user’s own files ( custom), or a generator ( constant, synthetic). For a brand-new variable family, se..." property="og:description"/>
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
-<meta content="A source is a concrete origin (public API, custom file, synthetic generator, or constant) bound to an existing data variable such as hydrometry, geology, dem, or recharge. This page covers the thre..." name="description"/>
-<meta content="2026-09-18T07:08:43+02:00" property="article:modified_time"/>
+<meta content="A source is one value a user may write in source = for an existing variable: a public API, the user’s own files ( custom), or a generator ( constant, synthetic). For a brand-new variable family, se..." name="description"/>
+<meta content="2026-09-25T00:21:24+02:00" property="article:modified_time"/>
 <title>Add a Data Source — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 18, 2026" name="docbuild:last-update"/>
+<meta content="Sep 25, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -484,34 +484,100 @@
 <article class="bd-article">
 <section id="add-a-data-source">
 <h1>Add a Data Source<a class="headerlink" href="#add-a-data-source" title="Link to this heading">#</a></h1>
-<p>A <em>source</em> is a concrete origin (public API, custom file, synthetic
-generator, or constant) bound to an existing data variable such as
-<code class="docutils literal notranslate"><span class="pre">hydrometry</span></code>, <code class="docutils literal notranslate"><span class="pre">geology</span></code>, <code class="docutils literal notranslate"><span class="pre">dem</span></code>, or <code class="docutils literal notranslate"><span class="pre">recharge</span></code>. This page
-covers the three flavours.</p>
-<p>For a brand-new variable family, see <a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a Data Variable</span></a>
-first.</p>
+<p>A <em>source</em> is one value a user may write in <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span></code> for an existing
+variable: a public API, the user’s own files (<code class="docutils literal notranslate"><span class="pre">custom</span></code>), or a generator
+(<code class="docutils literal notranslate"><span class="pre">constant</span></code>, <code class="docutils literal notranslate"><span class="pre">synthetic</span></code>). For a brand-new variable family, see
+<a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a Data Variable</span></a> first.</p>
 <section id="two-paths-and-which-one-you-are-on">
 <h2>Two paths, and which one you are on<a class="headerlink" href="#two-paths-and-which-one-you-are-on" title="Link to this heading">#</a></h2>
-<p><strong>The port.</strong> <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/port.py</span></code> declares what a source
-owes its callers, and <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/registry.py</span></code> resolves a
-<code class="docutils literal notranslate"><span class="pre">source_id</span></code> to the class that implements it. A source on this path is
-reachable by name from a project TOML, from a <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code>
-<code class="docutils literal notranslate"><span class="pre">request.json</span></code>, and from a third-party distribution that never patches
-this repository. <strong>It is the only path available out of tree.</strong></p>
-<p><strong>The per-variable adapter.</strong> Most variables still carry a module-level
-<code class="docutils literal notranslate"><span class="pre">fetch</span></code> under <code class="docutils literal notranslate"><span class="pre">variables/&lt;variable&gt;/apis/</span></code> and a branch on
-<code class="docutils literal notranslate"><span class="pre">source_cfg.source</span></code> in their manager’s <code class="docutils literal notranslate"><span class="pre">_fetch_from_source</span></code>.
-Twenty-three variable packages still carry a closed <code class="docutils literal notranslate"><span class="pre">Literal</span></code> of source
-names; <code class="docutils literal notranslate"><span class="pre">hydrography</span></code> is not one of them, and is the worked example of
-what the port replaces it with.</p>
-<p>Pick the port for anything new. The section below describes the adapter
-path because it is what you will find when you read an unmigrated
-variable, not because it is where a new source belongs.</p>
+<p><strong>In this repository</strong>, a provider is a function in the variable’s package
+and one entry in its manager’s <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code> table. That is how every shipped
+variable reaches Hub’Eau, SIM2, the BRGM, the IGN or the SHOM.</p>
+<p><strong>Out of tree</strong>, a provider is a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> class (the port,
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/port.py</span></code>) published on the
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code> entry-point group. It is nameable in a
+<code class="docutils literal notranslate"><span class="pre">[data.hydrography]</span></code> section when it serves a river network, and for any
+payload kind under the <code class="docutils literal notranslate"><span class="pre">installed</span></code> member of a data request, without a
+patch to this repository.</p>
 </section>
-<section id="the-port">
-<h2>The port<a class="headerlink" href="#the-port" title="Link to this heading">#</a></h2>
-<p>Eight members, seven of them class-level declarations read <em>before</em> any
-fetch runs, and one <code class="docutils literal notranslate"><span class="pre">fetch</span></code>:</p>
+<section id="an-in-tree-provider">
+<h2>An in-tree provider<a class="headerlink" href="#an-in-tree-provider" title="Link to this heading">#</a></h2>
+<p>Three edits, all inside the variable’s package, plus one line of the source
+table:</p>
+<ol class="arabic simple">
+<li><p>the provider module, <code class="docutils literal notranslate"><span class="pre">variables/&lt;variable&gt;/apis/&lt;provider&gt;.py</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">common/clients/</span></code> when several variables share it, as SIM2 does);</p></li>
+<li><p>the value in the <code class="docutils literal notranslate"><span class="pre">source</span></code> field of <code class="docutils literal notranslate"><span class="pre">variables/&lt;variable&gt;/config.py</span></code>;</p></li>
+<li><p>the entry in the manager’s <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code> table;</p></li>
+<li><p>an entry (licence, network hosts) in <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/sources.py</span></code>.</p></li>
+</ol>
+<p>A station provider has the form
+<code class="docutils literal notranslate"><span class="pre">fetch(cfg,</span> <span class="pre">*,</span> <span class="pre">bbox,</span> <span class="pre">station_ids,</span> <span class="pre">start,</span> <span class="pre">end,</span> <span class="pre">context)</span></code>, a gridded one
+<code class="docutils literal notranslate"><span class="pre">fetch(cfg,</span> <span class="pre">*,</span> <span class="pre">bbox,</span> <span class="pre">period,</span> <span class="pre">context)</span></code>. <code class="docutils literal notranslate"><span class="pre">cfg</span></code> is the validated source
+section, <code class="docutils literal notranslate"><span class="pre">bbox</span></code> the box the manager resolved for the provider’s CRS, and
+<code class="docutils literal notranslate"><span class="pre">context</span></code> a <code class="docutils literal notranslate"><span class="pre">SourceContext</span></code>: project extent, cache folder, section dates,
+nearest point.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/apis/acme.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.spatial_field</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldRecord</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">FieldRecord</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Wind speed from the Acme grid service, over bbox and period."""</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/config.py</span>
+<span class="n">source</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"custom"</span><span class="p">,</span> <span class="s2">"sim2"</span><span class="p">,</span> <span class="s2">"acme"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Data provider."</span><span class="p">,</span>
+    <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"value_docs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"acme"</span><span class="p">:</span> <span class="s2">"Wind speed from the Acme service."</span><span class="p">}},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/manager.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.wind.apis</span><span class="w"> </span><span class="kn">import</span> <span class="n">acme</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WindManager</span><span class="p">(</span><span class="n">BaseFieldManager</span><span class="p">):</span>
+    <span class="n">VARIABLE_NAME</span> <span class="o">=</span> <span class="s2">"wind"</span>
+    <span class="n">INTERNAL_UNIT</span> <span class="o">=</span> <span class="s2">"m/s"</span>
+    <span class="n">SOURCES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sim2"</span><span class="p">:</span> <span class="n">sim2_source</span><span class="p">(</span><span class="s2">"wind"</span><span class="p">),</span> <span class="s2">"acme"</span><span class="p">:</span> <span class="n">acme</span><span class="o">.</span><span class="n">fetch</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The manager owns the cache: <code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> keeps grids as NetCDF,
+<code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code> keeps chronicles per station and asks the provider
+only for the missing periods. A provider never opens the catalogue.</p>
+<p>A grid provider is cached only when it can say which variables it returns:
+give the function a <code class="docutils literal notranslate"><span class="pre">variables(cfg)</span></code> attribute, as <code class="docutils literal notranslate"><span class="pre">sim2_source</span></code> does.
+Without it the provider is called on every load and receives
+<code class="docutils literal notranslate"><span class="pre">bbox=None</span></code>, which is right for a local generator and wrong for a download.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">get_json</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/common/api_client.py</span></code>) or <code class="docutils literal notranslate"><span class="pre">HTTPClient</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/http_client.py</span></code>) rather than raw <code class="docutils literal notranslate"><span class="pre">requests</span></code>: they
+handle retry, backoff and timeout.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_the_variable_families_agree.py</span></code> checks that the
+<code class="docutils literal notranslate"><span class="pre">source</span></code> values of each variable (<code class="docutils literal notranslate"><span class="pre">custom</span></code> aside) are exactly the keys of
+its <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>, and that each has an entry in <code class="docutils literal notranslate"><span class="pre">schema/sources.py</span></code>; a
+missing edit fails there with the file to complete. <code class="docutils literal notranslate"><span class="pre">value_docs</span></code> renders
+the per-value table of the configuration reference, which
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.doc_config</span></code> regenerates.</p>
+<p>The source section is <strong>one flat model</strong>: every source’s fields sit side by
+side and <code class="docutils literal notranslate"><span class="pre">source</span></code> selects which are read. <code class="docutils literal notranslate"><span class="pre">extra="forbid"</span></code> refuses an
+unknown key, not a field of another source of the same section, so a field
+name is never reused across two sources of one variable.</p>
+</section>
+<section id="custom-files-and-generators">
+<h2>Custom files and generators<a class="headerlink" href="#custom-files-and-generators" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">"custom"</span></code> never appears in <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>: the base class loads the
+user’s files with <code class="docutils literal notranslate"><span class="pre">load_custom</span></code>, from the manager’s <code class="docutils literal notranslate"><span class="pre">VARIABLE_NAME</span></code> and
+<code class="docutils literal notranslate"><span class="pre">INTERNAL_UNIT</span></code>. A variable whose files need real work overrides it, or
+keeps a <code class="docutils literal notranslate"><span class="pre">custom.py</span></code> beside its manager. A generator is a module named after
+its value (<code class="docutils literal notranslate"><span class="pre">recharge/synthetic.py</span></code>, <code class="docutils literal notranslate"><span class="pre">oceanic/constant.py</span></code>) with the same
+signature as a provider.</p>
+</section>
+<section id="a-plugin-source">
+<h2>A plugin source<a class="headerlink" href="#a-plugin-source" title="Link to this heading">#</a></h2>
+<p>Eight members, seven of them class-level declarations read <em>before</em> any fetch
+runs, and one <code class="docutils literal notranslate"><span class="pre">fetch</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># mypackage/acme_radar.py</span>
 <span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#module-typing"><span class="nn">typing</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a>
 
@@ -522,6 +588,8 @@ fetch runs, and one <code class="docutils literal notranslate"><span class="pre"
     <span class="n">PeriodNeed</span><span class="p">,</span>
     <span class="n">Selector</span><span class="p">,</span>
     <span class="n">extent_for</span><span class="p">,</span>
+    <span class="n">require_period</span><span class="p">,</span>
+    <span class="n">require_selectors</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -539,50 +607,33 @@ fetch runs, and one <code class="docutils literal notranslate"><span class="pre"
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"radar_rainfall"</span><span class="p">,)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">FetchRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
-        <span class="n">extent</span> <span class="o">=</span> <span class="n">extent_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>  <span class="c1"># converts into extent_crs</span>
+        <span class="n">require_selectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">require_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="n">extent_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>  <span class="c1"># converted into extent_crs</span>
         <span class="o">...</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">variables</span></code> is the instance’s and not the class’s, because a source
-configured one way may serve fewer variables than the class can.
-Everything else is a <code class="docutils literal notranslate"><span class="pre">ClassVar</span></code>, so the registry can refuse a
-non-conforming class at registration instead of mid-fetch.</p>
-<p>What a source must <strong>not</strong> know: the DuckDB catalogue, the project
-workspace, the <code class="docutils literal notranslate"><span class="pre">geographic</span></code> object, a lock, or a cache. It receives an
-<code class="docutils literal notranslate"><span class="pre">Extent</span></code> carrying its own CRS, an optional <code class="docutils literal notranslate"><span class="pre">Period</span></code>, and an
-<code class="docutils literal notranslate"><span class="pre">out_dir</span></code> scratch it owns alone. Anything it writes outside <code class="docutils literal notranslate"><span class="pre">out_dir</span></code>
-is a bug the conformance suite catches.</p>
-</section>
-<section id="register-it">
-<h2>Register it<a class="headerlink" href="#register-it" title="Link to this heading">#</a></h2>
-<p>In tree, add one line to <code class="docutils literal notranslate"><span class="pre">_BUILTIN_PATHS</span></code> in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/registry.py</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">"acme-radar"</span><span class="p">:</span> <span class="s2">"hydromodpy.data.source.acme_radar:AcmeRadarSource"</span><span class="p">,</span>
-</pre></div>
-</div>
-<p>Nothing else. There is deliberately no <code class="docutils literal notranslate"><span class="pre">[project.entry-points]</span></code> table
-for in-tree sources: a second declaration is a second name, and that is
-how the solver registry once minted a backend with an adapter and no
-extractor.</p>
-<p>Out of tree, publish the class on the <code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code>
-entry-point group, from your own distribution:</p>
+<p><code class="docutils literal notranslate"><span class="pre">variables</span></code> belongs to the instance, because a source configured one way
+may serve fewer variables than the class can. Everything else is a
+<code class="docutils literal notranslate"><span class="pre">ClassVar</span></code>, so the registry refuses a non-conforming class when it is
+registered, not mid-fetch.</p>
+<p>A source must <strong>not</strong> know the DuckDB catalogue, the project workspace, a
+lock or a cache. It receives an <code class="docutils literal notranslate"><span class="pre">Extent</span></code> carrying its own CRS, an optional
+<code class="docutils literal notranslate"><span class="pre">Period</span></code> and an <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> scratch it owns alone.</p>
+<p>Publish it from your own distribution:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># your package's pyproject.toml</span>
 <span class="k">[project.entry-points.</span><span class="s2">"hydromodpy.data.source"</span><span class="k">]</span>
 <span class="n">acme-radar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mypackage.acme_radar:AcmeRadarSource"</span>
 </pre></div>
 </div>
-<p>The entry-point name must equal the <code class="docutils literal notranslate"><span class="pre">source_id</span></code> the class declares –
-a request writes the name and a result is stamped with the <code class="docutils literal notranslate"><span class="pre">source_id</span></code>,
-and two words for one source is how the two start disagreeing. A name
-this build already ships is refused, because the published description of
-<code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> names it and publishes the shape the in-tree adapter
-accepts. A plugin that fails any of these checks is skipped with a
-warning naming what is wrong, never raised: one broken plugin must not
-take down a host that asked for a different source.</p>
+<p>The entry-point name must equal the <code class="docutils literal notranslate"><span class="pre">source_id</span></code> the class declares: a
+request writes the name and a result is stamped with the <code class="docutils literal notranslate"><span class="pre">source_id</span></code>. A
+name this build already ships is refused. A plugin that fails any check is
+skipped with a warning naming what is wrong, never raised: one broken plugin
+must not take down a host that asked for a different source.</p>
 </section>
 <section id="name-it-from-a-document">
 <h2>Name it from a document<a class="headerlink" href="#name-it-from-a-document" title="Link to this heading">#</a></h2>
-<p>Once registered, the id is nameable without any further edit here:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># a project TOML. The section names a source whose payload kind is</span>
 <span class="c1"># "features"; a source of another kind is refused by the document.</span>
 <span class="k">[[data.hydrography.sources]]</span>
@@ -590,224 +641,48 @@ take down a host that asked for a different source.</p>
 </pre></div>
 </div>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"data-fetch"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"data-request"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">},</span>
 <span class="w">  </span><span class="nt">"inputs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"installed"</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-radar"</span><span class="p">,</span>
-<span class="w">               </span><span class="nt">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"sweep"</span><span class="p">:</span><span class="w"> </span><span class="s2">"short"</span><span class="p">}},</span>
-<span class="w">    </span><span class="nt">"extent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"bbox"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">-1.85</span><span class="p">,</span><span class="w"> </span><span class="mf">48.05</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.55</span><span class="p">,</span><span class="w"> </span><span class="mf">48.25</span><span class="p">],</span><span class="w"> </span><span class="nt">"crs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EPSG:4326"</span><span class="p">}</span>
+<span class="w">    </span><span class="nt">"installed"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-radar"</span><span class="p">,</span><span class="w"> </span><span class="nt">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"sweep"</span><span class="p">:</span><span class="w"> </span><span class="s2">"short"</span><span class="p">}}],</span>
+<span class="w">    </span><span class="nt">"extent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"bbox"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">-1.85</span><span class="p">,</span><span class="w"> </span><span class="mf">48.05</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.55</span><span class="p">,</span><span class="w"> </span><span class="mf">48.25</span><span class="p">],</span><span class="w"> </span><span class="nt">"crs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EPSG:4326"</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-01"</span><span class="p">,</span><span class="w"> </span><span class="nt">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-31"</span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">installed</span></code> member of <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> is for sources this build does
-not describe. The four it does describe have a member of their own, with
-the exact shape they accept published in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/processes/data-fetch@1.json</span></code>; naming one through
-<code class="docutils literal notranslate"><span class="pre">installed</span></code> is refused. <code class="docutils literal notranslate"><span class="pre">options</span></code> is handed to the constructor as
-keyword arguments and bound against its signature before the job starts,
-so an argument the source cannot take is refused by name rather than
-raised mid-fetch.</p>
-<p>Two things the description cannot say about an installed source, and
-both are by design: it does not appear in the process description, which
-ships frozen in the wheel, and the hosts it reaches are not in
-<code class="docutils literal notranslate"><span class="pre">hmp:invocation.network</span></code>. <code class="docutils literal notranslate"><span class="pre">outputs/fetch.json</span></code> records the hosts the
-run really contacted.</p>
-</section>
-<section id="a-configuration-section-binds-by-parameter-name">
-<h2>A configuration section binds by parameter name<a class="headerlink" href="#a-configuration-section-binds-by-parameter-name" title="Link to this heading">#</a></h2>
-<p>A variable section such as <code class="docutils literal notranslate"><span class="pre">[[data.hydrography.sources]]</span></code> is flat and
-shared by every source it can name, so the binder hands a source <strong>the
-section field its constructor names, and nothing else</strong>. Declare your
-parameters with the names the section uses and you receive them; declare
-a name the section does not carry and you get your own default. A
-positional-only parameter without a default is refused, because a
-section fills a parameter by name.</p>
-<p>Full configuration of an out-of-tree source is the <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code>
-capability’s job, where the request document carries an explicit
-<code class="docutils literal notranslate"><span class="pre">options</span></code> object instead of a shared flat section.</p>
-</section>
-<section id="conformance">
-<h2>Conformance<a class="headerlink" href="#conformance" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">tests/contract/test_data_source_contract.py</span></code> runs every declaration
-against a real fetch: the payload kind it claims, the CRS the provider is
-really asked in, whether a period is really required, and whether
-<code class="docutils literal notranslate"><span class="pre">out_dir</span></code> is really left alone. Add your source to that parametrisation
-when it lands in tree.</p>
-</section>
-<section id="the-adapter-path-for-the-variables-still-on-it">
-<h2>The adapter path, for the variables still on it<a class="headerlink" href="#the-adapter-path-for-the-variables-still-on-it" title="Link to this heading">#</a></h2>
-<p>A source on this path is wired by two explicit edits inside its own
-variable package:</p>
-<ol class="arabic simple">
-<li><p>a new member in the variable’s <code class="docutils literal notranslate"><span class="pre">source</span></code> field
-(<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/config.py</span></code>);</p></li>
-<li><p>a new branch in the variable manager’s <code class="docutils literal notranslate"><span class="pre">_fetch_from_source</span></code>
-(<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/manager.py</span></code>), which imports
-the adapter module lazily and calls its module-level <code class="docutils literal notranslate"><span class="pre">fetch</span></code>.</p></li>
-</ol>
-<p>The adapter itself is a plain module exposing a <code class="docutils literal notranslate"><span class="pre">fetch</span></code> function that
-returns contract records:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/&lt;variable&gt;/apis/&lt;source_name&gt;.py</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
-    <span class="o">...</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">source_cfg</span></code> is the validated Pydantic block from
-<code class="docutils literal notranslate"><span class="pre">[data.&lt;variable&gt;]</span></code>; the manager supplies the project period, the
-workspace cache handle, and the geographic context when needed.</p>
-</section>
-<section id="public-api-source">
-<h2>Public API source<a class="headerlink" href="#public-api-source" title="Link to this heading">#</a></h2>
-<p>Pick this flavour for an HTTP backend (Hub’Eau, BRGM, BD TOPAGE,
-SIM2, SHOM, IGN BD Alti, etc.).</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/data/variables/&lt;variable&gt;/apis/&lt;source_name&gt;.py
-</pre></div>
-</div>
-<p>Skeleton:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.common.api_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_json</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.timeseries</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointRecord</span>
-
-
-<span class="n">API_BASE</span> <span class="o">=</span> <span class="s2">"https://api.example.org/hydrometry"</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
-    <span class="n">payload</span> <span class="o">=</span> <span class="n">get_json</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">API_BASE</span><span class="si">}</span><span class="s2">/observations"</span><span class="p">,</span>
-        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"stations"</span><span class="p">:</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">station_ids</span><span class="p">),</span> <span class="s2">"start"</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">:</span> <span class="n">end</span><span class="p">},</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">PointRecord</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]]</span>
-</pre></div>
-</div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">get_json</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/common/api_client.py</span></code>) or
-<code class="docutils literal notranslate"><span class="pre">HTTPClient</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/http_client.py</span></code>) instead of raw
-<code class="docutils literal notranslate"><span class="pre">requests</span></code>: they handle retry, backoff, timeout, and SHA-256
-streaming.</p>
-<p>Cache integrity goes through <code class="docutils literal notranslate"><span class="pre">DataCatalogDuckDB</span></code>: every fetched
-file is recorded with its path, mtime, and SHA-256 so future runs
-can detect external modifications.</p>
-</section>
-<section id="custom-file-source">
-<h2>Custom-file source<a class="headerlink" href="#custom-file-source" title="Link to this heading">#</a></h2>
-<p>Pick this flavour for local rasters, vectors, or CSV time series.
-Convention is one <code class="docutils literal notranslate"><span class="pre">custom.py</span></code> per variable that knows how to read
-the supported formats.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/&lt;variable&gt;/custom.py</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_custom</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LoadResult</span><span class="p">:</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">path</span>
-    <span class="c1"># parse CSV / NetCDF / shapefile / GeoTIFF</span>
-    <span class="k">return</span> <span class="n">LoadResult</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">warnings</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>Custom sources need no extra wiring beyond the <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">==</span> <span class="pre">"custom"</span></code>
-branch the manager already carries.</p>
-</section>
-<section id="synthetic-source">
-<h2>Synthetic source<a class="headerlink" href="#synthetic-source" title="Link to this heading">#</a></h2>
-<p>Pick this flavour for generators (constant value, analytical
-forcing, periodic chronicle). They live next to the variable’s
-custom loader and produce <code class="docutils literal notranslate"><span class="pre">PointRecord</span></code> or <code class="docutils literal notranslate"><span class="pre">FieldRecord</span></code> from
-parameters declared in the TOML.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/recharge/synthetic.py</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_synthetic</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
-    <span class="n">series</span> <span class="o">=</span> <span class="n">build_series</span><span class="p">(</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">PointRecord</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">series</span><span class="p">]</span>
-</pre></div>
-</div>
-</section>
-<section id="wire-the-source-config">
-<h2>Wire the source config<a class="headerlink" href="#wire-the-source-config" title="Link to this heading">#</a></h2>
-<p>A variable’s source section is <strong>one flat model</strong>, not a discriminated
-union of one model per source: every source’s fields sit side by side and
-<code class="docutils literal notranslate"><span class="pre">source</span></code> selects which of them are read. Add the literal and the fields
-your source needs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/&lt;variable&gt;/config.py</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MyVariableSourceConfig</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
-    <span class="n">source</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"custom"</span><span class="p">,</span> <span class="s2">"mysource"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Data provider."</span><span class="p">,</span>
-        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"value_docs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mysource"</span><span class="p">:</span> <span class="s2">"what it downloads."</span><span class="p">}},</span>
-    <span class="p">)</span>
-    <span class="n">product</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">"level"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"..."</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">extra="forbid"</span></code> comes from <code class="docutils literal notranslate"><span class="pre">HydroModelBase</span></code>, so an unknown key is
-refused; a field that belongs to another source of the same section is
-not, which is the price of the flat shape and the reason a field name is
-never reused across two sources of one variable.</p>
-<p><code class="docutils literal notranslate"><span class="pre">value_docs</span></code> is what renders the per-value table in the configuration
-reference. A user-facing choice field without it is reported by
-<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.doc_config</span></code>.</p>
-<p>A variable on the port has no literal to extend: <code class="docutils literal notranslate"><span class="pre">source</span></code> is a plain
-<code class="docutils literal notranslate"><span class="pre">str</span></code> validated against the registry, and the payload kind the variable
-accepts is checked at the same time, so naming a DEM source in a river
-section is refused by the document.</p>
-</section>
-<section id="wire-the-source-into-the-manager">
-<h2>Wire the source into the manager<a class="headerlink" href="#wire-the-source-into-the-manager" title="Link to this heading">#</a></h2>
-<p>A variable still on the adapter path dispatches on <code class="docutils literal notranslate"><span class="pre">source_cfg.source</span></code>
-inside <code class="docutils literal notranslate"><span class="pre">_fetch_from_source</span></code>. Add the new branch:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_fetch_from_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"custom"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">load_custom</span><span class="p">(</span><span class="n">source_cfg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_period</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"mysource"</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.myvariable.apis.mysource</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch</span>
-
-        <span class="k">return</span> <span class="n">fetch</span><span class="p">(</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">station_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
-    <span class="k">raise</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/exceptions.html#ValueError"><span class="ne">ValueError</span></a><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown myvariable source: </span><span class="si">{</span><span class="n">source_cfg</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>A variable on the port has no such chain.
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/hydrography/manager.py</span></code> keeps one branch for
-<code class="docutils literal notranslate"><span class="pre">custom</span></code>, which reads a local file and contacts nobody, and hands every
-other name to <code class="docutils literal notranslate"><span class="pre">source_from_section</span></code>. Read that method before adding a
-branch here.</p>
-</section>
-<section id="provenance">
-<h2>Provenance<a class="headerlink" href="#provenance" title="Link to this heading">#</a></h2>
-<p>The base manager records, in the catalog <code class="docutils literal notranslate"><span class="pre">provenance</span></code> table, the
-<code class="docutils literal notranslate"><span class="pre">source_type</span></code> (<code class="docutils literal notranslate"><span class="pre">http_api</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_file</span></code>, <code class="docutils literal notranslate"><span class="pre">synthetic</span></code>,
-<code class="docutils literal notranslate"><span class="pre">cache</span></code>, <code class="docutils literal notranslate"><span class="pre">derived</span></code>) plus the source reference, the SHA-256 of
-the fetched payload, and the fetch timestamp. Make sure your source
-populates the fields the runtime expects.</p>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> is handed to the constructor as keyword arguments and bound
+against its signature before anything runs, so an argument the source cannot
+take is refused by name. An installed source does not appear in the process
+description, which ships frozen in the wheel, and the hosts it reaches are
+not in <code class="docutils literal notranslate"><span class="pre">hmp:invocation.network</span></code>; <code class="docutils literal notranslate"><span class="pre">outputs/request.json</span></code> names the source
+of each file the run wrote.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">[[data.hydrography.sources]]</span></code> section is flat and shared by every source
+it can name, so the binder hands a plugin <strong>the section field its constructor
+names, and nothing else</strong>. A name the section does not carry keeps your
+default; a positional-only parameter without a default is refused.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/contract/test_data_source_contract.py</span></code> holds every shipped source to
+the port: the payload kind it claims, the CRS the provider is really asked
+in, whether a period is really required, whether <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> is left alone.</p>
 </section>
 <section id="tests-to-add">
 <h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/data/&lt;variable&gt;/</span></code> for the config
-branch (extra fields rejected, units parsed) and a fixture-backed
-<code class="docutils literal notranslate"><span class="pre">fetch</span></code> call.</p></li>
-<li><p><strong>Replay</strong>: drop a static fixture under
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/examples/</span></code> for the public
-source and a smoke test that loads it offline.</p></li>
-<li><p><strong>Integration</strong> under <code class="docutils literal notranslate"><span class="pre">tests/integration/data_managers/</span></code> if the new
-source changes how the planner infers active variables.</p></li>
-</ul>
-</section>
-<section id="pitfalls-flagged-by-the-layer-matrix">
-<h2>Pitfalls flagged by the layer matrix<a class="headerlink" href="#pitfalls-flagged-by-the-layer-matrix" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> may not import <code class="docutils literal notranslate"><span class="pre">simulation</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code>, <code class="docutils literal notranslate"><span class="pre">results</span></code>,
-<code class="docutils literal notranslate"><span class="pre">display</span></code>, <code class="docutils literal notranslate"><span class="pre">analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, or <code class="docutils literal notranslate"><span class="pre">workflow</span></code>.</p></li>
-<li><p>Do not call the network outside the source’s <code class="docutils literal notranslate"><span class="pre">fetch</span></code> method:
-the cache layer expects deterministic, idempotent fetches.</p></li>
-<li><p>Keep the source layer free of physics and geographic logic. If
-your source needs reprojection or clipping, push the work back
-into <code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/</span></code> or <code class="docutils literal notranslate"><span class="pre">core/io/</span></code> helpers.</p></li>
+<li><p>the config: a value the section refuses, a field that belongs to another
+source;</p></li>
+<li><p>the provider on a recorded answer, so the tier runs offline;</p></li>
+<li><p>for a plugin, the contract suite parametrised on your class, in your own
+distribution.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../packages/data.html"><span class="doc">data</span></a> for the variable inventory and the manager
-contract.</p></li>
-<li><p><a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a Data Variable</span></a> for adding a new variable family.</p></li>
-<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a Config Field</span></a> for adding a new field on an existing
-source.</p></li>
-<li><p><a class="reference internal" href="../../user_guide/data/index.html"><span class="doc">Data Loading And Retrieval</span></a> for the user-facing inventory and
-provider matrix.</p></li>
-<li><p><a class="reference internal" href="add-a-process.html"><span class="doc">Add a Process</span></a> for exposing work as a capability an orchestrator
-runs, which is what <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> is.</p></li>
+<li><p><a class="reference internal" href="../packages/data.html"><span class="doc">data</span></a> for the variable inventory and the manager template.</p></li>
+<li><p><a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a Data Variable</span></a> for a new variable family.</p></li>
+<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a Config Field</span></a> for a new field on an existing source.</p></li>
+<li><p><a class="reference internal" href="../../user_guide/data/index.html"><span class="doc">Data Loading And Retrieval</span></a> for the user-facing provider matrix.</p></li>
+<li><p><a class="reference internal" href="add-a-process.html"><span class="doc">Add a Process</span></a> for exposing work as a capability an orchestrator runs,
+which is what <code class="docutils literal notranslate"><span class="pre">data-request</span></code> is.</p></li>
 </ul>
 </section>
 </section>
@@ -840,20 +715,11 @@ runs, which is what <code class="docutils literal notranslate"><span class="pre"
 <nav aria-labelledby="pst-page-navigation-heading-2" class="page-toc" id="pst-page-toc-nav">
 <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-paths-and-which-one-you-are-on">Two paths, and which one you are on</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-port">The port</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#register-it">Register it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-in-tree-provider">An in-tree provider</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-files-and-generators">Custom files and generators</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-plugin-source">A plugin source</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-it-from-a-document">Name it from a document</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-configuration-section-binds-by-parameter-name">A configuration section binds by parameter name</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conformance">Conformance</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-adapter-path-for-the-variables-still-on-it">The adapter path, for the variables still on it</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-api-source">Public API source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-file-source">Custom-file source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#synthetic-source">Synthetic source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-the-source-config">Wire the source config</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-the-source-into-the-manager">Wire the source into the manager</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance">Provenance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls-flagged-by-the-layer-matrix">Pitfalls flagged by the layer matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
 </ul>
 </nav></div>

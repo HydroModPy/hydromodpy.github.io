@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page explains the criterion that calibrates a catchment against the spatial extent of its stream network rather than against a gauge[ Abhervé et al., 2023], and how to read what it returns. It..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-28T00:40:14+02:00" />
     <title>Downslope-distance calibration of the stream network &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -91,7 +91,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 28, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -751,21 +751,40 @@ criterion therefore floods the mesh itself, by the priority flood of Barnes,
 Lehman and Mulla (2014) written over an explicit neighbour list instead of over
 a raster, so that it applies to cells of any arity
 (<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/depression_filling.py</span></code>). Water is walked inwards from the
-outlet through the lowest reachable rim, anything below that rim is raised onto
-it, and one millimetre is added per step so the filled floor drains instead of
-lying flat, which a steepest-descent graph needs in order to leave it at all.</p>
-<p>Two objects have to be shared with the metric or the flood repairs nothing.
-The neighbour graph is the first: fed the eight-neighbour graph while the
-metric descends the four-neighbour one, every filled cell spills over a
-diagonal the metric cannot take, and 99.8 per cent of the catchment stops
-reaching the outlet instead of none of it. The outlet is the second: the flood
-only guarantees a path to the cell it was seeded on, so the criterion seals
-that same cell into the target rather than resolving an outlet of its own
-afterwards.</p>
-<p>Measured on the Nancon, a 60 395-cell MODFLOW-NWT mesh at 50 m: <strong>17 166 cells
-raised, by up to 48.7 m</strong>; the unreachable share of the simulated support fell
-from <strong>13.6 per cent to 0.0</strong>; and the outlet moved from an internal depression
-at 130.3 m to the true low point of the catchment at 106.4 m.</p>
+border of the active domain through the lowest reachable rim, anything below
+that rim is raised onto it, and one millimetre is added per step so the filled
+floor drains instead of lying flat, which a steepest-descent graph needs in
+order to leave it at all.</p>
+<p>The neighbour graph has to be shared with the metric or the flood repairs
+nothing: fed the eight-neighbour graph while the metric descends the
+four-neighbour one, every filled cell spills over a diagonal the metric cannot
+take, and 99.8 per cent of the catchment stops reaching the outlet instead of
+none of it.</p>
+<p><strong>The flood is seeded on the border of the domain, the standard form, and not
+on the catchment outlet alone.</strong> The border is where water leaves the model.
+Sealing one outlet instead declares the whole domain endorheic towards it: a
+valley of the buffer that drains to the neighbouring basin is filled up to a
+col of the divide, and its seepage then crosses into the catchment and runs
+down a hillslope that does not seep. The downstream closure counts that path
+as simulated network. On the Nancon, with the simulated network stood in by
+the cells draining more than a threshold area, that leak added <strong>16 per cent
+of network cells</strong> near the root and moved the root by <strong>24 per cent</strong>
+(2.169 km2 against 1.751 km2). The code of the authors avoids it by cutting the
+seepage to the catchment before tracing it; the border seed avoids it by
+construction, on any mesh.</p>
+<p><strong>One graph then carries the outlet and the catchment.</strong> The outlet is the
+most accumulated cell within two cells of the pour point the geographic step
+snapped and delineated from, the <code class="docutils literal notranslate"><span class="pre">SnapPourPoints</span></code> rule of the paper read on
+the mesh; without a pour point it is the most accumulated cell of the
+delineated polygon. The catchment the criterion scores is every cell whose
+descent on the conditioned graph reaches that outlet. No descent from outside
+enters it, and every cell of it reaches the outlet without being raised
+towards it.</p>
+<p>Measured on the Nancon, a 60 395-cell MODFLOW-NWT mesh at 50 m, with the older
+flood seeded on the outlet alone: <strong>17 166 cells raised, by up to 48.7 m</strong>; the
+unreachable share of the simulated support fell from <strong>13.6 per cent to 0.0</strong>;
+and the outlet moved from an internal depression at 130.3 m to the true low
+point of the catchment at 106.4 m.</p>
 </section>
 <section id="the-two-mean-distances-and-the-criterion">
 <h2>The two mean distances and the criterion<a class="headerlink" href="#the-two-mean-distances-and-the-criterion" title="Link to this heading">#</a></h2>
@@ -1055,19 +1074,23 @@ and accepts; the correct reading returns <span class="math notranslate nohighlig
 mapped linework stops short of it, the distance is infinite downstream of the
 last reach, and since the simulated network retreats towards exactly that reach
 as the ratio grows, the criterion loses its sign change at the high end of the
-bracket and there is no root left to close. That cell is the low point of the
-catchment the geographic step closed on the declared gauge, and it is the cell
-the flood was seeded on, so writing that it belongs to the stream network is
-true by definition rather than a fudge.</p>
-<p><strong>Both supports are intersected with the catchment the geographic step
-delineated.</strong> Re-deriving one instead, by descending the model top to its own
-largest basin, fails for the reason given in the section above: the model top
-is never conditioned, so that descent ends in whichever internal depression is
-biggest. Measured on the Nancon, the re-derived catchment held 1 368 cells of
-the 60 395 in the mesh and <strong>not one cell of the mapped network</strong>, so every
-trial refused; the delineated catchment holds 26 907 cells and 1 119 of the
-mapped network. A run reaching the criterion without a delineated catchment
-falls back to the re-derived one and says so with a warning: a synthetic domain
+bracket and there is no root left to close. That cell closes the catchment
+the criterion scores, placed from the gauge the geographic step snapped, so
+writing that it belongs to the stream network is true by definition rather
+than a fudge.</p>
+<p><strong>Both supports are intersected with the catchment of that outlet on the
+criterion graph</strong>, not with the raster polygon. The polygon was delineated on
+another surface and another grid; it builds the model domain and places the
+outlet, and its gap to the scored catchment is published per trial as
+<code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code>, the area of their symmetric difference over the area of
+the polygon. A gap above five per cent is logged as a warning: it usually
+means an outlet placed on another branch, or a mesh much coarser than the
+DEM. On the Nancon grid at 75 m the gap is 26 cells, 0.2 per cent. On the
+unconditioned model top, descending to its own largest basin ended in an
+internal depression instead: measured on the Nancon, 1 368 cells of the
+60 395 in the mesh and <strong>not one cell of the mapped network</strong>. A run reaching
+the criterion with neither a pour point nor a polygon closes on the largest
+basin of the conditioned top and says so with a warning: a synthetic domain
 legitimately has no watershed, while a real run that lost one would otherwise
 produce a plausible number from the wrong support.</p>
 <p>The intersection itself is not a detail either. On a buffered model domain, ten
@@ -1140,6 +1163,17 @@ and the value comes back. A calibration is asked for a number; a coarse
 agreement qualifies that number, it does not replace it with nothing. Setting
 <code class="docutils literal notranslate"><span class="pre">on_roptim_violation</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code> turns that warning into a raise, which is an
 explicit choice to be handed nothing rather than a qualified value.</p>
+<p>A companion absolute threshold, <span class="math notranslate nohighlight">\(D_{optim} &lt; 300\)</span> m, appears in Gauvain,
+Abherve, Boivin, Roques et al., EGUsphere preprint 2026-868 (a HydroModPy
+technical note, section 3.2), justified there as four pixels of a 75 m DEM,
+so resolution-dependent rather than a fixed physical bound; <code class="docutils literal notranslate"><span class="pre">roptim_max</span> <span class="pre">=</span> <span class="pre">2</span></code>
+already generalises it to any cell size through <span class="math notranslate nohighlight">\(L_{ref}\)</span>. The same
+note gives <code class="docutils literal notranslate"><span class="pre">NSElog</span> <span class="pre">&gt;</span> <span class="pre">0.75</span></code> as the transient stage’s own acceptance
+threshold, on ten values of <span class="math notranslate nohighlight">\(S_y\)</span> explored over a fixed grid rather than
+by dichotomy. Both are stated for context; neither is enforced here, and
+neither is the <span class="math notranslate nohighlight">\(0.65\)</span> figure WRR 2025 states for the same stage (§10 of
+the audit, <code class="docutils literal notranslate"><span class="pre">D7-14</span></code>): the two published applications of stage two do not
+share a threshold.</p>
 </section>
 <section id="why-the-criterion-has-a-root-and-why-the-search-brackets-it">
 <h2>Why the criterion has a root, and why the search brackets it<a class="headerlink" href="#why-the-criterion-has-a-root-and-why-the-search-brackets-it" title="Link to this heading">#</a></h2>
@@ -1157,6 +1191,20 @@ the paper’s criterion read literally. On any other transform that width would 
 as an absolute one, and the adapter refuses a parameter that does not declare
 <code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">=</span> <span class="pre">&quot;log&quot;</span></code> rather than reporting convergence on a bracket orders of
 magnitude wide.</p>
+<p><strong>The zero is a plateau, not a point, and its width sets the true precision.</strong>
+<span class="math notranslate nohighlight">\(J\)</span> is piecewise constant in <span class="math notranslate nohighlight">\(K\)</span> because the masks are discrete: on
+a synthetic hillslope built to a known <span class="math notranslate nohighlight">\(K_{true}\)</span>, the network holds the
+same 222 cells from <span class="math notranslate nohighlight">\(K = 6.00 \times 10^{-6}\)</span> to <span class="math notranslate nohighlight">\(6.027 \times
+10^{-6}\)</span> m/s, a step of about 0.56 per cent of <span class="math notranslate nohighlight">\(K\)</span>, one cell over the
+unsaturated slope length. A one per cent stopping width therefore bounds the
+recovered <span class="math notranslate nohighlight">\(K\)</span> only when the grid is fine enough that a cell is smaller
+than the tolerance asks for; on a coarser grid the plateau is wider than one
+per cent, and it is the plateau, not the bisection’s <code class="docutils literal notranslate"><span class="pre">rel_tol</span></code>, that sets
+how precisely <span class="math notranslate nohighlight">\(K\)</span> is known. The twin recovers <span class="math notranslate nohighlight">\(K\)</span> to 0.45 per
+cent of <span class="math notranslate nohighlight">\(K_{true}\)</span> this way
+(<code class="docutils literal notranslate"><span class="pre">tests/validation/calibration/test_twin_matching_stream_network_modflow6.py</span></code>),
+which the grid was sized to make possible, not something the tolerance alone
+bought.</p>
 <p><strong>Monotonicity is not proven.</strong> The paper establishes the direction of
 variation on three points and generalises it over twenty-four catchments. A
 coarse logarithmic sweep of <code class="docutils literal notranslate"><span class="pre">sweep_points</span></code> points, seven by default, is run
@@ -1225,6 +1273,24 @@ the run really built: a release record that no declared package covers, or a
 sibling package budget sitting next to the model one, raises and names the
 package. That is also what catches the next package the same way, without
 naming it in advance.</p>
+<p><strong>A fixed drain conductance is refused only while the search moves a
+conductivity.</strong> The K/R invariance the previous section derives needs the
+conductance to follow K; a search driving some other parameter with the
+conductance fixed is a different question the criterion can still answer, so
+it gets a warning naming that the result depends on the chosen conductance,
+not a refusal. Setting <code class="docutils literal notranslate"><span class="pre">flow.bc.cauchy.drainage.value</span></code> to zero (or leaving
+it out) always keeps the fallback and sidesteps the question.</p>
+<p><strong>SFR and LAK build their own conductance from their own package data, never
+from K, so a K-moving network search next to either is refused</strong> before the
+first solve, the same way a fixed DRN conductance is: DRN’s own fallback
+follows K, and CHD fixes a head, so dividing the flow equation by K leaves it
+unchanged, but SFR and LAK do neither.
+<code class="docutils literal notranslate"><span class="pre">examples/projects/21_nancon_network_calibration/auto_sfr_drn.toml</span></code> switches
+SFR reaches off for its K stage and back on for the storage stage to work
+around exactly this. RIV and GHB would join the same guard – neither
+ties its conductance to K by construction – but neither is a constructible
+<code class="docutils literal notranslate"><span class="pre">flow.active_bc</span></code> id in this codebase today, so the guard’s message for them
+is future-facing only and cannot fire yet.</p>
 </section>
 <section id="what-the-criterion-reproduces-and-how-far-that-goes">
 <h2>What the criterion reproduces, and how far that goes<a class="headerlink" href="#what-the-criterion-reproduces-and-how-far-that-goes" title="Link to this heading">#</a></h2>
@@ -1242,6 +1308,95 @@ reproducibility of the criterion across a change of solver, of grid and of
 discretisation. It is not the accuracy of the calibrated conductivity, which
 the biases below bound far more loosely, and it says nothing about whether
 either number is right.</p>
+</section>
+<section id="declared-deviations-from-the-paper-and-from-the-authors-own-code">
+<h2>Declared deviations from the paper and from the authors’ own code<a class="headerlink" href="#declared-deviations-from-the-paper-and-from-the-authors-own-code" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MatchingHydrographicNetwork.deviations</span></code> (version 1.1) declares each of
+these departures in code, with the same key, paper value and reasoning as
+below; this section restates them so a reader is not sent to the code for a
+one-line answer. Where the key is a real option and its default is the
+paper’s (<code class="docutils literal notranslate"><span class="pre">diagonal_neighbors</span></code>, <code class="docutils literal notranslate"><span class="pre">weighting</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">observed_rasterization</span></code>), the entry is an offered departure: the Methods
+paragraph a run writes names it only when the file moves it off the paper’s
+value. Three departures already
+have their own section above because the reasoning does not fit in one line:
+<span class="math notranslate nohighlight">\(\tau_{ratio}\)</span> under “What counts as a seepage cell”, <code class="docutils literal notranslate"><span class="pre">weighting</span></code> and
+<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> under “Weighting, and the reference length”.
+The rest:</p>
+<dl class="simple">
+<dt>Descent, D8 or D4</dt><dd><p>True (D8) is the paper: the authors trace their distances with
+<code class="docutils literal notranslate"><span class="pre">wbt.downslope_distance_to_stream</span></code> on a filled DEM, and the delineation
+that produces the catchment already uses a D8 pointer. False departs to a
+D4 descent over shared edges only, and on a synthetic diagonal valley
+under-collects one accumulated cell to 6.6 per cent of the domain against
+100 per cent under D8. True has been the default since version 1.1; on a
+mesh whose faces are not all quadrilaterals no cell has a diagonal, so the
+descent walks shared edges either way, and on a Voronoi mesh the two
+graphs coincide.</p>
+</dd>
+<dt>The outlet cell, sealed into <span class="math notranslate nohighlight">\(D_{so}\)</span>’s target</dt><dd><p>Not addressed by the paper. The scored catchment is every cell whose
+descent reaches the outlet, so every simulated flowpath in it ends there by
+construction, and without sealing it into the target beside the mapped
+network, the outlet cell would count as unmatched seepage for the sole
+reason that it is the basin’s exit, never because the two networks
+disagree.</p>
+</dd>
+<dt>Unreached cells, capped rather than dropped</dt><dd><p>The authors’ own code drops a cell whose descent never meets its target
+silently before averaging. Here it is capped at <span class="math notranslate nohighlight">\(L_{cap}\)</span>, the
+longest descent to the outlet, and the run is refused when more than five
+per cent of <span class="math notranslate nohighlight">\(D_{so}\)</span>’s support (<code class="docutils literal notranslate"><span class="pre">max_unreachable_fraction</span></code>) never
+reaches the mapped network: a support that has silently shrunk cannot mean
+what an unqualified average implies.</p>
+</dd>
+<dt>The bisection variable and its sweep</dt><dd><p>The paper does not state the search variable or its scale; the authors’
+own code bisects linearly in <span class="math notranslate nohighlight">\(K/R\)</span> over <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">10000]</span></code>. Here the
+search bisects <span class="math notranslate nohighlight">\(\log_{10} K\)</span>, preceded by a seven-point log-spaced
+sweep that locates a sign change before bisecting, because <span class="math notranslate nohighlight">\(K/R\)</span>
+spans decades on a real catchment and a linear midpoint search would spend
+almost every step at the wrong end of the interval.</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(D_{os}\)</span>’s support, raw or closed downslope</dt><dd><p>The printed text (HESS p. 3225) leaves <span class="math notranslate nohighlight">\(D_{os}\)</span>’s support as each
+pixel of the observed streams, unmodified. The authors’ own published code
+(Zenodo 8311547, <code class="docutils literal notranslate"><span class="pre">objective_function.py:157-164</span></code>) instead traces every
+mapped pixel downslope with the same D8 tracing it uses for the simulated
+network, closing the observed network exactly as it closes the simulated
+one. HydroModPy follows the printed text, not the authors’ code: closing
+the observed network the way the code does would build the observation out
+of the DEM’s own descent, which erases the very signal Equation 4 exists to
+detect. Tested on a synthetic V-valley
+(<code class="docutils literal notranslate"><span class="pre">tests/unit/core/test_v_valley_support_bench.py</span></code>), closing the observed
+target instead moves <span class="math notranslate nohighlight">\(r_{optim}\)</span>’s root by more than a factor of ten.</p>
+</dd>
+<dt>Depression handling, breach or fill</dt><dd><p>The paper’s tool is <code class="docutils literal notranslate"><span class="pre">FillDepressions</span></code>, which raises every depression to
+its pour point, and the filled DEM serves both the delineation and the
+distances. The default here is <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;breach&quot;</span></code> for the
+raster delineation, which carves a channel through the barrier at the
+depression’s own minimal elevation change and moves far fewer cells. The
+criterion does not descend that raster: it fills the model top on the mesh
+graph, seeded on the domain border, which is the paper’s fill, and reads
+its catchment there. The departure reaches the criterion only through the
+domain and the outlet, and <code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code> measures it per trial.
+Setting <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;fill&quot;</span></code> reproduces the paper’s own tool.</p>
+</dd>
+<dt>The mapped network’s rasterisation</dt><dd><p>The paper rasterises the mapped network onto the model grid with
+WhiteboxTools’ <code class="docutils literal notranslate"><span class="pre">VectorLinesToRaster</span></code>, whose own assignment rule the text
+does not restate. The default here, <code class="docutils literal notranslate"><span class="pre">observed_rasterization</span> <span class="pre">=</span> <span class="pre">&quot;crossing&quot;</span></code>,
+is that rule restated on any mesh: a cell belongs to the network when it
+holds a point where the line crosses the segment joining two edge-sharing
+cell centres. On a structured grid those segments are the cell medians,
+which is what <code class="docutils literal notranslate"><span class="pre">VectorLinesToRaster</span></code> tests. The map comes out one cell
+wide, like the simulated network, so a model that reproduces the map
+scores <span class="math notranslate nohighlight">\(J = 0\)</span>. One departure from the tool is kept: a reach that
+crosses no segment marks the cell holding its midpoint instead of being
+dropped, counted per trial as <code class="docutils literal notranslate"><span class="pre">n_observed_features_fallback</span></code>. Measured on
+the Nancon (75 m grid): 490 cells here against 489 for a port of the tool,
+the gap coming from ties on a cell edge, which mark both cells. The older
+<code class="docutils literal notranslate"><span class="pre">&quot;touch&quot;</span></code> rule, every cell the line intersects, corners included, stays
+available to replay a session recorded before 2026-09. It thickens every
+diagonal step (730 cells on the same grid), grows <span class="math notranslate nohighlight">\(D_{os}\)</span> on a
+perfect match and departs from the paper.</p>
+</dd>
+</dl>
 </section>
 <section id="known-biases-and-how-to-read-the-output">
 <h2>Known biases, and how to read the output<a class="headerlink" href="#known-biases-and-how-to-read-the-output" title="Link to this heading">#</a></h2>
@@ -1332,15 +1487,18 @@ logged with a warning below 0.90. A run declaring no network there measures
 nothing. A calibration declaring a network output recomputes the same ratio on
 the solver mesh and publishes it per trial as <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>, together
 with <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code>, the same ratio restricted to the
-delineated catchment.</p>
+scored catchment.</p>
 <p>The restriction is not cosmetic. Outside the catchment the mesh is a buffer, so
 no cell there is required to descend into the mapped network, and every reach
 of the linework lying beyond the basin adds to the closure without adding to
-the numerator. A whole-mesh <span class="math notranslate nohighlight">\(lpha\)</span> therefore drops with the extent of
+the numerator. A whole-mesh <span class="math notranslate nohighlight">\(\alpha\)</span> therefore drops with the extent of
 the dataset that was loaded, not with the quality of its registration. On the
-Nancon, 1362 of the 2479 mapped cells sit outside the catchment and the two
-ratios read 0.306 and 0.693. <strong>The agreement is judged on the catchment one</strong>,
-which is the support the supports of the criterion live on.</p>
+Nancon, 1362 of the 2479 mapped cells sit outside the catchment, and while one
+outlet sealed the whole mesh the two ratios read 0.306 and 0.693: every buffer
+reach was traced across the divide to that outlet. With the flood seeded on
+the domain border, buffer reaches leave through the border and the two ratios
+come close (0.81 and 0.77 on the 75 m proxy). <strong>The agreement is judged on the
+catchment one</strong>, which is the support the supports of the criterion live on.</p>
 <p>Burning and flooding are two different repairs, and neither replaces the other.
 Burning fixes the registration between two datasets, once, on the routing
 raster; the flood described above fixes the surface itself, on the mesh graph,
@@ -1424,6 +1582,7 @@ and shadow the one on that page.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-ratio-is-what-gets-calibrated">Why the ratio is what gets calibrated</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-method-needs-from-the-flow-model">What the method needs from the flow model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-criterion-reproduces-and-how-far-that-goes">What the criterion reproduces, and how far that goes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declared-deviations-from-the-paper-and-from-the-authors-own-code">Declared deviations from the paper and from the authors’ own code</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#known-biases-and-how-to-read-the-output">Known biases, and how to read the output</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-of-validity">Domain of validity</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-pre-treatment-the-method-requires">The pre-treatment the method requires</a></li>

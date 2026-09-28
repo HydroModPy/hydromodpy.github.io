@@ -580,14 +580,13 @@
 
 <span class="sd">An optimizer proposes parameter points (``ask``) and ingests evaluation</span>
 <span class="sd">results (``tell``). Adapters for scipy, optuna, grid-search are found under</span>
-<span class="sd">``hydromodpy/calibration/adapters/`` and registered here.</span>
+<span class="sd">``hydromodpy/calibration/optim/adapters/`` and registered here.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">entry_points</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
 <span class="n">FAILED_EVAL_COST</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e12</span>
@@ -692,8 +691,8 @@
 <span class="sd">    same facts here lets a check read them before anything solves.</span>
 
 <span class="sd">    The defaults are permissive on purpose: an engine that constrains nothing</span>
-<span class="sd">    declares nothing, and a third-party one that says nothing is taken at its</span>
-<span class="sd">    word rather than assumed to be limited.</span>
+<span class="sd">    declares nothing, and one that says nothing is taken at its word rather</span>
+<span class="sd">    than assumed to be limited.</span>
 <span class="sd">    """</span>
 
     <span class="n">max_parameters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -745,32 +744,107 @@
 <span class="w">    </span><span class="sd">"""Return what the engine registered under ``name`` declares about itself."""</span>
     <span class="n">_ensure_builtins_loaded</span><span class="p">()</span>
     <span class="n">engine</span> <span class="o">=</span> <span class="n">_BUILTIN</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">"hydromodpy.optimizer"</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">ep</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">engine</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - an engine that will not load has no traits</span>
-                    <span class="k">return</span> <span class="n">DEFAULT_ENGINE_TRAITS</span>
-                <span class="k">break</span>
     <span class="n">declared</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">"traits"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">declared</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declared</span><span class="p">,</span> <span class="n">EngineTraits</span><span class="p">)</span> <span class="k">else</span> <span class="n">DEFAULT_ENGINE_TRAITS</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MethodChoice</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The search method a search that names none runs, and why."""</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="n">CHOSEN_FROM</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bisection"</span><span class="p">,</span> <span class="s2">"scipy_nelder_mead"</span><span class="p">)</span>
+<span class="sd">"""The engines a search that names no method is given, in the order tried.</span>
+
+<span class="sd">The first whose traits the search meets runs it. The root search comes first,</span>
+<span class="sd">because its traits are the ones a search can miss. The minimiser declares</span>
+<span class="sd">nothing to meet, so every search gets one, and SciPy is installed by default.</span>
+<span class="sd">"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">choose_method</span><span class="p">(</span><span class="n">transforms</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">criteria</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">MethodChoice</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the search method of a search that names none, and why.</span>
+
+<span class="sd">    ``transforms`` maps each parameter the search moves to its transform.</span>
+<span class="sd">    ``criteria`` names the criterion of each objective block it scores.</span>
+
+<span class="sd">    Each engine of :data:`CHOSEN_FROM` is faced with its ``EngineTraits``, as</span>
+<span class="sd">    ``hmp calibrate --check`` faces a written method. The root search needs</span>
+<span class="sd">    ``max_parameters`` at most, each in ``required_transform``, and, since it</span>
+<span class="sd">    ``needs_signed_residual``, a signed criterion on every block</span>
+<span class="sd">    (``CriterionRequirements.signed``): only then is the cost the absolute value</span>
+<span class="sd">    of the residual its bracket closes on, and the answer is the crossing, not a</span>
+<span class="sd">    minimum. One unsigned block makes the cost one to minimise.</span>
+
+<span class="sd">    An unknown criterion counts as unsigned. It cannot come from a validated</span>
+<span class="sd">    configuration, whose metrics are ``MetricKind`` literals.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">criterion_for</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_signed</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">criterion_for</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">requirements</span><span class="p">()</span><span class="o">.</span><span class="n">signed</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># Defensive: a metric is a MetricKind literal once validated, so every</span>
+            <span class="c1"># name a configuration hands here is registered.</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">criteria</span><span class="p">)</span>
+    <span class="n">signed</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_signed</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)</span>
+    <span class="n">lacking</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">CHOSEN_FROM</span><span class="p">:</span>
+        <span class="n">traits</span> <span class="o">=</span> <span class="n">engine_traits</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">unmet</span> <span class="o">=</span> <span class="n">_unmet</span><span class="p">(</span><span class="n">traits</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unmet</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MethodChoice</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">_why</span><span class="p">(</span><span class="n">traits</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="n">lacking</span><span class="o">=</span><span class="n">lacking</span><span class="p">))</span>
+        <span class="n">lacking</span> <span class="o">=</span> <span class="n">lacking</span> <span class="ow">or</span> <span class="n">unmet</span>
+    <span class="c1"># The last engine declares nothing to meet, so this is reached only when</span>
+    <span class="c1"># someone gives it a constraint. Its own refusal then names what is wrong.</span>
+    <span class="k">return</span> <span class="n">MethodChoice</span><span class="p">(</span><span class="n">CHOSEN_FROM</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">_why</span><span class="p">(</span><span class="n">DEFAULT_ENGINE_TRAITS</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="n">lacking</span><span class="o">=</span><span class="n">lacking</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unmet</span><span class="p">(</span><span class="n">traits</span><span class="p">:</span> <span class="n">EngineTraits</span><span class="p">,</span> <span class="n">transforms</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return what a search lacks to meet an engine's traits, or None when it meets them.</span>
+
+<span class="sd">    The phrase opens the reason the next engine gives. An unsigned criterion</span>
+<span class="sd">    needs none: "cost to minimise" already says it.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">traits</span><span class="o">.</span><span class="n">needs_signed_residual</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">signed</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="s2">"signed criterion"</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="s2">"criterion"</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">transforms</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">traits</span><span class="o">.</span><span class="n">max_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="n">traits</span><span class="o">.</span><span class="n">max_parameters</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">criterion</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> parameters"</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="n">traits</span><span class="o">.</span><span class="n">required_transform</span>
+    <span class="n">other</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">transforms</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">wanted</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">other</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">criterion</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in </span><span class="si">{</span><span class="n">wanted</span><span class="si">}</span><span class="s2"> space"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_why</span><span class="p">(</span><span class="n">traits</span><span class="p">:</span> <span class="n">EngineTraits</span><span class="p">,</span> <span class="n">transforms</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">lacking</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the reason an engine was chosen, in the words ``--list-phases`` prints."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">traits</span><span class="o">.</span><span class="n">needs_signed_residual</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">lacking</span><span class="si">}</span><span class="s2">, cost to minimise"</span> <span class="k">if</span> <span class="n">lacking</span> <span class="k">else</span> <span class="s2">"cost to minimise"</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">transforms</span><span class="p">)</span>
+    <span class="n">moved</span> <span class="o">=</span> <span class="s2">"one"</span> <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">traits</span><span class="o">.</span><span class="n">required_transform</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">traits</span><span class="o">.</span><span class="n">required_transform</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">moved</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2"> parameter</span><span class="si">{</span><span class="s1">''</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'s'</span><span class="si">}</span><span class="s2">, signed criterion"</span>
 
 
 <div class="viewcode-block" id="build_optimizer">
 <a class="viewcode-back" href="../../../../api/generated/hydromodpy.calibration.build_optimizer.html#hydromodpy.calibration.build_optimizer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_optimizer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optimizer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Construct an optimizer by name.</span>
-
-<span class="sd">    Looks up built-ins first, then ``hydromodpy.optimizer`` entry points.</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Construct a built-in optimizer by name."""</span>
     <span class="c1"># Lazy-load adapters so missing optionals do not break import.</span>
     <span class="n">_ensure_builtins_loaded</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_BUILTIN</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_BUILTIN</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">space</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">"hydromodpy.optimizer"</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">ep</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ep</span><span class="o">.</span><span class="n">load</span><span class="p">()(</span><span class="n">space</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown optimizer: </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available built-ins: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_BUILTIN</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 
@@ -778,11 +852,9 @@
 <div class="viewcode-block" id="available_optimizers">
 <a class="viewcode-back" href="../../../../api/generated/hydromodpy.calibration.available_optimizers.html#hydromodpy.calibration.available_optimizers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">available_optimizers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return registered optimizer names, including installed entry points."""</span>
+<span class="w">    </span><span class="sd">"""Return the names of the built-in optimizers."""</span>
     <span class="n">_ensure_builtins_loaded</span><span class="p">()</span>
-    <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">_BUILTIN</span><span class="p">)</span>
-    <span class="n">names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ep</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">"hydromodpy.optimizer"</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_BUILTIN</span><span class="p">))</span></div>
 
 
 
@@ -790,7 +862,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_builtins_loaded</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Auto-discover every adapter module under ``calibration/adapters/``.</span>
+<span class="w">    </span><span class="sd">"""Auto-discover every adapter module under ``calibration/optim/adapters/``.</span>
 
 <span class="sd">    Each adapter registers itself via ``@register_optimizer`` at import</span>
 <span class="sd">    time. Optional dependencies (optuna, GP, DA-MH-GP) surface as</span>
@@ -803,7 +875,7 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pkgutil</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapters</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapters</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
 
     <span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>

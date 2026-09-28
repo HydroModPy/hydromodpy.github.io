@@ -588,6 +588,23 @@
 <span class="sd">- ``"best_n"``: after the loop, promote the top ``save_best_n`` iterations</span>
 <span class="sd">                into full simulations (caller-supplied promoter callable).</span>
 <span class="sd">- ``"all"``:   each iteration is already a full simulation.</span>
+
+<span class="sd">Running out of budget is not converging. An engine that declares a stopping</span>
+<span class="sd">option (:func:`hydromodpy.calibration.optim.stopping.stopping_rule`) and</span>
+<span class="sd">reaches ``max_iter`` before meeting it has not converged: the session says so</span>
+<span class="sd">in ``converged`` and the caller decides what that means, a staged calibration</span>
+<span class="sd">freezes nothing from it. An engine whose only rule is its budget converges</span>
+<span class="sd">when the budget is spent.</span>
+
+<span class="sd">An engine that can count its evaluations before the first solve publishes a</span>
+<span class="sd">``counted_budget`` (:class:`~hydromodpy.calibration.optim.stopping.CountedBudget`).</span>
+<span class="sd">Only the root search does: ``max_iter = "auto"`` then runs its worst case, a</span>
+<span class="sd">declared budget below its nominal case is refused before anything solves, one</span>
+<span class="sd">below its worst case is announced, and a budget that still runs out is extended</span>
+<span class="sd">once by exactly the ``evaluations_remaining`` the engine reports, never by a</span>
+<span class="sd">fraction of the budget. Every other engine gets no extension: re-running with a</span>
+<span class="sd">larger ``max_iter`` replays the trials already solved from the params-hash</span>
+<span class="sd">cache.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -608,6 +625,18 @@
     <span class="n">ParamSuggestion</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.parameters</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterSpace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.stopping</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BUDGET_RULE</span><span class="p">,</span>
+    <span class="n">CountedBudget</span><span class="p">,</span>
+    <span class="n">remaining_grant</span><span class="p">,</span>
+    <span class="n">resolve_budget</span><span class="p">,</span>
+    <span class="n">short_budget</span><span class="p">,</span>
+    <span class="n">stopping_rule</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">EvaluatorFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ParamSuggestion</span><span class="p">],</span> <span class="n">EvaluationResult</span><span class="p">]</span>
 
@@ -639,6 +668,19 @@
     <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">EvaluationResult</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">started_at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">finished_at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">stopping_rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">BUDGET_RULE</span>
+<span class="w">    </span><span class="sd">"""The rule the engine stops on: its stopping option, or ``"budget"``."""</span>
+    <span class="n">converged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">"""Whether the search met ``stopping_rule`` before its budget ran out.</span>
+
+<span class="sd">    Set once the loop ends. A budget-only engine converges when it spends its</span>
+<span class="sd">    budget; any other engine only when its own rule says so.</span>
+<span class="sd">    """</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""The budget the engine ran with, ``"auto"`` resolved, before any extension."""</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""Evaluations granted beyond ``max_iter``: zero, or what a counting engine</span>
+<span class="sd">    still needed when its budget ran out, once."""</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">best</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -670,7 +712,8 @@
     <span class="n">space</span><span class="p">:</span> <span class="n">ParameterSpace</span>
     <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optimizer</span>
     <span class="n">evaluator</span><span class="p">:</span> <span class="n">EvaluatorFn</span>
-    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="w">    </span><span class="sd">"""The evaluation budget, or ``"auto"`` to let a counting engine size it."""</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">parallel</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">cache</span><span class="p">:</span> <span class="n">ParamsHashCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -688,29 +731,39 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationSession</span><span class="p">:</span>
         <span class="n">sid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
         <span class="n">reporter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress</span> <span class="ow">or</span> <span class="n">_NoopProgress</span><span class="p">()</span>
+        <span class="n">budget</span> <span class="o">=</span> <span class="n">resolve_budget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">)</span>
         <span class="n">session</span> <span class="o">=</span> <span class="n">CalibrationSession</span><span class="p">(</span>
             <span class="n">session_id</span><span class="o">=</span><span class="n">sid</span><span class="p">,</span>
             <span class="n">optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
             <span class="n">space</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
             <span class="n">started_at</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+            <span class="n">stopping_rule</span><span class="o">=</span><span class="n">stopping_rule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">),</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">judged</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">stopping_rule</span> <span class="o">!=</span> <span class="n">BUDGET_RULE</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">n_done</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">while</span> <span class="n">n_done</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">:</span>
-                <span class="n">take</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">-</span> <span class="n">n_done</span><span class="p">)</span>
-                <span class="n">suggestions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">take</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">suggestions</span><span class="p">:</span>
-                    <span class="k">break</span>
-                <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span><span class="n">suggestions</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">sugg</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">suggestions</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-                    <span class="n">session</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-                    <span class="n">reporter</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sugg</span><span class="o">.</span><span class="n">trial_id</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_iteration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">on_iteration</span><span class="p">(</span><span class="n">sugg</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-                <span class="n">n_done</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
-                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">judged</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_judge_the_budget</span><span class="p">(</span><span class="n">budget</span><span class="p">)</span>
+            <span class="n">ran_dry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_until</span><span class="p">(</span><span class="n">budget</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">reporter</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">judged</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ran_dry</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">extension</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extension</span><span class="p">(</span><span class="n">budget</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">extension</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_run_until</span><span class="p">(</span>
+                        <span class="n">budget</span> <span class="o">+</span> <span class="n">session</span><span class="o">.</span><span class="n">extension</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">history</span><span class="p">),</span> <span class="n">session</span><span class="p">,</span> <span class="n">reporter</span>
+                    <span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">judged</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">converged</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"The search did NOT converge: </span><span class="si">%d</span><span class="s2"> evaluations (</span><span class="si">%d</span><span class="s2"> budget + </span><span class="si">%d</span><span class="s2"> "</span>
+                    <span class="s2">"extension) did not meet its stopping rule (</span><span class="si">%s</span><span class="s2">). Its best trial is "</span>
+                    <span class="s2">"where the budget ended, not an answer. Raise max_iter or loosen "</span>
+                    <span class="s2">"the tolerance; a re-run replays the trials already solved from "</span>
+                    <span class="s2">"the cache."</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">history</span><span class="p">),</span>
+                    <span class="n">budget</span><span class="p">,</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">extension</span><span class="p">,</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">stopping_rule</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">session</span><span class="o">.</span><span class="n">finished_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
             <span class="n">reporter</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -718,6 +771,82 @@
             <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">close_optimizer</span><span class="p">):</span>
                 <span class="n">close_optimizer</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">session</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">budget</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">CalibrationSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return what the engine is granted, once, when *budget* ends before its rule.</span>
+
+<span class="sd">        Exactly the evaluations the engine reports it still needs, when it can</span>
+<span class="sd">        count them and they fit in half the budget. Nothing otherwise.</span>
+<span class="sd">        """</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="s2">"evaluations_remaining"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">grant</span> <span class="o">=</span> <span class="n">remaining_grant</span><span class="p">(</span><span class="n">remaining</span><span class="p">,</span> <span class="n">budget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grant</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"The search spent its budget of </span><span class="si">%d</span><span class="s2"> evaluations and needs </span><span class="si">%d</span><span class="s2"> more to "</span>
+                <span class="s2">"meet its stopping rule (</span><span class="si">%s</span><span class="s2">). Granting exactly those </span><span class="si">%d</span><span class="s2">, once."</span><span class="p">,</span>
+                <span class="n">budget</span><span class="p">,</span>
+                <span class="n">grant</span><span class="p">,</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">stopping_rule</span><span class="p">,</span>
+                <span class="n">grant</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">remaining</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"The search spent its budget of </span><span class="si">%d</span><span class="s2"> evaluations and still needs </span><span class="si">%d</span><span class="s2"> to "</span>
+                <span class="s2">"meet its stopping rule (</span><span class="si">%s</span><span class="s2">), more than half its budget: nothing is "</span>
+                <span class="s2">"granted."</span><span class="p">,</span>
+                <span class="n">budget</span><span class="p">,</span>
+                <span class="n">remaining</span><span class="p">,</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">stopping_rule</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">grant</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_until</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">budget</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_done</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">session</span><span class="p">:</span> <span class="n">CalibrationSession</span><span class="p">,</span>
+        <span class="n">reporter</span><span class="p">:</span> <span class="n">ProgressReporter</span> <span class="o">|</span> <span class="n">_NoopProgress</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Ask and tell until *budget* is spent or the optimizer stops.</span>
+
+<span class="sd">        Returns True when the optimizer ran out of suggestions: more budget</span>
+<span class="sd">        would buy nothing, so no extension is granted then.</span>
+<span class="sd">        """</span>
+        <span class="k">while</span> <span class="n">n_done</span> <span class="o">&lt;</span> <span class="n">budget</span><span class="p">:</span>
+            <span class="n">take</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">budget</span> <span class="o">-</span> <span class="n">n_done</span><span class="p">)</span>
+            <span class="n">suggestions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">take</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">suggestions</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span><span class="n">suggestions</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sugg</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">suggestions</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="n">reporter</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sugg</span><span class="o">.</span><span class="n">trial_id</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_iteration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">on_iteration</span><span class="p">(</span><span class="n">sugg</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+            <span class="n">n_done</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">converged</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_judge_the_budget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">budget</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a budget below the nominal count, announce one below the worst.</span>
+
+<span class="sd">        Only an engine that counts its evaluations up front publishes</span>
+<span class="sd">        ``counted_budget``; the root search does, from its bounds, sweep,</span>
+<span class="sd">        tolerance and expansions. Refusing now costs nothing, refusing after the</span>
+<span class="sd">        last solve costs the whole budget.</span>
+<span class="sd">        """</span>
+        <span class="n">counted</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="s2">"counted_budget"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">counted</span><span class="p">,</span> <span class="n">CountedBudget</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">verdict</span> <span class="o">=</span> <span class="n">short_budget</span><span class="p">(</span><span class="n">counted</span><span class="p">,</span> <span class="n">budget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">severity</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">verdict</span>
+        <span class="k">if</span> <span class="n">severity</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OptimizerError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

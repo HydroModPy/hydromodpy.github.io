@@ -10,11 +10,11 @@
 <meta content="website" property="og:type"/>
 <meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-figure.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
-<meta content="Figures live in hydromodpy.display and are auto-discovered through display/figures/__init__.py( pkgutil.iter_modules). Today 33 figures ship: hydrograph, piezometric_map, water_budget, calibration_..." property="og:description"/>
+<meta content="Figures live in hydromodpy.display and are auto-discovered through display/figures/__init__.py( pkgutil.iter_modules). hmp viz list prints every registered figure, and Figure Catalog carries the ge..." property="og:description"/>
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
-<meta content="Figures live in hydromodpy.display and are auto-discovered through display/figures/__init__.py( pkgutil.iter_modules). Today 33 figures ship: hydrograph, piezometric_map, water_budget, calibration_..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="Figures live in hydromodpy.display and are auto-discovered through display/figures/__init__.py( pkgutil.iter_modules). hmp viz list prints every registered figure, and Figure Catalog carries the ge..." name="description"/>
+<meta content="2026-09-26T03:11:00+02:00" property="article:modified_time"/>
 <title>Add a Figure — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 26, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -485,32 +485,37 @@
 <section id="add-a-figure">
 <h1>Add a Figure<a class="headerlink" href="#add-a-figure" title="Link to this heading">#</a></h1>
 <p>Figures live in <code class="docutils literal notranslate"><span class="pre">hydromodpy.display</span></code> and are auto-discovered through
-<code class="docutils literal notranslate"><span class="pre">display/figures/__init__.py</span></code> (<code class="docutils literal notranslate"><span class="pre">pkgutil.iter_modules</span></code>). Today 33
-figures ship: <code class="docutils literal notranslate"><span class="pre">hydrograph</span></code>, <code class="docutils literal notranslate"><span class="pre">piezometric_map</span></code>, <code class="docutils literal notranslate"><span class="pre">water_budget</span></code>,
+<code class="docutils literal notranslate"><span class="pre">display/figures/__init__.py</span></code> (<code class="docutils literal notranslate"><span class="pre">pkgutil.iter_modules</span></code>). <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">list</span></code>
+prints every registered figure, and <a class="reference internal" href="../../user_guide/figures.html"><span class="doc">Figure Catalog</span></a> carries the
+generated inventory: <code class="docutils literal notranslate"><span class="pre">hydrograph</span></code>, <code class="docutils literal notranslate"><span class="pre">piezometric_map</span></code>, <code class="docutils literal notranslate"><span class="pre">water_budget</span></code>,
 <code class="docutils literal notranslate"><span class="pre">calibration_convergence</span></code>, <code class="docutils literal notranslate"><span class="pre">hydrographic_network_comparison</span></code>,
-<code class="docutils literal notranslate"><span class="pre">simulated_active_network</span></code>, <code class="docutils literal notranslate"><span class="pre">side_by_side_map</span></code>, etc.</p>
+<code class="docutils literal notranslate"><span class="pre">simulated_active_network</span></code>, <code class="docutils literal notranslate"><span class="pre">side_by_side</span></code>, and the others. The map of the
+package, with its import rules, is <code class="docutils literal notranslate"><span class="pre">hydromodpy/display/README.md</span></code>.</p>
 <section id="contract">
 <h2>Contract<a class="headerlink" href="#contract" title="Link to this heading">#</a></h2>
 <p>Every figure is a <code class="docutils literal notranslate"><span class="pre">BaseFigure</span></code> subclass decorated with
 <code class="docutils literal notranslate"><span class="pre">@register</span></code>. It exposes a <code class="docutils literal notranslate"><span class="pre">FigureSpec</span></code> dataclass and a <code class="docutils literal notranslate"><span class="pre">render</span></code>
 method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/display/figure.py</span>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FigureSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a>
     <span class="n">title</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a>
-    <span class="n">kind</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a>                          <span class="c1"># "spatial" | "timeseries" | "balance" | "calibration" | ...</span>
-    <span class="n">required_fields</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-    <span class="n">optional_fields</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-    <span class="n">required_tables</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-    <span class="n">default_figsize</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#float"><span class="nb">float</span></a><span class="p">,</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#float"><span class="nb">float</span></a><span class="p">]</span>
+    <span class="n">former_names</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">FigureKind</span> <span class="o">=</span> <span class="s2">"spatial"</span>         <span class="c1"># one of the eight kinds below</span>
+    <span class="n">required_fields</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">optional_fields</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">required_tables</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">required_solvers</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">default_figsize</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#tuple"><span class="nb">tuple</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#float"><span class="nb">float</span></a><span class="p">,</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#float"><span class="nb">float</span></a><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Figure</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-    <span class="n">spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">FigureSpec</span><span class="p">]</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">FigureSpec</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="s2">"Run"</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="s2">"Axes"</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Axes"</span><span class="p">:</span> <span class="o">...</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="s2">"Run"</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Figure"</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="s2">"Run"</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Figure"</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unavailable_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="s2">"Run"</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">BaseFigure</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Implements ``plot()`` boilerplate (subplots + render + save)."""</span>
@@ -523,7 +528,29 @@ method:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/display/figures/my_figure.py
 </pre></div>
 </div>
-<p>Skeleton:</p>
+<p>The file name must not start with <code class="docutils literal notranslate"><span class="pre">_</span></code>: discovery skips those, which is
+where helpers shared by several figures live.</p>
+<p>A map of one value per mesh face needs no <code class="docutils literal notranslate"><span class="pre">render</span></code>: subclass
+<code class="docutils literal notranslate"><span class="pre">ScalarFaceMap</span></code> and declare the field. Model: <code class="docutils literal notranslate"><span class="pre">figures/piezometric_map.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.figure</span><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.display.FigureSpec.html#hydromodpy.display.FigureSpec" title="hydromodpy.display.figure.FigureSpec"><span class="n">FigureSpec</span></a>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.figure_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.figures._scalar_face_map</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarFaceMap</span>
+
+
+<span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PiezometricMap</span><span class="p">(</span><span class="n">ScalarFaceMap</span><span class="p">):</span>
+    <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.display.FigureSpec.html#hydromodpy.display.FigureSpec" title="hydromodpy.display.figure.FigureSpec"><span class="n">spec</span></a> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.display.FigureSpec.html#hydromodpy.display.FigureSpec" title="hydromodpy.display.figure.FigureSpec"><span class="n">FigureSpec</span></a><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"piezometric_map"</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Water-table elevation"</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="s2">"spatial"</span><span class="p">,</span>
+        <span class="n">required_fields</span><span class="o">=</span><span class="p">(</span><span class="s2">"watertable_elevation"</span><span class="p">,),</span>
+    <span class="p">)</span>
+    <span class="n">default_cmap</span> <span class="o">=</span> <span class="s2">"viridis"</span>
+    <span class="n">default_overlays</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"watershed"</span><span class="p">,</span> <span class="s2">"outlet"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Anything else is a <code class="docutils literal notranslate"><span class="pre">BaseFigure</span></code> with a <code class="docutils literal notranslate"><span class="pre">render</span></code> that draws on the axes it
+gets. Skeleton:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://matplotlib.org/stable/api/axes_api.html#module-matplotlib.axes"><span class="nn">matplotlib.axes</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="matplotlib.axes._axes.Axes"><span class="n">Axes</span></a>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.figure_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span>
@@ -551,27 +578,27 @@ method:</p>
         <span class="k">return</span> <a class="sphinx-codeautolink-a" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="matplotlib.axes._axes.Axes"><span class="n">ax</span></a>
 </pre></div>
 </div>
-<p>The base <code class="docutils literal notranslate"><span class="pre">BaseFigure.plot</span></code> method handles the full lifecycle:</p>
-<ol class="arabic simple">
-<li><p>resolve <code class="docutils literal notranslate"><span class="pre">required_fields</span></code> / <code class="docutils literal notranslate"><span class="pre">required_tables</span></code> against <code class="docutils literal notranslate"><span class="pre">Run</span></code>;</p></li>
-<li><p>create the matplotlib subplots with <code class="docutils literal notranslate"><span class="pre">default_figsize</span></code>;</p></li>
-<li><p>call <code class="docutils literal notranslate"><span class="pre">render</span></code>;</p></li>
-<li><p>optionally save to <code class="docutils literal notranslate"><span class="pre">save_path</span></code>.</p></li>
-</ol>
+<p>The base <code class="docutils literal notranslate"><span class="pre">BaseFigure.plot</span></code> method creates the matplotlib subplots with
+<code class="docutils literal notranslate"><span class="pre">default_figsize</span></code>, calls <code class="docutils literal notranslate"><span class="pre">render</span></code> and, when asked, saves the PNG with its
+provenance. Whether the figure applies to a run is decided before, by
+<code class="docutils literal notranslate"><span class="pre">unavailable_reason</span></code>: <code class="docutils literal notranslate"><span class="pre">[display].figures</span></code> skips a figure it refuses, and
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">show</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp.figure</span></code> refuse it with the same sentence.</p>
 </section>
 <section id="pick-the-right-kind">
 <h2>Pick the right <code class="docutils literal notranslate"><span class="pre">kind</span></code><a class="headerlink" href="#pick-the-right-kind" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">kind</span></code> field hints the layout used by composed reports:</p>
+<p><code class="docutils literal notranslate"><span class="pre">kind</span></code> is the plotting family, not the hydrological domain, and takes one
+of the eight values of <code class="docutils literal notranslate"><span class="pre">FigureKind</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">spatial</span></code> – map-style plots (<code class="docutils literal notranslate"><span class="pre">imshow</span></code>, <code class="docutils literal notranslate"><span class="pre">pcolormesh</span></code>,
-<code class="docutils literal notranslate"><span class="pre">tripcolor</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial</span></code> – a map (one value per face, a network, a raster).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">section</span></code> – a field sampled along a line.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">timeseries</span></code> – line plots over the simulation period.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">balance</span></code> – water budget bar charts.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration</span></code> – convergence, posterior, landscape views.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compare</span></code> – side-by-side grids.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">balance</span></code> – water budget and mass balance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">particles</span></code> – pathlines and residence times.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">table</span></code> – diagrams of samples (hydrochemistry).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">comparison</span></code> – simulated against observed, or one run against another.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">animation</span></code> – a sequence of frames.</p></li>
 </ul>
-<p>Add a new <code class="docutils literal notranslate"><span class="pre">kind</span></code> only when the existing layouts cannot host the
-view.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">list</span> <span class="pre">--kind</span> <span class="pre">&lt;kind&gt;</span></code> filters on it.</p>
 </section>
 <section id="required-fields-and-tables">
 <h2>Required fields and tables<a class="headerlink" href="#required-fields-and-tables" title="Link to this heading">#</a></h2>
@@ -591,6 +618,25 @@ boundary packages needs when a run carries two of six.</p></li>
 </ul>
 <p>A figure that reads an optional product declares it in <code class="docutils literal notranslate"><span class="pre">optional_fields</span></code>
 and says in <code class="docutils literal notranslate"><span class="pre">unavailable_reason</span></code> what it looked for and how to enable it.</p>
+<p>A need <code class="docutils literal notranslate"><span class="pre">spec</span></code> cannot express (a network, a DEM raster, hydrochemistry, the
+series of a stream reach, a lake or a piezometer) goes into an
+<code class="docutils literal notranslate"><span class="pre">unavailable_reason</span></code> override that calls the base first and returns a
+sentence. <code class="docutils literal notranslate"><span class="pre">render</span></code> may then assume the data is there. It never raises for
+missing data and never draws a placeholder. Model:
+<code class="docutils literal notranslate"><span class="pre">figures/lake_abacus_comparison.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">unavailable_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">Run</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">reason</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#super"><span class="nb">super</span></a><span class="p">()</span><span class="o">.</span><span class="n">unavailable_reason</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">reason</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">run_lake_abacus</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+    <span class="k">except</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/exceptions.html#KeyError"><span class="ne">KeyError</span></a><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"run holds no lake abacus"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">list</span> <span class="pre">--run</span> <span class="pre">&lt;sim_id&gt;</span></code> prints, for each figure, whether a run
+supports it or the sentence that says why not.</p>
 </section>
 <section id="auto-discovery">
 <h2>Auto-discovery<a class="headerlink" href="#auto-discovery" title="Link to this heading">#</a></h2>
@@ -615,9 +661,14 @@ hmp<span class="w"> </span>viz<span class="w"> </span>gallery<span class="w"> </
 <section id="tests-to-add">
 <h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p><strong>Registry</strong>: a line in <code class="docutils literal notranslate"><span class="pre">REGISTRY_CONTRACT</span></code>
+(<code class="docutils literal notranslate"><span class="pre">tests/unit/display/test_figure_registry_completeness.py</span></code>: class,
+<code class="docutils literal notranslate"><span class="pre">kind</span></code>, <code class="docutils literal notranslate"><span class="pre">required_fields</span></code>). The test refuses a figure missing from it.</p></li>
+<li><p><strong>Refusal</strong>: <code class="docutils literal notranslate"><span class="pre">tests/unit/display/test_every_figure_refuses_an_empty_run.py</span></code>
+runs on every registered figure and fails when one accepts a run that holds
+nothing.</p></li>
 <li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/display/</span></code> against a synthetic <code class="docutils literal notranslate"><span class="pre">Run</span></code>
-fixture: assert the figure produces a non-empty axes and honours
-<code class="docutils literal notranslate"><span class="pre">required_fields</span></code> / <code class="docutils literal notranslate"><span class="pre">required_tables</span></code>.</p></li>
+fixture: assert the figure produces a non-empty axes.</p></li>
 <li><p><strong>Image regression</strong> (optional): commit a small reference PNG and
 compare with <code class="docutils literal notranslate"><span class="pre">matplotlib.testing.compare_images</span></code>.</p></li>
 </ul>
@@ -628,11 +679,13 @@ compare with <code class="docutils literal notranslate"><span class="pre">matplo
 <li><p><code class="docutils literal notranslate"><span class="pre">display</span></code> may import <code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, <code class="docutils literal notranslate"><span class="pre">results</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">display</span></code>. It must <strong>not</strong> import <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation</span></code>,
 <code class="docutils literal notranslate"><span class="pre">solver</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">analysis</span></code>, or <code class="docutils literal notranslate"><span class="pre">workflow</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">analysis</span> <span class="pre">-&gt;</span> <span class="pre">display</span></code> tolerance is reserved for comparison
-exports. Do not push display logic into <code class="docutils literal notranslate"><span class="pre">analysis</span></code>.</p></li>
+<li><p>Inside <code class="docutils literal notranslate"><span class="pre">display</span></code>, a shared tool never imports <code class="docutils literal notranslate"><span class="pre">figures/</span></code>;
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/display_layout.yaml</span></code> lists who may import whom.</p></li>
 <li><p>Reach the data through <code class="docutils literal notranslate"><span class="pre">Run</span></code> (<code class="docutils literal notranslate"><span class="pre">run.field</span></code>, <code class="docutils literal notranslate"><span class="pre">run.timeseries</span></code>,
-<code class="docutils literal notranslate"><span class="pre">run.budget</span></code>), never through raw Zarr / DuckDB calls inside the
-figure module.</p></li>
+<code class="docutils literal notranslate"><span class="pre">run.budget</span></code>) or a module function of <code class="docutils literal notranslate"><span class="pre">results</span></code> that takes the run
+(<code class="docutils literal notranslate"><span class="pre">results.run.particles</span></code>, <code class="docutils literal notranslate"><span class="pre">results.calibration_trials</span></code>), never through
+raw Zarr / DuckDB calls or a private attribute of the run: ruff rule SLF001
+holds in <code class="docutils literal notranslate"><span class="pre">display</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -1077,6 +1077,7 @@
         <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">objective_blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">phases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_runs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1101,10 +1102,13 @@
 <span class="sd">        A configuration declaring ``[[calibration.phases]]`` **routes** to</span>
 <span class="sd">        :func:`~hydromodpy.calibration.runners.staged_runner.run_staged_calibration`</span>
 <span class="sd">        in TOML mode, and in embedded mode when this project was built from a</span>
-<span class="sd">        file. An embedded declaration on a project built in memory is</span>
-<span class="sd">        **refused**: each phase forks a fresh configuration from the source</span>
-<span class="sd">        file, and there is none. Python mode declares its own parameter space,</span>
-<span class="sd">        so the phases of the project config do not apply to it.</span>
+<span class="sd">        file. Python mode routes there too when ``phases`` is given, and so</span>
+<span class="sd">        does an embedded declaration on a project built in memory: both write</span>
+<span class="sd">        the calibration document the staged runner needs (next to this</span>
+<span class="sd">        project's ``sessions/``) and run it from there, since there is no</span>
+<span class="sd">        source file to fork each phase from otherwise. Python mode without</span>
+<span class="sd">        ``phases`` declares its own single-stage parameter space, so the</span>
+<span class="sd">        phases of the project config do not apply to it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1116,8 +1120,14 @@
 <span class="sd">            Python-mode output declarations.</span>
 <span class="sd">        objective_blocks</span>
 <span class="sd">            Python-mode objective block declarations.</span>
+<span class="sd">        phases</span>
+<span class="sd">            Python-mode phase declarations, one dict per phase, same keys as</span>
+<span class="sd">            ``[[calibration.phases]]``. Runs staged, through the same document</span>
+<span class="sd">            and runner as a TOML calibration that declares phases.</span>
 <span class="sd">        method</span>
-<span class="sd">            Optimizer method name.</span>
+<span class="sd">            Optimizer method name. Unset, the one the criteria call for: a root</span>
+<span class="sd">            search for one log parameter scored on signed criteria only, a</span>
+<span class="sd">            minimiser otherwise.</span>
 <span class="sd">        max_iter</span>
 <span class="sd">            Maximum number of optimizer iterations.</span>
 <span class="sd">        save_runs</span>
@@ -1150,7 +1160,6 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.dispatch.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">calibration_phases_or_raise</span><span class="p">,</span>
             <span class="n">declared_calibration_phases</span><span class="p">,</span>
-            <span class="n">in_memory_staged_refusal</span><span class="p">,</span>
             <span class="n">no_such_phase</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1192,10 +1201,11 @@
                     <span class="p">)</span>
 
                     <span class="k">return</span> <span class="n">run_staged_calibration</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">(),</span> <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">declared</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">in_memory_staged_refusal</span><span class="p">(</span><span class="n">declared</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">declared</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">no_such_phase</span><span class="p">(</span><span class="s2">"this configuration"</span><span class="p">,</span> <span class="n">phase</span><span class="p">))</span>
+                <span class="c1"># A declaration on a project built in memory has no file to fork</span>
+                <span class="c1"># each phase from: run_calibration_programmatic writes one next</span>
+                <span class="c1"># to this project's sessions/ and runs the staged runner on it.</span>
                 <span class="k">return</span> <span class="n">run_calibration_programmatic</span><span class="p">(</span>
                     <span class="n">embedded</span><span class="p">,</span>
                     <span class="n">project</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
@@ -1204,6 +1214,7 @@
                     <span class="n">metric_fn</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metric_fn"</span><span class="p">),</span>
                     <span class="n">objective</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"objective"</span><span class="p">),</span>
                     <span class="n">return_report</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"return_report"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                    <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">raise</span> <span class="n">ConfigMissingError</span><span class="p">(</span>
                 <span class="s2">"Project.calibrate() requires either config_path=, parameters= "</span>
@@ -1211,7 +1222,7 @@
                 <span class="s2">"project config."</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">phases</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">no_such_phase</span><span class="p">(</span><span class="s2">"this parameters= declaration"</span><span class="p">,</span> <span class="n">phase</span><span class="p">))</span>
 
         <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1228,6 +1239,8 @@
             <span class="n">payload</span><span class="p">[</span><span class="s2">"outputs"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">objective_blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">payload</span><span class="p">[</span><span class="s2">"objective_blocks"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">objective_blocks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">phases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"phases"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">phases</span><span class="p">)</span>
         <span class="n">payload</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
@@ -1245,6 +1258,14 @@
         <span class="p">)</span>
 
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">CalibrationConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="c1"># Completed from the target each parameter names, as the TOML route does,</span>
+        <span class="c1"># so a bare K searches the log space its field declares and gets the</span>
+        <span class="c1"># same method as the same file would.</span>
+        <span class="n">project_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.parameter_resolution</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_parameter_targets</span>
+
+            <span class="n">resolve_parameter_targets</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">project_config</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">run_calibration_programmatic</span><span class="p">(</span>
             <span class="n">cfg</span><span class="p">,</span>
             <span class="n">project</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
@@ -1253,6 +1274,7 @@
             <span class="n">metric_fn</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metric_fn"</span><span class="p">),</span>
             <span class="n">objective</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"objective"</span><span class="p">),</span>
             <span class="n">return_report</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"return_report"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

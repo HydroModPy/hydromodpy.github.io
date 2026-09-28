@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Nancon extreme K-sweep comparison configuration" />
 <meta name="description" content="Purpose: This page separates three notions that are easy to confuse: reference is the observed hydrographic network loaded with the run., persistent is the transient simulated-active extraction mod..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-27T21:19:31+02:00" />
     <title>Network Metrics And Extreme K-Sweep &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -91,7 +91,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 27, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -738,37 +738,45 @@ both directions</p></td>
 <td><p>Intermediate: it measures planar cell-centroid distances and is
 explicitly not the downslope DEM-routing metric from the article.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Legacy matching streams</p></td>
-<td><p>observed stream raster versus simulated seepage raster, in both
-directions</p></td>
-<td><p>historically implemented as <code class="docutils literal notranslate"><span class="pre">MatchingStreams</span></code>; the module was
-removed and has no replacement in the current tree</p></td>
-<td><p>Closest conceptual match: it created downslope-distance rasters and
-point samples needed to compute the bidirectional criterion.</p></td>
+<tr class="row-odd"><td><p>Downslope-distance criterion</p></td>
+<td><p>simulated seepage network versus the observed <code class="docutils literal notranslate"><span class="pre">reference</span></code> network, in
+both directions, along the steepest-descent receiver graph</p></td>
+<td><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.calibration.metrics.downslope_network</span></code>, reached
+through the <code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network</span></code> protocol</p></td>
+<td><p>Implemented: <span class="math notranslate nohighlight">\(D_{so}\)</span>, <span class="math notranslate nohighlight">\(D_{os}\)</span>, <span class="math notranslate nohighlight">\(J\)</span>,
+<span class="math notranslate nohighlight">\(D_{optim}\)</span> and <span class="math notranslate nohighlight">\(r_{optim}\)</span> (Eq. 1-4) are computed and
+published per trial. Declared deviations from the paper and from the
+authors’ own published code are listed on
+<a class="reference internal" href="downslope-distance-calibration.html"><span class="doc">Downslope-distance calibration of the stream network</span></a> and in
+<code class="docutils literal notranslate"><span class="pre">MatchingHydrographicNetwork.deviations</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The legacy <code class="docutils literal notranslate"><span class="pre">MatchingStreams</span></code> code did not persist a clean scalar CSV with
-<code class="docutils literal notranslate"><span class="pre">D_so</span></code>, <code class="docutils literal notranslate"><span class="pre">D_os</span></code> and <code class="docutils literal notranslate"><span class="pre">D_optim</span></code>. It produced the artifacts needed to derive
-them:</p>
+<p>The legacy <code class="docutils literal notranslate"><span class="pre">MatchingStreams</span></code> script (v1, retired) is the ancestor of this
+criterion: it produced the same family of rasters without persisting a clean
+scalar CSV of <code class="docutils literal notranslate"><span class="pre">D_so</span></code>, <code class="docutils literal notranslate"><span class="pre">D_os</span></code> and <code class="docutils literal notranslate"><span class="pre">D_optim</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">obs.tif</span></code> and <code class="docutils literal notranslate"><span class="pre">sim.tif</span></code>: observed and simulated stream supports.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">obsflow.tif</span></code> and <code class="docutils literal notranslate"><span class="pre">simflow.tif</span></code>: traced downslope flowpaths.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dist_dem_obs.tif</span></code> and <code class="docutils literal notranslate"><span class="pre">dist_dem_sim.tif</span></code>: downslope-distance rasters.</p></li>
 <li><p>sampled point layers such as <code class="docutils literal notranslate"><span class="pre">sim_pt.shp</span></code> and <code class="docutils literal notranslate"><span class="pre">obs_pt.shp</span></code>.</p></li>
 </ul>
-<p>To make it fully compatible with <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span>, HydroModPy should
-modernize that logic into a result view and CSV export that computes at least:</p>
+<p>The current criterion computes the same four quantities directly from the
+mesh, with no intermediate raster or point-sample step, and reports them for
+every trial of a calibration:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(D^{down}_{s\to o}\)</span>: average simulated-to-observed downslope
-distance.</p></li>
-<li><p><span class="math notranslate nohighlight">\(D^{down}_{o\to s}\)</span>: average observed-to-simulated downslope
-distance.</p></li>
-<li><p><span class="math notranslate nohighlight">\(D_{optim}\)</span>: combined downslope-distance criterion.</p></li>
-<li><p><span class="math notranslate nohighlight">\(r_{optim}\)</span>: <span class="math notranslate nohighlight">\(D_{optim}\)</span> normalized by the DEM or analysis
-resolution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">D_so</span></code>: average simulated-to-observed downslope distance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">D_os</span></code>: average observed-to-simulated downslope distance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Doptim</span></code>: <span class="math notranslate nohighlight">\((D_{so} + D_{os}) / 2\)</span>, the paper’s diagnostic, never the
+search cost.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">roptim</span></code>: <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> normalized by the reference length <code class="docutils literal notranslate"><span class="pre">L_ref</span></code> (the
+mesh resolution on a regular grid).</p></li>
 </ul>
+<p>Read <a class="reference internal" href="downslope-distance-calibration.html"><span class="doc">Downslope-distance calibration of the stream network</span></a> for what each of those means and
+which of its known biases apply, and
+<a class="reference internal" href="../../user_guide/workflows/stream-network-calibration.html"><span class="doc">Calibrating on the stream network</span></a> for how to run
+it.</p>
 </section>
 <section id="current-extreme-sweep">
 <h2>Current Extreme Sweep<a class="headerlink" href="#current-extreme-sweep" title="Link to this heading">#</a></h2>
@@ -846,11 +854,11 @@ their metric bands, then writes the trend and tradeoff graphs shown below.</p>
 </section>
 <section id="case-configuration">
 <h2>Case Configuration<a class="headerlink" href="#case-configuration" title="Link to this heading">#</a></h2>
-<figure class="align-default" id="id6">
+<figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="../../_images/case_configuration1.png"><img alt="Nancon extreme K-sweep comparison configuration" src="../../_images/case_configuration1.png" style="width: 100%;" />
 </a>
 <figcaption>
-<p><span class="caption-number">Fig. 424 </span><span class="caption-text">Common comparison support for the extreme MODFLOW 6 simulations.</span><a class="headerlink" href="#id6" title="Link to this image">#</a></p>
+<p><span class="caption-number">Fig. 424 </span><span class="caption-text">Common comparison support for the extreme MODFLOW 6 simulations.</span><a class="headerlink" href="#id5" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
@@ -1025,56 +1033,56 @@ placed below the map so the spatial pattern and scalar diagnostics stay
 together.</p>
 <section id="k-2e-6-m-s-100x-lower-than-reference">
 <h3><code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">2e-6</span> <span class="pre">m/s</span></code>: 100x lower than reference<a class="headerlink" href="#k-2e-6-m-s-100x-lower-than-reference" title="Link to this heading">#</a></h3>
-<figure class="align-default" id="id7">
+<figure class="align-default" id="id6">
 <a class="reference internal image-reference" href="../../_images/k_2e6_reference_overlay.png"><img alt="Simulated active network versus reference network for K equals 2e-6 m/s" src="../../_images/k_2e6_reference_overlay.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 425 </span><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">k_2e6</span></code>: <span class="math notranslate nohighlight">\(N_a=3033\)</span>, <span class="math notranslate nohighlight">\(C_{ref}=0.820\)</span>,
 <span class="math notranslate nohighlight">\(P_a=0.454\)</span>, <span class="math notranslate nohighlight">\(F_1=0.584\)</span>,
-<span class="math notranslate nohighlight">\(\bar{D}^{plan}=160\)</span> m.</span><a class="headerlink" href="#id7" title="Link to this image">#</a></p>
+<span class="math notranslate nohighlight">\(\bar{D}^{plan}=160\)</span> m.</span><a class="headerlink" href="#id6" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="k-2e-5-m-s-10x-lower-than-reference">
 <h3><code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">2e-5</span> <span class="pre">m/s</span></code>: 10x lower than reference<a class="headerlink" href="#k-2e-5-m-s-10x-lower-than-reference" title="Link to this heading">#</a></h3>
-<figure class="align-default" id="id8">
+<figure class="align-default" id="id7">
 <a class="reference internal image-reference" href="../../_images/k_2e5_reference_overlay.png"><img alt="Simulated active network versus reference network for K equals 2e-5 m/s" src="../../_images/k_2e5_reference_overlay.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 426 </span><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">k_2e5</span></code>: <span class="math notranslate nohighlight">\(N_a=1496\)</span>, <span class="math notranslate nohighlight">\(C_{ref}=0.529\)</span>,
 <span class="math notranslate nohighlight">\(P_a=0.591\)</span>, <span class="math notranslate nohighlight">\(F_1=0.558\)</span>,
-<span class="math notranslate nohighlight">\(\bar{D}^{plan}=173\)</span> m.</span><a class="headerlink" href="#id8" title="Link to this image">#</a></p>
+<span class="math notranslate nohighlight">\(\bar{D}^{plan}=173\)</span> m.</span><a class="headerlink" href="#id7" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="k-2e-4-m-s-reference-simulation">
 <h3><code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">2e-4</span> <span class="pre">m/s</span></code>: reference simulation<a class="headerlink" href="#k-2e-4-m-s-reference-simulation" title="Link to this heading">#</a></h3>
-<figure class="align-default" id="id9">
+<figure class="align-default" id="id8">
 <a class="reference internal image-reference" href="../../_images/k_2e4_reference_overlay1.png"><img alt="Simulated active network versus reference network for K equals 2e-4 m/s" src="../../_images/k_2e4_reference_overlay1.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 427 </span><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">k_2e4</span></code>: <span class="math notranslate nohighlight">\(N_a=811\)</span>, <span class="math notranslate nohighlight">\(C_{ref}=0.305\)</span>,
 <span class="math notranslate nohighlight">\(P_a=0.629\)</span>, <span class="math notranslate nohighlight">\(F_1=0.410\)</span>,
-<span class="math notranslate nohighlight">\(\bar{D}^{plan}=288\)</span> m.</span><a class="headerlink" href="#id9" title="Link to this image">#</a></p>
+<span class="math notranslate nohighlight">\(\bar{D}^{plan}=288\)</span> m.</span><a class="headerlink" href="#id8" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="k-2e-2-m-s-100x-higher-than-reference">
 <h3><code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">2e-2</span> <span class="pre">m/s</span></code>: 100x higher than reference<a class="headerlink" href="#k-2e-2-m-s-100x-higher-than-reference" title="Link to this heading">#</a></h3>
-<figure class="align-default" id="id10">
+<figure class="align-default" id="id9">
 <a class="reference internal image-reference" href="../../_images/k_2e2_reference_overlay.png"><img alt="Simulated active network versus reference network for K equals 2e-2 m/s" src="../../_images/k_2e2_reference_overlay.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 428 </span><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">k_2e2</span></code>: <span class="math notranslate nohighlight">\(N_a=174\)</span>, <span class="math notranslate nohighlight">\(C_{ref}=0.060\)</span>,
 <span class="math notranslate nohighlight">\(P_a=0.580\)</span>, <span class="math notranslate nohighlight">\(F_1=0.109\)</span>,
-<span class="math notranslate nohighlight">\(\bar{D}^{plan}=1117\)</span> m.</span><a class="headerlink" href="#id10" title="Link to this image">#</a></p>
+<span class="math notranslate nohighlight">\(\bar{D}^{plan}=1117\)</span> m.</span><a class="headerlink" href="#id9" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 <p>There is no figure for <code class="docutils literal notranslate"><span class="pre">k_2e3</span></code> because the MODFLOW 6 solve did not converge.</p>
 </section>
 <section id="metric-evolution">
 <h3>Metric Evolution<a class="headerlink" href="#metric-evolution" title="Link to this heading">#</a></h3>
-<figure class="align-default" id="id11">
+<figure class="align-default" id="id10">
 <a class="reference internal image-reference" href="../../_images/metric_trends1.png"><img alt="Evolution of Nancon extreme K-sweep active-network metrics with hydraulic conductivity" src="../../_images/metric_trends1.png" style="width: 100%;" />
 </a>
 <figcaption>
@@ -1082,16 +1090,16 @@ together.</p>
 the positive distance ratio <span class="math notranslate nohighlight">\(R_D^{plan}\)</span> across the completed extreme
 <code class="docutils literal notranslate"><span class="pre">K</span></code> values. The horizontal reference line marks <span class="math notranslate nohighlight">\(R_D^{plan}=1\)</span>.
 The failed <code class="docutils literal notranslate"><span class="pre">k_2e3</span></code> solve is excluded from the curve because no valid
-simulated-active network was produced for that simulation.</span><a class="headerlink" href="#id11" title="Link to this image">#</a></p>
+simulated-active network was produced for that simulation.</span><a class="headerlink" href="#id10" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
-<figure class="align-default" id="id12">
+<figure class="align-default" id="id11">
 <a class="reference internal image-reference" href="../../_images/metric_tradeoff1.png"><img alt="Nancon extreme K-sweep overlap and distance tradeoff graph" src="../../_images/metric_tradeoff1.png" style="width: 100%;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 430 </span><span class="caption-text">Tradeoff view: coverage versus precision, then
 <span class="math notranslate nohighlight">\(\bar{D}^{plan}\)</span> versus <span class="math notranslate nohighlight">\(F_1\)</span>. Point size is proportional to
-<span class="math notranslate nohighlight">\(N_a\)</span>.</span><a class="headerlink" href="#id12" title="Link to this image">#</a></p>
+<span class="math notranslate nohighlight">\(N_a\)</span>.</span><a class="headerlink" href="#id11" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
@@ -1117,7 +1125,7 @@ step if this diagnostic is promoted from visual development to calibration.</p>
 <p>The current planar metrics do contain an optimum-style distance ratio:
 <code class="docutils literal notranslate"><span class="pre">planar_distance_ratio</span></code> and <code class="docutils literal notranslate"><span class="pre">planar_distance_log10_ratio</span></code>. The ratio is
 useful for inspecting whether the two directional distances cross as <code class="docutils literal notranslate"><span class="pre">K</span></code>
-changes. It is not <span class="math notranslate nohighlight">\(r_{optim}\)</span> from <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span>, because the
+changes. It is not <span class="math notranslate nohighlight">\(r_{optim}\)</span> from <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span>, because the
 paper computes <span class="math notranslate nohighlight">\(D_{optim}\)</span> from downslope flowpath distances and then
 normalizes it by the DEM resolution.</p>
 <p>The current code now adds a safer intermediate CSV,
@@ -1141,7 +1149,7 @@ these are planar mesh diagnostics, not downslope DEM distances.</p></li>
 </section>
 <section id="diagnostic-or-criterion">
 <h2>Diagnostic Or Criterion<a class="headerlink" href="#diagnostic-or-criterion" title="Link to this heading">#</a></h2>
-<p>The downslope criterion of <span class="bibtex-citation" id="id4">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> is now implemented, on the
+<p>The downslope criterion of <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> is now implemented, on the
 receiver graph of the mesh rather than on a raster; see
 <a class="reference internal" href="downslope-distance-calibration.html"><span class="doc">Downslope-distance calibration of the stream network</span></a>. The two families answer different
 questions and neither replaces the other.</p>
@@ -1164,7 +1172,7 @@ proxy on a different distance, useful for looking, not for calibrating.</p>
 <li><p><a class="reference internal" href="nancon-k-sweep-results.html"><span class="doc">Nancon K-Sweep Results</span></a></p></li>
 <li><p><a class="reference internal" href="conceptual-model.html"><span class="doc">Conceptual Model</span></a></p></li>
 <li><p><a class="reference internal" href="../hydrology/simulated-active-network.html"><span class="doc">Simulated Active Network</span></a></p></li>
-<li><p><span class="bibtex-citation" id="id5">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> for the published bidirectional downslope-distance
+<li><p><span class="bibtex-citation" id="id4">[<a class="reference internal" href="../bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> for the published bidirectional downslope-distance
 criterion; see also <a class="reference internal" href="../bibliography.html"><span class="doc">Bibliography</span></a>.</p></li>
 </ul>
 </section>

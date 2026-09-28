@@ -797,30 +797,17 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_extract_crs_epsg</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">Run</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Pull the EPSG integer code from a ``Run`` instance when available.</span>
+<span class="w">    </span><span class="sd">"""Return the EPSG code the catalog recorded for ``sim``, or ``None``.</span>
 
-<span class="sd">    Tries the catalog-backed ``simulations.crs_epsg`` column first; falls</span>
-<span class="sd">    back to ``None`` rather than raising, so PNG metadata stays optional.</span>
+<span class="sd">    PNG provenance is optional. A run-shaped object with no catalog behind it</span>
+<span class="sd">    (the calibration report builds one from a session journal) still gets its</span>
+<span class="sd">    PNG, without an EPSG.</span>
 <span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run.geographic</span><span class="w"> </span><span class="kn">import</span> <span class="n">crs_epsg</span>
+
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">catalog</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s2">"_catalog"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">sim_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s2">"_sim_id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s2">"sim_id"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">catalog</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sim_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="s2">"backend"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
-            <span class="s2">"SELECT crs_epsg FROM simulations WHERE sim_id = ?"</span><span class="p">,</span>
-            <span class="p">[</span><span class="n">sim_id</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"crs_epsg"</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">crs_epsg</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># provenance is optional; it never costs the PNG</span>
         <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
 

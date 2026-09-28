@@ -19,15 +19,15 @@ logic.
 Code map
 --------
 
-- ``hydromodpy/data/managers/config_schema.py``:
+- ``hydromodpy/data/loading/config_schema.py``:
   typed validation of ``[data]`` sections.
-- ``hydromodpy/data/managers/planner.py`` and ``managers/plan.py``:
+- ``hydromodpy/data/loading/planner.py`` and ``loading/plan.py``:
   activation inference and immutable ``DataLoadPlan`` creation.
 - ``hydromodpy/data/loading/loader.py``:
   runtime dispatch from activated data types to concrete managers.
-- ``hydromodpy/data/managers/container.py``:
-  lightweight loaded-data container consumed by the project facade and
-  the structure binders.
+- ``hydromodpy/core/state/data.py``:
+  ``LoadedDataContext``, one field per variable, which the loader fills and
+  the project facade and the structure binders read.
 - ``hydromodpy/data/variables/*``:
   provider-specific packages that own typed config, manager logic, and IO.
 
@@ -35,8 +35,8 @@ Recommended reading path
 ------------------------
 
 1. ``hydromodpy/data/README.md``
-2. ``hydromodpy/data/managers/config_schema.py``
-3. ``hydromodpy/data/managers/planner.py``
+2. ``hydromodpy/data/loading/config_schema.py``
+3. ``hydromodpy/data/loading/planner.py``
 4. ``hydromodpy/data/loading/loader.py``
 5. one family package under ``hydromodpy/data/variables/``
 
@@ -46,13 +46,13 @@ Root-Layer Responsibilities
 The ``managers/`` and ``loading/`` sub-packages under ``hydromodpy/data/``
 split responsibilities as follows:
 
-- ``managers/config_schema.py`` validates ``[data]`` and normalizes typed
+- ``loading/config_schema.py`` validates ``[data]`` and normalizes typed
   sections,
-- ``managers/planner.py`` merges explicit types with inference rules,
-- ``managers/plan.py`` stores the immutable ``DataLoadPlan``,
-- ``loading/loader.py`` dispatches each activated type to its concrete manager,
-- ``managers/container.py`` exposes the lightweight runtime container consumed
-  by orchestration layers.
+- ``loading/planner.py`` merges explicit types with inference rules,
+- ``loading/plan.py`` stores the immutable ``DataLoadPlan``,
+- ``loading/loader.py`` dispatches each activated type to its concrete manager
+  and writes what it loaded into ``LoadedDataContext``
+  (``hydromodpy/core/state/data.py``), which orchestration layers read.
 
 This means the project facade can stay focused on execution order
 while the data layer owns activation, validation, and loading
@@ -99,8 +99,8 @@ only decides activation and calls the right loader.
 Provider Families
 -----------------
 
-The current provider inventory documented in ``hydromodpy/data/structure.md``
-is summarized below.
+The current provider inventory, whose full table is in
+``hydromodpy/data/README.md``, is summarized below.
 
 .. list-table::
    :header-rows: 1
@@ -172,10 +172,10 @@ What To Read When Touching This Layer
 
 Start with:
 
-- ``hydromodpy/data/README.md`` for the root orchestration contract,
-- ``hydromodpy/data/managers/planner.py`` for inference rules,
-- ``hydromodpy/data/loading/loader.py`` for the active dispatch surface,
-- ``hydromodpy/data/structure.md`` for the broader provider and cache model.
+- ``hydromodpy/data/README.md`` for the map of the package: variables,
+  subpackages, import rules and data flows,
+- ``hydromodpy/data/loading/planner.py`` for inference rules,
+- ``hydromodpy/data/loading/loader.py`` for the active dispatch surface.
 
 Then inspect one typed family such as:
 

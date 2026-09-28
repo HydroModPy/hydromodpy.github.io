@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Figures live in hydromodpy.display and consume the persisted hydromodpy.results.run.Run interface. They are solver-agnostic: the same figure name can render MODFLOW-NWT, MODFLOW 6, or Boussinesq ou..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-26T03:11:00+02:00" property="article:modified_time"/>
 <title>Figure Catalog — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 26, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -367,6 +367,7 @@
 <li class="toctree-l2"><a class="reference internal" href="workflows/site_selection.html">Site Selection Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/calibration.html">Calibration Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/calibration-recipes.html">Four calibrations to start from</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/calibration-uncertainty.html">How wide a calibrated value is</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/stream-network-calibration.html">Calibrating on the stream network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/comparison.html">Comparison Workflow</a></li>
 </ul>
@@ -485,6 +486,7 @@ itself:</p>
 </div>
 <p>From the CLI:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>viz<span class="w"> </span>list
+hmp<span class="w"> </span>viz<span class="w"> </span>list<span class="w"> </span>--run<span class="w"> </span>&lt;sim_id&gt;
 hmp<span class="w"> </span>viz<span class="w"> </span>show<span class="w"> </span>&lt;sim_id&gt;<span class="w"> </span>&lt;figure&gt;
 hmp<span class="w"> </span>viz<span class="w"> </span>gallery<span class="w"> </span>project.toml
 hmp<span class="w"> </span>run<span class="w"> </span>project.toml<span class="w"> </span>--no-display
@@ -548,7 +550,7 @@ build also regenerates it on every run.</p>
 <td><p>fields <code class="docutils literal notranslate"><span class="pre">accumulation_flux</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mesh_map</span></code></p></td>
-<td><p>Solver mesh</p></td>
+<td><p>Model mesh</p></td>
 <td><p>fields <code class="docutils literal notranslate"><span class="pre">topography</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parameter_map</span></code></p></td>
@@ -575,7 +577,11 @@ build also regenerates it on every run.</p>
 <td><p>Simulated active network</p></td>
 <td><p>fields <code class="docutils literal notranslate"><span class="pre">accumulation_flux</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">watertable_depth_map</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">watershed_id_card</span></code></p></td>
+<td><p>Watershed identity card</p></td>
+<td><p>(no fixed input)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">watertable_depth_map</span></code></p></td>
 <td><p>Water-table depth</p></td>
 <td><p>fields <code class="docutils literal notranslate"><span class="pre">watertable_depth</span></code></p></td>
 </tr>
@@ -808,7 +814,7 @@ build also regenerates it on every run.</p>
 <td><p>(no fixed input)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_reference</span></code></p></td>
-<td><p>BD Topage hydrographic network</p></td>
+<td><p>Reference hydrographic network</p></td>
 <td><p>(no fixed input)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_reference_missing_only</span></code></p></td>
@@ -862,10 +868,6 @@ build also regenerates it on every run.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulated_active_network_reference_overlay</span></code></p></td>
 <td><p>Simulated active network vs reference</p></td>
 <td><p>fields <code class="docutils literal notranslate"><span class="pre">accumulation_flux</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">watershed_id_card</span></code></p></td>
-<td><p>Watershed identity card</p></td>
-<td><p>(no fixed input)</p></td>
 </tr>
 </tbody>
 </table>
@@ -950,13 +952,22 @@ logged and skipped, so the same declaration works across projects.</p>
 <h2>Applicability rule<a class="headerlink" href="#applicability-rule" title="Link to this heading">#</a></h2>
 <p>Figure names are stable entry points, but every figure depends on what the
 run persisted. Each figure declares its requirements in its <code class="docutils literal notranslate"><span class="pre">FigureSpec</span></code>
-(<code class="docutils literal notranslate"><span class="pre">required_fields</span></code>, <code class="docutils literal notranslate"><span class="pre">required_tables</span></code>, <code class="docutils literal notranslate"><span class="pre">required_solvers</span></code>); the
-display layer checks them before rendering and skips the figure with an
-explicit reason when the run does not satisfy them. A configuration can
-therefore list every figure it may want: a run without particle tracking
-simply does not produce <code class="docutils literal notranslate"><span class="pre">particle_tracks</span></code>.</p>
+(<code class="docutils literal notranslate"><span class="pre">required_fields</span></code>, <code class="docutils literal notranslate"><span class="pre">required_tables</span></code>, <code class="docutils literal notranslate"><span class="pre">required_solvers</span></code>), and checks
+what <code class="docutils literal notranslate"><span class="pre">FigureSpec</span></code> cannot say (a network, a DEM raster, hydrochemistry, the
+series of a stream reach, a lake or a piezometer) itself. The display layer
+asks before rendering: <code class="docutils literal notranslate"><span class="pre">[display].figures</span></code> skips the figure with an explicit
+reason, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">show</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp.figure</span></code> refuse it with the same
+sentence. A configuration can therefore list every figure it may want: a run
+without particle tracking simply does not produce <code class="docutils literal notranslate"><span class="pre">particle_tracks</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">difference_map</span></code> and <code class="docutils literal notranslate"><span class="pre">side_by_side</span></code> compare two runs. They are drawn from
+Python, <code class="docutils literal notranslate"><span class="pre">hmp.figure(run,</span> <span class="pre">"difference_map",</span> <span class="pre">reference=other_run)</span></code>, and say so
+when <code class="docutils literal notranslate"><span class="pre">reference</span></code> is missing.</p>
 <p>List the names and their requirements with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>viz<span class="w"> </span>list
+</pre></div>
+</div>
+<p>Ask what one run supports, and why not the other figures, with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>viz<span class="w"> </span>list<span class="w"> </span>--run<span class="w"> </span>&lt;sim_id&gt;
 </pre></div>
 </div>
 <p>To inspect what a given run actually holds:</p>

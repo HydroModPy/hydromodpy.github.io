@@ -627,16 +627,21 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypeAlias</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">TypeAdapter</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">TypeAdapter</span><span class="p">,</span> <span class="n">ValidationError</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.protocols.matching_hydrographic_network</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">MatchingHydrographicNetworkOptions</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">HydroModelBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.persistence</span><span class="w"> </span><span class="kn">import</span> <span class="n">PersistenceConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.profile</span><span class="w"> </span><span class="kn">import</span> <span class="n">Profile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonEmptyStr</span><span class="p">,</span> <span class="n">NonNegativeInt</span><span class="p">,</span> <span class="n">PositiveFloat</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.stream_criterion_defaults</span><span class="w"> </span><span class="kn">import</span> <span class="n">STREAM_CRITERION_DEFAULTS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">NonEmptyStr</span><span class="p">,</span>
+    <span class="n">NonNegativeInt</span><span class="p">,</span>
+    <span class="n">PositiveFloat</span><span class="p">,</span>
+    <span class="n">PositiveInt</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.stream_criterion_defaults</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">STREAM_CRITERION_DEFAULTS</span><span class="p">,</span>
+    <span class="n">ObservedRasterization</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Length</span>
 
 <span class="n">SaveRunsMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"best_n"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">]</span>
@@ -659,13 +664,144 @@
 <span class="p">]</span>
 <span class="sd">"""Metric names a TOML may select.</span>
 
-<span class="sd">Kept equal to the keys of ``calibration.optim.objective.METRICS`` by</span>
+<span class="sd">Kept equal to the keys of ``calibration.criteria.series.METRICS`` by</span>
 <span class="sd">``tests/unit/calibration/test_metric_kind_matches_the_registry.py``: the engine</span>
 <span class="sd">computed metrics this list did not offer, so they ran in Python and were refused</span>
 <span class="sd">by validation.</span>
 <span class="sd">"""</span>
 <span class="n">CalibrationMethod</span> <span class="o">=</span> <span class="n">NonEmptyStr</span>
 <span class="n">OutputTime</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"all"</span><span class="p">,</span> <span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MatchingHydrographicNetworkOptions</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What a file may say about the protocol beyond naming it.</span>
+
+<span class="sd">    Everything here has a default that reproduces the published method. The</span>
+<span class="sd">    names are the ones the file uses for its own parameters and outputs, and the</span>
+<span class="sd">    engines are free: the method is the pair of criteria and the order they run</span>
+<span class="sd">    in, not the optimizer that walks them.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"matching_hydrographic_network"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Protocol identifier."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">version</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Recipe version this file was written against. Unset runs the version this "</span>
+            <span class="s2">"installation carries; pinned, a mismatch is refused rather than "</span>
+            <span class="s2">"approximated, so a result that informed a decision stays replayable."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">conductivity</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"K"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Name of the calibration parameter stage one moves, as the file "</span>
+        <span class="s2">"declares it under [calibration.parameters]."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">storage</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"Sy"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Name of the calibration parameter stage two moves. Null runs the "</span>
+        <span class="s2">"network stage alone, which is a method in its own right: it identifies the "</span>
+        <span class="s2">"conductivity without any discharge record."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">network_output</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Name of the network output stage one is scored on. Unset picks "</span>
+        <span class="s2">"the single output declared with support='network'."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_metric</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"distance_gap"</span><span class="p">,</span> <span class="s2">"distance_mean"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"distance_gap"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Criterion of stage one. 'distance_gap' is the signed difference "</span>
+        <span class="s2">"of Eq. 1, whose zero is the balance the paper solves for. 'distance_mean' is "</span>
+        <span class="s2">"the mean offset: a diagnostic, and the estimator of the reference script, "</span>
+        <span class="s2">"whose interior minimum sits nowhere in particular."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"bisection"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Engine of stage one. The signed criterion crosses zero once over "</span>
+        <span class="s2">"several decades, which is what a root search wants; any registered engine is "</span>
+        <span class="s2">"accepted."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveInt</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"auto"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Evaluation budget of stage one. 'auto' lets an engine that counts "</span>
+        <span class="s2">"its evaluations size it: the bisection budgets its worst case, S + 2E + "</span>
+        <span class="s2">"ceil(log2(1 / t)) for a root found after its E bracket expansions, 23 on "</span>
+        <span class="s2">"[1e-7, 1e-3] m/s with seven sweep points and one per cent; any other engine "</span>
+        <span class="s2">"gets 100. A number below the bisection's nominal count, S + ceil(log2(s / t)) "</span>
+        <span class="s2">"for a root inside the bounds (15 there), is refused before the first solve."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How precisely stage one has to pin the conductivity before it "</span>
+        <span class="s2">"stops, as a relative precision on the conductivity: 0.01 is the paper's one "</span>
+        <span class="s2">"per cent. Unset takes the engine's default, which for the bisection is that "</span>
+        <span class="s2">"same one per cent."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_engine_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-one engine itself, named as that engine "</span>
+        <span class="s2">"names them. Which ones exist depends on steady_method, and the model of "</span>
+        <span class="s2">"each engine is in calibration.optim.method_config. A key the engine does not "</span>
+        <span class="s2">"know is refused before the first solver call. The escape hatch for "</span>
+        <span class="s2">"reproducing a published call; a "</span>
+        <span class="s2">"precision is said once, in steady_tolerance."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">steady_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates the steady stage averages, as {start, end}. Unset takes the "</span>
+        <span class="s2">"whole [simulation.time] window."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transient_metric</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"nse_log"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Criterion of stage two. The default weights recessions as heavily "</span>
+        <span class="s2">"as peaks, which is where storage shows."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transient_method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"scipy_nelder_mead"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Engine of stage two."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transient_max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Evaluation budget of stage two. The simplex cannot count what it "</span>
+        <span class="s2">"needs, so it gets no extension: a stage two that spends this before its "</span>
+        <span class="s2">"tolerance is reported as not converged, and a re-run with a larger budget "</span>
+        <span class="s2">"replays the trials already solved from the cache."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transient_tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How precisely stage two has to pin the storage before it stops, "</span>
+        <span class="s2">"as a relative precision on the storage coefficient."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transient_engine_options</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Options of the stage-two engine itself, named as that engine "</span>
+        <span class="s2">"names them, and refused when it does not know them. Which ones exist depends "</span>
+        <span class="s2">"on transient_method."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">discharge_variable</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"discharge"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Observed variable stage two is scored on."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">observed_station_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Gauge whose cost drives stage two. Required when several stations are loaded."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates bounding the samples stage two scores on, as {start, end}. "</span>
+        <span class="s2">"Use it to drop the spin-up year the transient stage still has to simulate."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_accept_the_bare_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""``protocol = "matching_hydrographic_network"`` is the whole declaration."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">data</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
 
 <span class="n">CalibrationProtocolDecl</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">MatchingHydrographicNetworkOptions</span>
 <span class="sd">"""What ``[calibration].protocol`` validates against.</span>
@@ -771,6 +907,22 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_snap_radius</span><span class="p">(</span><span class="n">radius</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">support</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse a snap radius that could not mean what it says."""</span>
+    <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">to</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">metres</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"m"</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">to</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">metres</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"support=</span><span class="si">{</span><span class="n">support</span><span class="si">!r}</span><span class="s2">: snap_radius must be &gt; 0 m, got </span><span class="si">{</span><span class="n">metres</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> m."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"discharge"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"support=</span><span class="si">{</span><span class="n">support</span><span class="si">!r}</span><span class="s2">: snap_radius moves a gauge onto the most accumulated "</span>
+            <span class="sa">f</span><span class="s2">"cell, and variable=</span><span class="si">{</span><span class="n">variable</span><span class="si">!r}</span><span class="s2"> is not a discharge. A head or a lake state "</span>
+            <span class="s2">"is read where it was measured, never on the talweg nearby."</span>
+        <span class="p">)</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibOutputPoint</span><span class="p">(</span><span class="n">ScoresAnObservedRecord</span><span class="p">,</span> <span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Observable extracted at a planar ``(x, y)`` point.</span>
 
@@ -816,15 +968,32 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"Route this cell's discharge, and the area it drains, over shared "</span>
         <span class="s2">"nodes rather than shared edges, which recovers a talweg that runs diagonally "</span>
         <span class="s2">"across a square grid. Only reaches 'variable' = 'discharge'; a head or a lake "</span>
-        <span class="s2">"state read at this point ignores it. The same knob as the network output's own "</span>
-        <span class="s2">"'diagonal_neighbors', declared here too because a point output belongs to no "</span>
-        <span class="s2">"network block."</span><span class="p">,</span>
+        <span class="s2">"state read at this point ignores it. The same routing choice as the network "</span>
+        <span class="s2">"output's 'diagonal_neighbors', declared here because a point output belongs to "</span>
+        <span class="s2">"no network block, with its own default: false (shared edges) here, true (D8) "</span>
+        <span class="s2">"on the network output."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">snap_radius</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Opt-in. Move this gauge onto the cell that drains the most within "</span>
+        <span class="s2">"this radius, before it is scored. Accepts a bare number (metres) or a pint "</span>
+        <span class="s2">"string like '150 m'; it is a maximum displacement, measured from the gauge "</span>
+        <span class="s2">"coordinate to the cell centres. The drained area is the one the solver routes "</span>
+        <span class="s2">"on the mesh, with this output's 'diagonal_neighbors'. Only for 'variable' = "</span>
+        <span class="s2">"'discharge'. With 'observes', a discharge station is then located by the "</span>
+        <span class="s2">"coordinate of its record, which it otherwise is not, and snapped from there. "</span>
+        <span class="s2">"Off by default: a gauge otherwise stays in the cell it resolves to, which may "</span>
+        <span class="s2">"drain a small share of the catchment, and the run logs that share."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_point_selectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputPoint</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"support='point' requires both 'x' and 'y', or 'geometry'."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">observes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"support='point' requires both 'x' and 'y', or 'geometry', unless "</span>
+                <span class="s2">"'observes' names a station: its own record locates the point instead."</span>
+            <span class="p">)</span>
+        <span class="n">_check_snap_radius</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snap_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="s2">"point"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
 
@@ -911,14 +1080,28 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"Route this cell's discharge, and the area it drains, over shared "</span>
         <span class="s2">"nodes rather than shared edges, which recovers a talweg that runs diagonally "</span>
         <span class="s2">"across a square grid. Only reaches 'variable' = 'discharge'; a head read at this "</span>
-        <span class="s2">"cell ignores it. The same knob as the network output's own 'diagonal_neighbors', "</span>
-        <span class="s2">"declared here too because a cell output belongs to no network block."</span><span class="p">,</span>
+        <span class="s2">"cell ignores it. The same routing choice as the network output's "</span>
+        <span class="s2">"'diagonal_neighbors', declared here because a cell output belongs to no network "</span>
+        <span class="s2">"block, with its own default: false (shared edges) here, true (D8) on the "</span>
+        <span class="s2">"network output."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">snap_radius</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Opt-in. Move this gauge onto the cell that drains the most within "</span>
+        <span class="s2">"this radius, before it is scored. Accepts a bare number (metres) or a pint "</span>
+        <span class="s2">"string like '150 m'; it is a maximum displacement, measured from the gauge "</span>
+        <span class="s2">"cell centre to the cell centres. The drained area is the one the solver routes "</span>
+        <span class="s2">"on the mesh, with this output's 'diagonal_neighbors'. Only for 'variable' = "</span>
+        <span class="s2">"'discharge'. Off by default: a gauge otherwise stays in the cell it "</span>
+        <span class="s2">"resolves to, which may drain a small share of the catchment, and the run logs "</span>
+        <span class="s2">"that share."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_cell_selectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibOutputCell</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">row</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">col</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"support='cell' requires 'cell_id' or both 'row' and 'col'."</span><span class="p">)</span>
+        <span class="n">_check_snap_radius</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snap_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
 
@@ -970,12 +1153,17 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibOutputNetwork</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The mapped stream network as a calibration target.</span>
 
-<span class="sd">    The model is compared to a hydrographic network rather than to a gauge:</span>
-<span class="sd">    for every cell where it releases water to the surface, the descent to the</span>
-<span class="sd">    mapped network is measured, and reciprocally. The output produces the pair</span>
-<span class="sd">    ``(D_so, D_os)``; the metric on top of it is ``distance_gap``, their signed</span>
-<span class="sd">    difference in absolute value, whose zero is the balance between an excess</span>
-<span class="sd">    of simulated stream and a missing one.</span>
+<span class="sd">    The criterion compares a simulated stream network to a mapped one. For</span>
+<span class="sd">    every cell of the simulated network the descent to the mapped network is</span>
+<span class="sd">    measured, and reciprocally. The output produces the pair ``(D_so, D_os)``;</span>
+<span class="sd">    the metric on top of it is ``distance_gap``, their signed difference in</span>
+<span class="sd">    absolute value, whose zero is the balance between an excess of simulated</span>
+<span class="sd">    stream and a missing one.</span>
+
+<span class="sd">    It can drive any parameter that moves where the water table meets the</span>
+<span class="sd">    surface. What it identifies depends on what moves: with the homogeneous</span>
+<span class="sd">    conductivity alone, at fixed geometry and recharge, it identifies ``K/R``,</span>
+<span class="sd">    the ratio of Abherve et al. (2023), and not ``K`` itself.</span>
 
 <span class="sd">    There is no ``observed_values`` here and there cannot be: the criterion</span>
 <span class="sd">    balances two simulated quantities against each other, so nothing in it is</span>
@@ -1069,15 +1257,27 @@
         <span class="s2">"streams, where cell density is highest exactly where distances are smallest."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">diagonal_neighbors</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Route over shared nodes rather than shared edges, which recovers "</span>
-        <span class="s2">"the diagonal descents of a D8 grid. Only meaningful on a structured quad mesh. "</span>
-        <span class="s2">"The default is the literal reading of the paper and it is not a second-decimal "</span>
-        <span class="s2">"choice: on a synthetic valley whose talweg runs along the grid diagonal, the "</span>
-        <span class="s2">"most accumulated cell collects 6.6 per cent of the domain over shared edges and "</span>
-        <span class="s2">"100 per cent over shared nodes, and the delineation that produced the catchment "</span>
-        <span class="s2">"itself uses a D8 pointer. Set it to true wherever the talwegs are not "</span>
-        <span class="s2">"axis-aligned, which on real topography is most of them."</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">STREAM_CRITERION_DEFAULTS</span><span class="o">.</span><span class="n">diagonal_neighbors</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Descend over shared nodes, the eight D8 neighbours of a quad mesh. "</span>
+        <span class="s2">"True is the paper: its distances are traced by WhiteboxTools on a D8 pointer, "</span>
+        <span class="s2">"and the delineation that produced the catchment uses one too. False descends "</span>
+        <span class="s2">"over shared edges only, four neighbours (D4), and departs from the paper. It is "</span>
+        <span class="s2">"not a second-decimal choice: on a synthetic valley whose talweg runs along the "</span>
+        <span class="s2">"grid diagonal, the most accumulated cell collects 100 per cent of the domain "</span>
+        <span class="s2">"over shared nodes and 6.6 per cent over shared edges. On a mesh whose faces are "</span>
+        <span class="s2">"not all quadrilaterals no cell has a diagonal and the descent walks shared "</span>
+        <span class="s2">"edges either way; on a Voronoi mesh the two graphs are the same one."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">observed_rasterization</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">ObservedRasterization</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">STREAM_CRITERION_DEFAULTS</span><span class="o">.</span><span class="n">observed_rasterization</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How the mapped network is drawn on the mesh cells. 'crossing' "</span>
+        <span class="s2">"keeps the cell holding each point where a line crosses the segment joining two "</span>
+        <span class="s2">"edge-sharing cell centres. On a structured grid it reproduces WhiteboxTools "</span>
+        <span class="s2">"VectorLinesToRaster, the paper's tool, and draws the map one cell wide like "</span>
+        <span class="s2">"the simulated network, so a model that matches the map scores J = 0. 'touch' "</span>
+        <span class="s2">"keeps every cell the line touches, corners included, and replays a session "</span>
+        <span class="s2">"made before 2026-09; it thickens every diagonal step of the map and departs "</span>
+        <span class="s2">"from the paper."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">observed_position_accuracy</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Length</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1094,8 +1294,12 @@
     <span class="p">)</span>
     <span class="n">on_roptim_violation</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"warn"</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"warn"</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"What a violation of the validity bound does. Default warns and "</span>
-        <span class="s2">"returns the value, because a calibration is asked for a number."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"What a violation of the validity bound does. The bound is read once, "</span>
+        <span class="s2">"on the trial the search returns, as the paper reads it at the optimum; every "</span>
+        <span class="s2">"trial still records 'roptim' and 'roptim_valid'. 'warn' logs it and returns the "</span>
+        <span class="s2">"value, because a calibration is asked for a number. 'error' raises after the "</span>
+        <span class="s2">"session is saved, so a staged calibration freezes nothing and runs no phase that "</span>
+        <span class="s2">"depends on this one."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">max_unreachable_fraction</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
@@ -1138,11 +1342,40 @@
         <span class="s2">"catchment over ground that routes the same way leaves the two ratios equal, "</span>
         <span class="s2">"and reporting it there would be noise on every ordinary project."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">time</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">OutputTime</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"last"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"last"</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Which timesteps the release flux is read at. Phase one runs a "</span>
-        <span class="s2">"single steady period, so 'last' is the whole run."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Which single state the release flux is read at: 'last' (default) "</span>
+        <span class="s2">"or 'first'. Phase one runs a single steady period, so 'last' is the whole "</span>
+        <span class="s2">"run. 'all' and a list of dates are refused: the network branch always keeps "</span>
+        <span class="s2">"one state (the last one it is served), so either would silently score that "</span>
+        <span class="s2">"state instead of the one named."</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_single_state</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a selector that reads more than the one declared state.</span>
+
+<span class="sd">        ``build_simulated_network`` (``hydromodpy/core/stream_network.py``) always</span>
+<span class="sd">        keeps the last row of whatever stack it is served. Requesting 'last' or</span>
+<span class="sd">        'first' serves it exactly one row, so both are read correctly. Requesting</span>
+<span class="sd">        'all' or a list of dates serves it the whole stack, still scored at the</span>
+<span class="sd">        last row: the network would be scored at a state other than the one the</span>
+<span class="sd">        file names, without warning.</span>
+
+<span class="sd">        Runs before the field's own type check so this message, not the generic</span>
+<span class="sd">        "not a valid enumeration member" one, is what a 'all' or a list of dates</span>
+<span class="sd">        gets. The type itself is narrowed to ``Literal["last", "first"]`` so the</span>
+<span class="sd">        generated schema and OpenAPI export never advertise the values refused here.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">"all"</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"calibration output for the stream network has time=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">: a "</span>
+                <span class="s2">"network output reads exactly one state, 'last' or 'first'. A "</span>
+                <span class="s2">"transient comparison of the minimal and maximal extents is a "</span>
+                <span class="s2">"separate mode being designed, not this field."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
 
 
 <span class="n">CalibOutputDecl</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
@@ -1168,6 +1401,27 @@
 <span class="w">    </span><span class="sd">"""Validate one output mapping and return the concrete variant instance."""</span>
     <span class="k">return</span> <span class="n">_CALIB_OUTPUT_ADAPTER</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">outputs_agree</span><span class="p">(</span><span class="n">here</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">there</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Say whether two output declarations describe the same output.</span>
+
+<span class="sd">    Compared through the model rather than raw: a persisted document spells</span>
+<span class="sd">    out every default (``time``, ``reducer``, ``diagonal_neighbors``, ...)</span>
+<span class="sd">    that a freshly written declaration leaves out, and the two describe the</span>
+<span class="sd">    same output either way. Returns ``False`` on anything that does not</span>
+<span class="sd">    validate as an output, rather than raising.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dumped_here</span> <span class="o">=</span> <span class="n">_CALIB_OUTPUT_ADAPTER</span><span class="o">.</span><span class="n">dump_python</span><span class="p">(</span>
+            <span class="n">_CALIB_OUTPUT_ADAPTER</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">here</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span>
+        <span class="p">)</span>
+        <span class="n">dumped_there</span> <span class="o">=</span> <span class="n">_CALIB_OUTPUT_ADAPTER</span><span class="o">.</span><span class="n">dump_python</span><span class="p">(</span>
+            <span class="n">_CALIB_OUTPUT_ADAPTER</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">there</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">dumped_here</span> <span class="o">==</span> <span class="n">dumped_there</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibScoringWindow</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
@@ -1315,6 +1569,154 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 
+<span class="n">PHASE_REGIME_PATHS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"steady"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"flow.flow_regime"</span><span class="p">,</span>
+        <span class="s2">"simulation.time.start_datetime"</span><span class="p">,</span>
+        <span class="s2">"simulation.time.end_datetime"</span><span class="p">,</span>
+        <span class="s2">"simulation.time.step_unit"</span><span class="p">,</span>
+        <span class="s2">"simulation.time.step_value"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"transient"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"flow.flow_regime"</span><span class="p">,),</span>
+<span class="p">}</span>
+<span class="sd">"""The dotted paths a phase's ``regime`` writes, by regime.</span>
+
+<span class="sd">``runners/phase_regime.py`` writes them. They are listed here because a phase</span>
+<span class="sd">that also writes one of them in ``overrides`` is refused when the file is read,</span>
+<span class="sd">and ``config`` does not import ``runners``.</span>
+<span class="sd">``tests/unit/calibration/test_phase_regime.py`` keeps the two equal.</span>
+<span class="sd">"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fold_a_legacy_regime</span><span class="p">(</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">steady_window</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a phase written with its regime as overrides, rewritten with ``regime``.</span>
+
+<span class="sd">    Runs sealed before ``regime`` existed carry each protocol stage in that</span>
+<span class="sd">    spelling, and reading one back must not refuse it as a contradiction of the</span>
+<span class="sd">    protocol that wrote it.</span>
+
+<span class="sd">    The spelling is a phase with no ``regime`` whose ``overrides`` hold every</span>
+<span class="sd">    path ``PHASE_REGIME_PATHS`` lists for its ``flow.flow_regime``. Those paths</span>
+<span class="sd">    are dropped and every other override is kept. When the protocol names a</span>
+<span class="sd">    ``steady_window``, the sealed bounds have to be the same instants; otherwise</span>
+<span class="sd">    they are trusted, since the file was written from its own</span>
+<span class="sd">    ``[simulation.time]``. Returns None for any other phase, and for a window</span>
+<span class="sd">    that does not match.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"regime"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">overrides</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"overrides"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overrides</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">regime</span> <span class="o">=</span> <span class="n">overrides</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"flow.flow_regime"</span><span class="p">)</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">PHASE_REGIME_PATHS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">regime</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regime</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">paths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">path</span> <span class="ow">in</span> <span class="n">overrides</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">folded</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="n">folded</span><span class="p">[</span><span class="s2">"regime"</span><span class="p">]</span> <span class="o">=</span> <span class="n">regime</span>
+    <span class="n">folded</span><span class="p">[</span><span class="s2">"overrides"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">overrides</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">steady_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">regime</span> <span class="o">==</span> <span class="s2">"steady"</span><span class="p">:</span>
+        <span class="n">sealed</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">overrides</span><span class="p">[</span><span class="s2">"simulation.time.start_datetime"</span><span class="p">],</span>
+            <span class="n">overrides</span><span class="p">[</span><span class="s2">"simulation.time.end_datetime"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">named</span> <span class="o">=</span> <span class="p">(</span><span class="n">steady_window</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"start"</span><span class="p">),</span> <span class="n">steady_window</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"end"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">_same_instant</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sealed</span><span class="p">,</span> <span class="n">named</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">folded</span><span class="p">[</span><span class="s2">"steady_window"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">steady_window</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">folded</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_same_instant</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Say whether two spellings name the same instant."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"</span><span class="si">{where}</span><span class="s2"> gives optimizer_kwargs and no method. They are options of one engine, "</span>
+    <span class="s2">"and a search that names no method gets the one its criteria call for. Write "</span>
+    <span class="s2">"method beside them, or drop them."</span>
+<span class="p">)</span>
+
+
+<span class="n">UncertaintyMethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"cost_profile"</span><span class="p">,</span> <span class="s2">"multistart"</span><span class="p">,</span> <span class="s2">"linearized"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_refuse_a_posterior</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Answer 'posterior' with the reason it is not offered, instead of an enum error."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"posterior"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> method='posterior' is not offered, and the "</span>
+            <span class="s2">"reason is worth stating rather than hiding behind a list. A posterior "</span>
+            <span class="s2">"is a statement about probability, so it needs a likelihood, and a "</span>
+            <span class="s2">"likelihood needs a criterion built from residuals with an error model "</span>
+            <span class="s2">"on each observation. An efficiency score is not one: NSE, KGE and "</span>
+            <span class="s2">"nse_log are aggregates already stripped of their units, and a "</span>
+            <span class="s2">"posterior computed from one would carry a precision nothing "</span>
+            <span class="s2">"established. Sampling it also costs thousands of model runs, not the "</span>
+            <span class="s2">"one per parameter that 'linearized' costs. Use 'linearized', which "</span>
+            <span class="s2">"reports a first-order width and the parameter tradeoffs from "</span>
+            <span class="s2">"residuals, or 'multistart', which reports the spread of restarted "</span>
+            <span class="s2">"searches, and say in the write-up which of the two the number rests "</span>
+            <span class="s2">"on."</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CalibPhaseUncertaintyDecl</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""How wide one phase says its answer is, key by key over ``[calibration.uncertainty]``.</span>
+
+<span class="sd">    Every key is optional and has the meaning it has in the section. A key</span>
+<span class="sd">    written here wins for this phase. A key left out takes the section's value,</span>
+<span class="sd">    then the default that follows what the phase scores. ``restarts`` and</span>
+<span class="sd">    ``perturbation`` belong to a method: a phase that names another method than</span>
+<span class="sd">    the section does not inherit them.</span>
+<span class="sd">    """</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">UncertaintyMethod</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How this phase's interval is obtained: 'cost_profile', "</span>
+        <span class="s2">"'multistart' or 'linearized', read as in [calibration.uncertainty] method."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">restarts</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How many times method='multistart' repeats this phase's search."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">perturbation</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Relative step of method='linearized' for this phase, as a fraction "</span>
+        <span class="s2">"of each calibrated value."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Width of this phase's interval: a fraction of the best cost when "</span>
+        <span class="s2">"mode='relative', a number in the unit of the cost (metres for a network "</span>
+        <span class="s2">"distance) when mode='absolute'. Unset here and in [calibration.uncertainty], "</span>
+        <span class="s2">"one mesh cell for a phase scored only by network distances, five per cent of "</span>
+        <span class="s2">"the best cost otherwise."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"relative"</span><span class="p">,</span> <span class="s2">"absolute"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How this phase's tolerance is read. Unset here and in "</span>
+        <span class="s2">"[calibration.uncertainty], 'absolute' for a phase scored only by network "</span>
+        <span class="s2">"distances, 'relative' otherwise."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_say_why_a_posterior_is_not_one_of_these</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Answer 'posterior' the way the section does."""</span>
+        <span class="n">_refuse_a_posterior</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"a phase's uncertainty"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibPhaseDecl</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""One stage of a calibration that runs in several.</span>
 
@@ -1324,13 +1726,15 @@
 <span class="sd">    its own is its search: a method, a budget, and which parameters it is</span>
 <span class="sd">    allowed to move.</span>
 
-<span class="sd">    ``freeze_on_success`` means the parameters this phase calibrated are held</span>
-<span class="sd">    fixed for the phases that depend on it. It reads "freeze if the phase</span>
-<span class="sd">    converged", never "freeze if the result is good": a validity indicator</span>
-<span class="sd">    qualifies a result, and a phase that returns a coarse agreement still</span>
-<span class="sd">    returns a number. The state of that indicator travels to the dependent</span>
-<span class="sd">    phase and into the report, so a value calibrated on top of a doubtful one</span>
-<span class="sd">    carries the mention all the way out.</span>
+<span class="sd">    ``freeze_on_success`` means this phase passes the values it found to the</span>
+<span class="sd">    phases after it. A later phase holds them fixed, unless it lists the</span>
+<span class="sd">    parameter: it then moves it again, starting from the passed value when its</span>
+<span class="sd">    method accepts a start point. It reads "pass on if the phase converged",</span>
+<span class="sd">    never "pass on if the result is good": a validity indicator qualifies a</span>
+<span class="sd">    result, and a phase that returns a coarse agreement still returns a number.</span>
+<span class="sd">    The state of that indicator travels to the later phases and into the</span>
+<span class="sd">    report, so a value calibrated on top of a doubtful one carries the mention</span>
+<span class="sd">    all the way out.</span>
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">NonEmptyStr</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1341,10 +1745,15 @@
         <span class="n">default</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"What this phase calibrates and against what, in one sentence."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibrationMethod</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">"grid"</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibrationMethod</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Optimization method for this phase only. "</span>
+            <span class="s2">"Optimization method for this phase only. Unset, it follows from what the "</span>
+            <span class="s2">"phase scores: 'bisection' when the phase moves one parameter in log space "</span>
+            <span class="s2">"and every one of its blocks is signed (distance_gap), since the answer is "</span>
+            <span class="s2">"then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. "</span>
+            <span class="s2">"hmp calibrate --list-phases prints the method and why. Write it to "</span>
+            <span class="s2">"depart from that choice, and whenever optimizer_kwargs are given. "</span>
             <span class="s2">"Built-ins: 'grid' (regular sweep, sized by "</span>
             <span class="s2">"optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of "</span>
             <span class="s2">"a signed criterion on one parameter, the stream-network stage), 'optuna' "</span>
@@ -1353,10 +1762,13 @@
             <span class="s2">"with the list installed here."</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum number of evaluations for this phase."</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveInt</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"auto"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum number of evaluations for this phase. 'auto' lets an "</span>
+        <span class="s2">"engine that counts its evaluations size it: the bisection budgets its worst "</span>
+        <span class="s2">"case, and refuses before the first solve a number below its nominal count "</span>
+        <span class="s2">"(see [calibration].max_iter). Any other engine gets 100 from 'auto', and no "</span>
+        <span class="s2">"extension when it spends them before its stopping rule."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1395,10 +1807,13 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">"Names of the calibration outputs this phase scores on. Empty "</span>
         <span class="s2">"means every declared output."</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">objective_blocks</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">objective_blocks</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PositiveFloat</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Names of the objective blocks this phase evaluates. Empty means "</span>
-        <span class="s2">"every declared block."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Objective blocks this phase evaluates. Empty means every declared "</span>
+        <span class="s2">"block. A list names them and keeps their declared weight. A table gives each "</span>
+        <span class="s2">"named block the phase's own share instead, {block = share}, normalised to sum "</span>
+        <span class="s2">"to one like a block's weight already is; every key must be a declared block, "</span>
+        <span class="s2">"and every share must be positive."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">variable</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1415,14 +1830,33 @@
     <span class="p">)</span>
     <span class="n">optimizer_kwargs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to this phase's optimizer."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to this phase's optimizer. They "</span>
+        <span class="s2">"belong to one engine, so a phase that gives them names its method."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">regime</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"steady"</span><span class="p">,</span> <span class="s2">"transient"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Flow regime this phase runs, a property of the model and not of "</span>
+        <span class="s2">"the search. 'steady' is one period over steady_window, by default the extent "</span>
+        <span class="s2">"of [simulation.time]. 'transient' is the project's own time grid. Unset, the "</span>
+        <span class="s2">"phase runs the model as the project and its overrides declare it."</span><span class="p">,</span>
+        <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"value_docs"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"steady"</span><span class="p">:</span> <span class="s2">"One period over steady_window, so the recharge over it "</span>
+                <span class="s2">"averages to its mean. A steady solve carries no storage."</span><span class="p">,</span>
+                <span class="s2">"transient"</span><span class="p">:</span> <span class="s2">"The project's time grid, with only the regime restated."</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">steady_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dates the steady period spans, as {start, end}, when regime = "</span>
+        <span class="s2">"'steady'. Unset takes the whole [simulation.time] window."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">overrides</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Configuration values this phase runs with, as dotted paths into "</span>
-        <span class="s2">"the project configuration. The two stages of a stream-network calibration "</span>
-        <span class="s2">"are one steady and one transient, which is a property of the model and not "</span>
-        <span class="s2">"of the search, so a phase has to be able to say it."</span><span class="p">,</span>
+        <span class="s2">"the project configuration. A phase that gives regime may not write here a "</span>
+        <span class="s2">"path regime writes: that would say the same thing twice."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">scoring_window</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibScoringWindow</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1430,14 +1864,25 @@
     <span class="p">)</span>
     <span class="n">depends_on</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Name of the phase that must run first. Its frozen parameters "</span>
-        <span class="s2">"enter this one as fixed values."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Name of the phase that must run first. The values it passes on "</span>
+        <span class="s2">"enter this one fixed, except those this phase lists and moves again."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">freeze_on_success</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Hold the parameters this phase calibrated fixed for the phases "</span>
-        <span class="s2">"that depend on it. Success means the phase converged, not that its validity "</span>
-        <span class="s2">"indicator is good."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Pass the values this phase found to the phases after it. A later "</span>
+        <span class="s2">"phase holds them fixed, unless it lists the parameter: it then moves it again, "</span>
+        <span class="s2">"starting from the passed value when its method accepts a start point. When two "</span>
+        <span class="s2">"phases pass on the same parameter, the later one wins. Success means the phase "</span>
+        <span class="s2">"converged, not that its validity indicator is good."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">uncertainty</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibPhaseUncertaintyDecl</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How wide this phase says its answer is, with the keys of "</span>
+        <span class="s2">"[calibration.uncertainty]. A key written here wins for this phase; a key left "</span>
+        <span class="s2">"out takes the section's value, then the default that follows what the phase "</span>
+        <span class="s2">"scores: one mesh cell for a phase scored only by network distances, five per "</span>
+        <span class="s2">"cent of the best cost otherwise. hmp calibrate --list-phases prints the width "</span>
+        <span class="s2">"each phase reads and where it comes from."</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1450,6 +1895,43 @@
 <span class="sd">        and score it on a criterion it never asked for.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_name_the_engine_the_options_belong_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibPhaseDecl</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse optimizer_kwargs on a phase that names no method.</span>
+
+<span class="sd">        The options belong to one engine, and a phase that names none gets the</span>
+<span class="sd">        one its criteria call for. The options would then reach an engine the</span>
+<span class="sd">        file never chose.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_say_the_regime_once</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibPhaseDecl</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a regime said twice, and a steady window with no steady regime.</span>
+
+<span class="sd">        ``regime`` writes its paths into the configuration the trials run with,</span>
+<span class="sd">        and ``overrides`` writes into the same one. A path in both would leave</span>
+<span class="sd">        the reader to guess which value the model ran with.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steady_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">regime</span> <span class="o">!=</span> <span class="s2">"steady"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> gives a steady_window and regime = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">regime</span><span class="si">!r}</span><span class="s2">. "</span>
+                <span class="s1">'The window is the span of the one steady period: write regime = "steady", '</span>
+                <span class="s2">"or drop the window."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">regime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">twice</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">PHASE_REGIME_PATHS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">regime</span><span class="p">]</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">overrides</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">twice</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> gives regime = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">regime</span><span class="si">!r}</span><span class="s2">, which writes "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twice</span><span class="p">)</span><span class="si">}</span><span class="s2">, and writes the same in overrides: two ways to say "</span>
+                <span class="s2">"the same thing. Keep regime and drop these overrides, or drop regime."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CalibAggregateDecl</span><span class="p">(</span><span class="n">HydroModelBase</span><span class="p">):</span>
@@ -1521,7 +2003,7 @@
 <span class="sd">    trace and not a posterior.</span>
 <span class="sd">    """</span>
 
-    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"cost_profile"</span><span class="p">,</span> <span class="s2">"multistart"</span><span class="p">,</span> <span class="s2">"linearized"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">UncertaintyMethod</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">"cost_profile"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"How the interval around each calibrated value is obtained. "</span>
@@ -1570,22 +2052,7 @@
 <span class="sd">        the reason it is not offered is a position rather than an omission. Leaving</span>
 <span class="sd">        them a bare list of three literals sends them looking for a bug.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"posterior"</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">"[calibration.uncertainty] method='posterior' is not offered, and the "</span>
-                <span class="s2">"reason is worth stating rather than hiding behind a list. A posterior "</span>
-                <span class="s2">"is a statement about probability, so it needs a likelihood, and a "</span>
-                <span class="s2">"likelihood needs a criterion built from residuals with an error model "</span>
-                <span class="s2">"on each observation. An efficiency score is not one: NSE, KGE and "</span>
-                <span class="s2">"nse_log are aggregates already stripped of their units, and a "</span>
-                <span class="s2">"posterior computed from one would carry a precision nothing "</span>
-                <span class="s2">"established. Sampling it also costs thousands of model runs, not the "</span>
-                <span class="s2">"one per parameter that 'linearized' costs. Use 'linearized', which "</span>
-                <span class="s2">"reports a first-order width and the parameter tradeoffs from "</span>
-                <span class="s2">"residuals, or 'multistart', which reports the spread of restarted "</span>
-                <span class="s2">"searches, and say in the write-up which of the two the number rests "</span>
-                <span class="s2">"on."</span>
-            <span class="p">)</span>
+        <span class="n">_refuse_a_posterior</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"[calibration.uncertainty]"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
@@ -1616,21 +2083,29 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="n">tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Width of the interval. A fraction of the best cost when mode='relative' "</span>
             <span class="s2">"(0.05 = five per cent), and a number in the unit of the cost when "</span>
-            <span class="s2">"mode='absolute'."</span>
+            <span class="s2">"mode='absolute'. Unset, it follows what the search scores: one mesh cell, "</span>
+            <span class="s2">"in metres, for a search scored only by network distances (distance_gap, "</span>
+            <span class="s2">"distance_mean), because a stream cannot move by less than a cell; 0.05 "</span>
+            <span class="s2">"otherwise, five per cent of the best cost. The cell is the median distance "</span>
+            <span class="s2">"between the centres of neighbouring cells, measured by the network "</span>
+            <span class="s2">"criterion on the mesh it scores. A phase may write its own, which wins."</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">mode</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"relative"</span><span class="p">,</span> <span class="s2">"absolute"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">"relative"</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"relative"</span><span class="p">,</span> <span class="s2">"absolute"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"How 'tolerance' is read. 'relative' is a fraction of the best cost and is "</span>
             <span class="s2">"the usual choice for an efficiency score. A criterion solved at zero, such "</span>
             <span class="s2">"as the stream-network gap, has no fraction of itself to take: state the "</span>
-            <span class="s2">"width in the unit of the cost with 'absolute', for example 25 metres."</span>
+            <span class="s2">"width in the unit of the cost with 'absolute', for example 25 metres. "</span>
+            <span class="s2">"Unset, 'absolute' for a search scored only by network distances and "</span>
+            <span class="s2">"'relative' otherwise. hmp calibrate --check refuses 'relative' on a search "</span>
+            <span class="s2">"scored only by network distances."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -1660,10 +2135,15 @@
             <span class="s2">"objective blocks cannot also name a protocol."</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibrationMethod</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">"grid"</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibrationMethod</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Optimization method. "</span>
+            <span class="s2">"Optimization method. Unset, it follows from what the calibration scores: "</span>
+            <span class="s2">"'bisection' when it moves one parameter in log space and every one of its "</span>
+            <span class="s2">"blocks is signed (distance_gap), since the answer is then a zero to find; "</span>
+            <span class="s2">"'scipy_nelder_mead' otherwise, a cost to minimise. Write it to depart from "</span>
+            <span class="s2">"that choice, and whenever optimizer_kwargs are given. A phase of "</span>
+            <span class="s2">"[[calibration.phases]] names its own. "</span>
             <span class="s2">"Built-ins: 'grid' (regular sweep, sized by "</span>
             <span class="s2">"optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of "</span>
             <span class="s2">"a signed criterion on one parameter, the stream-network stage), 'optuna' "</span>
@@ -1704,10 +2184,24 @@
             <span class="s2">"no other evaluator."</span>
         <span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum number of calibration iterations."</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveInt</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"auto"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Maximum number of evaluations of the search. 'auto' lets an engine that "</span>
+            <span class="s2">"counts its evaluations before the first solve size its own budget. Only "</span>
+            <span class="s2">"the bisection does: with d the declared interval in decades, t = "</span>
+            <span class="s2">"log10(1 + rel_tol), S the sweep points (2 when sweep_points is 0), s = d / "</span>
+            <span class="s2">"(S - 1) and E = bracket_expand, a root inside the bounds costs S + "</span>
+            <span class="s2">"ceil(log2(s / t)) and one found after e expansions S + 2e + "</span>
+            <span class="s2">"ceil(log2(1 / t)); 'auto' budgets the largest, 23 on [1e-7, 1e-3] m/s "</span>
+            <span class="s2">"with seven points and one per cent (15 inside the bounds). A number "</span>
+            <span class="s2">"below the nominal count is refused before the first solve, one below the "</span>
+            <span class="s2">"worst case is announced, and a budget that still runs out gets exactly "</span>
+            <span class="s2">"the halvings left, once. Any other engine gets 100 from 'auto' and no "</span>
+            <span class="s2">"extension: a search that spends its budget before its own stopping rule "</span>
+            <span class="s2">"is reported as not converged, and a re-run with a larger max_iter "</span>
+            <span class="s2">"replays the trials already solved from the cache."</span>
+        <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PositiveFloat</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1839,7 +2333,8 @@
     <span class="p">)</span>
     <span class="n">optimizer_kwargs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">DEV</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to the optimizer adapter."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Extra keyword arguments forwarded to the optimizer adapter. They "</span>
+        <span class="s2">"belong to one engine, so a calibration that gives them names its method."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CalibParameterDecl</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
@@ -1885,7 +2380,8 @@
     <span class="n">uncertainty</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">CalibUncertaintyDecl</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="n">CalibUncertaintyDecl</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"How wide the search reports its own answer to be. The calibrated "</span>
-        <span class="s2">"value is unaffected; this only decides the interval printed beside it."</span><span class="p">,</span>
+        <span class="s2">"value is unaffected; this only decides the interval printed beside it. It is "</span>
+        <span class="s2">"the default of every phase, and a phase may write its own keys."</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">persistence</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">PersistenceConfig</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="n">PersistenceConfig</span><span class="p">,</span>
@@ -2034,6 +2530,17 @@
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_name_the_engine_the_options_belong_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse optimizer_kwargs on a section that names no method.</span>
+
+<span class="sd">        Same reason as on a phase: the options belong to one engine, and the one a</span>
+<span class="sd">        section gets when it names none follows from its criteria.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">_OPTIONS_WITHOUT_AN_ENGINE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="o">=</span><span class="s2">"[calibration]"</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_the_protocol_was_expanded</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationConfig</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Refuse a protocol whose stages nobody wrote.</span>
 
@@ -2054,22 +2561,155 @@
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_registry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Verify the selected method is registered and its kwargs validate.</span>
+<span class="w">        </span><span class="sd">"""Verify the method this calibration runs is registered and its kwargs validate.</span>
 
 <span class="sd">        The discriminated union :data:`CalibrationMethodConfig` raises eagerly</span>
 <span class="sd">        when ``optimizer_kwargs`` carries keys foreign to ``method`` so the</span>
 <span class="sd">        failure happens at config-load time instead of inside the adapter</span>
-<span class="sd">        constructor.</span>
+<span class="sd">        constructor. A method left unwritten is checked as :meth:`method_for`</span>
+<span class="sd">        chooses it.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.method_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_method_kwargs</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">available_optimizers</span>
 
+        <span class="n">method</span><span class="p">,</span> <span class="n">_reason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_for</span><span class="p">()</span>
         <span class="n">available</span> <span class="o">=</span> <span class="n">available_optimizers</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Unknown calibration method </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">!r}</span><span class="s2">. Available methods: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"Unknown calibration method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">. Available methods: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
-        <span class="n">validate_method_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span><span class="p">)</span>
+        <span class="n">validate_method_kwargs</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">method_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the method this calibration, or one of its phases, runs, and why.</span>
+
+<span class="sd">        A method the file writes comes back as written, with no reason. One it</span>
+<span class="sd">        leaves unwritten is chosen from what the search scores, by</span>
+<span class="sd">        ``optim.optimizer.choose_method``, and the reason says why. ``phase``</span>
+<span class="sd">        reads the parameters that phase moves and the blocks it scores, selected</span>
+<span class="sd">        as the staged runner selects them; ``None`` reads the whole section.</span>
+<span class="sd">        """</span>
+        <span class="n">written</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">phase</span><span class="o">.</span><span class="n">method</span>
+        <span class="k">if</span> <span class="n">written</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">written</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">choose_method</span>
+
+        <span class="n">moved</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">phase</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">transforms</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">moved</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="p">}</span>
+        <span class="n">choice</span> <span class="o">=</span> <span class="n">choose_method</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_criteria_scored_by</span><span class="p">(</span><span class="n">phase</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">choice</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">choice</span><span class="o">.</span><span class="n">reason</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibUncertaintyDecl</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the uncertainty a search reads: the phase's keys over the section's.</span>
+
+<span class="sd">        ``None`` reads the section alone. A phase that names another method than</span>
+<span class="sd">        the section does not inherit the section's ``restarts`` or</span>
+<span class="sd">        ``perturbation``, which belong to the section's method.</span>
+<span class="sd">        """</span>
+        <span class="n">own</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">phase</span><span class="o">.</span><span class="n">uncertainty</span>
+        <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span>
+        <span class="n">written</span> <span class="o">=</span> <span class="n">own</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">written</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span><span class="o">.</span><span class="n">method</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span><span class="o">.</span><span class="n">method</span><span class="p">:</span>
+            <span class="n">merged</span><span class="p">[</span><span class="s2">"restarts"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">merged</span><span class="p">[</span><span class="s2">"perturbation"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">written</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CalibUncertaintyDecl</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">interval_width_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the width a search reads its interval with, and where it comes from.</span>
+
+<span class="sd">        A tolerance or a mode written in the phase wins, then the one written in</span>
+<span class="sd">        ``[calibration.uncertainty]``. Left unwritten, both follow what the search</span>
+<span class="sd">        scores, by ``optim.tolerance.choose_interval_width``. ``phase`` reads the</span>
+<span class="sd">        blocks that phase scores; ``None`` reads the whole section.</span>
+
+<span class="sd">        The answer is an ``optim.tolerance.IntervalWidth``. The signature does not</span>
+<span class="sd">        name it because this module imports ``optim`` only inside a function.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.optim.tolerance</span><span class="w"> </span><span class="kn">import</span> <span class="n">choose_interval_width</span>
+
+        <span class="n">own</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">phase</span><span class="o">.</span><span class="n">uncertainty</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">written</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">own</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">own</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="s2">"phase"</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="s2">"section"</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">choose_interval_width</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scored_on_network_distances</span><span class="p">(</span><span class="n">phase</span><span class="p">),</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">written</span><span class="p">(</span><span class="s2">"tolerance"</span><span class="p">),</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">written</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">objective_blocks_for</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">CalibObjectiveBlockDecl</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Return the blocks a phase, or the whole section, scores, each with its weight.</span>
+
+<span class="sd">        Selection is :meth:`_blocks_scored_by`, the same a search itself reads.</span>
+<span class="sd">        The weight is the phase's own share when it names a table ``{block:</span>
+<span class="sd">        share}``, else the block's declared weight -- unnormalised, the same</span>
+<span class="sd">        way :class:`optim.objective.CompositeObjective` takes its own weights</span>
+<span class="sd">        before dividing by their sum. Empty for a single-metric route</span>
+<span class="sd">        (:attr:`CalibPhaseDecl.is_single_metric`, or the section route when it</span>
+<span class="sd">        declares no block). ``hmp calibrate --list-phases`` and ``--check``</span>
+<span class="sd">        read this to say what each block compares with what.</span>
+<span class="sd">        """</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks_scored_by</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">phase</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">shares</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">objective_blocks</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">block</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">shares</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span> <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">shares</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">block</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">weight</span><span class="p">))</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_blocks_scored_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CalibObjectiveBlockDecl</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the blocks a search scores: the phase's, or every declared one.</span>
+
+<span class="sd">        A single-metric phase scores no block.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase</span><span class="o">.</span><span class="n">is_single_metric</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective_blocks</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">:</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span> <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">phase</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_criteria_scored_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the criterion of each block a search scores.</span>
+
+<span class="sd">        A phase scores its single metric, or the blocks it names, or every</span>
+<span class="sd">        declared block. With no block, the section scores ``objective``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase</span><span class="o">.</span><span class="n">is_single_metric</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">phase</span><span class="o">.</span><span class="n">objective</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)]</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks_scored_by</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scored_on_network_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="n">CalibPhaseDecl</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether a search is scored only by network distances left in metres.</span>
+
+<span class="sd">        Read as :meth:`_criteria_scored_by` reads the criteria: a single-metric</span>
+<span class="sd">        phase scores its own ``objective`` or the section's, and a search with</span>
+<span class="sd">        no block scores the section's ``objective``. A block with a transform is</span>
+<span class="sd">        no longer in metres. A distance cannot be normalised, so that case does</span>
+<span class="sd">        not arise, and the single-metric route has no transform.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">NETWORK_ESTIMATORS</span>
+
+        <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase</span><span class="o">.</span><span class="n">is_single_metric</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">phase</span><span class="o">.</span><span class="n">objective</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks_scored_by</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">blocks</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objective</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span> <span class="ow">in</span> <span class="n">NETWORK_ESTIMATORS</span> <span class="ow">and</span> <span class="n">block</span><span class="o">.</span><span class="n">transform</span> <span class="o">==</span> <span class="s2">"identity"</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span>
+        <span class="p">)</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"candidates_root"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
@@ -2112,15 +2752,11 @@
                 <span class="c1"># A parameter may name its quantity instead of writing a path, and</span>
                 <span class="c1"># the name is resolved against the project catalogue once the whole</span>
                 <span class="c1"># configuration is loaded. Until then the parameter's own name is</span>
-                <span class="c1"># what two phases would be freezing.</span>
+                <span class="c1"># what a phase freezes. Two phases may freeze the same path: the</span>
+                <span class="c1"># later one moves it again from the earlier value, and its value</span>
+                <span class="c1"># wins. The staged report names both.</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span><span class="o">.</span><span class="n">resolve_target</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">&gt;"</span>
                 <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">freeze_on_success</span><span class="p">:</span>
-                    <span class="n">owner</span> <span class="o">=</span> <span class="n">frozen_by</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"phases </span><span class="si">{</span><span class="n">owner</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> both freeze </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2">; "</span>
-                            <span class="s2">"the second would overwrite what the first calibrated."</span>
-                        <span class="p">)</span>
                     <span class="n">frozen_by</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">name</span>
 
             <span class="n">unknown_outputs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">phase</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">-</span> <span class="n">declared_outputs</span><span class="p">)</span>
@@ -2130,8 +2766,10 @@
                 <span class="p">)</span>
             <span class="n">unknown_blocks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">phase</span><span class="o">.</span><span class="n">objective_blocks</span><span class="p">)</span> <span class="o">-</span> <span class="n">declared_blocks</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">unknown_blocks</span><span class="p">:</span>
+                <span class="n">declared</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">declared_blocks</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"nothing"</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> uses undeclared objective block(s) </span><span class="si">{</span><span class="n">unknown_blocks</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> uses undeclared objective block(s) </span><span class="si">{</span><span class="n">unknown_blocks</span><span class="si">}</span><span class="s2">; "</span>
+                    <span class="sa">f</span><span class="s2">"[[calibration.objective_blocks]] declares </span><span class="si">{</span><span class="n">declared</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">depends_on</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -2171,6 +2809,15 @@
                     <span class="s2">"different routes and only one of them would run. Pick one "</span>
                     <span class="s2">"convention."</span>
                 <span class="p">)</span>
+            <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">uncertainty</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_for</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="n">reasons</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"msg"</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">exc</span><span class="o">.</span><span class="n">errors</span><span class="p">())</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"phase </span><span class="si">{</span><span class="n">phase</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> writes an uncertainty that does not hold "</span>
+                        <span class="sa">f</span><span class="s2">"once read over [calibration.uncertainty]: </span><span class="si">{</span><span class="n">reasons</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>

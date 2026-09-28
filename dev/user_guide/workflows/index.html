@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="HydroModPy distinguishes two orthogonal questions and answers them with two different vocabularies. Mixing them is the most common source of confusion when reading the docs and the code. A workflow..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-26T09:28:05+02:00" property="article:modified_time"/>
 <title>Workflow Reference — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -81,7 +81,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 26, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -368,6 +368,7 @@
 <li class="toctree-l2"><a class="reference internal" href="site_selection.html">Site Selection Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration.html">Calibration Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html">Four calibrations to start from</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html">How wide a calibrated value is</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html">Calibrating on the stream network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="comparison.html">Comparison Workflow</a></li>
 </ul>
@@ -660,7 +661,7 @@ whose <code class="docutils literal notranslate"><span class="pre">type</span> <
 <tr class="row-even"><td><p>3</p></td>
 <td><p>Multiple runs sharing one base TOML</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Project("project.toml")</span></code> plus a Python loop</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">examples/projects/02_nancon_watershed/run_sweep_sy.toml</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">examples/projects/02_nancon_watershed/run_cellular.py</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>4</p></td>
 <td><p>Python API with a validated config</p></td>
@@ -670,7 +671,7 @@ whose <code class="docutils literal notranslate"><span class="pre">type</span> <
 <tr class="row-even"><td><p>5</p></td>
 <td><p>Step-by-step debug run</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">project.build_geographic/load_data/build_mesh/simulate</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">examples/projects/02_nancon_watershed/run_transient_prototype.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">examples/projects/02_nancon_watershed/run_cellular.py</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>6</p></td>
 <td><p>Notebook with phase reload</p></td>
@@ -921,7 +922,16 @@ Workspace layout</div>
 <li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html#checking-before-the-solver-starts">Checking before the solver starts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html#finding-what-a-project-can-calibrate">Finding what a project can calibrate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html#reading-the-value-the-search-returns">Reading the value the search returns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html#convergence-and-budget">Convergence and budget</a></li>
 <li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html#why-the-mesh-is-not-a-parameter">Why the mesh is not a parameter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calibration-uncertainty.html">How wide a calibrated value is</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html#what-the-interval-is-and-is-not">What the interval is, and is not</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html#the-three-methods">The three methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html#the-default-width-and-why">The default width, and why</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html#overriding-it">Overriding it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html#when-to-change-it">When to change it</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stream-network-calibration.html">Calibrating on the stream network</a><ul>
@@ -929,6 +939,7 @@ Workspace layout</div>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#naming-the-method">Naming the method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#declaring-the-two-stages-by-hand">Declaring the two stages by hand</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#scoring-the-second-stage-on-two-criteria">Scoring the second stage on two criteria</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#measured-on-the-nancon">Measured on the Nancon</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#what-each-choice-buys-you">What each choice buys you</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#running-it">Running it</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stream-network-calibration.html#reading-the-output">Reading the output</a></li>

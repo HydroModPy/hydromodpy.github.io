@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Calibration in HydroModPy runs an ask/tell loop: an optimizer proposes a parameter point, the engine evaluates it, the optimizer ingests the result. Optimizers are plugged through adapters under hy..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="2026-09-26T04:32:33+02:00" property="article:modified_time"/>
 <title>Add a Calibration Method — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 26, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -487,38 +487,40 @@
 <p>Calibration in HydroModPy runs an ask/tell loop: an optimizer
 proposes a parameter point, the engine evaluates it, the optimizer
 ingests the result. Optimizers are plugged through <em>adapters</em> under
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/adapters/</span></code>.</p>
 <p>Today nine adapters ship: <code class="docutils literal notranslate"><span class="pre">Grid</span></code>, <code class="docutils literal notranslate"><span class="pre">RandomSearch</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ScipyNelderMead</span></code>, <code class="docutils literal notranslate"><span class="pre">ScipyDE</span></code>, <code class="docutils literal notranslate"><span class="pre">Optuna</span></code> (TPE / CMA-ES samplers),
 <code class="docutils literal notranslate"><span class="pre">CmaEs</span></code>, <code class="docutils literal notranslate"><span class="pre">GpMapping</span></code>, <code class="docutils literal notranslate"><span class="pre">DaMhGp</span></code>, plus the prior-sampling helper.</p>
 <section id="contract">
 <h2>Contract<a class="headerlink" href="#contract" title="Link to this heading">#</a></h2>
 <p>A calibration adapter exposes an <code class="docutils literal notranslate"><span class="pre">ask</span></code> / <code class="docutils literal notranslate"><span class="pre">tell</span></code> pair plus a small
-configuration surface. The Protocol lives in
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/__init__.py</span></code> (or the matching
-contracts module).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CalibrationMethodAdapter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-    <span class="n">method_name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span>
+configuration surface. The Protocol, <code class="docutils literal notranslate"><span class="pre">Optimizer</span></code>, lives in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/optimizer.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Optimizer</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#dict"><span class="nb">dict</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#int"><span class="nb">int</span></a> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">ParamSuggestion</span><span class="p">]:</span> <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParamSuggestion</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">EvaluationResult</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">EvaluationResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">suggest_next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParamSuggestion</span><span class="p">:</span> <span class="o">...</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">best</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationResult</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">converged</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#bool"><span class="nb">bool</span></a><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">ParameterSpace</span></code> aggregates the <code class="docutils literal notranslate"><span class="pre">[calibration.parameters.*]</span></code>
 declarations (bounds, transform, prior, dotted path).
 <code class="docutils literal notranslate"><span class="pre">ParamSuggestion</span></code> carries one parameter point;
 <code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code> carries the matching scalar objective plus
-metadata.</p>
+metadata. <code class="docutils literal notranslate"><span class="pre">ask</span></code> proposes one or more points at once; <code class="docutils literal notranslate"><span class="pre">tell</span></code> feeds back
+the matching batch of results.</p>
 </section>
 <section id="files-to-create">
 <h2>Files to create<a class="headerlink" href="#files-to-create" title="Link to this heading">#</a></h2>
 <p>A new method called <code class="docutils literal notranslate"><span class="pre">mymethod</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/calibration/adapters/mymethod.py
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/calibration/optim/adapters/mymethod.py
 </pre></div>
 </div>
 <p>Skeleton:</p>
@@ -532,20 +534,26 @@ metadata.</p>
 
 <span class="nd">@register_optimizer</span><span class="p">(</span><span class="s2">"mymethod"</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyMethodOptimizer</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"mymethod"</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParameterSpace.html#hydromodpy.calibration.ParameterSpace" title="hydromodpy.calibration.optim.parameters.ParameterSpace"><span class="n">space</span></a><span class="p">:</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParameterSpace.html#hydromodpy.calibration.ParameterSpace" title="hydromodpy.calibration.optim.parameters.ParameterSpace"><span class="n">ParameterSpace</span></a><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#int"><span class="nb">int</span></a> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParameterSpace.html#hydromodpy.calibration.ParameterSpace" title="hydromodpy.calibration.optim.parameters.ParameterSpace"><span class="n">space</span></a>
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_best</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">EvaluationResult</span></a> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParamSuggestion.html#hydromodpy.calibration.ParamSuggestion" title="hydromodpy.calibration.optim.optimizer.ParamSuggestion"><span class="n">ParamSuggestion</span></a><span class="p">:</span>
-        <span class="c1"># propose the next point in the internal sampling space</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#int"><span class="nb">int</span></a> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParamSuggestion.html#hydromodpy.calibration.ParamSuggestion" title="hydromodpy.calibration.optim.optimizer.ParamSuggestion"><span class="n">ParamSuggestion</span></a><span class="p">]:</span>
+        <span class="c1"># propose n points in the internal sampling space</span>
         <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">result</span></a><span class="p">:</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">EvaluationResult</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">objective</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span><span class="o">.</span><span class="n">objective</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_best</span> <span class="o">=</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">result</span></a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">EvaluationResult</span></a><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">+=</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#len"><span class="nb">len</span></a><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">objective</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span><span class="o">.</span><span class="n">objective</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_best</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">suggest_next</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.ParamSuggestion.html#hydromodpy.calibration.ParamSuggestion" title="hydromodpy.calibration.optim.optimizer.ParamSuggestion"><span class="n">ParamSuggestion</span></a><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">best</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="../../api/generated/hydromodpy.calibration.EvaluationResult.html#hydromodpy.calibration.EvaluationResult" title="hydromodpy.calibration.optim.optimizer.EvaluationResult"><span class="n">EvaluationResult</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best</span>
@@ -561,11 +569,27 @@ metadata.</p>
 publishes the class under the name accepted by
 <code class="docutils literal notranslate"><span class="pre">CalibrationConfig.method</span></code> and by <code class="docutils literal notranslate"><span class="pre">build_optimizer</span></code>. The registry
 (<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/optimizer.py</span></code>) auto-discovers every
-module under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/</span></code> on the first
+module under <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/adapters/</span></code> on the first
 <code class="docutils literal notranslate"><span class="pre">build_optimizer</span></code> call, so dropping the file in that package is all
 the wiring required.</p>
-<p>Third-party methods shipped outside the repository register through the
-<code class="docutils literal notranslate"><span class="pre">hydromodpy.optimizer</span></code> entry-point group instead.</p>
+</section>
+<section id="declaring-the-options">
+<h2>Declaring the options<a class="headerlink" href="#declaring-the-options" title="Link to this heading">#</a></h2>
+<p>Registering the class is not enough: <code class="docutils literal notranslate"><span class="pre">optimizer_kwargs</span></code> is validated
+against a typed model before it ever reaches the adapter constructor. Add a
+<code class="docutils literal notranslate"><span class="pre">BaseModel</span></code> for <code class="docutils literal notranslate"><span class="pre">mymethod</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/method_config.py</span></code>,
+with <code class="docutils literal notranslate"><span class="pre">method:</span> <span class="pre">Literal["mymethod"]</span></code> and one field per accepted constructor
+keyword, and list it in the <code class="docutils literal notranslate"><span class="pre">CalibrationMethodConfig</span></code> union at the bottom
+of that module. <code class="docutils literal notranslate"><span class="pre">CalibrationConfig.validate_registry</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">validate_method_kwargs</span></code>, which raises on an unknown key or a wrong type
+at config-load time, instead of inside the adapter where the message is
+much less helpful.</p>
+<p>Search methods ship with HydroModPy and are not plugged from outside. A
+search of your own does not go through this registry: write an object
+that satisfies <code class="docutils literal notranslate"><span class="pre">Optimizer</span></code> (<code class="docutils literal notranslate"><span class="pre">ask</span></code>, <code class="docutils literal notranslate"><span class="pre">tell</span></code>, <code class="docutils literal notranslate"><span class="pre">suggest_next</span></code>,
+<code class="docutils literal notranslate"><span class="pre">best</span></code>, <code class="docutils literal notranslate"><span class="pre">converged</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>) and hand it to
+<code class="docutils literal notranslate"><span class="pre">CalibrationEngine(optimizer=...)</span></code> (<code class="docutils literal notranslate"><span class="pre">optim/engine.py</span></code>), with no
+registration.</p>
 </section>
 <section id="saying-what-the-engine-can-be-handed">
 <h2>Saying what the engine can be handed<a class="headerlink" href="#saying-what-the-engine-can-be-handed" title="Link to this heading">#</a></h2>
@@ -713,7 +737,7 @@ post-loop figure registry can plot it.</p>
 <h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/calibration/</span></code> for
-<code class="docutils literal notranslate"><span class="pre">configure</span></code> (option parsing), <code class="docutils literal notranslate"><span class="pre">ask</span></code> (point generation),
+<code class="docutils literal notranslate"><span class="pre">__init__</span></code> (option parsing), <code class="docutils literal notranslate"><span class="pre">ask</span></code> (point generation),
 <code class="docutils literal notranslate"><span class="pre">tell</span></code> (state update), <code class="docutils literal notranslate"><span class="pre">best</span></code> (post-loop selection).</p></li>
 <li><p><strong>Synthetic benchmark</strong> under
 <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases/</span></code> reusing
@@ -783,6 +807,7 @@ pitfalls, Python API).</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract">Contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-to-create">Files to create</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration">Registration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declaring-the-options">Declaring the options</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#saying-what-the-engine-can-be-handed">Saying what the engine can be handed</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-restart-based-uncertainty-asks-of-an-engine">What a restart-based uncertainty asks of an engine</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-linearized-width-beside-it">The linearized width beside it</a></li>

@@ -603,8 +603,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.time</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_simulation_time_window_dates</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.workspace.path_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">PREPROCESSING_DIR</span><span class="p">,</span> <span class="n">WorkspacePathRegistry</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.loading._dispatch</span><span class="w"> </span><span class="kn">import</span> <span class="n">VARIABLE_SPECS</span><span class="p">,</span> <span class="n">VariableSpec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.loading.plan</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoadPlan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.loading.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.managers.plan</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoadPlan</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.registry.catalog_duckdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataCatalogDuckDB</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -859,6 +859,7 @@
 <span class="w">        </span><span class="sd">"""Load geology data via GeologyManager, then build GeologyField."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_store</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.geology.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeologyConfig</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.geology.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_geology_field</span>
 
         <span class="n">raw_section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_data_section</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"geology"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">raw_section</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -874,9 +875,10 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">geology_cfg</span> <span class="o">=</span> <span class="n">GeologyConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">raw_section</span><span class="p">)</span>
 
+            <span class="n">geographic</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span>
             <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">geology_cfg</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">setup</span><span class="o">.</span><span class="n">geographic</span><span class="o">.</span><span class="n">watershed_shp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="ow">and</span> <span class="n">geographic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">src</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geology_request_mask</span><span class="p">(</span><span class="n">geographic</span><span class="p">)</span>
 
             <span class="n">load_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_store</span><span class="p">()</span><span class="o">.</span><span class="n">load_geology</span><span class="p">(</span>
                 <span class="n">geology_cfg</span><span class="p">,</span>
@@ -885,7 +887,7 @@
 
             <span class="k">if</span> <span class="n">load_result</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
                 <span class="n">field_record</span> <span class="o">=</span> <span class="n">load_result</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">geology_field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_geology_field_from_record</span><span class="p">(</span>
+                <span class="n">geology_field</span> <span class="o">=</span> <span class="n">build_geology_field</span><span class="p">(</span>
                     <span class="n">field_record</span><span class="p">,</span>
                     <span class="n">geology_cfg</span><span class="o">=</span><span class="n">geology_cfg</span><span class="p">,</span>
                     <span class="n">raster_support</span><span class="o">=</span><span class="n">raster_support</span><span class="p">,</span>
@@ -901,79 +903,20 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_handle_data_loading_error</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"geology"</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_geology_field_from_record</span><span class="p">(</span>
-        <span class="n">field_record</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">geology_cfg</span><span class="p">,</span>
-        <span class="n">raster_support</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Build a GeologyField from a FieldRecord (GeoPackage or raster)."""</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.geology.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-            <span class="n">validate_geology_config_data</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.geology.io</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-            <span class="n">infer_source_kind</span><span class="p">,</span>
-            <span class="n">load_geology_encoded_grid</span><span class="p">,</span>
-            <span class="n">load_geology_encoded_grid_on_raster_support</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.spatial.field.geology.geology_field</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeologyField</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_geology_request_mask</span><span class="p">(</span><span class="n">geographic</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the file whose extent the geology request must cover.</span>
 
-        <span class="n">data_path</span> <span class="o">=</span> <span class="n">field_record</span><span class="o">.</span><span class="n">data</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
-            <span class="n">data_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">data_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
-
-        <span class="c1"># BRGM data always uses CODE_LEG; custom sources carry their own code_field.</span>
-        <span class="n">source_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">field_record</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">source_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"brgm_1m"</span><span class="p">,</span> <span class="s2">"brgm_50k"</span><span class="p">):</span>
-            <span class="n">code_field</span> <span class="o">=</span> <span class="s2">"CODE_LEG"</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">code_field</span> <span class="o">=</span> <span class="s2">"CODE_LEG"</span>
-            <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geology_cfg</span><span class="p">,</span> <span class="s2">"sources"</span><span class="p">,</span> <span class="p">[]):</span>
-                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"custom"</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s2">"code_field"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-                    <span class="n">code_field</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">code_field</span>
-                    <span class="k">break</span>
-        <span class="n">source_kind</span> <span class="o">=</span> <span class="n">infer_source_kind</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
-
-        <span class="n">cfg_dict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">geology_cfg</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
-            <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">"path"</span><span class="p">:</span> <span class="n">data_path</span><span class="p">,</span>
-                <span class="s2">"kind"</span><span class="p">:</span> <span class="n">source_kind</span><span class="p">,</span>
-                <span class="s2">"code_field"</span><span class="p">:</span> <span class="n">code_field</span><span class="p">,</span>
-                <span class="s2">"all_touched"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="s2">"cell_samples_per_axis"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">geology_cfg</span><span class="o">.</span><span class="n">cell_samples_per_axis</span><span class="p">),</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="n">raster_support</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">source_kind</span> <span class="o">==</span> <span class="s2">"vector"</span><span class="p">:</span>
-            <span class="n">cfg_dict</span><span class="p">[</span><span class="s2">"source"</span><span class="p">][</span><span class="s2">"reference_raster_path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_path</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">validate_geology_config_data</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span>
-            <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_geology_encoded_grid_on_raster_support</span><span class="p">(</span>
-                <span class="n">cfg</span><span class="p">,</span>
-                <span class="n">raster_support</span><span class="o">=</span><span class="n">raster_support</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">source_kind</span> <span class="o">==</span> <span class="s2">"vector"</span><span class="p">:</span>
-                <span class="n">cfg_dict</span><span class="p">[</span><span class="s2">"source"</span><span class="p">][</span><span class="s2">"reference_raster_path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_path</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">validate_geology_config_data</span><span class="p">(</span><span class="n">cfg_dict</span><span class="p">)</span>
-            <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_geology_encoded_grid</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-
-        <span class="n">field</span> <span class="o">=</span> <span class="n">GeologyField</span><span class="p">(</span>
-            <span class="n">identifier</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">geology_cfg</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
-            <span class="n">encoded_codes</span><span class="o">=</span><span class="n">loaded</span><span class="p">[</span><span class="s2">"encoded_codes"</span><span class="p">],</span>
-            <span class="n">encoded_to_zone</span><span class="o">=</span><span class="n">loaded</span><span class="p">[</span><span class="s2">"encoded_to_zone"</span><span class="p">],</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">loaded</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">],</span>
-            <span class="n">crs</span><span class="o">=</span><span class="n">loaded</span><span class="p">[</span><span class="s2">"crs"</span><span class="p">],</span>
-            <span class="n">source_kind</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">loaded</span><span class="p">[</span><span class="s2">"source_kind"</span><span class="p">]),</span>
-            <span class="n">default_cell_samples_per_axis</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">geology_cfg</span><span class="o">.</span><span class="n">cell_samples_per_axis</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="c1"># Expose the cached source path so the overview report can re-open</span>
-        <span class="c1"># the original vector file for map rendering. The overview panel</span>
-        <span class="c1"># looks for one of `source_path`, `geol_file`, `vector_source`.</span>
-        <span class="n">field</span><span class="o">.</span><span class="n">source_path</span> <span class="o">=</span> <span class="n">data_path</span>
-        <span class="k">return</span> <span class="n">field</span>
+<span class="sd">        Geology feeds a heterogeneous parameter on every active cell, and the</span>
+<span class="sd">        active domain is the buffered box by default (``domain_extent='box'``).</span>
+<span class="sd">        The watershed polygon is smaller by the buffer, so a request clipped to</span>
+<span class="sd">        it leaves a frame of cells that no zone covers, where K comes out 0.</span>
+<span class="sd">        The buffered-box DEM contains every domain extent, so it is asked for.</span>
+<span class="sd">        The watershed polygon stays the fallback when that DEM is absent.</span>
+<span class="sd">        """</span>
+        <span class="n">box_dem</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geographic</span><span class="p">,</span> <span class="s2">"watershed_box_buff_dem"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">box_dem</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">box_dem</span><span class="p">))</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">box_dem</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">geographic</span><span class="o">.</span><span class="n">watershed_shp</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_geology_raster_support</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">WorkflowContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>

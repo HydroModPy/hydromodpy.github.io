@@ -10,11 +10,11 @@
 <meta content="website" property="og:type"/>
 <meta content="https://docs.hydromodpy.fr/dev/architecture/how-to/add-a-data-variable.html" property="og:url"/>
 <meta content="HydroModPy" property="og:site_name"/>
-<meta content="A data variable is a thematic family loaded by Project.load_data and stored in the input cache. Today seventeen variables ship under hydromodpy/data/variables/: hydrometry, piezometry, water_qualit..." property="og:description"/>
+<meta content="A data variable is one[data.&lt;name&gt;] section of a project TOML, loaded by one manager and stored in the input cache. Twenty-five ship under hydromodpy/data/variables/; their single list is VAR..." property="og:description"/>
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
-<meta content="A data variable is a thematic family loaded by Project.load_data and stored in the input cache. Today seventeen variables ship under hydromodpy/data/variables/: hydrometry, piezometry, water_qualit..." name="description"/>
-<meta content="2026-09-14T19:51:27+02:00" property="article:modified_time"/>
+<meta content="A data variable is one[data.&lt;name&gt;] section of a project TOML, loaded by one manager and stored in the input cache. Twenty-five ship under hydromodpy/data/variables/; their single list is VAR..." name="description"/>
+<meta content="2026-09-25T09:49:00+02:00" property="article:modified_time"/>
 <title>Add a Data Variable — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 14, 2026" name="docbuild:last-update"/>
+<meta content="Sep 25, 2026" name="docbuild:last-update"/>
 <script src="../../_static/searchtools.js"></script>
 <script src="../../_static/language_data.js"></script>
 <script src="../../searchindex.js"></script>
@@ -484,191 +484,159 @@
 <article class="bd-article">
 <section id="add-a-data-variable">
 <h1>Add a Data Variable<a class="headerlink" href="#add-a-data-variable" title="Link to this heading">#</a></h1>
-<p>A <em>data variable</em> is a thematic family loaded by <code class="docutils literal notranslate"><span class="pre">Project.load_data</span></code>
-and stored in the input cache. Today seventeen variables ship under
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/</span></code>: <code class="docutils literal notranslate"><span class="pre">hydrometry</span></code>, <code class="docutils literal notranslate"><span class="pre">piezometry</span></code>,
-<code class="docutils literal notranslate"><span class="pre">water_quality</span></code>, <code class="docutils literal notranslate"><span class="pre">hydrography</span></code>, <code class="docutils literal notranslate"><span class="pre">oceanic</span></code>, <code class="docutils literal notranslate"><span class="pre">geology</span></code>,
-<code class="docutils literal notranslate"><span class="pre">dem</span></code>, <code class="docutils literal notranslate"><span class="pre">precipitation</span></code>, <code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">etp</span></code>,
-<code class="docutils literal notranslate"><span class="pre">soil_moisture</span></code>, <code class="docutils literal notranslate"><span class="pre">humidity</span></code>, <code class="docutils literal notranslate"><span class="pre">recharge</span></code>, <code class="docutils literal notranslate"><span class="pre">runoff</span></code>,
-<code class="docutils literal notranslate"><span class="pre">radiation</span></code>, <code class="docutils literal notranslate"><span class="pre">wind</span></code>, <code class="docutils literal notranslate"><span class="pre">intermittency</span></code>.</p>
-<p>Add a brand-new variable only when the family is genuinely new (a
-new physical quantity with its own normalisation contract). To add a
-<strong>source</strong> to an existing variable, see <a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a>
-instead.</p>
-<section id="two-manager-flavours">
-<h2>Two manager flavours<a class="headerlink" href="#two-manager-flavours" title="Link to this heading">#</a></h2>
+<p>A <em>data variable</em> is one <code class="docutils literal notranslate"><span class="pre">[data.&lt;name&gt;]</span></code> section of a project TOML, loaded
+by one manager and stored in the input cache. Twenty-five ship under
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/</span></code>; their single list is <code class="docutils literal notranslate"><span class="pre">VARIABLE_SPECS</span></code> in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/_dispatch.py</span></code>.</p>
+<p>Add a variable only when the family is genuinely new: a new physical quantity
+with its own unit. To add a <strong>source</strong> to an existing variable, see
+<a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a> instead. The set of variables is closed on purpose:
+each one is an explicit field of <code class="docutils literal notranslate"><span class="pre">DataManagersConfig</span></code> that the JSON schema
+publishes, so a variable is a change of HydroModPy and not a plugin.</p>
+<section id="pick-a-manager-base">
+<h2>Pick a manager base<a class="headerlink" href="#pick-a-manager-base" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Point variables</strong> (gauges, observations) inherit from
-<code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code> and emit <code class="docutils literal notranslate"><span class="pre">PointRecord</span></code> objects.</p></li>
-<li><p><strong>Field variables</strong> (rasters, gridded forcing) inherit from
-<code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> and emit <code class="docutils literal notranslate"><span class="pre">FieldRecord</span></code> objects.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> for gridded data (<code class="docutils literal notranslate"><span class="pre">FieldRecord</span></code>): it caches grids as
+NetCDF and loads a user’s NetCDF, GeoTIFF or folder of chronicles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code> for station chronicles (<code class="docutils literal notranslate"><span class="pre">PointRecord</span></code>): it caches
+one file per station and asks a provider only for the missing periods.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BaseFileManager</span></code> for a variable read only from the user’s own files
+(<code class="docutils literal notranslate"><span class="pre">lake_abacus</span></code>, <code class="docutils literal notranslate"><span class="pre">lake_bathymetry</span></code>, <code class="docutils literal notranslate"><span class="pre">lake_geometry</span></code>, <code class="docutils literal notranslate"><span class="pre">substratum</span></code>).
+<code class="docutils literal notranslate"><span class="pre">RasterFileManager</span></code>, in the same module, is the further-specialized base
+for a single-band raster read only from the user’s own files
+(<code class="docutils literal notranslate"><span class="pre">lake_bathymetry</span></code>, <code class="docutils literal notranslate"><span class="pre">substratum</span></code>): it needs only <code class="docutils literal notranslate"><span class="pre">VARIABLE_NAME</span></code>.</p></li>
 </ul>
-<p>Both contracts live under <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/</span></code> (<code class="docutils literal notranslate"><span class="pre">base_manager_variable.py</span></code>,
-<code class="docutils literal notranslate"><span class="pre">base_manager_field.py</span></code>, <code class="docutils literal notranslate"><span class="pre">_base_manager_common.py</span></code>).</p>
+<p>All three live in <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/</span></code>. <code class="docutils literal notranslate"><span class="pre">wind</span></code> is the shortest
+grid variable to copy, <code class="docutils literal notranslate"><span class="pre">hydrometry</span></code> the shortest station variable.</p>
 </section>
-<section id="files-to-create">
-<h2>Files to create<a class="headerlink" href="#files-to-create" title="Link to this heading">#</a></h2>
-<p>For a new variable called <code class="docutils literal notranslate"><span class="pre">newvar</span></code>:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/data/variables/newvar/
-|-- __init__.py                   # exports
-|-- config.py                     # NewvarSourceConfig, NewvarConfig
-|-- manager.py                    # NewvarManager(BaseVariableManager|BaseFieldManager)
-|-- custom.py                     # load_custom(source_cfg, project_period)
-|-- contracts.py                  # variable-specific record fields if any
-|-- apis/
-|   |-- __init__.py
-|   `-- &lt;source_name&gt;.py          # one file per public source
-`-- README.md                     # short rationale
+<section id="the-package">
+<h2>The package<a class="headerlink" href="#the-package" title="Link to this heading">#</a></h2>
+<p>For a variable called <code class="docutils literal notranslate"><span class="pre">evaporation</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hydromodpy/data/variables/evaporation/
+|-- __init__.py   a docstring; importing the package loads no manager
+|-- config.py     EvaporationSourceConfig, EvaporationConfig
+|-- manager.py    EvaporationManager: VARIABLE_NAME, INTERNAL_UNIT, SOURCES
+`-- apis/         one module per network provider, if the variable has one
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/hydrometry/</span></code> as the canonical
-template for point variables, <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/dem/</span></code> for
-field variables.</p>
-</section>
-<section id="manager-skeleton">
-<h2>Manager skeleton<a class="headerlink" href="#manager-skeleton" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/newvar/manager.py</span>
-<span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#module-typing"><span class="nn">typing</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.managers.base_manager_variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseVariableManager</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.timeseries</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointRecord</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.load_result</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoadResult</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">NewvarManager</span><span class="p">(</span><span class="n">BaseVariableManager</span><span class="p">):</span>
-    <span class="n">VARIABLE_NAME</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="typing.ClassVar"><span class="n">ClassVar</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">]</span> <span class="o">=</span> <span class="s2">"newvar"</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_from_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_cfg</span><span class="p">,</span> <span class="n">project_period</span><span class="p">):</span>
-        <span class="c1"># dispatch on source_cfg.source ("custom", "myapi", ...)</span>
-        <span class="c1"># return LoadResult(points=[PointRecord(...)], fields=[], warnings=[])</span>
-        <span class="o">...</span>
-</pre></div>
-</div>
-<p>The base class handles cache lookups, persistence to CSV plus LOC
-metadata, registration in the catalog, and warning aggregation.</p>
-</section>
-<section id="config-block">
-<h2>Config block<a class="headerlink" href="#config-block" title="Link to this heading">#</a></h2>
-<p>Each variable owns one block under <code class="docutils literal notranslate"><span class="pre">[data.&lt;variable&gt;]</span></code> with a
-<code class="docutils literal notranslate"><span class="pre">sources</span></code> list:</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[data.newvar]</span>
-<span class="n">date_start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2020-01-01"</span>
-<span class="n">date_end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2020-12-31"</span>
-
-<span class="k">[[data.newvar.sources]]</span>
-<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"myapi"</span>
-<span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"qmnj"</span>
-<span class="n">extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"watershed"</span>
-</pre></div>
-</div>
-<p>The matching Pydantic models:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/newvar/config.py</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/evaporation/config.py</span>
 <span class="kn">from</span><span class="w"> </span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#module-typing"><span class="nn">typing</span></a><span class="w"> </span><span class="kn">import</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">,</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="typing.Literal"><span class="n">Literal</span></a>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.config_kit.profile</span><span class="w"> </span><span class="kn">import</span> <span class="n">Profile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.managers.base_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseVariableConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.managers.timeseries_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TimeseriesColumnsMixin</span><span class="p">,</span>
+    <span class="n">TimeseriesSelectionMixin</span><span class="p">,</span>
+<span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">NewvarApiSourceConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
-    <span class="n">source</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="typing.Literal"><span class="n">Literal</span></a><span class="p">[</span><span class="s2">"myapi"</span><span class="p">]</span>
-    <span class="n">product</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span>
-    <span class="n">extent</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"watershed"</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvaporationSourceConfig</span><span class="p">(</span><span class="n">TimeseriesColumnsMixin</span><span class="p">,</span> <span class="n">TimeseriesSelectionMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One evaporation source."""</span>
+
+    <span class="n">source</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="typing.Literal"><span class="n">Literal</span></a><span class="p">[</span><span class="s2">"custom"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Data provider: 'custom' for the user's files."</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"A .nc or .tif file, or a folder of chronicles."</span>
+    <span class="p">)</span>
+    <span class="n">crs</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"CRS of a custom NetCDF that declares none."</span>
+    <span class="p">)</span>
+    <span class="n">nodata</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/functions.html#float"><span class="nb">float</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Nodata of a custom NetCDF that declares none."</span>
+    <span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">NewvarCustomSourceConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
-    <span class="n">source</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="typing.Literal"><span class="n">Literal</span></a><span class="p">[</span><span class="s2">"custom"</span><span class="p">]</span>
-    <span class="n">path</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvaporationConfig</span><span class="p">(</span><span class="n">BaseVariableConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Top-level evaporation configuration."""</span>
 
+    <span class="n">_TOML_SECTION</span> <span class="o">=</span> <span class="s2">"evaporation"</span>
 
-<span class="n">NewvarSourceConfig</span> <span class="o">=</span> <span class="n">NewvarApiSourceConfig</span> <span class="o">|</span> <span class="n">NewvarCustomSourceConfig</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">NewvarConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
-    <span class="n">date_start</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">date_end</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#str"><span class="nb">str</span></a> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">sources</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">NewvarSourceConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">)</span>
+    <span class="n">sources</span><span class="p">:</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/library/typing.html#typing.Annotated" title="typing.Annotated"><span class="n">Annotated</span></a><span class="p">[</span><a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">EvaporationSourceConfig</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"At least one data source."</span>
+    <span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="source-modules">
-<h2>Source modules<a class="headerlink" href="#source-modules" title="Link to this heading">#</a></h2>
-<p>There is no source registry. Each public API source is a plain module
-exposing a <code class="docutils literal notranslate"><span class="pre">fetch</span></code> function:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/newvar/apis/myapi.py</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.timeseries</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointRecord</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/evaporation/manager.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.managers.base_manager_field</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseFieldManager</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">station_ids</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">-&gt;</span> <a class="sphinx-codeautolink-a" href="https://docs.python.org/3/builtins/stdtypes.html#list"><span class="nb">list</span></a><span class="p">[</span><span class="n">PointRecord</span><span class="p">]:</span>
-    <span class="o">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvaporationManager</span><span class="p">(</span><span class="n">BaseFieldManager</span><span class="p">):</span>
+    <span class="n">VARIABLE_NAME</span> <span class="o">=</span> <span class="s2">"evaporation"</span>
+    <span class="n">INTERNAL_UNIT</span> <span class="o">=</span> <span class="s2">"mm/day"</span>
+    <span class="n">SOURCES</span> <span class="o">=</span> <span class="p">{}</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">NewvarManager._fetch_from_source</span></code> dispatches on
-<code class="docutils literal notranslate"><span class="pre">source_cfg.source</span></code> and imports the module lazily inside the matching
-branch. See <a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a> for the full wiring.</p>
+<p><code class="docutils literal notranslate"><span class="pre">custom</span></code> is never in <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>: the base class loads the user’s files.
+Each network provider adds one key, see <a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a>.</p>
 </section>
-<section id="wire-it-into-the-planner">
-<h2>Wire it into the planner<a class="headerlink" href="#wire-it-into-the-planner" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DataPlanner</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/planner.py</span></code>) merges the
-<code class="docutils literal notranslate"><span class="pre">[data].types</span></code> list with rules that infer extra families from other
-sections (geology if the domain references “geology”, hydrography if
-the flow uses <code class="docutils literal notranslate"><span class="pre">"stream"</span></code> boundary conditions, etc.). If your
-variable should be auto-inferred from a foreign config, add the rule
-to the planner.</p>
-<p>Otherwise the user activates it explicitly:</p>
+<section id="the-lists-a-variable-joins">
+<h2>The lists a variable joins<a class="headerlink" href="#the-lists-a-variable-joins" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/_dispatch.py</span></code>: a <code class="docutils literal notranslate"><span class="pre">VariableSpec</span></code> in
+<code class="docutils literal notranslate"><span class="pre">VARIABLE_SPECS</span></code> naming the config and manager classes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/config_schema.py</span></code>: the name in
+<code class="docutils literal notranslate"><span class="pre">SUPPORTED_DATA_MANAGER_TYPES</span></code>, a field of <code class="docutils literal notranslate"><span class="pre">DataManagersConfig</span></code>, and
+the config class in <code class="docutils literal notranslate"><span class="pre">_TYPED_SECTIONS</span></code> and in <code class="docutils literal notranslate"><span class="pre">_rebuild_forward_refs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/state/data.py</span></code>: a field of <code class="docutils literal notranslate"><span class="pre">LoadedDataContext</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/workspace/scaffold.py</span></code>: a <code class="docutils literal notranslate"><span class="pre">VariableSpec</span></code> in
+<code class="docutils literal notranslate"><span class="pre">VARIABLES</span></code>, the drop zone <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">init</span></code> creates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/_lazy.py</span></code>: <code class="docutils literal notranslate"><span class="pre">EvaporationConfig</span></code> and
+<code class="docutils literal notranslate"><span class="pre">EvaporationSourceConfig</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/sources.py</span></code>: an entry (licence, network hosts) for
+each new provider slug.</p></li>
+<li><p>The planner, only when the variable should be activated by another section
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/planner.py</span></code>); otherwise the user lists it in
+<code class="docutils literal notranslate"><span class="pre">[data].types</span></code>.</p></li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_the_variable_families_agree.py</span></code> compares the lists to
+<code class="docutils literal notranslate"><span class="pre">VARIABLE_SPECS</span></code> and names the one you missed. Two pins move with a new
+variable, and moving them is the point: the variable count in the same test,
+and <code class="docutils literal notranslate"><span class="pre">DATA_SCHEMA_SHA256</span></code> in <code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_the_data_surfaces_hold_still.py</span></code>.
+Regenerate the configuration reference with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.doc_config</span></code>.</p>
+</section>
+<section id="check-it">
+<h2>Check it<a class="headerlink" href="#check-it" title="Link to this heading">#</a></h2>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[data]</span>
-<span class="n">types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"newvar"</span><span class="p">]</span>
+<span class="n">types</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"evaporation"</span><span class="p">]</span>
+
+<span class="k">[[data.evaporation.sources]]</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"custom"</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"data/evaporation/evaporation_basin.nc"</span>
+<span class="n">nodata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-9999.0</span>
 </pre></div>
 </div>
-</section>
-<section id="wire-it-into-hydromodpyconfig">
-<h2>Wire it into <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code><a class="headerlink" href="#wire-it-into-hydromodpyconfig" title="Link to this heading">#</a></h2>
-<p>In <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/config_schema.py</span></code> (or the equivalent
-discriminated union), add <code class="docutils literal notranslate"><span class="pre">NewvarConfig</span></code> so <code class="docutils literal notranslate"><span class="pre">[data.newvar]</span></code>
-parses cleanly.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pytest<span class="w"> </span>tests/unit/architecture<span class="w"> </span>tests/unit/data<span class="w"> </span>-q
+<span class="gp">$ </span>cat<span class="w"> </span>&gt;<span class="w"> </span>ask.json<span class="w"> </span>&lt;&lt;<span class="s1">'JSON'</span>
+<span class="go">{"data": {"evaporation": {"sources": [</span>
+<span class="go">   {"source": "custom", "path": "data/evaporation/evaporation_basin.nc",</span>
+<span class="go">    "nodata": -9999.0}]}},</span>
+<span class="go"> "extent": {"bbox": [320000, 6780000, 330000, 6790000], "crs": "EPSG:2154"},</span>
+<span class="go"> "period": {"start": "2020-01-01", "end": "2020-01-31"}}</span>
+<span class="go">JSON</span>
+<span class="gp">$ </span>hmp<span class="w"> </span>data<span class="w"> </span>get<span class="w"> </span>ask.json<span class="w"> </span>--out<span class="w"> </span>evap/
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">get</span></code> reads your file back through the new manager, cut to the box
+and the period, into <code class="docutils literal notranslate"><span class="pre">evap/evaporation_custom.nc</span></code> beside <code class="docutils literal notranslate"><span class="pre">evap/request.json</span></code>.
+A job refuses a <code class="docutils literal notranslate"><span class="pre">custom</span></code> source; the command line serves it.</p>
 </section>
 <section id="tests-to-add">
 <h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Unit</strong> under <code class="docutils literal notranslate"><span class="pre">tests/unit/data/newvar/</span></code> for the config parsers,
-the custom loader on a fixture file, and the manager’s normalisation
-contract.</p></li>
-<li><p><strong>Integration</strong> under <code class="docutils literal notranslate"><span class="pre">tests/integration/data_managers/</span></code> for one
-<code class="docutils literal notranslate"><span class="pre">Project.load_data</span></code> cycle using a stub source.</p></li>
-<li><p><strong>Replay</strong> under <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/examples/</span></code> (or a dedicated
-fixtures folder) for any HTTP-backed source so smoke tests can run
-offline.</p></li>
-</ul>
-<p>Run <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">ls</span></code> after a manual cache write to confirm the
-catalog row appears.</p>
-</section>
-<section id="pitfalls-flagged-by-the-layer-matrix">
-<h2>Pitfalls flagged by the layer matrix<a class="headerlink" href="#pitfalls-flagged-by-the-layer-matrix" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> may import <code class="docutils literal notranslate"><span class="pre">core</span></code> and <code class="docutils literal notranslate"><span class="pre">schema</span></code> only. The
-<code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">-&gt;</span> <span class="pre">spatial</span></code> tolerance is strictly reserved for the geology
-field bridge.</p></li>
-<li><p>Do not import <code class="docutils literal notranslate"><span class="pre">simulation</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>,
-<code class="docutils literal notranslate"><span class="pre">results</span></code>, <code class="docutils literal notranslate"><span class="pre">display</span></code>, <code class="docutils literal notranslate"><span class="pre">analysis</span></code> from a manager.</p></li>
-<li><p>The data layer must not depend on a workspace; the optional
-<code class="docutils literal notranslate"><span class="pre">workspace.cache</span></code> lives separately and is set at runtime.</p></li>
-<li><p>Records emitted by the manager must be timezone-aware when they
-carry datetimes (UTC by default).</p></li>
+<li><p>the config: a <code class="docutils literal notranslate"><span class="pre">custom</span></code> source without <code class="docutils literal notranslate"><span class="pre">path</span></code> is refused;</p></li>
+<li><p>the manager on a small fixture file, offline;</p></li>
+<li><p>each provider with a recorded answer, so the tier runs without network.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../packages/data.html"><span class="doc">data</span></a> for the data package map and the existing
-variables.</p></li>
-<li><p><a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a> for adding a new source to an existing
-variable.</p></li>
-<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a Config Field</span></a> if the new variable needs a dedicated
-TOML knob outside the source list.</p></li>
-<li><p><a class="reference internal" href="../../user_guide/data/index.html"><span class="doc">Data Loading And Retrieval</span></a> for the user-facing data loading
-guide.</p></li>
+<li><p><a class="reference internal" href="../packages/data.html"><span class="doc">data</span></a> for the package map and the manager template.</p></li>
+<li><p><a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a Data Source</span></a> for a source of an existing variable.</p></li>
+<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a Config Field</span></a> for a TOML knob outside the source list.</p></li>
 </ul>
 </section>
 </section>
@@ -700,15 +668,11 @@ guide.</p></li>
   </div>
 <nav aria-labelledby="pst-page-navigation-heading-2" class="page-toc" id="pst-page-toc-nav">
 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-manager-flavours">Two manager flavours</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-to-create">Files to create</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manager-skeleton">Manager skeleton</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-block">Config block</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-modules">Source modules</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-into-the-planner">Wire it into the planner</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wire-it-into-hydromodpyconfig">Wire it into <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-a-manager-base">Pick a manager base</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-package">The package</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-lists-a-variable-joins">The lists a variable joins</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#check-it">Check it</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls-flagged-by-the-layer-matrix">Pitfalls flagged by the layer matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
 </ul>
 </nav></div>

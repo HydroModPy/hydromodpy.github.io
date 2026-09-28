@@ -907,21 +907,6 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_phase_summaries</span><span class="p">(</span><span class="n">declarations</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""Describe declared calibration phases, in declaration order."""</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="n">decl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="s2">"description"</span><span class="p">:</span> <span class="n">decl</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-            <span class="s2">"method"</span><span class="p">:</span> <span class="n">decl</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
-            <span class="s2">"parameters"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">decl</span><span class="o">.</span><span class="n">parameters</span><span class="p">),</span>
-            <span class="s2">"depends_on"</span><span class="p">:</span> <span class="n">decl</span><span class="o">.</span><span class="n">depends_on</span><span class="p">,</span>
-            <span class="s2">"freeze_on_success"</span><span class="p">:</span> <span class="n">decl</span><span class="o">.</span><span class="n">freeze_on_success</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="k">for</span> <span class="n">decl</span> <span class="ow">in</span> <span class="p">(</span><span class="n">declarations</span> <span class="ow">or</span> <span class="p">[])</span>
-    <span class="p">]</span>
-
-
 <div class="viewcode-block" id="calibrate">
 <a class="viewcode-back" href="../../api/generated/hydromodpy.calibrate.html#hydromodpy.calibrate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span>
@@ -929,6 +914,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">phase</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">list_phases</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">expand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Run a calibration workflow from a TOML file or config object.</span>
@@ -940,9 +926,9 @@
 <span class="sd">    A TOML declaring ``[[calibration.phases]]`` **routes** to</span>
 <span class="sd">    :func:`~hydromodpy.calibration.runners.staged_runner.run_staged_calibration`:</span>
 <span class="sd">    each phase calibrates its own parameters and freezes them for the next. The</span>
-<span class="sd">    same declaration carried by an in-memory config object is **refused**: a</span>
-<span class="sd">    phase forks its configuration from the source file, and there is none.</span>
-<span class="sd">    Write the config out and pass the path.</span>
+<span class="sd">    same declaration carried by an in-memory config object routes there too:</span>
+<span class="sd">    :meth:`~hydromodpy.project.Project.calibrate` writes the document a staged</span>
+<span class="sd">    run needs next to the project's ``sessions/`` and runs it from there.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -953,7 +939,21 @@
 <span class="sd">        froze, so a phase whose dependency has not run is refused rather than</span>
 <span class="sd">        calibrated against un-frozen values.</span>
 <span class="sd">    list_phases</span>
-<span class="sd">        Return the declared phases without running anything.</span>
+<span class="sd">        Return the declared phases without running anything. Each names the</span>
+<span class="sd">        method it runs; a phase that names none gets the one its criteria call</span>
+<span class="sd">        for, and ``method_reason`` says why. ``interval_width`` gives the width</span>
+<span class="sd">        the phase reads its interval with and where it comes from: written in</span>
+<span class="sd">        the phase, in ``[calibration.uncertainty]``, or the default that follows</span>
+<span class="sd">        what the phase scores. A phase that moves again a parameter an earlier</span>
+<span class="sd">        phase passes on also names that phase, and says whether its engine</span>
+<span class="sd">        starts from the passed value.</span>
+<span class="sd">    expand</span>
+<span class="sd">        Return the ``[calibration]`` section a protocol unfolds into, instead</span>
+<span class="sd">        of running anything. Needs ``config`` to be a TOML path. A file naming</span>
+<span class="sd">        a protocol gets only ``objective_blocks`` and ``phases``, the keys the</span>
+<span class="sd">        protocol writes; a file naming none gets its own section back</span>
+<span class="sd">        unchanged. Refused together with ``phase`` or ``list_phases``: expand</span>
+<span class="sd">        answers what would run, it does not run it.</span>
 <span class="sd">    kwargs</span>
 <span class="sd">        Options forwarded to the underlying calibration runner. The</span>
 <span class="sd">        ``headless`` keyword controls the project initialization for the</span>
@@ -964,15 +964,22 @@
 <span class="sd">    -------</span>
 <span class="sd">    Any</span>
 <span class="sd">        Calibration report or workflow-specific result. A ``list`` of phase</span>
-<span class="sd">        descriptions when ``list_phases`` is set.</span>
+<span class="sd">        descriptions when ``list_phases`` is set. A ``dict`` with</span>
+<span class="sd">        ``"calibration"`` and ``"protocol"`` keys when ``expand`` is set:</span>
+<span class="sd">        ``"protocol"`` is ``None`` for a file naming no protocol, else a</span>
+<span class="sd">        ``dict`` with ``"name"``, ``"version"`` and ``"citation"`` (the first</span>
+<span class="sd">        reference, short form).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    FileNotFoundError</span>
 <span class="sd">        If the calibration TOML path does not exist.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``expand`` is combined with ``phase`` or ``list_phases``, or given</span>
+<span class="sd">        a config object instead of a TOML path.</span>
 <span class="sd">    hydromodpy.core.exceptions.ConfigError</span>
 <span class="sd">        If the configuration cannot be read and the answer depends on reading</span>
-<span class="sd">        it (``phase`` or ``list_phases``).</span>
+<span class="sd">        it (``phase``, ``list_phases`` or ``expand``).</span>
 <span class="sd">    hydromodpy.core.exceptions.ConfigMissingError</span>
 <span class="sd">        If neither ``config_path`` nor ``parameters`` is supplied.</span>
 <span class="sd">    hydromodpy.core.exceptions.CalibrationError</span>
@@ -996,18 +1003,30 @@
 <span class="sd">    hydromodpy.calibration.CalibrationReport</span>
 <span class="sd">        Structured calibration result.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">expand</span> <span class="ow">and</span> <span class="p">(</span><span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">list_phases</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"calibrate(expand=True) cannot be combined with phase or list_phases: "</span>
+            <span class="s2">"expand answers what a protocol writes, it runs nothing."</span>
+        <span class="p">)</span>
+
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationError</span><span class="p">,</span> <span class="n">ConfigError</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.dispatch.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">in_memory_staged_refusal</span><span class="p">,</span> <span class="n">no_such_phase</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.dispatch.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">no_such_phase</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">expand</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_expand_calibration_section</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
         <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.runners.cli_runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">load_toml_calibration</span><span class="p">,</span>
             <span class="n">run_calibration_cli</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.runners.staged_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_staged_calibration</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.runners.staged_runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">phase_summaries</span><span class="p">,</span>
+            <span class="n">run_staged_calibration</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
         <span class="c1"># Probe the file to decide staged or not. When that decision is all</span>
         <span class="c1"># that hangs on the read, a failure is left to the runner, which</span>
         <span class="c1"># reports it with its own context. When the answer itself is what the</span>
@@ -1019,27 +1038,105 @@
                 <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> cannot be read: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
             <span class="k">return</span> <span class="n">run_calibration_cli</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">list_phases</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_phase_summaries</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">phases</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">phase_summaries</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">phases</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">run_staged_calibration</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">no_such_phase</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">phase</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">run_calibration_cli</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="n">declared</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"calibration"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"phases"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expand</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"calibrate(expand=True) needs a TOML path, not a config object."</span><span class="p">)</span>
+
+    <span class="n">calibration</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"calibration"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">declared</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">calibration</span><span class="p">,</span> <span class="s2">"phases"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">list_phases</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_phase_summaries</span><span class="p">(</span><span class="n">declared</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">declared</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">in_memory_staged_refusal</span><span class="p">([</span><span class="n">decl</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">decl</span> <span class="ow">in</span> <span class="n">declared</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.runners.staged_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">phase_summaries</span>
+
+        <span class="k">return</span> <span class="n">phase_summaries</span><span class="p">(</span><span class="n">calibration</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">declared</span> <span class="ow">and</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">CalibrationError</span><span class="p">(</span><span class="n">no_such_phase</span><span class="p">(</span><span class="s2">"this configuration"</span><span class="p">,</span> <span class="n">phase</span><span class="p">))</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
 
     <span class="n">headless</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"headless"</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase</span>
     <span class="k">with</span> <span class="n">Project</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span> <span class="k">as</span> <span class="n">project</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">project</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_expand_calibration_section</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return what a protocol unfolds ``target``'s ``[calibration]`` section into.</span>
+
+<span class="sd">    Reads through the same ``base_config`` chain :func:`load_toml_calibration`</span>
+<span class="sd">    resolves, then hands the document to</span>
+<span class="sd">    :func:`hydromodpy.calibration.protocols.expand_calibration_protocol`. A</span>
+<span class="sd">    file naming no protocol gets its own section back, ``protocol`` key</span>
+<span class="sd">    aside: nothing was unfolded, so there is nothing else to say. A file</span>
+<span class="sd">    naming one gets :data:`~hydromodpy.calibration.protocols.WRITTEN_SECTIONS`</span>
+<span class="sd">    (``objective_blocks``, ``phases``) in full, plus any output the protocol</span>
+<span class="sd">    introduced under ``outputs`` that the file did not already declare (a</span>
+<span class="sd">    protocol may add one, such as the point output its transient stage reads,</span>
+<span class="sd">    beside the network output the file supplies itself): the rest of the</span>
+<span class="sd">    section -- parameters, the file's own outputs, seed -- already sits in</span>
+<span class="sd">    the file or its ``base_config`` and does not need restating.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">WRITTEN_SECTIONS</span><span class="p">,</span>
+        <span class="n">expand_calibration_protocol</span><span class="p">,</span>
+        <span class="n">get_protocol</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigError</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.toml_io.loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_toml_with_base_config</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">load_toml_with_base_config</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> cannot be read: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="n">calibration</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No [calibration] section in </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">declaration</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"protocol"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">declaration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">calibration</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">"protocol"</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"calibration"</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span> <span class="s2">"protocol"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">expanded</span> <span class="o">=</span> <span class="n">expand_calibration_protocol</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">declaration</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">declaration</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">declaration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="n">get_protocol</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">expanded_calibration</span> <span class="o">=</span> <span class="n">expanded</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">section</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">expanded_calibration</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">WRITTEN_SECTIONS</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expanded_calibration</span>
+    <span class="p">}</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">outputs_agree</span>
+
+    <span class="n">declared_outputs</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"outputs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">produced_outputs</span> <span class="o">=</span> <span class="n">expanded_calibration</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"outputs"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">new_outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">output_name</span><span class="p">:</span> <span class="n">decl</span>
+        <span class="k">for</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">decl</span> <span class="ow">in</span> <span class="n">produced_outputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">output_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">declared_outputs</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="n">outputs_agree</span><span class="p">(</span><span class="n">declared_outputs</span><span class="p">[</span><span class="n">output_name</span><span class="p">],</span> <span class="n">decl</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">new_outputs</span><span class="p">:</span>
+        <span class="n">section</span><span class="p">[</span><span class="s2">"outputs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_outputs</span>
+    <span class="n">citation</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">protocol</span><span class="o">.</span><span class="n">references</span><span class="p">:</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">references</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">citation</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">reference</span><span class="o">.</span><span class="n">authors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">','</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2"> et al. </span><span class="si">{</span><span class="n">reference</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">reference</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"calibration"</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span>
+        <span class="s2">"protocol"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="n">protocol</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="s2">"citation"</span><span class="p">:</span> <span class="n">citation</span><span class="p">},</span>
+    <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">spinup</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinupResult</span><span class="p">:</span>
@@ -1343,20 +1440,9 @@
 <span class="sd">    &gt;&gt;&gt; run = cat.latest()  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; hmp.figure(run, "cross_section", orientation="sn")  # doctest: +SKIP</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display.runs</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_figure</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">get</span> <span class="k">as</span> <span class="n">_get_figure</span>
-
-    <span class="n">renderer</span> <span class="o">=</span> <span class="n">_get_figure</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">reason</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">unavailable_reason</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"figure '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' does not apply to this run: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-    <span class="n">save_path</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">save</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">_Path</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
-        <span class="n">save_path</span> <span class="o">=</span> <span class="n">target</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.png"</span> <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">""</span> <span class="k">else</span> <span class="n">target</span>
-    <span class="k">return</span> <span class="n">renderer</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_figure</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="export">
@@ -1550,7 +1636,7 @@
 <span class="sd">    &gt;&gt;&gt; hmp.example_add("04").project_dir  # doctest: +SKIP</span>
 <span class="sd">    PosixPath('/home/user/hydromodpy/projects/04_streamflow_intermittence_in_transient')</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.scaffold</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_ROOT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.workspace.scaffold</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_ROOT</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.blobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_source</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.examples.install</span><span class="w"> </span><span class="kn">import</span> <span class="n">install_example</span>
 

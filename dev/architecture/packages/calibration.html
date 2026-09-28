@@ -12,12 +12,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://docs.hydromodpy.fr/dev/architecture/packages/calibration.html" />
 <meta property="og:site_name" content="HydroModPy" />
-<meta property="og:description" content="hydromodpy.calibration runs the ask/tell loop that estimates parameters against observations. It sits on top of the simulation layer and reuses the prepare-once / evaluate-many primitive in hydromo..." />
+<meta property="og:description" content="hydromodpy.calibration fits model parameters to observations. A[calibration] table names the parameters to vary, the outputs to compare, the criterion that scores them and the search method. An opt..." />
 <meta property="og:image" content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" />
 <meta property="og:image:alt" content="HydroModPy" />
-<meta name="description" content="hydromodpy.calibration runs the ask/tell loop that estimates parameters against observations. It sits on top of the simulation layer and reuses the prepare-once / evaluate-many primitive in hydromo..." />
+<meta name="description" content="hydromodpy.calibration fits model parameters to observations. A[calibration] table names the parameters to vary, the outputs to compare, the criterion that scores them and the search method. An opt..." />
 
-    <meta property="article:modified_time" content="2026-09-14T19:51:27+02:00" />
+    <meta property="article:modified_time" content="2026-09-26T02:54:00+02:00" />
     <title>calibration &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 14, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 26, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -725,94 +725,66 @@
                   
   <section id="calibration">
 <h1>calibration<a class="headerlink" href="#calibration" title="Link to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration</span></code> runs the ask/tell loop that estimates
-parameters against observations. It sits on top of the simulation
-layer and reuses the prepare-once / evaluate-many primitive in
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration</span></code> fits model parameters to observations. A
+<code class="docutils literal notranslate"><span class="pre">[calibration]</span></code> table names the parameters to vary, the outputs to
+compare, the criterion that scores them and the search method. An
+optimizer proposes parameter values, one trial runs the model with them,
+the outputs are scored against the observations, and the session is
+written to disk as it goes. It sits above the simulation and solver
+layers and reuses the prepare-once / evaluate-many primitive of
 <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/trial.py</span></code>.</p>
-<section id="sub-modules">
-<h2>Sub-modules<a class="headerlink" href="#sub-modules" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/cli_runner.py</span></code> – CLI driver
-(<code class="docutils literal notranslate"><span class="pre">run_calibration_cli</span></code>). Loads the TOML, prepares the trial
-context, runs the engine, persists iterations, optionally promotes
-best trials.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/programmatic_runner.py</span></code> – in-process driver used
-by <code class="docutils literal notranslate"><span class="pre">hmp.calibrate</span></code> and the regional_lab pipeline.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/runners/</span></code> – per-method runner variants
-(twin experiments, trial helpers, contracts).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/promotion.py</span></code> – top-N promotion of best trials to
-full simulations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/state.py</span></code> – in-memory session state shared between
-ask/tell loops and the persistence layer.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/engine.py</span></code> – <code class="docutils literal notranslate"><span class="pre">CalibrationEngine</span></code> drives the
-ask/tell loop until convergence or <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>. Returns a
-<code class="docutils literal notranslate"><span class="pre">CalibrationSession</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/adapters/</span></code> – one adapter per optimizer
-(<code class="docutils literal notranslate"><span class="pre">Grid</span></code>, <code class="docutils literal notranslate"><span class="pre">RandomSearch</span></code>, <code class="docutils literal notranslate"><span class="pre">ScipyNelderMead</span></code>, <code class="docutils literal notranslate"><span class="pre">ScipyDE</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Optuna</span></code> with TPE / CMA-ES samplers, <code class="docutils literal notranslate"><span class="pre">CmaEs</span></code>,
-<code class="docutils literal notranslate"><span class="pre">GpMapping</span></code>, <code class="docutils literal notranslate"><span class="pre">DaMhGp</span></code>, plus prior sampling).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/cases/</span></code> – runnable analytical benchmarks that the
-loop can exercise end-to-end without MODFLOW
-(<code class="docutils literal notranslate"><span class="pre">recession_brutsaert</span></code>, <code class="docutils literal notranslate"><span class="pre">groundwater_1d</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/lumped/</span></code> – lumped-model helpers reused by the
-cases.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/metrics.py</span></code> – trial-side metric extractor
-(<code class="docutils literal notranslate"><span class="pre">build_metric_extractor</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/objective.py</span></code> – <code class="docutils literal notranslate"><span class="pre">Objective</span></code> aggregates one or
-more weighted metrics into a scalar loss.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/persistence.py</span></code> – DuckDB writes for
-<code class="docutils literal notranslate"><span class="pre">calibration_sessions</span></code> and <code class="docutils literal notranslate"><span class="pre">calibration_iterations</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/report.py</span></code> – HTML report assembly.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">calibration/diagnostics.py</span></code> – <code class="docutils literal notranslate"><span class="pre">convergence_rate</span></code>,
-<code class="docutils literal notranslate"><span class="pre">parameter_correlation</span></code>, and other post-loop helpers.</p></li>
-</ul>
-</section>
+<p>The map of the package – its parts, its import rules, the tree of
+modules and where to add a search method, criterion, evaluator, forward
+model or protocol – is <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/README.md</span></code>, enforced by
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/calibration_layout.yaml</span></code> and
+<code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_package_layouts.py</span></code>.</p>
 <section id="ask-tell-flow">
 <h2>Ask / tell flow<a class="headerlink" href="#ask-tell-flow" title="Link to this heading">#</a></h2>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>load TOML -&gt; CalibrationConfig
 prepare_trials() runs steps [0..earliest) once
-for iter in range(max_iter):
-    suggestion = optimizer.ask()
-    result = run_trial_light(trial_ctx, suggestion, ...)
-    optimizer.tell(result)
-    persist iteration to DuckDB
+n_done = 0
+while n_done &lt; max_iter and not optimizer.converged():
+    suggestions = optimizer.ask(n=batch_size)
+    results = [run_trial_light(trial_ctx, s, ...) for s in suggestions]
+    optimizer.tell(results)
+    persist each iteration to DuckDB
+    n_done += len(results)
 if save_runs != "none":
     promote selected trials to full simulations
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">earliest</span></code> is computed by
-<code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/internals/dependencies.py</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">earliest</span></code> is computed by <code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/internals/dependencies.py</span></code>
 from the dotted paths in <code class="docutils literal notranslate"><span class="pre">[calibration.parameters.*]</span></code>. Steps
-<code class="docutils literal notranslate"><span class="pre">[0..earliest)</span></code> are shared across every trial; steps
-<code class="docutils literal notranslate"><span class="pre">[earliest..8]</span></code> re-run lightweight per trial; steps
-<code class="docutils literal notranslate"><span class="pre">[9..11]</span></code> only run when <code class="docutils literal notranslate"><span class="pre">promote_trial</span></code> is invoked after the
-loop.</p>
+<code class="docutils literal notranslate"><span class="pre">[0..earliest)</span></code> are shared across every trial; steps <code class="docutils literal notranslate"><span class="pre">[earliest..8]</span></code>
+re-run lightweight per trial; steps <code class="docutils literal notranslate"><span class="pre">[9..11]</span></code> only run when
+<code class="docutils literal notranslate"><span class="pre">promote_trial</span></code> is invoked after the loop.</p>
 </section>
 <section id="storage-rule">
 <h2>Storage rule<a class="headerlink" href="#storage-rule" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>RAM only inside the loop (aligned simulated vector + scalar
-metrics).</p></li>
-<li><p>DuckDB rows for the trace
-(<code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code> stays NULL by default).</p></li>
-<li><p>Zarr / Parquet only for promoted trials (<code class="docutils literal notranslate"><span class="pre">save_runs</span> <span class="pre">=</span> <span class="pre">&quot;best_n&quot;</span></code>
-or <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>), each linked by <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> before it replays.</p></li>
+<li><p>RAM only inside the loop (aligned simulated vector + scalar metrics).</p></li>
+<li><p>DuckDB rows for the trace (<code class="docutils literal notranslate"><span class="pre">calibration_iterations.sim_id</span></code> stays NULL
+by default).</p></li>
+<li><p>Zarr / Parquet only for promoted trials (<code class="docutils literal notranslate"><span class="pre">save_runs</span> <span class="pre">=</span> <span class="pre">&quot;best_n&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>), each linked by <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> before it replays.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">ParamsHashCache</span></code> (SHA-256 of canonical parameter JSON)
-deduplicates trials across sessions when <code class="docutils literal notranslate"><span class="pre">use_cache</span> <span class="pre">=</span> <span class="pre">true</span></code>
-(default).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ParamsHashCache</span></code> (SHA-256 of canonical parameter JSON,
+<code class="docutils literal notranslate"><span class="pre">optim/cache.py</span></code>) deduplicates trials across sessions when
+<code class="docutils literal notranslate"><span class="pre">use_cache</span> <span class="pre">=</span> <span class="pre">true</span></code> (default).</p>
 </section>
 <section id="key-public-symbols">
 <h2>Key public symbols<a class="headerlink" href="#key-public-symbols" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.runners.cli_runner.run_calibration_cli</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.runners.programmatic_runner.run_calibration_programmatic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.runners.staged_runner</span></code> – the phased runner.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.engine.CalibrationEngine</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.adapters.{Grid,</span> <span class="pre">RandomSearch,</span>
-<span class="pre">ScipyNelderMead,</span> <span class="pre">ScipyDE,</span> <span class="pre">OptunaAdapter,</span> <span class="pre">CmaEsAdapter,</span>
-<span class="pre">GpMappingAdapter,</span> <span class="pre">DaMhGpAdapter}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.optimizer.{available_optimizers,</span>
+<span class="pre">build_optimizer,</span> <span class="pre">register_optimizer}</span></code> – the search-method registry; see
+the README for the adapters it discovers under <code class="docutils literal notranslate"><span class="pre">optim/adapters/</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.metrics.build_metric_extractor</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.objective.Objective</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.objective.{Objective,</span>
+<span class="pre">build_objective_from_config}</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.diagnostics.{convergence_rate,</span>
 <span class="pre">parameter_correlation}</span></code></p></li>
 </ul>
@@ -820,11 +792,12 @@ deduplicates trials across sessions when <code class="docutils literal notransla
 <section id="recommended-reading-path">
 <h2>Recommended reading path<a class="headerlink" href="#recommended-reading-path" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/README.md</span></code> for the package map.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/__init__.py</span></code> for the public surface.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/cli_runner.py</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/engine.py</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/trial.py</span></code></p></li>
-<li><p>one adapter (<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/adapters/optuna_adapter.py</span></code>
+<li><p>one adapter (<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/adapters/optuna_adapter.py</span></code>
 is the most generic).</p></li>
 <li><p>one case (<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/cases/recession_brutsaert.py</span></code>).</p></li>
 </ol>
@@ -833,20 +806,19 @@ is the most generic).</p></li>
 <h2>Layer-matrix neighbours<a class="headerlink" href="#layer-matrix-neighbours" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Allowed targets: <code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, <code class="docutils literal notranslate"><span class="pre">physics</span></code>, <code class="docutils literal notranslate"><span class="pre">data</span></code>,
-<code class="docutils literal notranslate"><span class="pre">spatial</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>,
-<code class="docutils literal notranslate"><span class="pre">results</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">spatial</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">results</span></code>.</p></li>
 <li><p>Allowed sources: <code class="docutils literal notranslate"><span class="pre">config</span></code>, <code class="docutils literal notranslate"><span class="pre">workflow</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code> and <code class="docutils literal notranslate"><span class="pre">cli</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../calibration/calibration-architecture.html"><span class="doc">Calibration Architecture</span></a> –
-package map plus every UML view.</p></li>
-<li><p><a class="reference internal" href="../calibration/calibration-guide.html"><span class="doc">Calibration Guide</span></a> – full
-operational reference.</p></li>
-<li><p><a class="reference internal" href="../how-to/add-a-calibration-method.html"><span class="doc">Add a Calibration Method</span></a> –
-step-by-step recipe.</p></li>
+<li><p><a class="reference internal" href="../calibration/calibration-architecture.html"><span class="doc">Calibration Architecture</span></a> – package map
+plus every UML view.</p></li>
+<li><p><a class="reference internal" href="../calibration/calibration-guide.html"><span class="doc">Calibration Guide</span></a> – full operational
+reference.</p></li>
+<li><p><a class="reference internal" href="../how-to/add-a-calibration-method.html"><span class="doc">Add a Calibration Method</span></a> – step-by-step
+recipe.</p></li>
 <li><p><a class="reference internal" href="../../user_guide/workflows/calibration.html"><span class="doc">Calibration Workflow</span></a> – user-facing hub.</p></li>
 </ul>
 </section>
@@ -899,7 +871,6 @@ step-by-step recipe.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sub-modules">Sub-modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ask-tell-flow">Ask / tell flow</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#storage-rule">Storage rule</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-public-symbols">Key public symbols</a></li>

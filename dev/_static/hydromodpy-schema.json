@@ -918,12 +918,42 @@
         },
         "diagonal_neighbors": {
           "default": false,
-          "description": "Route this cell's discharge, and the area it drains, over shared nodes rather than shared edges, which recovers a talweg that runs diagonally across a square grid. Only reaches 'variable' = 'discharge'; a head read at this cell ignores it. The same knob as the network output's own 'diagonal_neighbors', declared here too because a cell output belongs to no network block.",
+          "description": "Route this cell's discharge, and the area it drains, over shared nodes rather than shared edges, which recovers a talweg that runs diagonally across a square grid. Only reaches 'variable' = 'discharge'; a head read at this cell ignores it. The same routing choice as the network output's 'diagonal_neighbors', declared here because a cell output belongs to no network block, with its own default: false (shared edges) here, true (D8) on the network output.",
           "examples": [
             false
           ],
           "title": "Diagonal Neighbors",
           "type": "boolean",
+          "x-hmp-profile": "user"
+        },
+        "snap_radius": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "properties": {
+                "magnitude": {
+                  "title": "Magnitude",
+                  "type": "string"
+                },
+                "units": {
+                  "title": "Units",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "magnitude"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Opt-in. Move this gauge onto the cell that drains the most within this radius, before it is scored. Accepts a bare number (metres) or a pint string like '150 m'; it is a maximum displacement, measured from the gauge cell centre to the cell centres. The drained area is the one the solver routes on the mesh, with this output's 'diagonal_neighbors'. Only for 'variable' = 'discharge'. Off by default: a gauge otherwise stays in the cell it resolves to, which may drain a small share of the catchment, and the run logs that share.",
+          "title": "Snap Radius",
           "x-hmp-profile": "user"
         }
       },
@@ -1053,7 +1083,7 @@
     },
     "CalibOutputNetwork": {
       "additionalProperties": false,
-      "description": "The mapped stream network as a calibration target.\n\nThe model is compared to a hydrographic network rather than to a gauge:\nfor every cell where it releases water to the surface, the descent to the\nmapped network is measured, and reciprocally. The output produces the pair\n``(D_so, D_os)``; the metric on top of it is ``distance_gap``, their signed\ndifference in absolute value, whose zero is the balance between an excess\nof simulated stream and a missing one.\n\nThere is no ``observed_values`` here and there cannot be: the criterion\nbalances two simulated quantities against each other, so nothing in it is\nfitted to a record. The mapped network enters as a geometry, not as a\nseries, and exactly one of ``observed_network`` and\n``stream_geometry_path`` names where it comes from.",
+      "description": "The mapped stream network as a calibration target.\n\nThe criterion compares a simulated stream network to a mapped one. For\nevery cell of the simulated network the descent to the mapped network is\nmeasured, and reciprocally. The output produces the pair ``(D_so, D_os)``;\nthe metric on top of it is ``distance_gap``, their signed difference in\nabsolute value, whose zero is the balance between an excess of simulated\nstream and a missing one.\n\nIt can drive any parameter that moves where the water table meets the\nsurface. What it identifies depends on what moves: with the homogeneous\nconductivity alone, at fixed geometry and recharge, it identifies ``K/R``,\nthe ratio of Abherve et al. (2023), and not ``K`` itself.\n\nThere is no ``observed_values`` here and there cannot be: the criterion\nbalances two simulated quantities against each other, so nothing in it is\nfitted to a record. The mapped network enters as a geometry, not as a\nseries, and exactly one of ``observed_network`` and\n``stream_geometry_path`` names where it comes from.",
       "properties": {
         "variable": {
           "default": "release_flux",
@@ -1138,13 +1168,27 @@
           "x-hmp-profile": "user"
         },
         "diagonal_neighbors": {
-          "default": false,
-          "description": "Route over shared nodes rather than shared edges, which recovers the diagonal descents of a D8 grid. Only meaningful on a structured quad mesh. The default is the literal reading of the paper and it is not a second-decimal choice: on a synthetic valley whose talweg runs along the grid diagonal, the most accumulated cell collects 6.6 per cent of the domain over shared edges and 100 per cent over shared nodes, and the delineation that produced the catchment itself uses a D8 pointer. Set it to true wherever the talwegs are not axis-aligned, which on real topography is most of them.",
+          "default": true,
+          "description": "Descend over shared nodes, the eight D8 neighbours of a quad mesh. True is the paper: its distances are traced by WhiteboxTools on a D8 pointer, and the delineation that produced the catchment uses one too. False descends over shared edges only, four neighbours (D4), and departs from the paper. It is not a second-decimal choice: on a synthetic valley whose talweg runs along the grid diagonal, the most accumulated cell collects 100 per cent of the domain over shared nodes and 6.6 per cent over shared edges. On a mesh whose faces are not all quadrilaterals no cell has a diagonal and the descent walks shared edges either way; on a Voronoi mesh the two graphs are the same one.",
           "examples": [
-            false
+            true
           ],
           "title": "Diagonal Neighbors",
           "type": "boolean",
+          "x-hmp-profile": "user"
+        },
+        "observed_rasterization": {
+          "default": "crossing",
+          "description": "How the mapped network is drawn on the mesh cells. 'crossing' keeps the cell holding each point where a line crosses the segment joining two edge-sharing cell centres. On a structured grid it reproduces WhiteboxTools VectorLinesToRaster, the paper's tool, and draws the map one cell wide like the simulated network, so a model that matches the map scores J = 0. 'touch' keeps every cell the line touches, corners included, and replays a session made before 2026-09; it thickens every diagonal step of the map and departs from the paper.",
+          "enum": [
+            "crossing",
+            "touch"
+          ],
+          "examples": [
+            "crossing"
+          ],
+          "title": "Observed Rasterization",
+          "type": "string",
           "x-hmp-profile": "user"
         },
         "observed_position_accuracy": {
@@ -1190,7 +1234,7 @@
         },
         "on_roptim_violation": {
           "default": "warn",
-          "description": "What a violation of the validity bound does. Default warns and returns the value, because a calibration is asked for a number.",
+          "description": "What a violation of the validity bound does. The bound is read once, on the trial the search returns, as the paper reads it at the optimum; every trial still records 'roptim' and 'roptim_valid'. 'warn' logs it and returns the value, because a calibration is asked for a number. 'error' raises after the session is saved, so a staged calibration freezes nothing and runs no phase that depends on this one.",
           "enum": [
             "warn",
             "error"
@@ -1251,28 +1295,17 @@
           "x-hmp-profile": "expert"
         },
         "time": {
-          "anyOf": [
-            {
-              "enum": [
-                "all",
-                "last",
-                "first"
-              ],
-              "type": "string"
-            },
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          ],
           "default": "last",
-          "description": "Which timesteps the release flux is read at. Phase one runs a single steady period, so 'last' is the whole run.",
+          "description": "Which single state the release flux is read at: 'last' (default) or 'first'. Phase one runs a single steady period, so 'last' is the whole run. 'all' and a list of dates are refused: the network branch always keeps one state (the last one it is served), so either would silently score that state instead of the one named.",
+          "enum": [
+            "last",
+            "first"
+          ],
           "examples": [
             "last"
           ],
           "title": "Time",
+          "type": "string",
           "x-hmp-profile": "user"
         }
       },
@@ -1452,12 +1485,42 @@
         },
         "diagonal_neighbors": {
           "default": false,
-          "description": "Route this cell's discharge, and the area it drains, over shared nodes rather than shared edges, which recovers a talweg that runs diagonally across a square grid. Only reaches 'variable' = 'discharge'; a head or a lake state read at this point ignores it. The same knob as the network output's own 'diagonal_neighbors', declared here too because a point output belongs to no network block.",
+          "description": "Route this cell's discharge, and the area it drains, over shared nodes rather than shared edges, which recovers a talweg that runs diagonally across a square grid. Only reaches 'variable' = 'discharge'; a head or a lake state read at this point ignores it. The same routing choice as the network output's 'diagonal_neighbors', declared here because a point output belongs to no network block, with its own default: false (shared edges) here, true (D8) on the network output.",
           "examples": [
             false
           ],
           "title": "Diagonal Neighbors",
           "type": "boolean",
+          "x-hmp-profile": "user"
+        },
+        "snap_radius": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "properties": {
+                "magnitude": {
+                  "title": "Magnitude",
+                  "type": "string"
+                },
+                "units": {
+                  "title": "Units",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "magnitude"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Opt-in. Move this gauge onto the cell that drains the most within this radius, before it is scored. Accepts a bare number (metres) or a pint string like '150 m'; it is a maximum displacement, measured from the gauge coordinate to the cell centres. The drained area is the one the solver routes on the mesh, with this output's 'diagonal_neighbors'. Only for 'variable' = 'discharge'. With 'observes', a discharge station is then located by the coordinate of its record, which it otherwise is not, and snapped from there. Off by default: a gauge otherwise stays in the cell it resolves to, which may drain a small share of the catchment, and the run logs that share.",
+          "title": "Snap Radius",
           "x-hmp-profile": "user"
         }
       },
@@ -1582,7 +1645,7 @@
     },
     "CalibPhaseDecl": {
       "additionalProperties": false,
-      "description": "One stage of a calibration that runs in several.\n\nA phase selects, by name, from the parameters, outputs and objective blocks\nthe calibration already declares: nothing is redeclared, so the two stages\nof a method cannot drift apart in a single file. What a phase carries of\nits own is its search: a method, a budget, and which parameters it is\nallowed to move.\n\n``freeze_on_success`` means the parameters this phase calibrated are held\nfixed for the phases that depend on it. It reads \"freeze if the phase\nconverged\", never \"freeze if the result is good\": a validity indicator\nqualifies a result, and a phase that returns a coarse agreement still\nreturns a number. The state of that indicator travels to the dependent\nphase and into the report, so a value calibrated on top of a doubtful one\ncarries the mention all the way out.",
+      "description": "One stage of a calibration that runs in several.\n\nA phase selects, by name, from the parameters, outputs and objective blocks\nthe calibration already declares: nothing is redeclared, so the two stages\nof a method cannot drift apart in a single file. What a phase carries of\nits own is its search: a method, a budget, and which parameters it is\nallowed to move.\n\n``freeze_on_success`` means this phase passes the values it found to the\nphases after it. A later phase holds them fixed, unless it lists the\nparameter: it then moves it again, starting from the passed value when its\nmethod accepts a start point. It reads \"pass on if the phase converged\",\nnever \"pass on if the result is good\": a validity indicator qualifies a\nresult, and a phase that returns a coarse agreement still returns a number.\nThe state of that indicator travels to the later phases and into the\nreport, so a value calibrated on top of a doubtful one carries the mention\nall the way out.",
       "properties": {
         "name": {
           "description": "Phase identifier, unique in the calibration and used in the session directory and in the report.",
@@ -1604,24 +1667,37 @@
           "x-hmp-profile": "user"
         },
         "method": {
-          "default": "grid",
-          "description": "Optimization method for this phase only. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.",
-          "examples": [
-            "grid"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "default": null,
+          "description": "Optimization method for this phase only. Unset, it follows from what the phase scores: 'bisection' when the phase moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. hmp calibrate --list-phases prints the method and why. Write it to depart from that choice, and whenever optimizer_kwargs are given. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.",
           "title": "Method",
-          "type": "string",
           "x-hmp-profile": "user"
         },
         "max_iter": {
-          "default": 100,
-          "description": "Maximum number of evaluations for this phase.",
-          "examples": [
-            100
+          "anyOf": [
+            {
+              "description": "Positive integer.",
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "const": "auto",
+              "type": "string"
+            }
           ],
-          "minimum": 1,
+          "default": "auto",
+          "description": "Maximum number of evaluations for this phase. 'auto' lets an engine that counts its evaluations size it: the bisection budgets its worst case, and refuses before the first solve a number below its nominal count (see [calibration].max_iter). Any other engine gets 100 from 'auto', and no extension when it spends them before its stopping rule.",
+          "examples": [
+            "auto"
+          ],
           "title": "Max Iter",
-          "type": "integer",
           "x-hmp-profile": "user"
         },
         "tolerance": {
@@ -1682,12 +1758,24 @@
           "x-hmp-profile": "user"
         },
         "objective_blocks": {
-          "description": "Names of the objective blocks this phase evaluates. Empty means every declared block.",
-          "items": {
-            "type": "string"
-          },
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "additionalProperties": {
+                "description": "Positive floating-point value.",
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              "type": "object"
+            }
+          ],
+          "description": "Objective blocks this phase evaluates. Empty means every declared block. A list names them and keeps their declared weight. A table gives each named block the phase's own share instead, {block = share}, normalised to sum to one like a block's weight already is; every key must be a declared block, and every share must be positive.",
           "title": "Objective Blocks",
-          "type": "array",
           "x-hmp-profile": "user"
         },
         "variable": {
@@ -1746,14 +1834,53 @@
         },
         "optimizer_kwargs": {
           "additionalProperties": true,
-          "description": "Extra keyword arguments forwarded to this phase's optimizer.",
+          "description": "Extra keyword arguments forwarded to this phase's optimizer. They belong to one engine, so a phase that gives them names its method.",
           "title": "Optimizer Kwargs",
           "type": "object",
           "x-hmp-profile": "dev"
         },
+        "regime": {
+          "anyOf": [
+            {
+              "enum": [
+                "steady",
+                "transient"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Flow regime this phase runs, a property of the model and not of the search. 'steady' is one period over steady_window, by default the extent of [simulation.time]. 'transient' is the project's own time grid. Unset, the phase runs the model as the project and its overrides declare it.",
+          "title": "Regime",
+          "value_docs": {
+            "steady": "One period over steady_window, so the recharge over it averages to its mean. A steady solve carries no storage.",
+            "transient": "The project's time grid, with only the regime restated."
+          },
+          "x-hmp-profile": "user"
+        },
+        "steady_window": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dates the steady period spans, as {start, end}, when regime = 'steady'. Unset takes the whole [simulation.time] window.",
+          "title": "Steady Window",
+          "x-hmp-profile": "user"
+        },
         "overrides": {
           "additionalProperties": true,
-          "description": "Configuration values this phase runs with, as dotted paths into the project configuration. The two stages of a stream-network calibration are one steady and one transient, which is a property of the model and not of the search, so a phase has to be able to say it.",
+          "description": "Configuration values this phase runs with, as dotted paths into the project configuration. A phase that gives regime may not write here a path regime writes: that would say the same thing twice.",
           "title": "Overrides",
           "type": "object",
           "x-hmp-profile": "user"
@@ -1781,18 +1908,31 @@
             }
           ],
           "default": null,
-          "description": "Name of the phase that must run first. Its frozen parameters enter this one as fixed values.",
+          "description": "Name of the phase that must run first. The values it passes on enter this one fixed, except those this phase lists and moves again.",
           "title": "Depends On",
           "x-hmp-profile": "user"
         },
         "freeze_on_success": {
           "default": true,
-          "description": "Hold the parameters this phase calibrated fixed for the phases that depend on it. Success means the phase converged, not that its validity indicator is good.",
+          "description": "Pass the values this phase found to the phases after it. A later phase holds them fixed, unless it lists the parameter: it then moves it again, starting from the passed value when its method accepts a start point. When two phases pass on the same parameter, the later one wins. Success means the phase converged, not that its validity indicator is good.",
           "examples": [
             true
           ],
           "title": "Freeze On Success",
           "type": "boolean",
+          "x-hmp-profile": "user"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CalibPhaseUncertaintyDecl"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How wide this phase says its answer is, with the keys of [calibration.uncertainty]. A key written here wins for this phase; a key left out takes the section's value, then the default that follows what the phase scores: one mesh cell for a phase scored only by network distances, five per cent of the best cost otherwise. hmp calibrate --list-phases prints the width each phase reads and where it comes from.",
           "x-hmp-profile": "user"
         }
       },
@@ -1801,6 +1941,98 @@
         "parameters"
       ],
       "title": "CalibPhaseDecl",
+      "type": "object"
+    },
+    "CalibPhaseUncertaintyDecl": {
+      "additionalProperties": false,
+      "description": "How wide one phase says its answer is, key by key over ``[calibration.uncertainty]``.\n\nEvery key is optional and has the meaning it has in the section. A key\nwritten here wins for this phase. A key left out takes the section's value,\nthen the default that follows what the phase scores. ``restarts`` and\n``perturbation`` belong to a method: a phase that names another method than\nthe section does not inherit them.",
+      "properties": {
+        "method": {
+          "anyOf": [
+            {
+              "enum": [
+                "cost_profile",
+                "multistart",
+                "linearized"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How this phase's interval is obtained: 'cost_profile', 'multistart' or 'linearized', read as in [calibration.uncertainty] method.",
+          "title": "Method",
+          "x-hmp-profile": "user"
+        },
+        "restarts": {
+          "anyOf": [
+            {
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How many times method='multistart' repeats this phase's search.",
+          "title": "Restarts",
+          "x-hmp-profile": "user"
+        },
+        "perturbation": {
+          "anyOf": [
+            {
+              "description": "Positive floating-point value.",
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Relative step of method='linearized' for this phase, as a fraction of each calibrated value.",
+          "title": "Perturbation",
+          "x-hmp-profile": "user"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "description": "Positive floating-point value.",
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Width of this phase's interval: a fraction of the best cost when mode='relative', a number in the unit of the cost (metres for a network distance) when mode='absolute'. Unset here and in [calibration.uncertainty], one mesh cell for a phase scored only by network distances, five per cent of the best cost otherwise.",
+          "title": "Tolerance",
+          "x-hmp-profile": "user"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "relative",
+                "absolute"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How this phase's tolerance is read. Unset here and in [calibration.uncertainty], 'absolute' for a phase scored only by network distances, 'relative' otherwise.",
+          "title": "Mode",
+          "x-hmp-profile": "user"
+        }
+      },
+      "title": "CalibPhaseUncertaintyDecl",
       "type": "object"
     },
     "CalibScoringWindow": {
@@ -1890,28 +2122,37 @@
           "x-hmp-profile": "user"
         },
         "tolerance": {
-          "default": 0.05,
-          "description": "Width of the interval. A fraction of the best cost when mode='relative' (0.05 = five per cent), and a number in the unit of the cost when mode='absolute'.",
-          "examples": [
-            0.05
+          "anyOf": [
+            {
+              "description": "Positive floating-point value.",
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
           ],
-          "exclusiveMinimum": 0.0,
+          "default": null,
+          "description": "Width of the interval. A fraction of the best cost when mode='relative' (0.05 = five per cent), and a number in the unit of the cost when mode='absolute'. Unset, it follows what the search scores: one mesh cell, in metres, for a search scored only by network distances (distance_gap, distance_mean), because a stream cannot move by less than a cell; 0.05 otherwise, five per cent of the best cost. The cell is the median distance between the centres of neighbouring cells, measured by the network criterion on the mesh it scores. A phase may write its own, which wins.",
           "title": "Tolerance",
-          "type": "number",
           "x-hmp-profile": "user"
         },
         "mode": {
-          "default": "relative",
-          "description": "How 'tolerance' is read. 'relative' is a fraction of the best cost and is the usual choice for an efficiency score. A criterion solved at zero, such as the stream-network gap, has no fraction of itself to take: state the width in the unit of the cost with 'absolute', for example 25 metres.",
-          "enum": [
-            "relative",
-            "absolute"
+          "anyOf": [
+            {
+              "enum": [
+                "relative",
+                "absolute"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ],
-          "examples": [
-            "relative"
-          ],
+          "default": null,
+          "description": "How 'tolerance' is read. 'relative' is a fraction of the best cost and is the usual choice for an efficiency score. A criterion solved at zero, such as the stream-network gap, has no fraction of itself to take: state the width in the unit of the cost with 'absolute', for example 25 metres. Unset, 'absolute' for a search scored only by network distances and 'relative' otherwise. hmp calibrate --check refuses 'relative' on a search scored only by network distances.",
           "title": "Mode",
-          "type": "string",
           "x-hmp-profile": "user"
         }
       },
@@ -1936,13 +2177,17 @@
           "x-hmp-profile": "user"
         },
         "method": {
-          "default": "grid",
-          "description": "Optimization method. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.",
-          "examples": [
-            "grid"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "default": null,
+          "description": "Optimization method. Unset, it follows from what the calibration scores: 'bisection' when it moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise. Write it to depart from that choice, and whenever optimizer_kwargs are given. A phase of [[calibration.phases]] names its own. Built-ins: 'grid' (regular sweep, sized by optimizer_kwargs.points_per_dim), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'. An unknown name is refused when the optimizer is built, with the list installed here.Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.",
           "title": "Method",
-          "type": "string",
           "x-hmp-profile": "user"
         },
         "evaluator": {
@@ -1974,14 +2219,23 @@
           "x-hmp-profile": "user"
         },
         "max_iter": {
-          "default": 100,
-          "description": "Maximum number of calibration iterations.",
-          "examples": [
-            100
+          "anyOf": [
+            {
+              "description": "Positive integer.",
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "const": "auto",
+              "type": "string"
+            }
           ],
-          "minimum": 1,
+          "default": "auto",
+          "description": "Maximum number of evaluations of the search. 'auto' lets an engine that counts its evaluations before the first solve size its own budget. Only the bisection does: with d the declared interval in decades, t = log10(1 + rel_tol), S the sweep points (2 when sweep_points is 0), s = d / (S - 1) and E = bracket_expand, a root inside the bounds costs S + ceil(log2(s / t)) and one found after e expansions S + 2e + ceil(log2(1 / t)); 'auto' budgets the largest, 23 on [1e-7, 1e-3] m/s with seven points and one per cent (15 inside the bounds). A number below the nominal count is refused before the first solve, one below the worst case is announced, and a budget that still runs out gets exactly the halvings left, once. Any other engine gets 100 from 'auto' and no extension: a search that spends its budget before its own stopping rule is reported as not converged, and a re-run with a larger max_iter replays the trials already solved from the cache.",
+          "examples": [
+            "auto"
+          ],
           "title": "Max Iter",
-          "type": "integer",
           "x-hmp-profile": "user"
         },
         "tolerance": {
@@ -2196,7 +2450,7 @@
         },
         "optimizer_kwargs": {
           "additionalProperties": true,
-          "description": "Extra keyword arguments forwarded to the optimizer adapter.",
+          "description": "Extra keyword arguments forwarded to the optimizer adapter. They belong to one engine, so a calibration that gives them names its method.",
           "title": "Optimizer Kwargs",
           "type": "object",
           "x-hmp-profile": "dev"
@@ -2322,7 +2576,7 @@
         },
         "uncertainty": {
           "$ref": "#/$defs/CalibUncertaintyDecl",
-          "description": "How wide the search reports its own answer to be. The calibrated value is unaffected; this only decides the interval printed beside it.",
+          "description": "How wide the search reports its own answer to be. The calibrated value is unaffected; this only decides the interval printed beside it. It is the default of every phase, and a phase may write its own keys.",
           "x-hmp-profile": "user"
         },
         "persistence": {
@@ -3437,6 +3691,14 @@
           "x-hmp-profile": "user"
         },
         "thickness": {
+          "calibrable": {
+            "bounds": null,
+            "description": "Aquifer thickness below the topography, one value everywhere.",
+            "is_the_value_of_its_instance": false,
+            "prior": "log_uniform",
+            "transform": "log",
+            "units": "m"
+          },
           "default": 50.0,
           "description": "Constant aquifer thickness applied below topography (canonical metres). Accepts inline units, e.g. '0.2 km'.",
           "examples": [
@@ -3896,6 +4158,48 @@
       "title": "CustomLakeGeometrySource",
       "type": "object"
     },
+    "CustomSubstratumSource": {
+      "additionalProperties": false,
+      "description": "User-provided substratum raster (GeoTIFF/ASC).\n\nThe raster places the bottom of the aquifer. It is read only when\n``[domain.depth_model] kind`` is ``\"raster_substratum\"`` (its values are the\nelevation of the substratum) or ``\"raster_thickness\"`` (its values are the\naquifer thickness below the top). With any other kind it is loaded but unused.",
+      "properties": {
+        "source": {
+          "const": "custom",
+          "default": "custom",
+          "description": "Discriminator tag selecting the 'custom' substratum provider.",
+          "examples": [
+            "custom"
+          ],
+          "title": "Source",
+          "type": "string",
+          "x-hmp-profile": "user"
+        },
+        "path": {
+          "description": "Path to a custom substratum raster file (GeoTIFF, ASC).",
+          "examples": [
+            "data/input.csv"
+          ],
+          "format": "path",
+          "title": "Path",
+          "type": "string",
+          "x-hmp-profile": "user"
+        },
+        "default_crs": {
+          "default": "EPSG:2154",
+          "description": "Fallback CRS used only when the raster carries none of its own. Defaults to RGF93/Lambert-93 (EPSG:2154); set it to the site CRS for a non-French dataset.",
+          "examples": [
+            "EPSG:2154"
+          ],
+          "title": "Default Crs",
+          "type": "string",
+          "x-hmp-profile": "user"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "CustomSubstratumSource",
+      "type": "object"
+    },
     "DamCarveConfig": {
       "additionalProperties": false,
       "description": "Optional dam structure-carve of the MODEL-TOP DEM.\n\nA raw DEM samples the concrete dam crest as terrain, so the aquifer column\nunder the dam is lifted to the crest (~87 m on the Cheze 5 m DEM) and a\ncutoff-wall HFB band lands above the real seepage. This carves ONLY the dam\nfootprint of the model-top DEM down to the surrounding valley floor, so the\ncutoff wall can sit on the surveyed axis at the dam (not shifted downstream,\nand no need for a stream-burned DEM that would lower every channel). It is\nthe mirror of enforce_lakes: enforce_lakes carves the routing DEM, this\ncarves the top DEM, at the dam only.",
@@ -3960,7 +4264,7 @@
       "description": "Top-level ``[data]`` configuration for manager families.\n\nThe `types` list declares user-requested data families. The effective\nactive set can also include planner-inferred families deduced from other\nsections (domain, flow) depending on `inference_mode`.\n\nFor each active type, the matching nested section can be validated dynamically:\n- `geology` already uses its dedicated Pydantic model (`GeologyConfig`),\n- `oceanic` uses `OceanicConfig`,\n- the other data families are kept as validated mappings for now.\n\nUse this model for validation only. Runtime activation order is represented\nby ``DataLoadPlan`` and loaded by ``DataManagersRuntimeLoader``.",
       "properties": {
         "types": {
-          "description": "Ordered list of data-manager types explicitly requested in [data]. The launcher may append inferred types deduced from other sections (for example domain.zone_ids, flow.active_bc). Allowed values: 'dem', 'etp', 'geology', 'humidity', 'hydrography', 'hydrometry', 'intermittency', 'lake_abacus', 'lake_bathymetry', 'lake_geometry', 'lake_inflow', 'lake_levels', 'lake_outflow', 'lake_withdrawal', 'oceanic', 'piezometry', 'precipitation', 'radiation', 'recharge', 'runoff', 'soil_moisture', 'temperature', 'water_quality', 'wind'.",
+          "description": "Ordered list of data-manager types explicitly requested in [data]. The launcher may append inferred types deduced from other sections (for example domain.zone_ids, flow.active_bc). Allowed values: 'dem', 'etp', 'geology', 'humidity', 'hydrography', 'hydrometry', 'intermittency', 'lake_abacus', 'lake_bathymetry', 'lake_geometry', 'lake_inflow', 'lake_levels', 'lake_outflow', 'lake_withdrawal', 'oceanic', 'piezometry', 'precipitation', 'radiation', 'recharge', 'runoff', 'soil_moisture', 'substratum', 'temperature', 'water_quality', 'wind'.",
           "items": {
             "type": "string"
           },
@@ -4292,6 +4596,19 @@
           ],
           "default": null,
           "description": "Soil moisture configuration (soil moisture index).",
+          "x-hmp-profile": "user"
+        },
+        "substratum": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubstratumConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Substratum configuration (aquifer-bottom raster, elevation or thickness).",
           "x-hmp-profile": "user"
         }
       },
@@ -4794,7 +5111,7 @@
           "description": "Per-figure keyword overrides, keyed by figure name (e.g. ``{'piezometric_map': {'cmap': 'cividis', 'vmin': 0}}``).",
           "title": "Overrides",
           "type": "object",
-          "x-hmp-profile": "expert"
+          "x-hmp-profile": "user"
         }
       },
       "title": "DisplayConfig",
@@ -4853,11 +5170,13 @@
           "x-hmp-profile": "user"
         },
         "depth_model": {
-          "description": "Vertical domain model configuration. Use 'constant_thickness' or 'flat_substratum'.",
+          "description": "Vertical domain model configuration. Use 'constant_thickness', 'flat_substratum', or 'raster' with a [data.substratum] raster.",
           "discriminator": {
             "mapping": {
               "constant_thickness": "#/$defs/ConstantThicknessDepthModel",
-              "flat_substratum": "#/$defs/FlatSubstratumDepthModel"
+              "flat_substratum": "#/$defs/FlatSubstratumDepthModel",
+              "raster_substratum": "#/$defs/RasterSubstratumDepthModel",
+              "raster_thickness": "#/$defs/RasterThicknessDepthModel"
             },
             "propertyName": "kind"
           },
@@ -4867,6 +5186,12 @@
             },
             {
               "$ref": "#/$defs/FlatSubstratumDepthModel"
+            },
+            {
+              "$ref": "#/$defs/RasterSubstratumDepthModel"
+            },
+            {
+              "$ref": "#/$defs/RasterThicknessDepthModel"
             }
           ],
           "title": "Depth Model",
@@ -4948,7 +5273,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -5840,6 +6165,14 @@
           "x-hmp-profile": "user"
         },
         "substratum_elevation": {
+          "calibrable": {
+            "bounds": null,
+            "description": "Elevation of the flat substratum, one value everywhere.",
+            "is_the_value_of_its_instance": false,
+            "prior": "uniform",
+            "transform": "identity",
+            "units": "m"
+          },
           "default": 0.0,
           "description": "Flat substratum elevation applied over the full domain (canonical metres). Accepts inline units, e.g. '40 m'. This is an ABSOLUTE elevation, not a depth below topography: where the land surface drops under it, no aquifer is left. Use 'constant_thickness' to follow the relief instead.",
           "examples": [
@@ -10269,21 +10602,6 @@
           "type": "string",
           "x-hmp-profile": "user"
         },
-        "bottom_path": {
-          "anyOf": [
-            {
-              "format": "path",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Path to a raster representing the aquifer bottom elevation. Must share the same grid as the model domain.",
-          "title": "Bottom Path",
-          "x-hmp-profile": "user"
-        },
         "reg_fold": {
           "anyOf": [
             {
@@ -10619,7 +10937,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -10833,7 +11151,7 @@
           "title": "Source",
           "type": "string",
           "value_docs": {
-            "bdtopage": "Downloads the French BD Topage reference network from the Sandre WFS.",
+            "bdtopage": "Downloads every reach of the French BD Topage network from the Sandre WFS, each with its permanence, and writes the permanent network too.",
             "custom": "Loads a river network from a local vector or raster file you provide.",
             "euhydro": "Downloads the EEA EU-Hydro continental-scale river network.",
             "osm": "Downloads waterway geometries from OpenStreetMap."
@@ -10865,21 +11183,11 @@
           "type": "string",
           "x-hmp-profile": "user"
         },
-        "typename": {
-          "default": "sa:CoursEau_FXX_Topage2025",
-          "description": "WFS typename for BD Topage.",
-          "examples": [
-            "sa:CoursEau_FXX_Topage2025"
-          ],
-          "title": "Typename",
-          "type": "string",
-          "x-hmp-profile": "dev"
-        },
         "page_size": {
-          "default": 2000,
-          "description": "WFS pagination page size (BD Topage).",
+          "default": 50000,
+          "description": "WFS pagination page size (BD Topage), in features.",
           "examples": [
-            2000
+            50000
           ],
           "title": "Page Size",
           "type": "integer",
@@ -11089,7 +11397,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -11705,7 +12013,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -12155,7 +12463,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -12390,7 +12698,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -12625,7 +12933,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -12981,7 +13289,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -13400,14 +13708,23 @@
           "x-hmp-profile": "user"
         },
         "steady_max_iter": {
-          "default": 20,
-          "description": "Evaluation budget of stage one.",
-          "examples": [
-            20
+          "anyOf": [
+            {
+              "description": "Positive integer.",
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "const": "auto",
+              "type": "string"
+            }
           ],
-          "minimum": 1,
+          "default": "auto",
+          "description": "Evaluation budget of stage one. 'auto' lets an engine that counts its evaluations size it: the bisection budgets its worst case, S + 2E + ceil(log2(1 / t)) for a root found after its E bracket expansions, 23 on [1e-7, 1e-3] m/s with seven sweep points and one per cent; any other engine gets 100. A number below the bisection's nominal count, S + ceil(log2(s / t)) for a root inside the bounds (15 there), is refused before the first solve.",
+          "examples": [
+            "auto"
+          ],
           "title": "Steady Max Iter",
-          "type": "integer",
           "x-hmp-profile": "user"
         },
         "steady_tolerance": {
@@ -13472,7 +13789,7 @@
         },
         "transient_max_iter": {
           "default": 120,
-          "description": "Evaluation budget of stage two.",
+          "description": "Evaluation budget of stage two. The simplex cannot count what it needs, so it gets no extension: a stage two that spends this before its tolerance is reported as not converged, and a re-run with a larger budget replays the trials already solved from the cache.",
           "examples": [
             120
           ],
@@ -15935,7 +16252,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -16193,7 +16510,7 @@
               "type": "number"
             }
           ],
-          "description": "Buffer around the watershed polygon. Numeric values are interpreted as a percentage of sqrt(area [km^2]). String values are interpreted as explicit distances (for example '500 m', '2 km').",
+          "description": "Margin around the watershed polygon. A percentage ('10%') enlarges the catchment AREA by that share, the rule of Abherve et al. (2023): the distance is solved on the real polygon, then snapped to the DEM grid. A length ('500 m', '2 km') is an explicit distance. A bare number (10) keeps the legacy v1 rule, 10 per cent of sqrt(area in km2) km, about 50 per cent more area on a real catchment, and warns: it lets a sealed run replay its domain.",
           "title": "Buff Area",
           "x-hmp-profile": "user"
         }
@@ -16934,7 +17251,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -17264,7 +17581,7 @@
               "type": "number"
             }
           ],
-          "description": "Buffer around the watershed polygon. Numeric values are interpreted as a percentage of sqrt(area [km^2]). String values are interpreted as explicit distances (for example '500 m', '2 km').",
+          "description": "Margin around the watershed polygon. A percentage ('10%') enlarges the catchment AREA by that share, the rule of Abherve et al. (2023): the distance is solved on the real polygon, then snapped to the DEM grid. A length ('500 m', '2 km') is an explicit distance. A bare number (10) keeps the legacy v1 rule, 10 per cent of sqrt(area in km2) km, about 50 per cent more area on a real catchment, and warns: it lets a sealed run replay its domain.",
           "title": "Buff Area",
           "x-hmp-profile": "user"
         }
@@ -17348,7 +17665,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -17690,7 +18007,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -17880,6 +18197,97 @@
       "title": "RadiationSourceConfig",
       "type": "object"
     },
+    "RasterSubstratumDepthModel": {
+      "additionalProperties": false,
+      "description": "Vertical model reading the substratum elevation from a raster.\n\nThe raster twin of ``flat_substratum``: ``bottom = raster + offset``.",
+      "properties": {
+        "kind": {
+          "const": "raster_substratum",
+          "default": "raster_substratum",
+          "description": "Depth-model kind discriminator. Use 'raster_substratum' when the raster declared under [data.substratum] holds the elevation of the substratum (metres, same datum as the DEM).",
+          "examples": [
+            "raster_substratum"
+          ],
+          "title": "Kind",
+          "type": "string",
+          "x-hmp-profile": "user"
+        },
+        "offset": {
+          "default": 0.0,
+          "description": "Vertical shift added to the substratum everywhere (canonical metres). Positive raises it, so it thins the aquifer. One number to move the whole surface, for a sensitivity test for example. Accepts inline units, e.g. '-5 m'.",
+          "examples": [
+            0.0
+          ],
+          "title": "Offset",
+          "type": "number",
+          "x-hmp-profile": "user"
+        },
+        "min_thickness": {
+          "default": 1.0,
+          "description": "Smallest aquifer thickness kept under the top (canonical metres). Where the raster places the substratum higher than top - min_thickness, it is lowered to that level and a warning counts the cells.",
+          "examples": [
+            1.0
+          ],
+          "exclusiveMinimum": 0.0,
+          "title": "Min Thickness",
+          "type": "number",
+          "x-hmp-profile": "user"
+        }
+      },
+      "title": "RasterSubstratumDepthModel",
+      "type": "object"
+    },
+    "RasterThicknessDepthModel": {
+      "additionalProperties": false,
+      "description": "Vertical model reading the aquifer thickness from a raster.\n\nThe raster twin of ``constant_thickness``:\n``bottom = top - scale * raster + offset``.",
+      "properties": {
+        "kind": {
+          "const": "raster_thickness",
+          "default": "raster_thickness",
+          "description": "Depth-model kind discriminator. Use 'raster_thickness' when the raster declared under [data.substratum] holds the aquifer thickness below the top surface (metres).",
+          "examples": [
+            "raster_thickness"
+          ],
+          "title": "Kind",
+          "type": "string",
+          "x-hmp-profile": "user"
+        },
+        "offset": {
+          "default": 0.0,
+          "description": "Vertical shift added to the substratum everywhere (canonical metres). Positive raises it, so it thins the aquifer. One number to move the whole surface, for a sensitivity test for example. Accepts inline units, e.g. '-5 m'.",
+          "examples": [
+            0.0
+          ],
+          "title": "Offset",
+          "type": "number",
+          "x-hmp-profile": "user"
+        },
+        "min_thickness": {
+          "default": 1.0,
+          "description": "Smallest aquifer thickness kept under the top (canonical metres). Where the raster places the substratum higher than top - min_thickness, it is lowered to that level and a warning counts the cells.",
+          "examples": [
+            1.0
+          ],
+          "exclusiveMinimum": 0.0,
+          "title": "Min Thickness",
+          "type": "number",
+          "x-hmp-profile": "user"
+        },
+        "scale": {
+          "default": 1.0,
+          "description": "Factor applied to the thickness raster (dimensionless).",
+          "examples": [
+            1.0
+          ],
+          "exclusiveMinimum": 0.0,
+          "title": "Scale",
+          "type": "number",
+          "x-hmp-profile": "user"
+        }
+      },
+      "title": "RasterThicknessDepthModel",
+      "type": "object"
+    },
     "RechargeConfig": {
       "additionalProperties": false,
       "description": "Top-level recharge configuration.\n\nThe section groups recharge sources and an optional date window. Loaded\nrecharge is used by groundwater and coupled flow workflows as a time-series\nor gridded forcing.",
@@ -17952,7 +18360,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -19470,7 +19878,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -20244,7 +20652,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -21143,6 +21551,28 @@
       "title": "StreamEnforcementConfig",
       "type": "object"
     },
+    "SubstratumConfig": {
+      "additionalProperties": false,
+      "description": "Top-level substratum variable configuration.\n\nExample TOML::\n\n    [[data.substratum.sources]]\n    source = \"custom\"\n    path = \"data/substratum/substratum_custom_bottom.tif\"",
+      "properties": {
+        "sources": {
+          "description": "Exactly one substratum data source: one bottom surface per model.",
+          "items": {
+            "$ref": "#/$defs/CustomSubstratumSource"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array",
+          "x-hmp-profile": "user"
+        }
+      },
+      "required": [
+        "sources"
+      ],
+      "title": "SubstratumConfig",
+      "type": "object"
+    },
     "SyntheticGeographicConfig": {
       "additionalProperties": false,
       "description": "Top-level config for one synthetic geographic build.",
@@ -21354,7 +21784,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -22890,7 +23320,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },
@@ -23187,7 +23617,7 @@
             }
           ],
           "default": null,
-          "description": "Explicit station identifiers to load (custom source).",
+          "description": "Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.",
           "title": "Station Ids",
           "x-hmp-profile": "user"
         },

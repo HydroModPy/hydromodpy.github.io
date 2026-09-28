@@ -586,7 +586,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
@@ -595,16 +595,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.calibration.criteria.series</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HIGHER_IS_BETTER</span><span class="p">,</span>
     <span class="n">LOG_METRICS</span><span class="p">,</span>
-    <span class="n">clip_negatives_for_log_metric</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">kge</span><span class="p">,</span>
-    <span class="n">log_nse</span><span class="p">,</span>
-    <span class="n">mae</span><span class="p">,</span>
-    <span class="n">nse</span><span class="p">,</span>
-    <span class="n">nse_delta</span><span class="p">,</span>
-    <span class="n">nse_seasonal</span><span class="p">,</span>
-    <span class="n">rmse</span><span class="p">,</span>
+    <span class="n">METRICS</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -683,98 +674,6 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Builtin metrics and a lightweight ScalarObjective</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_kge_score</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Scalar KGE score; calibration needs a single number, not the decomposition."""</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">kge</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">obs</span><span class="p">)[</span><span class="s2">"kge"</span><span class="p">])</span>
-
-
-<span class="c1"># Window, in samples, over which the reservoir objective differences the level.</span>
-<span class="c1"># A day-to-day increment is wrecked by a two or three day phase shift even when the</span>
-<span class="c1"># filling and emptying are right; ten days keeps the flux signal while making such a</span>
-<span class="c1"># shift a perturbation rather than a sign flip.</span>
-<span class="n">RESERVOIR_INCREMENT_STEP</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
-
-
-<span class="c1"># KGE is NOT offered on increments, on purpose. Its beta term is a ratio of means,</span>
-<span class="c1"># and the mean of an increment series is (last - first) / n, i.e. near zero by</span>
-<span class="c1"># construction, so the score swings wildly for one and the same run depending only</span>
-<span class="c1"># on where the series is cut. NSE has no such term and stays stable, so the</span>
-<span class="c1"># increment side of the objective uses it.</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_reservoir_score</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Half seasonal efficiency on the level, half efficiency on its increments.</span>
-
-<span class="sd">    Built for an impounded level, where the two usual metrics mislead in opposite</span>
-<span class="sd">    ways. ``nse`` on the level compares the model to a flat mean, a benchmark a</span>
-<span class="sd">    strongly seasonal signal beats on its own, so a run can score comfortably and</span>
-<span class="sd">    still be worse than the seasonal cycle. And a level is an integral, so</span>
-<span class="sd">    compensating flux errors cancel in it: a low-water bias and a high-water bias of</span>
-<span class="sd">    opposite signs hide behind a mean bias near zero while the increments stay</span>
-<span class="sd">    uncorrelated.</span>
-
-<span class="sd">    Pairing the two closes both holes: the seasonal term keeps the absolute level</span>
-<span class="sd">    honest and demands more than climatology, the increment term makes the water</span>
-<span class="sd">    balance count. Equal weights, no tuning knob, so the score stays readable.</span>
-
-<span class="sd">    The increments are taken over ``RESERVOIR_INCREMENT_STEP`` samples rather than</span>
-<span class="sd">    one, so a timing error of a few days is not punished as though the model had</span>
-<span class="sd">    filled when it should have emptied.</span>
-<span class="sd">    """</span>
-    <span class="n">seasonal</span> <span class="o">=</span> <span class="n">nse_seasonal</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
-    <span class="n">increments</span> <span class="o">=</span> <span class="n">nse_delta</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">RESERVOIR_INCREMENT_STEP</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">seasonal</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">increments</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
-    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">seasonal</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">increments</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_distance_pair</span><span class="p">(</span><span class="n">simulated</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Read the ``(D_so, D_os)`` pair a network output produces."""</span>
-    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">simulated</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"a distance metric scores the pair (D_so, D_os) a network output "</span>
-            <span class="sa">f</span><span class="s2">"produces; got </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> value(s)."</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">distance_gap</span><span class="p">(</span><span class="n">simulated</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""``abs(D_so - D_os)``, Eq. 1: the cost the root search drives to zero.</span>
-
-<span class="sd">    It takes no observed vector, structurally: the criterion balances an excess</span>
-<span class="sd">    of simulated stream against a missing one, both simulated. That is why the</span>
-<span class="sd">    zero of this cost is an intersection and not a minimum of distance.</span>
-<span class="sd">    """</span>
-    <span class="n">d_so</span><span class="p">,</span> <span class="n">d_os</span> <span class="o">=</span> <span class="n">_distance_pair</span><span class="p">(</span><span class="n">simulated</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">d_so</span> <span class="o">-</span> <span class="n">d_os</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">distance_mean</span><span class="p">(</span><span class="n">simulated</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""``(D_so + D_os) / 2``, Eq. 2. A diagnostic, and a cost only outside.</span>
-
-<span class="sd">    It is legitimate as a cost in the outer loop that picks between structures</span>
-<span class="sd">    already balanced at ``J = 0``; using it inside, in place of Eq. 1, is a</span>
-<span class="sd">    different estimator, and nothing puts its interior minimum at the crossing.</span>
-<span class="sd">    """</span>
-    <span class="n">d_so</span><span class="p">,</span> <span class="n">d_os</span> <span class="o">=</span> <span class="n">_distance_pair</span><span class="p">(</span><span class="n">simulated</span><span class="p">)</span>
-    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">d_so</span> <span class="o">+</span> <span class="n">d_os</span><span class="p">)</span>
-
-
-<span class="n">METRICS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"nse"</span><span class="p">:</span> <span class="n">nse</span><span class="p">,</span>
-    <span class="s2">"rmse"</span><span class="p">:</span> <span class="n">rmse</span><span class="p">,</span>
-    <span class="s2">"mae"</span><span class="p">:</span> <span class="n">mae</span><span class="p">,</span>
-    <span class="s2">"kge"</span><span class="p">:</span> <span class="n">_kge_score</span><span class="p">,</span>
-    <span class="s2">"nse_delta"</span><span class="p">:</span> <span class="n">nse_delta</span><span class="p">,</span>
-    <span class="s2">"nse_seasonal"</span><span class="p">:</span> <span class="n">nse_seasonal</span><span class="p">,</span>
-    <span class="s2">"nse_log"</span><span class="p">:</span> <span class="n">log_nse</span><span class="p">,</span>
-    <span class="s2">"distance_gap"</span><span class="p">:</span> <span class="n">distance_gap</span><span class="p">,</span>
-    <span class="s2">"distance_mean"</span><span class="p">:</span> <span class="n">distance_mean</span><span class="p">,</span>
-    <span class="s2">"reservoir"</span><span class="p">:</span> <span class="n">_reservoir_score</span><span class="p">,</span>
-<span class="p">}</span>
 
 <span class="c1"># Output supports whose values carry no time axis. A ``network`` output produces the</span>
 <span class="c1"># pair (D_so, D_os), two distances in metres, so nothing in it can be read as "the</span>
@@ -998,6 +897,78 @@
                 <span class="n">merged_components</span><span class="p">[</span><span class="n">target_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ObjectiveValue</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">total</span><span class="p">),</span> <span class="n">components</span><span class="o">=</span><span class="n">merged_components</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">objective_block_shares</span><span class="p">(</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return each block's share of the cost one trial's components actually summed.</span>
+
+<span class="sd">    ``blocks`` lists ``(name, weight)`` as declared; the weights are normalised</span>
+<span class="sd">    the same way :class:`CompositeObjective` normalises them. The share of</span>
+<span class="sd">    block ``i`` is ``w_i * c_i / sum_j(w_j * c_j)``, where ``c_i`` is read from</span>
+<span class="sd">    ``components["&lt;name&gt;.total"]``: the per-block cost :class:`CompositeObjective`</span>
+<span class="sd">    itself weighted and summed, after the block's own transform and before its</span>
+<span class="sd">    weight. Reading it there rather than re-deriving a sign is why a signed</span>
+<span class="sd">    criterion such as ``distance_gap`` never turns the share negative: its</span>
+<span class="sd">    ``.total`` is already the absolute residual the criterion publishes as a</span>
+<span class="sd">    cost, not the raw signed value. A single declared block always takes the</span>
+<span class="sd">    whole cost, without needing a ``.total`` key at all (no composite wraps</span>
+<span class="sd">    it). Returns ``None`` when the share cannot be told apart: ``components``</span>
+<span class="sd">    is missing a block total, or the weighted costs sum to (numerically) zero.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span> <span class="mf">1.0</span><span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">weight</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">total_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">total_weight</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">raw</span> <span class="o">/</span> <span class="n">total_weight</span>
+    <span class="n">contributions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_weight</span><span class="p">),</span> <span class="n">norm_weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">normalized</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.total"</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">components</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">contributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">norm_weight</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">components</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">contributions</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">denominator</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">denominator</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0e-15</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">contribution</span> <span class="o">/</span> <span class="n">denominator</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_weight</span><span class="p">),</span> <span class="n">contribution</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">contributions</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_objective_block_shares</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">trial_components</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Average each block's share of the cost over several trials.</span>
+
+<span class="sd">    Skips a trial whose share :func:`objective_block_shares` cannot compute.</span>
+<span class="sd">    Returns ``None`` when ``blocks`` is empty or none of the trials could;</span>
+<span class="sd">    otherwise the averaged shares and the count of trials that entered the</span>
+<span class="sd">    average, so a caller can say how many trials the mean actually covers.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">sums</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_weight</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">}</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">trial_components</span><span class="p">:</span>
+        <span class="n">share</span> <span class="o">=</span> <span class="n">objective_block_shares</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">share</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sums</span><span class="p">:</span>
+            <span class="n">sums</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">share</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">total</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">total</span> <span class="ow">in</span> <span class="n">sums</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span> <span class="n">n</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">refuse_a_normalisation_that_means_nothing</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1293,15 +1264,11 @@
     <span class="s2">"CompositeObjective"</span><span class="p">,</span>
     <span class="s2">"ConfigBlockObjective"</span><span class="p">,</span>
     <span class="s2">"build_objective_from_config"</span><span class="p">,</span>
-    <span class="s2">"METRICS"</span><span class="p">,</span>
-    <span class="s2">"HIGHER_IS_BETTER"</span><span class="p">,</span>
-    <span class="s2">"LOG_METRICS"</span><span class="p">,</span>
     <span class="s2">"TIMELESS_SUPPORTS"</span><span class="p">,</span>
-    <span class="s2">"distance_gap"</span><span class="p">,</span>
-    <span class="s2">"distance_mean"</span><span class="p">,</span>
-    <span class="s2">"clip_negatives_for_log_metric"</span><span class="p">,</span>
     <span class="s2">"refuse_a_normalisation_that_means_nothing"</span><span class="p">,</span>
     <span class="s2">"evaluate_objective"</span><span class="p">,</span>
+    <span class="s2">"objective_block_shares"</span><span class="p">,</span>
+    <span class="s2">"mean_objective_block_shares"</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 

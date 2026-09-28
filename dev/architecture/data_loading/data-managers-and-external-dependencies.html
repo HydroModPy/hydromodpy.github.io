@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Scope: The data-manager root layer is HydroModPy’s orchestration boundary for data loading. It answers three questions before solver work begins: which data families are active for this run,, which..." />
 
-    <meta property="article:modified_time" content="2026-09-18T04:49:13+02:00" />
+    <meta property="article:modified_time" content="2026-09-25T01:14:05+02:00" />
     <title>Data Managers And External Dependencies &#8212; HydroModPy 2.0.0a1 documentation</title>
   
   
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 18, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 25, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -742,15 +742,15 @@ logic.</p>
 <section id="code-map">
 <h2>Code map<a class="headerlink" href="#code-map" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/config_schema.py</span></code>:
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/config_schema.py</span></code>:
 typed validation of <code class="docutils literal notranslate"><span class="pre">[data]</span></code> sections.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/planner.py</span></code> and <code class="docutils literal notranslate"><span class="pre">managers/plan.py</span></code>:
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/planner.py</span></code> and <code class="docutils literal notranslate"><span class="pre">loading/plan.py</span></code>:
 activation inference and immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code> creation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code>:
 runtime dispatch from activated data types to concrete managers.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/container.py</span></code>:
-lightweight loaded-data container consumed by the project facade and
-the structure binders.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/state/data.py</span></code>:
+<code class="docutils literal notranslate"><span class="pre">LoadedDataContext</span></code>, one field per variable, which the loader fills and
+the project facade and the structure binders read.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/*</span></code>:
 provider-specific packages that own typed config, manager logic, and IO.</p></li>
 </ul>
@@ -759,8 +759,8 @@ provider-specific packages that own typed config, manager logic, and IO.</p></li
 <h2>Recommended reading path<a class="headerlink" href="#recommended-reading-path" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/README.md</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/config_schema.py</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/planner.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/config_schema.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/planner.py</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code></p></li>
 <li><p>one family package under <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/</span></code></p></li>
 </ol>
@@ -770,13 +770,13 @@ provider-specific packages that own typed config, manager logic, and IO.</p></li
 <p>The <code class="docutils literal notranslate"><span class="pre">managers/</span></code> and <code class="docutils literal notranslate"><span class="pre">loading/</span></code> sub-packages under <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/</span></code>
 split responsibilities as follows:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">managers/config_schema.py</span></code> validates <code class="docutils literal notranslate"><span class="pre">[data]</span></code> and normalizes typed
+<li><p><code class="docutils literal notranslate"><span class="pre">loading/config_schema.py</span></code> validates <code class="docutils literal notranslate"><span class="pre">[data]</span></code> and normalizes typed
 sections,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">managers/planner.py</span></code> merges explicit types with inference rules,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">managers/plan.py</span></code> stores the immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">loading/loader.py</span></code> dispatches each activated type to its concrete manager,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">managers/container.py</span></code> exposes the lightweight runtime container consumed
-by orchestration layers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loading/planner.py</span></code> merges explicit types with inference rules,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loading/plan.py</span></code> stores the immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loading/loader.py</span></code> dispatches each activated type to its concrete manager
+and writes what it loaded into <code class="docutils literal notranslate"><span class="pre">LoadedDataContext</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/state/data.py</span></code>), which orchestration layers read.</p></li>
 </ul>
 <p>This means the project facade can stay focused on execution order
 while the data layer owns activation, validation, and loading
@@ -820,8 +820,8 @@ only decides activation and calls the right loader.</p>
 </section>
 <section id="provider-families">
 <h2>Provider Families<a class="headerlink" href="#provider-families" title="Link to this heading">#</a></h2>
-<p>The current provider inventory documented in <code class="docutils literal notranslate"><span class="pre">hydromodpy/data/structure.md</span></code>
-is summarized below.</p>
+<p>The current provider inventory, whose full table is in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/README.md</span></code>, is summarized below.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Provider or source family</p></th>
@@ -906,10 +906,10 @@ calls,</p></li>
 <h2>What To Read When Touching This Layer<a class="headerlink" href="#what-to-read-when-touching-this-layer" title="Link to this heading">#</a></h2>
 <p>Start with:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/README.md</span></code> for the root orchestration contract,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/managers/planner.py</span></code> for inference rules,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code> for the active dispatch surface,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/structure.md</span></code> for the broader provider and cache model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/README.md</span></code> for the map of the package: variables,
+subpackages, import rules and data flows,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/planner.py</span></code> for inference rules,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/loading/loader.py</span></code> for the active dispatch surface.</p></li>
 </ul>
 <p>Then inspect one typed family such as:</p>
 <ul class="simple">

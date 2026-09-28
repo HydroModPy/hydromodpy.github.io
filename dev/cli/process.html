@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Drive a capability as an external process. A capability is a function from a validated input document to a directory of sealed artefacts: it opens no workspace, no catalog and no database, and it r..." name="description"/>
-<meta content="2026-09-18T14:58:21+02:00" property="article:modified_time"/>
+<meta content="2026-09-25T11:25:21+02:00" property="article:modified_time"/>
 <title>hmp process — HydroModPy 2.0.0a1 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 18, 2026" name="docbuild:last-update"/>
+<meta content="Sep 25, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -393,18 +393,18 @@ state directory.</p>
 <p>Whether it reaches the network is declared, not assumed. Each description lists
 under <code class="docutils literal notranslate"><span class="pre">hmp:invocation.network</span></code> every host the capability contacts, and an empty
 list means it runs on a node with no route out at all – which is what
-<code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> and <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> declare. <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> declares the
-four providers it may reach, one per source it serves, because that is the set an
-orchestrator has to allow before it has read the request; which of them a given
-run reached is named host by host under <code class="docutils literal notranslate"><span class="pre">hosts</span></code> in <code class="docutils literal notranslate"><span class="pre">outputs/fetch.json</span></code>. A
-gate records every name the process resolves and every address it connects to and
-refuses one the declaration does not carry, so the list is checked rather than
-promised.</p>
+<code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> and <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> declare. <code class="docutils literal notranslate"><span class="pre">data-request</span></code> declares
+every provider a source it serves may reach, because that is the set an
+orchestrator has to allow before it has read the request; which sources a given
+run asked is listed file by file in <code class="docutils literal notranslate"><span class="pre">outputs/request.json</span></code>. A gate records
+every name the process resolves and every address it connects to and refuses one
+the declaration does not carry, so the list is checked rather than promised.</p>
 <p>It is not always free of the filesystem outside the job either. Each description
 lists under <code class="docutils literal notranslate"><span class="pre">hmp:invocation.writes_outside_jobdir</span></code> every location the
-capability needs writable. <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> and <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> name
+capability needs writable. <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> and <code class="docutils literal notranslate"><span class="pre">data-request</span></code> name
 <code class="docutils literal notranslate"><span class="pre">$TMPDIR</span></code>, where the first assembles one catchment per outlet and the second
-gives each fetch a scratch directory it owns; <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> names nothing,
+keeps the download cache of the managers, indexed in memory and removed with
+the job; <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> names nothing,
 because the job directory is the only thing it writes into. An empty list means
 exactly that, and a gate runs the capability under a controlled <code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code> and a
 controlled <code class="docutils literal notranslate"><span class="pre">HOME</span></code> to hold it to it.</p>
@@ -528,7 +528,11 @@ than stamped with one the caller asserted.</p>
 the raster the bottom was derived from, so a reader holding a DEM can prove
 it is that one, and the largest write of the job is not doubled to produce a
 copy of its own input. The two artefacts a chain feeds it are the corrected
-DEM and the catchment <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> seals:</p>
+DEM and the catchment <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> seals.</p>
+<p>A depth model of kind <code class="docutils literal notranslate"><span class="pre">raster_substratum</span></code> or <code class="docutils literal notranslate"><span class="pre">raster_thickness</span></code> also
+takes <code class="docutils literal notranslate"><span class="pre">substratum</span></code>, the raster the bottom is read from. It carries its own CRS, is reprojected onto the grid of
+the DEM, and must cover every active cell: the mask is the extent. Its digest
+is recorded like the DEM’s. Any other kind refuses a <code class="docutils literal notranslate"><span class="pre">substratum</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"process"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"domain-build"</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"1.0.0"</span><span class="p">},</span>
  <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">{</span>
    <span class="s2">"dem"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"href"</span><span class="p">:</span> <span class="s2">"/scratch/jobs/4711/outputs/dem_corrected.tif"</span><span class="p">},</span>
@@ -538,39 +542,41 @@ DEM and the catchment <code class="docutils literal notranslate"><span class="pr
 </pre></div>
 </div>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">data-fetch</span></code></dt><dd><p>Asks one declared data source for one variable over a bounding box, a
-vector mask or a list of station codes, and seals what came back.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">data-request</span></code></dt><dd><p>Loads <code class="docutils literal notranslate"><span class="pre">[data]</span></code> sections over a bounding box, a vector mask or a list of
+station codes, and seals one file per variable and source, cut to the
+extent and the period asked for. The sections are the models of the project
+TOML, so what a project asks for, a job asks for the same way; this is the
+document <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">get</span></code> reads, under <code class="docutils literal notranslate"><span class="pre">inputs</span></code>.</p>
 <p>The extent is an <strong>input</strong>, never an object the process went looking for:
-either <code class="docutils literal notranslate"><span class="pre">extent</span></code>, a bounding box that carries the CRS it is expressed in,
-or <code class="docutils literal notranslate"><span class="pre">mask</span></code>, a vector file whose bounds are the extent. The second is what
-chains the two capabilities – the GeoPackage <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> seals is
-a mask <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> reads – through a directory rather than through an
-object graph.</p>
-<p>A source is asked for through a tagged document: <code class="docutils literal notranslate"><span class="pre">source.id</span></code> selects it and
-the rest of the object configures it, so the description carries the exact
-shape each source accepts instead of an option bag validated by nothing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"process"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"data-fetch"</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"1.0.0"</span><span class="p">},</span>
+<code class="docutils literal notranslate"><span class="pre">extent.bbox</span></code> with <code class="docutils literal notranslate"><span class="pre">extent.crs</span></code>, <code class="docutils literal notranslate"><span class="pre">extent.mask</span></code>, a vector file whose
+shape bounds the request, or <code class="docutils literal notranslate"><span class="pre">extent.station_ids</span></code>. The mask is what chains
+the two capabilities – the GeoPackage <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code> seals is a mask
+<code class="docutils literal notranslate"><span class="pre">data-request</span></code> reads – through a directory rather than through an object
+graph:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"process"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"data-request"</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"1.0.0"</span><span class="p">},</span>
  <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">{</span>
-   <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"hubeau-piezometry"</span><span class="p">,</span> <span class="s2">"product"</span><span class="p">:</span> <span class="s2">"level"</span><span class="p">},</span>
-   <span class="s2">"mask"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"href"</span><span class="p">:</span> <span class="s2">"/scratch/jobs/4711/outputs/watershed.gpkg"</span><span class="p">},</span>
+   <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"piezometry"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"sources"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"hubeau"</span><span class="p">,</span> <span class="s2">"product"</span><span class="p">:</span> <span class="s2">"level"</span><span class="p">}]},</span>
+            <span class="s2">"dem"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"sources"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"ign_geoplateforme_dem"</span><span class="p">}]}},</span>
+   <span class="s2">"extent"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mask"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"href"</span><span class="p">:</span> <span class="s2">"/scratch/jobs/4711/outputs/watershed.gpkg"</span><span class="p">}},</span>
    <span class="s2">"period"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start"</span><span class="p">:</span> <span class="s2">"2020-01-01"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">:</span> <span class="s2">"2020-12-31"</span><span class="p">}}}</span>
 </pre></div>
 </div>
 <p>The mask is named in full, and it has to be: a <strong>relative</strong> input path is
 resolved against the job directory and refused if it walks out of it, which
 is what the directory of another job is. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">process</span> <span class="pre">chain</span></code> writes that
-path for the caller.</p>
-<p>Which artefact it writes depends on the source’s payload kind, and the run
-writes exactly one of them: <code class="docutils literal notranslate"><span class="pre">outputs/points.parquet</span></code>,
-<code class="docutils literal notranslate"><span class="pre">outputs/fields.nc</span></code>, <code class="docutils literal notranslate"><span class="pre">outputs/features.gpkg</span></code> or <code class="docutils literal notranslate"><span class="pre">outputs/raster.tif</span></code>.
-<code class="docutils literal notranslate"><span class="pre">outputs/fetch.json</span></code> is always there, and it names the one that was
-written, the hosts this run contacted, the extent that was <strong>really
-queried</strong> and the CRS it was really queried in – a WGS84 box asked for a
-DEM reaches the Geoplateforme in Lambert-93 metres, and nothing else on disk
-says so.</p>
+path for the caller. A <code class="docutils literal notranslate"><span class="pre">sha256</span></code> beside <code class="docutils literal notranslate"><span class="pre">href</span></code> pins its bytes.</p>
+<p>Each variable lands under <code class="docutils literal notranslate"><span class="pre">outputs/</span></code> as <code class="docutils literal notranslate"><span class="pre">&lt;variable&gt;_&lt;source&gt;</span></code> with the
+suffix of its kind: <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> for chronicles, <code class="docutils literal notranslate"><span class="pre">.nc</span></code> for grids,
+<code class="docutils literal notranslate"><span class="pre">.tif</span></code> for rasters, <code class="docutils literal notranslate"><span class="pre">.gpkg</span></code> for vectors. <code class="docutils literal notranslate"><span class="pre">outputs/request.json</span></code> is
+always there: it lists each file with its sha256, CRS, box, period and
+unit, and every variable that answered nothing.</p>
 <p>A provider that holds nothing inside the extent is an answer, not a failure:
-the run succeeds, <code class="docutils literal notranslate"><span class="pre">fetch.json</span></code> says <code class="docutils literal notranslate"><span class="pre">"empty":</span> <span class="pre">true</span></code>, and no data artefact
-is sealed.</p>
+the run succeeds, the report says <code class="docutils literal notranslate"><span class="pre">"empty":</span> <span class="pre">true</span></code> for that variable, and
+no data file is sealed for it. A variable that <strong>fails</strong> fails the job, with
+the typed exit code of its error, and nothing is sealed. A <code class="docutils literal notranslate"><span class="pre">custom</span></code>
+source is refused before anything is written: a job has no user files to
+read. Plugin sources are asked under <code class="docutils literal notranslate"><span class="pre">installed</span></code>, by name, with the
+options their constructor takes.</p>
 </dd>
 </dl>
 </section>
@@ -620,8 +626,8 @@ would break the seal that hashes it.</p>
 <section id="chaining-capabilities">
 <h2>Chaining capabilities<a class="headerlink" href="#chaining-capabilities" title="Link to this heading">#</a></h2>
 <p>Capabilities compose through the disk: the GeoPackage <code class="docutils literal notranslate"><span class="pre">terrain-delineate</span></code>
-seals is a mask <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> reads, and the corrected DEM it seals beside it is
-the top surface <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> places a bottom under. Asking for a variable
+seals is a mask <code class="docutils literal notranslate"><span class="pre">data-request</span></code> reads, and the corrected DEM it seals beside
+it is the top surface <code class="docutils literal notranslate"><span class="pre">domain-build</span></code> places a bottom under. Asking for a variable
 over a watershed, or for the geometry of an aquifer under one, is therefore two
 jobs, and <code class="docutils literal notranslate"><span class="pre">chain</span></code> is the verb that runs them as one command.</p>
 <p>The caller writes <strong>one</strong> document at the chain root:</p>
@@ -636,14 +642,16 @@ jobs, and <code class="docutils literal notranslate"><span class="pre">chain</sp
               <span class="s2">"outlets"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"site_id"</span><span class="p">:</span> <span class="s2">"valley"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">:</span> <span class="mf">300112.5</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">:</span> <span class="mf">6701262.5</span><span class="p">}],</span>
               <span class="s2">"crs_project"</span><span class="p">:</span> <span class="s2">"EPSG:2154"</span><span class="p">}},</span>
   <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"fetch"</span><span class="p">,</span>
-   <span class="s2">"process"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"data-fetch"</span><span class="p">},</span>
-   <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"hubeau-piezometry"</span><span class="p">,</span> <span class="s2">"product"</span><span class="p">:</span> <span class="s2">"level"</span><span class="p">},</span>
+   <span class="s2">"process"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="s2">"data-request"</span><span class="p">},</span>
+   <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"piezometry"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"sources"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"hubeau"</span><span class="p">,</span> <span class="s2">"product"</span><span class="p">:</span> <span class="s2">"level"</span><span class="p">}]}},</span>
               <span class="s2">"period"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start"</span><span class="p">:</span> <span class="s2">"2020-01-01"</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">:</span> <span class="s2">"2020-12-31"</span><span class="p">}},</span>
-   <span class="s2">"links"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"member"</span><span class="p">:</span> <span class="s2">"mask"</span><span class="p">,</span> <span class="s2">"step"</span><span class="p">:</span> <span class="s2">"delineate"</span><span class="p">,</span> <span class="s2">"output"</span><span class="p">:</span> <span class="s2">"watershed_vector"</span><span class="p">}]}</span>
+   <span class="s2">"links"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"member"</span><span class="p">:</span> <span class="s2">"extent.mask"</span><span class="p">,</span> <span class="s2">"step"</span><span class="p">:</span> <span class="s2">"delineate"</span><span class="p">,</span>
+              <span class="s2">"output"</span><span class="p">:</span> <span class="s2">"watershed_vector"</span><span class="p">}]}</span>
 <span class="p">]}</span>
 </pre></div>
 </div>
-<p>A <strong>link</strong> is the whole point: <code class="docutils literal notranslate"><span class="pre">member</span></code> is the input of this step to fill,
+<p>A <strong>link</strong> is the whole point: <code class="docutils literal notranslate"><span class="pre">member</span></code> is the input of this step to fill
+(a dotted path such as <code class="docutils literal notranslate"><span class="pre">extent.mask</span></code> names a member nested in another),
 <code class="docutils literal notranslate"><span class="pre">step</span></code> is an earlier step of the chain, and <code class="docutils literal notranslate"><span class="pre">output</span></code> is an artefact of that
 step <strong>as its capability declares it</strong> – <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">process</span> <span class="pre">describe</span></code> lists the
 names. The chain turns it into the absolute path that artefact takes, which is
@@ -670,10 +678,9 @@ to them. The exit code of the chain is the typed exit code of the step that
 stopped it. The status of a step is read off <strong>its exit code</strong> and never off
 the document it printed; a step whose document says otherwise has its
 disagreement published as a fault of that step.</p></li>
-<li><p><strong>a linked artefact that the run did not produce refuses its reader.</strong> Half
-the artefacts of this tree are optional – a <code class="docutils literal notranslate"><span class="pre">data-fetch</span></code> run writes one
-payload of four – so the chain checks the file is there before starting the
-step that reads it.</p></li>
+<li><p><strong>a linked artefact that the run did not produce refuses its reader.</strong> An
+artefact declared optional is one a run may not write, so the chain checks
+the file is there before starting the step that reads it.</p></li>
 <li><p><strong>idempotency composes.</strong> Running the same chain into the same root again
 re-submits each step with a byte-identical request, so each one is a reuse:
 nothing is re-run, and <code class="docutils literal notranslate"><span class="pre">chain-outcome.json</span></code> says <code class="docutils literal notranslate"><span class="pre">"reused":</span> <span class="pre">true</span></code> for
@@ -716,9 +723,10 @@ asserted by <code class="docutils literal notranslate"><span class="pre">tests/e
 <span class="go">   "inputs": {"dem": {"href": "/data/dem_valley.tif"},</span>
 <span class="go">              "outlets": [{"site_id": "valley", "x": 300112.5, "y": 6701262.5}],</span>
 <span class="go">              "crs_project": "EPSG:2154"}},</span>
-<span class="go">  {"id": "fetch", "process": {"id": "data-fetch"},</span>
-<span class="go">   "inputs": {"source": {"id": "ign-bdalti"}},</span>
-<span class="go">   "links": [{"member": "mask", "step": "delineate", "output": "watershed_vector"}]}]}</span>
+<span class="go">  {"id": "fetch", "process": {"id": "data-request"},</span>
+<span class="go">   "inputs": {"data": {"dem": {"sources": [{"source": "ign_geoplateforme_dem"}]}}},</span>
+<span class="go">   "links": [{"member": "extent.mask", "step": "delineate",</span>
+<span class="go">              "output": "watershed_vector"}]}]}</span>
 <span class="go">JSON</span>
 <span class="gp">$ </span>hmp<span class="w"> </span>process<span class="w"> </span>chain<span class="w"> </span>--root<span class="w"> </span>/scratch/chains/17<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>&gt;<span class="w"> </span>/scratch/chains/17.stdout.json<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>/scratch/chains/17.stderr.log

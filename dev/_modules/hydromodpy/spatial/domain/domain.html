@@ -594,12 +594,18 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigError</span><span class="p">,</span> <span class="n">DataContractViolation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.spatial.domain.depth_model_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ConstantThicknessDepthModel</span><span class="p">,</span>
     <span class="n">FlatSubstratumDepthModel</span><span class="p">,</span>
+    <span class="n">RasterDepthModel</span><span class="p">,</span>
+    <span class="n">RasterThicknessDepthModel</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.spatial.domain.domain_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DomainConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.spatial.surface</span><span class="w"> </span><span class="kn">import</span> <span class="n">Surface</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Domain">
@@ -628,10 +634,14 @@
         <span class="n">config</span><span class="p">:</span> <span class="n">DomainConfig</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">surface_topo</span><span class="p">:</span> <span class="n">Surface</span><span class="p">,</span>
+        <span class="n">substratum_source</span><span class="p">:</span> <span class="n">Surface</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">active_cells</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="p">:</span> <span class="n">Surface</span> <span class="o">=</span> <span class="n">surface_topo</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">substratum</span><span class="p">:</span> <span class="n">Surface</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_substratum_source</span> <span class="o">=</span> <span class="n">substratum_source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_cells</span> <span class="o">=</span> <span class="n">active_cells</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">support</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">georeferencing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">support</span><span class="o">.</span><span class="n">as_georeferencing_dict</span><span class="p">()</span>
@@ -663,19 +673,97 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build the lower domain surface from the configured depth model.</span>
 
-<span class="sd">        Two modes are currently supported:</span>
+<span class="sd">        Four modes are supported:</span>
 <span class="sd">        - `ConstantThicknessDepthModel`:</span>
 <span class="sd">          shift the topography downward by a constant offset,</span>
 <span class="sd">        - `FlatSubstratumDepthModel`:</span>
-<span class="sd">          create one flat surface at a constant elevation below the topography.</span>
+<span class="sd">          create one flat surface at a constant elevation below the topography,</span>
+<span class="sd">        - `RasterSubstratumDepthModel` and `RasterThicknessDepthModel`:</span>
+<span class="sd">          read the substratum elevation, or the aquifer thickness, from the</span>
+<span class="sd">          raster handed over as `substratum_source`.</span>
 <span class="sd">        """</span>
         <span class="n">depth_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">depth_model</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substratum_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth_model</span><span class="p">,</span> <span class="n">RasterDepthModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"A substratum raster was given, and depth_model kind "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">depth_model</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> does not read one."</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth_model</span><span class="p">,</span> <span class="n">ConstantThicknessDepthModel</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">substratum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">shifted_down_by</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">thickness</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth_model</span><span class="p">,</span> <span class="n">FlatSubstratumDepthModel</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">substratum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">flat_like</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">substratum_elevation</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth_model</span><span class="p">,</span> <span class="n">RasterDepthModel</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">substratum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substratum_from_raster</span><span class="p">(</span><span class="n">depth_model</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported depth_model payload: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">depth_model</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_substratum_from_raster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth_model</span><span class="p">:</span> <span class="n">RasterDepthModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Surface</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Place the substratum from a raster, on the grid of the top surface.</span>
+
+<span class="sd">        The raster must carry a value on every cell of the domain. Those cells</span>
+<span class="sd">        are the ones where the top carries data, which follows</span>
+<span class="sd">        ``geographic.domain_extent``, narrowed to ``active_cells`` when given.</span>
+<span class="sd">        A cell outside the domain keeps the nodata sentinel of the top.</span>
+<span class="sd">        """</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substratum_source</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"domain.depth_model kind </span><span class="si">{</span><span class="n">depth_model</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> reads the raster declared "</span>
+                <span class="s2">"under [data.substratum], and none was given to the domain."</span>
+            <span class="p">)</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">support</span>
+        <span class="k">if</span> <span class="n">support</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The top surface has no RasterSupport to place a raster substratum on."</span>
+            <span class="p">)</span>
+
+        <span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_topo</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
+        <span class="n">has_top</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">has_top</span> <span class="o">&amp;=</span> <span class="n">top</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="n">support</span><span class="o">.</span><span class="n">nodata</span><span class="p">)</span>
+        <span class="n">cells</span> <span class="o">=</span> <span class="n">has_top</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_cells</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">has_top</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_cells</span>
+        <span class="n">n_cells</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">cells</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n_cells</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The domain holds no cell with a top elevation."</span><span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">reprojected_onto</span><span class="p">(</span><span class="n">support</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"substratum"</span><span class="p">)</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
+        <span class="n">n_uncovered</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">cells</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">n_uncovered</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataContractViolation</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The substratum raster leaves </span><span class="si">{</span><span class="n">n_uncovered</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="n">n_cells</span><span class="si">}</span><span class="s2"> cells of the "</span>
+                <span class="s2">"domain without a value. It must cover the whole extent the domain is "</span>
+                <span class="s2">"built on: the catchment for geographic.domain_extent = 'watershed', the "</span>
+                <span class="s2">"buffered box for 'box'. Extend the raster, or choose a smaller extent."</span>
+            <span class="p">)</span>
+
+        <span class="n">offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth_model</span><span class="p">,</span> <span class="n">RasterThicknessDepthModel</span><span class="p">):</span>
+            <span class="n">bottom</span> <span class="o">=</span> <span class="n">top</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">*</span> <span class="n">values</span> <span class="o">+</span> <span class="n">offset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bottom</span> <span class="o">=</span> <span class="n">values</span> <span class="o">+</span> <span class="n">offset</span>
+        <span class="n">ceiling</span> <span class="o">=</span> <span class="n">top</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">min_thickness</span><span class="p">)</span>
+        <span class="n">capped</span> <span class="o">=</span> <span class="n">cells</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">bottom</span> <span class="o">&gt;</span> <span class="n">ceiling</span><span class="p">)</span>
+        <span class="n">n_capped</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">capped</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n_capped</span> <span class="o">==</span> <span class="n">n_cells</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The substratum raster sits within min_thickness of the top on every "</span>
+                <span class="s2">"cell of the domain; no aquifer would remain."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_capped</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"The substratum raster sits within min_thickness=</span><span class="si">%g</span><span class="s2"> m of the top on </span><span class="si">%d</span><span class="s2"> of "</span>
+                <span class="s2">"the </span><span class="si">%d</span><span class="s2"> cells of the domain, up to </span><span class="si">%.3g</span><span class="s2"> m above top - min_thickness; "</span>
+                <span class="s2">"those cells are lowered to top - min_thickness."</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">depth_model</span><span class="o">.</span><span class="n">min_thickness</span><span class="p">),</span>
+                <span class="n">n_capped</span><span class="p">,</span>
+                <span class="n">n_cells</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">ceiling</span><span class="p">)[</span><span class="n">capped</span><span class="p">])),</span>
+            <span class="p">)</span>
+
+        <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">bottom</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">bottom</span><span class="p">,</span> <span class="n">ceiling</span><span class="p">),</span> <span class="n">ceiling</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bottom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">has_top</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">support</span><span class="o">.</span><span class="n">nodata</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Surface</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"substratum"</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">bottom</span><span class="p">,</span> <span class="n">support</span><span class="o">=</span><span class="n">support</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">z_interfaces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>

@@ -598,6 +598,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.run_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkflowContext</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.facade</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.results.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span>
 
@@ -607,7 +608,7 @@
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_pin_parent_sim_id</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parent_sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_pin_parent_sim_id</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">WorkflowContext</span><span class="p">,</span> <span class="n">parent_sim_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Temporarily set ``ctx.parent_sim_id`` for the duration of the block.</span>
 
 <span class="sd">    Restores the previous value on exit, including when an exception</span>
@@ -967,7 +968,7 @@
         <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">workspace</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">head_only</span> <span class="k">else</span> <span class="n">workspace_path</span><span class="p">)</span>
         <span class="n">restore_frozen_root</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">frozen</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.data_freeze</span><span class="w"> </span><span class="kn">import</span> <span class="n">frozen_project_root</span><span class="p">,</span> <span class="n">set_frozen_mode</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.provenance.lockfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">frozen_project_root</span><span class="p">,</span> <span class="n">set_frozen_mode</span>
 
             <span class="n">restore_frozen_root</span> <span class="o">=</span> <span class="n">frozen_project_root</span><span class="p">()</span>
             <span class="n">set_frozen_mode</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">project_root</span><span class="o">=</span><span class="n">workspace_path</span><span class="p">)</span>
@@ -1001,7 +1002,7 @@
                 <span class="n">project_phases</span><span class="o">.</span><span class="n">open_catalog</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
             <span class="n">_rebind_run_history_catalog</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">frozen</span><span class="p">:</span>
-                <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.data_freeze</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_frozen_mode</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.provenance.lockfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_frozen_mode</span>
 
                 <span class="n">set_frozen_mode</span><span class="p">(</span>
                     <span class="n">restore_frozen_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
