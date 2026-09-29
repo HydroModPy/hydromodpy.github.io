@@ -625,6 +625,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigMissingError</span><span class="p">,</span> <span class="n">PipelineError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.core.state.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_scratch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.accessors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectDataAccessor</span><span class="p">,</span> <span class="n">ProjectRunsAccessor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectCatalog</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.project.runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectRunner</span><span class="p">,</span> <span class="n">_pin_parent_sim_id</span>
@@ -1055,17 +1056,19 @@
 <span class="sd">        hydromodpy.results.run.Run</span>
 <span class="sd">            Per-simulation result view returned by successful runs.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">resume</span><span class="o">=</span><span class="n">resume</span><span class="p">,</span>
-            <span class="n">from_step</span><span class="o">=</span><span class="n">from_step</span><span class="p">,</span>
-            <span class="n">until_step</span><span class="o">=</span><span class="n">until_step</span><span class="p">,</span>
-            <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
-            <span class="n">frozen</span><span class="o">=</span><span class="n">frozen</span><span class="p">,</span>
-            <span class="n">no_display</span><span class="o">=</span><span class="n">no_display</span><span class="p">,</span>
-            <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">simulation</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">"run"</span>
+        <span class="k">with</span> <span class="n">run_scratch</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">project_root</span><span class="p">),</span> <span class="n">label</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">resume</span><span class="o">=</span><span class="n">resume</span><span class="p">,</span>
+                <span class="n">from_step</span><span class="o">=</span><span class="n">from_step</span><span class="p">,</span>
+                <span class="n">until_step</span><span class="o">=</span><span class="n">until_step</span><span class="p">,</span>
+                <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+                <span class="n">frozen</span><span class="o">=</span><span class="n">frozen</span><span class="p">,</span>
+                <span class="n">no_display</span><span class="o">=</span><span class="n">no_display</span><span class="p">,</span>
+                <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Project.calibrate">
@@ -1210,7 +1213,7 @@
                     <span class="n">embedded</span><span class="p">,</span>
                     <span class="n">project</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
                     <span class="n">workspace</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"workspace"</span><span class="p">),</span>
-                    <span class="n">project_label</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_label"</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="s2">"calibration"</span><span class="p">)),</span>
+                    <span class="n">project_label</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_label"</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)),</span>
                     <span class="n">metric_fn</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metric_fn"</span><span class="p">),</span>
                     <span class="n">objective</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"objective"</span><span class="p">),</span>
                     <span class="n">return_report</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"return_report"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
@@ -1270,7 +1273,7 @@
             <span class="n">cfg</span><span class="p">,</span>
             <span class="n">project</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">workspace</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"workspace"</span><span class="p">),</span>
-            <span class="n">project_label</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_label"</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="s2">"calibration"</span><span class="p">)),</span>
+            <span class="n">project_label</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_label"</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)),</span>
             <span class="n">metric_fn</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metric_fn"</span><span class="p">),</span>
             <span class="n">objective</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"objective"</span><span class="p">),</span>
             <span class="n">return_report</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"return_report"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
