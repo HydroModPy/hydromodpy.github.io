@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Where are my outputs? Inside the project, in runs/&lt;name&gt;/. One directory per run, named after the run. Nothing is hidden in a database, nothing is packed into an archive: the arrays are Zarr,..." name="description"/>
-<meta content="2026-09-28T08:00:17+02:00" property="article:modified_time"/>
+<meta content="2026-09-29T13:17:20+02:00" property="article:modified_time"/>
 <title>Results and exports — HydroModPy 2.0.0a3 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 28, 2026" name="docbuild:last-update"/>
+<meta content="Sep 29, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -603,8 +603,9 @@ on the directory raises. For raw access, open the group with <code class="docuti
 </section>
 <section id="derived-fields-are-rebuilt-at-read-time">
 <h3>Derived fields are rebuilt at read time<a class="headerlink" href="#derived-fields-are-rebuilt-at-read-time" title="Link to this heading">#</a></h3>
-<p>The store persists primary variables. Four fields are <strong>not</strong> stored: they
-are recomputed on every read, from the head and the mesh topography.</p>
+<p>The store persists primary variables. Six fields are <strong>not</strong> stored: they
+are recomputed on every read, from the head, the per-cell budget and the
+mesh.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 28.0%"/>
@@ -630,6 +631,18 @@ otherwise the geometric criterion on the water table.</p></td>
 <td><p>the per-cell drain budget field, summed over layers, sign-corrected
 to a positive outflow. Needs the spatial budget to be persisted.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_flux</span></code></p></td>
+<td><p>every budget term that carries water out of the aquifer (drain and
+DRN-TO-MVR, SFR streams, LAK lakes, surface excess), each made a
+positive outflow and summed per cell, in m3/s. Asking for it with
+<code class="docutils literal notranslate"><span class="pre">[simulation.results.derived]</span> <span class="pre">release_flux</span> <span class="pre">=</span> <span class="pre">true</span></code> keeps those terms
+in the store.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fluxes_from_budget</span></code></p></td>
+<td><p>the drain budget field (the recharge one when there is no drain),
+summed over layers and divided by the cell area, in m/s. Needs the
+spatial budget to be persisted.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -640,7 +653,22 @@ to a positive outflow. Needs the spatial budget to be persisted.</p></td>
 <p>Because they are computed, they load eagerly and ignore laziness. That is
 also why a run with no persisted budget still exposes
 <code class="docutils literal notranslate"><span class="pre">watertable_elevation</span></code>, <code class="docutils literal notranslate"><span class="pre">watertable_depth</span></code> and <code class="docutils literal notranslate"><span class="pre">seepage_mask</span></code>, but not
-<code class="docutils literal notranslate"><span class="pre">outflow_drain</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">outflow_drain</span></code> or <code class="docutils literal notranslate"><span class="pre">fluxes_from_budget</span></code>. A run written before
+<code class="docutils literal notranslate"><span class="pre">release_flux</span></code> and <code class="docutils literal notranslate"><span class="pre">fluxes_from_budget</span></code> were rebuilt on read still holds
+them under <code class="docutils literal notranslate"><span class="pre">derived/</span></code>, and the stored array is what a read returns.</p>
+</section>
+<section id="stored-precision">
+<h3>Stored precision<a class="headerlink" href="#stored-precision" title="Link to this heading">#</a></h3>
+<p>The time-varying fields (head, per-cell budget terms, stored derived fields,
+concentrations) are float32 with their mantissa rounded to 16 bits, set by
+<code class="docutils literal notranslate"><span class="pre">[simulation.results.persistence]</span> <span class="pre">field_precision</span> <span class="pre">=</span> <span class="pre">"compact"</span></code>. Each value
+moves by at most 2**-17 of itself, 7.6e-6 relative: 1 mm on a 130 m head.
+The store is about three times smaller than in float64. Such an array carries
+the CF attributes <code class="docutils literal notranslate"><span class="pre">quantization</span> <span class="pre">=</span> <span class="pre">"quantization_info"</span></code> and
+<code class="docutils literal notranslate"><span class="pre">quantization_nsb</span> <span class="pre">=</span> <span class="pre">16</span></code>. <code class="docutils literal notranslate"><span class="pre">field_precision</span> <span class="pre">=</span> <span class="pre">"exact"</span></code> keeps float64. Mesh
+geometry, topography, thicknesses, indices, coordinates and timestamps are
+never rounded. <a class="reference internal" href="../api/generated/hydromodpy.read.html#hydromodpy.read" title="hydromodpy.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">hydromodpy.read()</span></code></a> and every reader of the library hand
+back float64 either way; raw <code class="docutils literal notranslate"><span class="pre">zarr</span></code> access sees the stored float32.</p>
 </section>
 <section id="manifest-json-provenance-json-annotations-json">
 <h3><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code><a class="headerlink" href="#manifest-json-provenance-json-annotations-json" title="Link to this heading">#</a></h3>
@@ -1053,6 +1081,7 @@ hierarchy and the path-resolution rules.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tables-parquet-with-pandas"><code class="docutils literal notranslate"><span class="pre">tables.parquet/</span></code> with pandas</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fields-zarr-with-xarray"><code class="docutils literal notranslate"><span class="pre">fields.zarr/</span></code> with xarray</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#derived-fields-are-rebuilt-at-read-time">Derived fields are rebuilt at read time</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-precision">Stored precision</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#manifest-json-provenance-json-annotations-json"><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance.json</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations.json</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-toml"><code class="docutils literal notranslate"><span class="pre">config.toml</span></code></a></li>
 </ul>

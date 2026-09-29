@@ -14,7 +14,7 @@
 <meta content="https://docs.hydromodpy.fr/dev/_static/logoHydroModPy_long.png" property="og:image"/>
 <meta content="HydroModPy" property="og:image:alt"/>
 <meta content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories, one per run. The DuckDB file under.hmp/ is a query index over those directories: ..." name="description"/>
-<meta content="2026-09-28T20:17:13+02:00" property="article:modified_time"/>
+<meta content="2026-09-29T13:17:20+02:00" property="article:modified_time"/>
 <title>Storage Layout — HydroModPy 2.0.0a3 documentation</title>
 <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
@@ -80,7 +80,7 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="en" name="docsearch:language"/>
 <meta content="2.0" name="docsearch:version"/>
-<meta content="Sep 28, 2026" name="docbuild:last-update"/>
+<meta content="Sep 29, 2026" name="docbuild:last-update"/>
 <script src="../_static/searchtools.js"></script>
 <script src="../_static/language_data.js"></script>
 <script src="../searchindex.js"></script>
@@ -934,7 +934,8 @@ suffix would break those readers.</p>
 |-- geographic/   created on demand for the geographic rasters
 |-- head          root array, (time, layer, cell)
 |-- time          root array, the CF time axis
-`-- crs           root array, the CF grid mapping
+|-- crs           root array, the CF grid mapping
+`-- quantization_info  root array, present when a field is rounded
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">meta</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">particles</span></code> and <code class="docutils literal notranslate"><span class="pre">forcing</span></code> are created
@@ -950,6 +951,38 @@ values are masked to NaN at write time. Chunks target about 1 MiB.
 Sharding switches on when a variable’s total footprint
 (<code class="docutils literal notranslate"><span class="pre">n_timesteps</span> <span class="pre">*</span> <span class="pre">layer_bytes_per_step</span></code>) exceeds 100 MiB, with shards
 capped near 64 MiB.</p>
+<p><strong>Precision.</strong> <code class="docutils literal notranslate"><span class="pre">[simulation.results.persistence]</span> <span class="pre">field_precision</span></code> sets how
+the time-varying fields are kept: every array written through
+<code class="docutils literal notranslate"><span class="pre">write_field</span></code> or <code class="docutils literal notranslate"><span class="pre">write_field_stack</span></code> (head, per-cell budget terms,
+stored derived fields, concentrations). <code class="docutils literal notranslate"><span class="pre">compact</span></code>, the default, stores
+float32 whose mantissa is rounded to nearest at 16 bits
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.core.field_precision</span></code>): a value moves by at most 2**-17
+of itself, 7.6e-6 relative, NaN stays NaN and no finite value becomes
+infinite. The zeroed low bits are what bitshuffle and zstd pack away: the
+daily six-year MODFLOW 6 run of example 04 (2192 steps, 21 406 cells)
+drops from 1.38 GB to 0.40 GB, its two derived arrays included. Such
+an array carries the CF-1.11 quantization attributes
+<code class="docutils literal notranslate"><span class="pre">quantization</span> <span class="pre">=</span> <span class="pre">"quantization_info"</span></code> and <code class="docutils literal notranslate"><span class="pre">quantization_nsb</span> <span class="pre">=</span> <span class="pre">16</span></code>, and
+the root holds the <code class="docutils literal notranslate"><span class="pre">quantization_info</span></code> container with
+<code class="docutils literal notranslate"><span class="pre">algorithm</span> <span class="pre">=</span> <span class="pre">"bitround"</span></code>. <code class="docutils literal notranslate"><span class="pre">exact</span></code> stores float64 as computed. Mesh
+geometry, vertices, connectivity, topography, layer thickness, z
+interfaces, static parameter fields, indices, coordinates and timestamps
+are never rounded. Every library reader returns float fields as float64
+whichever precision the store holds.</p>
+<p><strong>Fields rebuilt on read.</strong> <code class="docutils literal notranslate"><span class="pre">release_flux</span></code> and <code class="docutils literal notranslate"><span class="pre">fluxes_from_budget</span></code> are
+not stored: the readers rebuild them from the per-cell budget terms
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.results.derive.virtual_fields</span></code>) with the function that
+used to compute them before writing, so a step read equals the step that
+would have been stored. <code class="docutils literal notranslate"><span class="pre">[simulation.results.derived]</span> <span class="pre">release_flux</span></code> keeps
+its meaning, making the field available: it turns the per-cell budget on
+and keeps the terms the field is built from when the rest of that budget is
+dropped as an intermediate. A store written before holds
+<code class="docutils literal notranslate"><span class="pre">derived/release_flux</span></code> and <code class="docutils literal notranslate"><span class="pre">derived/fluxes_from_budget</span></code> in float64, and
+every reader returns the stored array first, so it reads as it always did.</p>
+<p>Neither change bumps <code class="docutils literal notranslate"><span class="pre">zarr_schema_version</span></code>: the layout, the names, the
+shapes and the meaning of every stored array are unchanged, the float width
+is declared by each array’s own Zarr metadata, and both an old store and a
+new one read the same through every reader.</p>
 </section>
 <section id="per-run-parquet-directory">
 <h2>Per-run Parquet directory<a class="headerlink" href="#per-run-parquet-directory" title="Link to this heading">#</a></h2>

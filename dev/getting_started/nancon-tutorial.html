@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page starts from an empty machine and ends with a complete monthly transient MODFLOW 6 simulation of the Nançon catchment, GeoTIFF exports included. It builds the config in five small files, e..." />
 
-    <meta property="article:modified_time" content="2026-09-28T08:00:17+02:00" />
+    <meta property="article:modified_time" content="2026-09-29T15:53:28+02:00" />
     <title>Nançon Tutorial &#8212; HydroModPy 2.0.0a3 documentation</title>
   
   
@@ -90,7 +90,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="Sep 28, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 29, 2026"/>
   
     
     <script src="../_static/searchtools.js"></script>
@@ -791,7 +791,10 @@ list, and <code class="docutils literal notranslate"><span class="pre">&lt;key&g
 <dl>
 <dt>step1_minimal.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step1_minimal</span></code>, no <code class="docutils literal notranslate"><span class="pre">base_config</span></code></dt><dd><p>The shortest config that runs to completion on the Nançon catchment:
 steady state, the local DEM, one homogeneous <code class="docutils literal notranslate"><span class="pre">K</span></code>, and a drainage
-boundary. Nothing here is optional; this is the floor.</p>
+boundary. It draws five figures and writes three exports to
+<code class="docutils literal notranslate"><span class="pre">share/nancon_step1_minimal/</span></code>: the catchment, the water table and the
+seepage cells as GeoTIFF, and the budget. Each later step inherits these
+exports and appends its own with <code class="docutils literal notranslate"><span class="pre">[[export__append]]</span></code>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>run<span class="w"> </span>~/hydromodpy/projects/04_streamflow_intermittence_in_transient/step1_minimal.toml
 </pre></div>
 </div>
@@ -804,19 +807,21 @@ the DEM reshapes the routing surface instead, which only the calibration
 criterion looks at. So this step buys you data on disk, not a different
 result.</p>
 </dd>
-<dt>step3_api_data.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step3_api</span></code>, <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">&quot;step1_minimal.toml&quot;</span></code></dt><dd><p>The same model as step 2, but the hydrography comes from the BD TOPAGE
-API and the hydrometry from Hub’Eau instead of local files. It is a
-<strong>sibling</strong> of step 2, not a child: both inherit only from step 1, and
-both should produce a comparable network from two different sources.
-Running it needs network access; step 2 does not.</p>
+<dt>step3_api_data.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step3_api</span></code>, <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">&quot;step2_local_data.toml&quot;</span></code></dt><dd><p>The same model as step 2, but the hydrography comes from the BD TOPAGE
+API and the hydrometry from Hub’Eau instead of local files:
+<code class="docutils literal notranslate"><span class="pre">sources__delete</span> <span class="pre">=</span> <span class="pre">true</span></code> drops the local sources it inherits. It also
+exports the permanent BD TOPAGE reaches beside all of them. Running it
+needs network access; step 2 does not. Step 4 builds on step 2, so the
+API variant stays a side branch.</p>
 </dd>
 <dt>step4_transient.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step4_transient</span></code>, <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">&quot;step2_local_data.toml&quot;</span></code></dt><dd><p>Switches to monthly transient, 2000-2002, with storage and the observed
 recharge and runoff forcing. This is the complete Nançon simulation,
 with no calibration: the parameters are still the assumed values from
 step 1, not fitted ones.</p>
 </dd>
-<dt>step5_export.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step5_export</span></code>, <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">&quot;step4_transient.toml&quot;</span></code></dt><dd><p>Adds <code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> blocks and a <code class="docutils literal notranslate"><span class="pre">[display]</span></code> figure list, four
-<code class="docutils literal notranslate"><span class="pre">base_config</span></code> levels deep. Run this last:</p>
+<dt>step5_export.toml — run <code class="docutils literal notranslate"><span class="pre">nancon_step5_export</span></code>, <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">&quot;step4_transient.toml&quot;</span></code></dt><dd><p>Writes one <code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> block per kind of data, four <code class="docutils literal notranslate"><span class="pre">base_config</span></code>
+levels deep. A top-level <code class="docutils literal notranslate"><span class="pre">export__delete</span> <span class="pre">=</span> <span class="pre">true</span></code> drops the blocks steps
+1 to 4 declared, so the list is this file’s alone. Run this last:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>run<span class="w"> </span>~/hydromodpy/projects/04_streamflow_intermittence_in_transient/step5_export.toml
 </pre></div>
 </div>
@@ -841,7 +846,7 @@ discharge.csv                     the simulated discharge, dated
 CSV, the catchment and the networks to GeoPackage, the DEM to GeoTIFF;
 <code class="docutils literal notranslate"><span class="pre">format</span> <span class="pre">=</span> <span class="pre">&quot;package&quot;</span></code> writes the portable <code class="docutils literal notranslate"><span class="pre">.hmp</span></code> archive. The console
 says it in one line, <code class="docutils literal notranslate"><span class="pre">Exported</span> <span class="pre">N</span> <span class="pre">file(s)</span> <span class="pre">-&gt;</span> <span class="pre">share/nancon_step5_export</span></code>.
-The four <code class="docutils literal notranslate"><span class="pre">[display]</span></code> figures land in the run’s <code class="docutils literal notranslate"><span class="pre">figures/</span></code> directory;
+The eight <code class="docutils literal notranslate"><span class="pre">[display]</span></code> figures land in the run’s <code class="docutils literal notranslate"><span class="pre">figures/</span></code> directory;
 use <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">viz</span> <span class="pre">show</span></code> (section 7) to render any other registered figure
 for this run on demand, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export</span></code> to write any other data.</p>
 </dd>
