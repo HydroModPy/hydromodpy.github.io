@@ -1,0 +1,2082 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="824x987">
+    <link rel="shortcut icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon"><meta property="og:title" content="Calibrating on the stream network" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/v2.0.0a3/user_guide/workflows/stream-network-calibration.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="How to calibrate a catchment against the extent of its hydrographic network rather than against a gauge, in two stages: the transmissivity-to-recharge ratio against the network in steady state, the..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/v2.0.0a3/_static/logoHydroModPy_long.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="How to calibrate a catchment against the extent of its hydrographic network rather than against a gauge, in two stages: the transmissivity-to-recharge ratio against the network in steady state, the..." />
+
+    <meta property="article:modified_time" content="2026-09-28T19:48:35+02:00" />
+    <title>Calibrating on the stream network &#8212; HydroModPy 2.0.0a3 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-codeautolink.css?v=b2176991" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7115939c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/uml-diagrams.css?v=3ab94cdd" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api-reference.css?v=a49870ba" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-image-compare.css?v=b76b300f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-feedback.css?v=22c36e05" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-page-badges.css?v=5987351c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-config-reference.css?v=f5531137" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="../../_static/documentation_options.js?v=b2e6443d"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/workflows/stream-network-calibration';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.0a3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../_static/uml-diagrams.js?v=fefff902"></script>
+    <script src="../../_static/js/hmp-image-compare.js?v=f121e18f"></script>
+    <script src="../../_static/js/hmp-feedback.js?v=3aadc2ed"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=00ba584f"></script>
+    <script src="../../_static/js/hmp-config-reference.js?v=714105cc"></script>
+    <script src="../../_static/js/hmp-config-search.js?v=e0efbc57"></script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/v2.0.0a3/user_guide/workflows/stream-network-calibration.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Comparison Workflow" href="comparison.html" />
+    <link rel="prev" title="How wide a calibrated value is" href="calibration-uncertainty.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="Sep 28, 2026"/>
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">🚧 Development documentation</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy 2.0.0a3 documentation - Home"/>
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-dark pst-js-only" alt="HydroModPy 2.0.0a3 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../python_api/index.html">
+    Python API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../cli/index.html">
+    CLI
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../capability_gallery/index.html">
+    Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture/index.html">
+    Developer
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-circle-info fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Issues</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://groups.google.com/g/hydromodpy" title="Google Group" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Google Group</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../config_reference/index.html">Configuration reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/config_index.html">Configuration index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/complete_toml.html">Complete annotated TOML reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/schema_explorer.html">Schema Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/recipes.html">Recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/workflow.html">[workflow] WorkflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/workspace.html">[workspace] WorkspaceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/geographic.html">[geographic] GeographicConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/domain.html">[domain] DomainConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/data.html">[data] DataManagersConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/flow.html">[flow] FlowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/transport.html">[transport] TransportConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/simulation.html">[simulation] SimulationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/solver.html">[solver] SolverConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/modflownwt.html">[modflownwt] ModflowConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/modflow6.html">[modflow6] Modflow6Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/display.html">[display] DisplayConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/export.html">[export] ExportRequest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/persistence.html">[persistence] PersistenceConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/observation.html">[observation] ObservationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/analysis.html">[analysis] AnalysisConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/overview.html">[overview] OverviewConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/mesh_catchment.html">[mesh_catchment] MeshCatchmentConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/mesh_input.html">[mesh_input] MeshInputConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/calibration.html">[calibration] CalibrationConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/spinup.html">[spinup] SpinupConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/testbed.html">[testbed] TestbedConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/site_selection.html">[site_selection] SiteSelectionConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../config_reference/hydrometry.html">[hydrometry] HydrometryConfig</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Workflow families and modes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="overview.html">Overview Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testbed.html">Testbed Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="regional_lab.html">Regional Lab Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="site_selection.html">Site Selection Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration.html">Calibration Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-recipes.html">Four calibrations to start from</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibration-uncertainty.html">How wide a calibrated value is</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Calibrating on the stream network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison.html">Comparison Workflow</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../concepts/index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/workspace-layout.html">Workspace layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/project-vs-run.html">Project vs Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/where-a-transient-starts.html">Where a transient starts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/comparison-workflow.html">Simulation Comparison Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/comparison-output-reading-order.html">Comparison Output Reading Order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/reading-results-pages.html">How To Read Gallery, Comparison, and Validation Pages</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli-reference.html">CLI reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../data/index.html">Data loading</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../data/retrieval-workflow.html">Retrieval Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/runs-and-figures.html">Runs And Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/provider-replay-cases.html">Provider Replay Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/custom-data.html">Custom Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/cache-and-lockfiles.html">Cache And Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/dem.html">DEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/geology.html">Geology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/hydrography.html">Hydrography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/hydrometry.html">Hydrometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/piezometry.html">Piezometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/intermittency.html">Intermittency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/water-quality.html">Water Quality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/recharge.html">Recharge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/precipitation.html">Precipitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/etp.html">ETP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/temperature.html">Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/wind.html">Wind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/humidity.html">Humidity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/radiation.html">Radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/soil-moisture.html">Soil Moisture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/runoff.html">Runoff</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/oceanic.html">Oceanic</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../results-and-exports.html">Results and exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../point-queries.html">Reading one point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog.html">The catalog door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../figures.html">Figure Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catchment-report.html">Catchment HTML Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../initialization.html">Initialization and spin-up</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modflow6-prt.html">MODFLOW 6 PRT Particle Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modflow6-lake.html">Lakes and Reservoirs (MODFLOW 6 LAK)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modflow6-sfr.html">Streams and Routing (MODFLOW 6 SFR)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modflow6-flow-barrier.html">Flow Barriers and Dam Cutoff Walls (MODFLOW 6 HFB)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Workflow Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Calibrating on the stream network</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="calibrating-on-the-stream-network">
+<h1>Calibrating on the stream network<a class="headerlink" href="#calibrating-on-the-stream-network" title="Link to this heading">#</a></h1>
+<p>How to calibrate a catchment against the extent of its hydrographic network
+rather than against a gauge, in two stages: the transmissivity-to-recharge
+ratio against the network in steady state, then the storage against the
+discharge in transient.</p>
+<p>Read <a class="reference internal" href="../../theory/streams_and_seepage/downslope-distance-calibration.html"><span class="doc">Downslope-distance calibration of the stream network</span></a>
+first. This page says how to run it; that one says what the number means, and
+which way each of its known biases points.</p>
+<section id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Link to this heading">#</a></h2>
+<p>Four things have to be true, and the first is the one people skip.</p>
+<p><strong>The mapped network must sit in the talwegs of the routing surface.</strong> The
+criterion measures lengths along the flow paths of the DEM, so if the linework
+does not follow them, it measures a disagreement between two datasets. Burn the
+network into the routing surface first:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[geographic.enforce_streams]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">stream_geometry_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"data/hydrography/streams.gpkg"</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"constant"</span>
+<span class="n">depth_m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span>
+</pre></div>
+</div>
+<p>The burn needs a network, and it needs it as a file: it runs inside the
+geographic step, before any data manager, so it cannot read what the data
+loading step later produces. <code class="docutils literal notranslate"><span class="pre">stream_geometry_path</span></code> says which file, and it is
+anchored once, when the configuration is loaded: a relative value against the
+directory of the TOML that declares it, a bare filename under
+<code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/hydrography/</span></code> then <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/</span></code>. Nothing is probed
+when the file is read, so the run takes the same network whatever directory it
+was launched from.</p>
+<p>Leave it out and the burn falls back to what <code class="docutils literal notranslate"><span class="pre">[[data.hydrography.sources]]</span></code>
+declares, so the same file is named once:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[[data.hydrography.sources]]</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"custom"</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"streams.gpkg"</span>
+
+<span class="k">[geographic.enforce_streams]</span>
+<span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"constant"</span>
+<span class="n">depth_m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span>
+</pre></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">custom</span></code> source hands its own file straight over, a directory yields its
+first vector layer, and a raster one yields nothing: the burn rasterizes
+geometries onto the DEM grid itself. An API source (<code class="docutils literal notranslate"><span class="pre">osm</span></code>, <code class="docutils literal notranslate"><span class="pre">bdtopage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">euhydro</span></code>) is downloaded on a box around <code class="docutils literal notranslate"><span class="pre">x_outlet</span></code> / <code class="docutils literal notranslate"><span class="pre">y_outlet</span></code>, clipped
+to the DEM footprint, and cached under <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/data/hydrography/</span></code>; the
+watershed a data manager would clip against is not delineated yet at that point,
+and the regional extent is what the burn wants anyway. Declaring
+<code class="docutils literal notranslate"><span class="pre">stream_geometry_path</span></code> explicitly always wins, which is how you burn a network
+that differs from the one the data family loads. Declaring neither stops the
+geographic pipeline at the first step, before anything is calibrated.</p>
+<p>A project declaring that path gets the agreement measured whether or not
+<code class="docutils literal notranslate"><span class="pre">enabled</span></code> is set, which is how you find out that the burning is needed. It
+goes to <code class="docutils literal notranslate"><span class="pre">stream_dem_agreement.json</span></code> in the geographic directory, as
+<code class="docutils literal notranslate"><span class="pre">alpha</span></code>: the ratio between the mapped network and its own downslope closure,
+where one means the linework follows the talwegs and below 0.90 the run warns.
+Redo the burning at every change of resolution: the ratio between the width of
+the linework and the cell size changes with it.</p>
+<p><strong>That number is not the one the criterion publishes, and the two cannot
+agree.</strong> The burn is cut into the routing DEM alone; the model top stays on the
+raw DEM, because a top lowered along the mapped network would give a model that
+seeps along it by construction. The criterion measures its distances on that
+top, so the ratio it recomputes on the solver mesh and publishes per trial as
+<code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code> describes a different surface. On the Nancon the routing
+DEM reaches <code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.994</span></code> after a 30 m burn while <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>
+sat at 0.306, and <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code> at 0.693, when one outlet
+sealed the whole mesh. With the flood seeded on the domain border the buffer
+reaches leave through the border, and the first two come close (0.81 and 0.77
+on a 75 m proxy of the same basin). Read the three:
+the first says the delineation and the flow paths follow the map, the third
+says how much of the criterion’s own measurement is a top-versus-map
+disagreement, and the gap between the second and the third is the mapped
+linework the criterion carries outside the basin. <strong>A trial is judged on the
+third.</strong> The criterion never descends the burned surface, so a low value there
+is never a reason to burn deeper.</p>
+<p><strong>The drain conductance must stay proportional to the conductivity.</strong> Leave
+<code class="docutils literal notranslate"><span class="pre">[flow.bc.cauchy.drainage]</span> <span class="pre">value</span></code> at zero, or at anything not strictly
+positive, so the fallback applies: <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">=</span> <span class="pre">K</span> <span class="pre">*</span> <span class="pre">cell_area</span> <span class="pre">/</span> <span class="pre">solver.drain_bed_thickness_m</span></code>
+on both MODFLOW backends (the clogging-layer thickness of a watercourse,
+decimetres to a metre, not the model layer thickness), <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">=</span> <span class="pre">K</span> <span class="pre">*</span> <span class="pre">cell_area</span></code> on
+Boussinesq. That proportionality is
+what makes the ratio the calibrated quantity; a fixed conductance breaks the
+invariance from a factor 1.05 onwards.</p>
+<p><strong>The recharge must be frozen during the first stage.</strong> The criterion at one
+per cent is on the ratio, which equals one per cent on the conductivity only
+when the recharge does not move. Every trial publishes <code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code>, the mean
+recharge the criterion actually read back from the built model, and a move
+between two builds raises a warning naming both values. Nothing refuses the run,
+because this check knows a mesh and not a session: keep the recharge out of
+<code class="docutils literal notranslate"><span class="pre">[calibration.parameters]</span></code> and out of anything the first phase moves, and read
+<code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code> across the trials before reading the calibrated value as a <code class="docutils literal notranslate"><span class="pre">K</span></code>.</p>
+<p><strong>The union has to cover every package that carries water out of the aquifer.</strong>
+The criterion reads the per-cell release as the union of the packages that can
+feed the surface: drains, streams, release-role constant heads. Whenever the
+stream reaches are modelled rather than drained, most of the seepage leaves
+through the stream package and not through the drain. Measured on the Nancon
+with the main reaches in SFR: the aquifer sent 1.33 of its 2.10 m3/s through
+the stream package while 0.80 stayed on the drain. A union reading the drain
+alone would report 63 per cent of that water as dry land, exactly where the
+package drains, which is exactly where the criterion aims. Both extractors now
+read the requirement off the budget file rather than off the model object, and
+refuse a release record no declared package covers instead of returning a
+partial network.</p>
+<p>The visible symptom, if that guard is ever bypassed, is a root that stops
+responding to the parameter: on that same run the search closed on a
+conductivity three decades above its declared bounds, with a validity indicator
+comfortably inside its own. A simulated network holding its cells by
+construction never retracts, and the criterion then balances against a fixed
+skeleton.</p>
+</section>
+<section id="snapping-the-mapped-network">
+<h2>Snapping the mapped network<a class="headerlink" href="#snapping-the-mapped-network" title="Link to this heading">#</a></h2>
+<p>Burning conditions the <em>routing surface</em> so its D8 paths follow the mapped
+network; it never moves the map. <code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> does the
+opposite: it moves the map, cell by cell, onto the talwegs the criterion
+graph already carries, and publishes what the move cost. The two repairs
+answer different questions and neither replaces the other: a network burned
+into the routing raster can still sit off the mesh’s own talwegs once the
+mesh floods that raster back (see “Before you start” above), and a snapped
+map still measures a genuine hydrogeological disagreement wherever it was
+never off-talweg to begin with.</p>
+<p>Off by default, three modes:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[geographic.snap_streams]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"diagnose"</span>
+<span class="n">radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2 cells"</span>
+<span class="n">max_displacement_p90</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1 cell"</span>
+<span class="n">max_rejected_share</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.10</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">off</span></code></dt><dd><p>Computes nothing. Every trial publishes exactly what it published before
+the snap existed.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">diagnose</span></code></dt><dd><p>Computes the snapped map, its displacement, its rejected cells, the length
+change and the floor <code class="docutils literal notranslate"><span class="pre">F</span></code> (below), and publishes them — but still scores
+the <strong>raw</strong> map, so nothing about the calibrated value changes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">apply</span></code></dt><dd><p>Scores the <strong>snapped</strong> map. Equation 4 then also asks the 90th percentile
+of the displacement and the share of rejected cells to stay within their
+bounds, on top of <code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">&lt;=</span> <span class="pre">validity_length</span></code>.</p>
+</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">radius</span></code> and <code class="docutils literal notranslate"><span class="pre">max_displacement_p90</span></code> are lengths: a Pint length such as
+<code class="docutils literal notranslate"><span class="pre">&quot;200</span> <span class="pre">m&quot;</span></code>, or a count of cells such as <code class="docutils literal notranslate"><span class="pre">&quot;2</span> <span class="pre">cells&quot;</span></code> — one cell being
+<code class="docutils literal notranslate"><span class="pre">h_obs</span></code> (below), so the same TOML means the same number of mesh cells at
+every resolution. Two cells is the outlet-snapping distance of the paper’s
+own <code class="docutils literal notranslate"><span class="pre">SnapPourPoints</span></code>. It sits under <code class="docutils literal notranslate"><span class="pre">[geographic]</span></code>, beside
+<code class="docutils literal notranslate"><span class="pre">enforce_streams</span></code>, because it is common to every consumer of the mapped
+network — the criterion, the redrawn figures, and (not wired yet, see
+below) stream burning — not to one calibration output.</p>
+<dl>
+<dt>The algorithm</dt><dd><p>Flow-accumulation guided snapping, run on the same graph the criterion
+descends, in the topological order of the mapped network from downstream
+to upstream:</p>
+<ol class="arabic simple">
+<li><p>the mapped cells of the catchment are grouped into connected pieces on
+the criterion’s neighbour graph, each piece rooted at its lowest cell;</p></li>
+<li><p>the pieces are walked by a priority flood along the map itself, most
+accumulated first, so a main stem is processed before the tributaries
+that join it;</p></li>
+<li><p>each mapped cell moves, within the radius, to the free model cell with
+the highest accumulation whose receiver is already attached — the
+outlet and the water bodies are attached from the start — which is
+what keeps every snapped cell continuous to the outlet;</p></li>
+<li><p>a cell with no such candidate merges onto the nearest attached cell
+within the radius instead, counted as merged; with neither, it is
+rejected and keeps its raw position, so a grossly misplaced reach stays
+visible to Equation 4 rather than disappearing into a plausible number;</p></li>
+<li><p>a talweg cell no mapped cell moved onto is never added: a gap in the
+map is not bridged, the reach above it attaches one cell lower, and the
+displacement says so.</p></li>
+</ol>
+<p>Mapped cells outside the catchment are not scored and are left as they are.</p>
+</dd>
+<dt>Limits, read before trusting an <code class="docutils literal notranslate"><span class="pre">apply</span></code> run</dt><dd><p>A gap in the map drags the whole reach above it down by one cell, and the
+displacement map shows it. A map that never comes within one radius of the
+outlet, and never joins a piece that is already attached, is rejected
+whole rather than partly. On tortuous talwegs a few per cent of cells are
+rejected even on a well-registered map — 5 to 6 % measured on a noisy
+synthetic network shifted by one column — so a nonzero <code class="docutils literal notranslate"><span class="pre">snap_rejected_share</span></code>
+is not by itself evidence of a bad map. A radius of two cells can also
+reach into a neighbouring, more accumulated talweg and pull the map onto
+the wrong branch; watch <code class="docutils literal notranslate"><span class="pre">snap_accumulation_percentile_p50</span></code> and the map
+figure below for that.</p>
+<p><strong>``apply`` changes what is scored, and that is a risk as much as a fix.</strong>
+<code class="docutils literal notranslate"><span class="pre">roptim</span></code> in <code class="docutils literal notranslate"><span class="pre">apply</span></code> mode measures the agreement between the model and
+the <em>snapped</em> map, not the surveyed one, so a badly registered map that
+<code class="docutils literal notranslate"><span class="pre">diagnose</span></code> would have flagged with a large <code class="docutils literal notranslate"><span class="pre">snap_displacement_p90_m</span></code>
+can come back looking well calibrated once it is moved onto the model’s
+own talwegs. Run <code class="docutils literal notranslate"><span class="pre">diagnose</span></code> first, read the displacement histogram and
+<code class="docutils literal notranslate"><span class="pre">snap_floor_m</span></code>, and only turn <code class="docutils literal notranslate"><span class="pre">apply</span></code> on once the displacement is
+small relative to the positional accuracy of the source: a large snap is a
+sign the DEM and the map disagree structurally, which burning or a better
+DEM should fix, not a distance the snap should absorb silently.</p>
+</dd>
+<dt>Published indices</dt><dd><p>Every trial with <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">!=</span> <span class="pre">&quot;off&quot;</span></code> publishes, per output (and per bound,
+suffixed, when two maps are scored): <code class="docutils literal notranslate"><span class="pre">snap_mode</span></code> (1 for <code class="docutils literal notranslate"><span class="pre">diagnose</span></code>, 2
+for <code class="docutils literal notranslate"><span class="pre">apply</span></code>), <code class="docutils literal notranslate"><span class="pre">snap_radius_m</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_displacement_p50_m</span></code>,
+<code class="docutils literal notranslate"><span class="pre">snap_displacement_p90_m</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_displacement_bound_m</span></code>,
+<code class="docutils literal notranslate"><span class="pre">snap_rejected_share</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_rejected_share_max</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_moved_share</span></code>,
+<code class="docutils literal notranslate"><span class="pre">snap_merged_share</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_length_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_connected_share</span></code>,
+<code class="docutils literal notranslate"><span class="pre">snap_accumulation_percentile_p50</span></code>, <code class="docutils literal notranslate"><span class="pre">snap_n_cells_raw</span></code> and
+<code class="docutils literal notranslate"><span class="pre">snap_floor_m</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">snap_floor_m</span></code> is <code class="docutils literal notranslate"><span class="pre">F</span></code>, the <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> a model that reproduced the
+snapped talwegs <em>exactly</em> would still score against the raw map, computed
+with the criterion’s own metric, sealed outlet and per-cell weighting. It
+is the representation error the snap itself introduces: no calibrated
+value can read as more accurate than <code class="docutils literal notranslate"><span class="pre">F</span></code>, whatever <code class="docutils literal notranslate"><span class="pre">roptim</span></code> says.</p>
+</dd>
+<dt>Equation 4 in <code class="docutils literal notranslate"><span class="pre">apply</span></code> mode</dt><dd><p>The verdict now reads three conditions together: <code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">&lt;=</span>
+<span class="pre">validity_length</span></code> on the snapped map, the 90th percentile of the
+displacement at or under <code class="docutils literal notranslate"><span class="pre">max_displacement_p90</span></code>, and the rejected share
+at or under <code class="docutils literal notranslate"><span class="pre">max_rejected_share</span></code>. In <code class="docutils literal notranslate"><span class="pre">diagnose</span></code> mode the verdict still
+reads <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> on the raw map, because the raw map is what was scored;
+the floor <code class="docutils literal notranslate"><span class="pre">F</span></code> only widens the validity length (below). The report names
+the cause of a failure: the mismatch, the snap, or both.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">h_obs</span></code> replaces the reference length</dt><dd><p><code class="docutils literal notranslate"><span class="pre">L_ref</span></code>, the length <code class="docutils literal notranslate"><span class="pre">roptim</span></code> and the width of a network output’s
+search interval are read against, is <code class="docutils literal notranslate"><span class="pre">h_obs</span></code>: the median distance
+between the centres of neighbouring cells that share an edge, taken over
+the mapped cells of the catchment (or, absent any, the catchment itself).
+It replaces the square root of the median cell area, so on a regular grid
+nothing changes — both read the cell size — but on a mesh refined along
+the streams the old measure could land on the coarse hillslope cells a
+catchment-wide median happens to pick, while <code class="docutils literal notranslate"><span class="pre">h_obs</span></code> reads the scale
+where the mapped network actually sits, the fine cells.
+<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> no longer touches it: <code class="docutils literal notranslate"><span class="pre">roptim</span></code> is
+<code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">/</span> <span class="pre">h_obs</span></code>, the paper’s Equation 3, whatever the output declares.
+It is read on the <strong>raw</strong> map, even in <code class="docutils literal notranslate"><span class="pre">apply</span></code> mode: the radius the snap
+searches within is counted in the resolution the map was captured at, not
+in the resolution it was moved onto. <code class="docutils literal notranslate"><span class="pre">&lt;output&gt;.cell_spacing_m</span></code> carries
+the same value.</p>
+</dd>
+<dt>The validity length</dt><dd><p>Equation 4 is a length in metres: the calibration is valid when <code class="docutils literal notranslate"><span class="pre">Doptim</span>
+<span class="pre">&lt;=</span> <span class="pre">validity_length</span></code>. <code class="docutils literal notranslate"><span class="pre">validity_length</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code>, the default, reads a
+cell size <code class="docutils literal notranslate"><span class="pre">h</span></code>, which is <code class="docutils literal notranslate"><span class="pre">h_obs</span></code>, raised to
+<code class="docutils literal notranslate"><span class="pre">observed_position_accuracy</span></code> when the output declares one, and then:</p>
+<ul class="simple">
+<li><p>without the snap, <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">h</span></code>: the paper’s two pixels, so <code class="docutils literal notranslate"><span class="pre">roptim</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>
+on a regular grid;</p></li>
+<li><p>with <code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> in <code class="docutils literal notranslate"><span class="pre">diagnose</span></code> or <code class="docutils literal notranslate"><span class="pre">apply</span></code>,
+<code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">+</span> <span class="pre">max(h,</span> <span class="pre">F)</span></code>: one cell for the hydrogeology, and one for the map
+error the paper budgets (HESS p. 3224), replaced by the floor <code class="docutils literal notranslate"><span class="pre">F</span></code>
+when <code class="docutils literal notranslate"><span class="pre">F</span></code> is larger. At 75 m on the Nançon <code class="docutils literal notranslate"><span class="pre">F</span></code> stays under one cell
+and the bound is the paper’s 150 m; at 25 m it is about three cells and
+the bound widens to about 100 m instead of 50 m.</p></li>
+</ul>
+<p>A length such as <code class="docutils literal notranslate"><span class="pre">validity_length</span> <span class="pre">=</span> <span class="pre">&quot;300</span> <span class="pre">m&quot;</span></code> replaces the computation.
+Each map resolves its own length, so the two bounds of the two-bound mode
+may differ. Every trial publishes <code class="docutils literal notranslate"><span class="pre">validity_length_m</span></code> and
+<code class="docutils literal notranslate"><span class="pre">validity_length_provenance</span></code>, a code: 0 <code class="docutils literal notranslate"><span class="pre">auto</span></code> (two cells), 1
+<code class="docutils literal notranslate"><span class="pre">auto_floor</span></code> (<code class="docutils literal notranslate"><span class="pre">F</span></code> exceeded <code class="docutils literal notranslate"><span class="pre">h</span></code>), 2 <code class="docutils literal notranslate"><span class="pre">declared_accuracy</span></code> (the
+declared accuracy exceeded <code class="docutils literal notranslate"><span class="pre">h_obs</span></code>), 3 <code class="docutils literal notranslate"><span class="pre">user</span></code> (a declared length).
+The former <code class="docutils literal notranslate"><span class="pre">roptim_max</span></code> is gone. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--fix-config</span></code> drops it
+from a file that sets it to 2, which <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> reproduces, and refuses
+any other value with the length to write instead. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span></code> and
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> apply the same migration in memory when they read the file,
+without rewriting it.</p>
+</dd>
+<dt>Scope</dt><dd><p>The setting applies to every consumer of the mapped network. <code class="docutils literal notranslate"><span class="pre">apply</span></code>
+makes each one read the snapped map, <code class="docutils literal notranslate"><span class="pre">diagnose</span></code> leaves each one on the
+raw map while the snap is computed and published, and <code class="docutils literal notranslate"><span class="pre">off</span></code> changes
+nothing anywhere.</p>
+<ul class="simple">
+<li><p>The criterion (every network output, one map or two) and its figures
+snap on the criterion graph of the mesh.</p></li>
+<li><p>A run stores the snapped map it scored as a geographic feature (one
+point per mapped cell of the catchment, with its displacement, status
+and accumulation percentile). The overlap and distance metrics of the
+<code class="docutils literal notranslate"><span class="pre">reference</span></code> and <code class="docutils literal notranslate"><span class="pre">reference_permanent</span></code> roles read it in <code class="docutils literal notranslate"><span class="pre">apply</span></code>,
+and say which map they read under <code class="docutils literal notranslate"><span class="pre">network_map</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[geographic.enforce_streams]</span></code> burns the routing raster before any
+mesh exists, so its snap runs on the raster grid: the raw DEM is
+conditioned by <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span></code>, the rasterised map is snapped on the
+eight-neighbour graph of that raster by the same algorithm and radius
+rule, and <code class="docutils literal notranslate"><span class="pre">apply</span></code> burns the snapped cells instead of the raw lines.
+The routing DEM is then conditioned again as usual. This pass runs
+whenever the snap is on and <code class="docutils literal notranslate"><span class="pre">enforce_streams.stream_geometry_path</span></code>
+names a network, burning or not, and costs one extra conditioning pass
+and a graph over the whole raster.</p></li>
+<li><p>That raster pass is published in the geographic directory:
+<code class="docutils literal notranslate"><span class="pre">stream_snap_raster.json</span></code> (mode, mapped file, indices),
+<code class="docutils literal notranslate"><span class="pre">stream_snap_raster.tif</span></code> (snapped map, per-cell status) and
+<code class="docutils literal notranslate"><span class="pre">stream_snap_raster_lines.gpkg</span></code>. A mesh whose <code class="docutils literal notranslate"><span class="pre">rivers.source</span> <span class="pre">=</span>
+<span class="pre">&quot;file&quot;</span></code> names the same mapped file reads those lines in <code class="docutils literal notranslate"><span class="pre">apply</span></code>, and
+the stream/DEM agreement of the geographic step measures the snapped
+map the burn followed.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Two figures read the sealed setting of the run they were asked to draw, so an
+<code class="docutils literal notranslate"><span class="pre">apply</span></code> run’s figures show the snapped map it scored, never the raw one:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">observed_network_snap_map</span></code></dt><dd><p>The raw mapped cells outlined, the snapped map filled, and one segment per
+raw cell joining it to where it moved, coloured by its status
+(unchanged, moved, merged, rejected).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">observed_network_snap_histogram</span></code></dt><dd><p>The displacement, stacked by status, with the <code class="docutils literal notranslate"><span class="pre">max_displacement_p90</span></code>
+bound and the search radius drawn as lines, and the rejected count in the
+key rather than left out of the picture.</p>
+</dd>
+</dl>
+<p>Both refuse by name, with a sentence instead of a figure, on a run whose
+<code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> is <code class="docutils literal notranslate"><span class="pre">off</span></code>.</p>
+</section>
+<section id="naming-the-method">
+<h2>Naming the method<a class="headerlink" href="#naming-the-method" title="Link to this heading">#</a></h2>
+<p>The two stages, their criteria, and the regime that makes one steady and the
+other transient are the method, not the site. Name it and they are written
+for you:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration]</span>
+<span class="n">protocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"matching_hydrographic_network"</span>
+</pre></div>
+</div>
+<p>The section name is the quantity: <code class="docutils literal notranslate"><span class="pre">K</span></code> is the id this project declares in
+<code class="docutils literal notranslate"><span class="pre">[flow].param_list</span></code>, and it is resolved against what the project exposes, so
+neither the path into the configuration nor the log space a conductivity is
+searched in has to be written. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">targets</span></code> prints the names a given
+project carries. Writing <code class="docutils literal notranslate"><span class="pre">path</span></code> is still allowed and still wins, for a value
+the catalogue does not reach.</p>
+<p>What stays in the file is the two search ranges and the mapped network.
+<a class="reference internal" href="calibration-recipes.html"><span class="doc">Four calibrations to start from</span></a> shows the whole thing, with every option written out
+and its default explained. The engines are free: <code class="docutils literal notranslate"><span class="pre">steady_method</span></code> and
+<code class="docutils literal notranslate"><span class="pre">transient_method</span></code> take any registered optimizer, so the same two criteria can
+be walked by a bisection, by Nelder-Mead or by Optuna without changing what is
+calibrated. The run records the method and its citation, so a value that came
+out of it says what it rests on.</p>
+<p>A file cannot both name a protocol and declare phases or objective blocks of
+its own. That is two answers to one question, and it is refused rather than
+silently resolved, naming the section it found them in. Stages identical to
+the ones the protocol would write are the exception, and not a loophole: it is
+how a run re-read from its own sealed configuration replays. A child
+inheriting a parent that names a protocol drops the name with
+<code class="docutils literal notranslate"><span class="pre">protocol__delete</span> <span class="pre">=</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">[calibration]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">storage</span></code> names the parameter stage two moves, and defaults to <code class="docutils literal notranslate"><span class="pre">Sy</span></code>, not
+to network-only: the network stage alone is a method in its own right, HESS
+2023 with no discharge record, but TOML has no null to ask for it with
+<code class="docutils literal notranslate"><span class="pre">[calibration.protocol]</span> <span class="pre">storage</span> <span class="pre">=</span> <span class="pre">...</span></code>. From a file, get the same result by
+not naming the protocol at all and writing the single steady stage by hand,
+the first half of “Declaring the two stages by hand” below, with no second
+<code class="docutils literal notranslate"><span class="pre">[[calibration.phases]]</span></code> table. From Python, <code class="docutils literal notranslate"><span class="pre">storage=None</span></code> in the options
+dict still expands through the named protocol, with its citation, version pin
+and declared deviations.</p>
+</section>
+<section id="declaring-the-two-stages-by-hand">
+<h2>Declaring the two stages by hand<a class="headerlink" href="#declaring-the-two-stages-by-hand" title="Link to this heading">#</a></h2>
+<p>The long form, for a variant the protocol does not cover.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">base_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"project.toml"</span>
+
+<span class="k">[workflow]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"calibration"</span>
+
+<span class="k">[calibration]</span>
+<span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span>
+<span class="n">save_runs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"best_n"</span>
+<span class="n">save_best_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">persist_iteration_detail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"full"</span>
+
+<span class="k">[calibration.parameters.K]</span>
+<span class="n">bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-9</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-3</span><span class="p">]</span>
+
+<span class="k">[calibration.parameters.Sy]</span>
+<span class="n">bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span><span class="w"> </span><span class="mf">3e-1</span><span class="p">]</span>
+
+<span class="k">[calibration.outputs.seepage_network]</span>
+<span class="n">support</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="s2">"network"</span>
+<span class="n">stream_geometry_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"data/hydrography/streams.gpkg"</span>
+<span class="n">weighting</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">"area"</span>
+<span class="n">tau_specific_ratio</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-4</span>
+<span class="n">validity_length</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"auto"</span>
+<span class="n">time</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="s2">"last"</span>
+
+<span class="k">[[calibration.objective_blocks]]</span>
+<span class="n">name</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"abherve_gap"</span>
+<span class="n">metric</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"distance_gap"</span>
+<span class="n">uses_outputs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"seepage_network"</span><span class="p">]</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="s2">"steady_conductivity"</span>
+<span class="n">description</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"Zero of the signed gap D_so - D_os, by bisection on K."</span>
+<span class="n">method</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s2">"bisection"</span>
+<span class="n">max_iter</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="mi">18</span>
+<span class="n">parameters</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"K"</span><span class="p">]</span>
+<span class="n">objective_blocks</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"abherve_gap"</span><span class="p">]</span>
+<span class="n">freeze_on_success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[calibration.phases.method_options]</span>
+<span class="n">rel_tol</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span>
+<span class="n">sweep_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span>
+
+<span class="k">[calibration.phases.overrides]</span>
+<span class="s2">"flow.flow_regime"</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="s2">"steady"</span>
+<span class="s2">"simulation.time.start_datetime"</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012-01-01"</span>
+<span class="s2">"simulation.time.end_datetime"</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012-12-31"</span>
+<span class="s2">"simulation.time.step_unit"</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"year"</span>
+<span class="s2">"simulation.time.step_value"</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient_storage"</span>
+<span class="n">method</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"grid"</span>
+<span class="n">max_iter</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+<span class="n">parallel</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">parameters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Sy"</span><span class="p">]</span>
+<span class="n">variable</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"discharge"</span>
+<span class="n">objective</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"nse_log"</span>
+<span class="n">depends_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"steady_conductivity"</span>
+
+<span class="k">[calibration.phases.scoring_window]</span>
+<span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2012-01-01"</span>
+<span class="n">end</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"2015-12-31"</span>
+
+<span class="k">[calibration.phases.method_options]</span>
+<span class="n">points_per_dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+
+<span class="k">[calibration.phases.overrides]</span>
+<span class="s2">"flow.flow_regime"</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient"</span>
+<span class="s2">"simulation.time.start_datetime"</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"2011-01-01"</span>
+<span class="s2">"simulation.time.end_datetime"</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"2015-12-31"</span>
+<span class="s2">"simulation.time.step_unit"</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"month"</span>
+<span class="s2">"simulation.time.step_value"</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>Declaring the <code class="docutils literal notranslate"><span class="pre">[[calibration.phases]]</span></code> table is what switches the runner to
+staged mode. Without it nothing changes for an existing configuration.</p>
+<p>The shipped version of that file is
+<code class="docutils literal notranslate"><span class="pre">examples/projects/04_streamflow_intermittence_in_transient/run_calibration_by_hand.toml</span></code>.
+It inherits the project next door, which declares no calibration, and
+writes the two stages as phases.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">run_calibration.toml</span> <span class="pre">--list-phases</span></code> in that directory and
+the two stages the name expands to are the two stages that file writes out. Nothing
+downstream can tell them apart: the runner records <code class="docutils literal notranslate"><span class="pre">phase_name</span></code> and
+<code class="docutils literal notranslate"><span class="pre">phase_index</span></code> from the declarations whichever way they were written, and the
+four calibration figures read those records rather than the protocol. What the
+name still carries is the citation, the version pin and the list of deviations
+from the publication, which a hand-written assembly records nothing of.</p>
+</section>
+<section id="scoring-the-second-stage-on-two-criteria">
+<h2>Scoring the second stage on two criteria<a class="headerlink" href="#scoring-the-second-stage-on-two-criteria" title="Link to this heading">#</a></h2>
+<p>The reason to write the long form is the variant the name cannot express. The
+published method scores the storage stage on the hydrograph alone; this scores
+it on the hydrograph and on the extent of the simulated network, as two blocks
+in one phase, each with its own share of the cost.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration.outputs.gauged_discharge]</span>
+<span class="n">support</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"point"</span>
+<span class="n">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"discharge"</span>
+<span class="n">observes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"NANCON"</span>
+
+<span class="k">[[calibration.objective_blocks]]</span>
+<span class="n">name</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">"network_extension"</span>
+<span class="n">metric</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"distance_gap"</span>
+<span class="n">uses_outputs</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"seepage_network"</span><span class="p">]</span>
+<span class="n">normalize_cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[[calibration.objective_blocks]]</span>
+<span class="n">name</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"hydrograph"</span>
+<span class="n">metric</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"nse_log"</span>
+<span class="n">uses_outputs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"gauged_discharge"</span><span class="p">]</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient_storage"</span>
+<span class="n">max_iter</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span>
+<span class="n">tolerance</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="mf">0.05</span>
+<span class="n">parameters</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Sy"</span><span class="p">]</span>
+<span class="n">objective_blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">hydrograph</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="n">network_extension</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="p">}</span>
+<span class="n">depends_on</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">"steady_conductivity"</span>
+<span class="n">regime</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient"</span>
+
+<span class="k">[calibration.phases.scoring_window]</span>
+<span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2001-01-01"</span>
+</pre></div>
+</div>
+<p>Five things in there are not free choices.</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;point&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">observes</span></code>, for the gauge</dt><dd><p>The single-metric route declares no output, so a stage that scores two
+criteria has to name the gauge as one. That form reads what the
+single-metric route reads, which is what keeps the two costs comparable:
+the station’s own cell where the loader placed one, with the runoff of
+<code class="docutils literal notranslate"><span class="pre">[data.runoff]</span></code> added over the area that cell drains, and the
+whole-catchment series where it placed none, with the basin’s runoff added.
+A discharge station is deliberately never placed by the coordinates written
+beside it, so the second case is the ordinary one, and the run logs one line
+naming the station when it takes it. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--list-phases</span></code> prints
+it as <code class="docutils literal notranslate"><span class="pre">discharge,</span> <span class="pre">station</span> <span class="pre">NANCON</span> <span class="pre">(whole-catchment</span> <span class="pre">series)</span></code>. An <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>
+or <code class="docutils literal notranslate"><span class="pre">geometry</span></code> written beside <code class="docutils literal notranslate"><span class="pre">observes</span></code> is not read, and loading warns
+so, unless <code class="docutils literal notranslate"><span class="pre">snap_radius</span></code> is set. The same target written
+<code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;boundary&quot;</span></code> on the drain
+validates and scores the drain budget instead, which is baseflow without
+runoff and not what a gauge records.</p>
+<p><code class="docutils literal notranslate"><span class="pre">snap_radius</span></code> is the opt-in exception, on a <code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;point&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;cell&quot;</span></code> discharge output. A gauge coordinate rarely sits on
+the talweg the model routes on: on the Nancon it resolves to a cell
+draining 0.107 km2 of the 64.6 km2 catchment. With a radius, the output
+is moved onto the cell that drains the most within that distance before
+it is scored, and a station named in <code class="docutils literal notranslate"><span class="pre">observes</span></code> is then placed by the
+coordinate of its record and snapped from there.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration.outputs.gauged_discharge]</span>
+<span class="n">support</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"point"</span>
+<span class="n">variable</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"discharge"</span>
+<span class="n">observes</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"NANCON"</span>
+<span class="n">x</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="mf">389285.910</span>
+<span class="n">y</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="mf">6816518.749</span>
+<span class="n">snap_radius</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"150 m"</span>
+</pre></div>
+</div>
+<p>The drained area searched is the one the solver accumulates on the mesh,
+on the graph the discharge is routed on, <code class="docutils literal notranslate"><span class="pre">diagonal_neighbors</span></code> included.
+The delineation’s own outlet snap works on the DEM raster instead, and its
+snapped outlet resolves to a mesh cell draining 0.022 km2, so that surface
+is not reused. The radius is a maximum displacement from the gauge, not the
+window width <code class="docutils literal notranslate"><span class="pre">geographic.snap_dist</span></code> is. Each trial logs the distance
+moved and the area drained before and after. A radius that reaches no cell
+but the one the gauge already sits in is refused, with the distance to the
+nearest other cell, and two outputs snapped onto one cell are named in a
+warning, since they would score one series against two records. Without
+<code class="docutils literal notranslate"><span class="pre">snap_radius</span></code> nothing moves, which keeps every existing project where it
+was.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">scoring_window</span></code>, for the spin-up of both blocks</dt><dd><p><code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">=</span> <span class="pre">&quot;2001-01-01&quot;</span></code> is the first date scored, and 2000 is simulated
+and not scored. A series keeps its stamps inside the window. The network
+output reads one state, dated at the stamp that closes the period it
+reads: the last month here, stamped 2003-01-01, inside the window. A
+window that does not hold that stamp is refused, naming both, by
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--check</span></code> and at the first trial, rather than scored under
+the name of a windowed cost. <code class="docutils literal notranslate"><span class="pre">warmup</span></code> and <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code> still load
+but count samples, twelve being a year at a monthly step and twelve days
+at a daily one; the window names the same span at any step.</p>
+</dd>
+<dt>The network block, in transient, scores one instant</dt><dd><p>A network output reads exactly one state unless it declares an <code class="docutils literal notranslate"><span class="pre">extent</span></code>
+table: <code class="docutils literal notranslate"><span class="pre">time</span> <span class="pre">=</span> <span class="pre">&quot;last&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code>, or an ISO date such as
+<code class="docutils literal notranslate"><span class="pre">&quot;2002-10-15&quot;</span></code>, which reads the state of the period that holds it,
+<code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>. The extraction serves the criterion that row and no
+other. On a steady phase the one period spans the whole record, so every
+date of it reads its one state and the same output serves both stages.
+<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> and a list of dates are refused at configuration load. A
+transient comparison against the two mapped extents, counted over the
+calendar years of the run, is the two-bound mode of
+<a class="reference internal" href="#two-maps-and-two-bounds">Two maps and two bounds</a> below: it reads the maps already declared on
+this output and needs no observed intermittence record. Scoring against an
+actual seasonal intermittence record instead is the method of
+<span class="bibtex-citation" id="id1">[<a class="reference internal" href="../../theory/bibliography.html#id20" title="R. Abhervé, C. Roques, J.-R. de Dreuzy, T. Datry, P. Brunner, L. Longuevergne, and L. Aquilina. Improving calibration of groundwater flow models using headwater streamflow intermittence. Hydrological Processes, 2024. doi:10.1002/hyp.15167.">Abhervé <em>et al.</em>, 2024</a>]</span>, a different observation altogether.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">normalize_cost</span></code> on the network block, then a share table</dt><dd><p>The two costs are in different units: <code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> is metres and
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">nse_log</span></code> is a pure number. <code class="docutils literal notranslate"><span class="pre">normalize_cost</span> <span class="pre">=</span> <span class="pre">true</span></code> on the network
+block divides each distance by the output’s <code class="docutils literal notranslate"><span class="pre">validity_length</span></code> (Eq. 4,
+<code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> = 2 h_obs, 150 m on the Nancon mesh), so the gap is counted in
+validity lengths and a gap of one costs as much as an NSE of zero. It stays
+refused on <code class="docutils literal notranslate"><span class="pre">nse_log</span></code>, already dimensionless. A table,
+<code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">block</span> <span class="pre">=</span> <span class="pre">share,</span> <span class="pre">...</span> <span class="pre">}</span></code>, then gives the phase its own balance between two
+pure numbers instead of a weight declared once on the block itself, which
+would also apply to any other phase that reads it. Shares are normalized to
+sum to one, so the trial cost above is
+<code class="docutils literal notranslate"><span class="pre">0.2</span> <span class="pre">*</span> <span class="pre">|gap|</span> <span class="pre">/</span> <span class="pre">L</span> <span class="pre">+</span> <span class="pre">0.8</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">NSElog)</span></code>. Read <code class="docutils literal notranslate"><span class="pre">network_extension.total</span></code>
+and <code class="docutils literal notranslate"><span class="pre">hydrograph.total</span></code>, which every trial reports, to see what it bought.
+Without <code class="docutils literal notranslate"><span class="pre">normalize_cost</span></code> the table is an exchange rate between metres and
+an efficiency, and <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">hydrograph</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">network_extension</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">}</span></code> was the
+spelling it needed.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">regime</span> <span class="pre">=</span> <span class="pre">&quot;transient&quot;</span></code> in place of an override</dt><dd><p>The first stage writes <code class="docutils literal notranslate"><span class="pre">regime</span> <span class="pre">=</span> <span class="pre">&quot;steady&quot;</span></code>, and this one restates
+<code class="docutils literal notranslate"><span class="pre">regime</span> <span class="pre">=</span> <span class="pre">&quot;transient&quot;</span></code>, which is what “then” means between the two: a
+phase without <code class="docutils literal notranslate"><span class="pre">regime</span></code> runs the project’s own time grid, but this stage
+comes right after one that changed it. Writing <code class="docutils literal notranslate"><span class="pre">regime</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">[calibration.phases.overrides]</span> <span class="pre">&quot;flow.flow_regime&quot;</span> <span class="pre">=</span> <span class="pre">&quot;transient&quot;</span></code> is the
+same override, produced for the phase instead of typed into it.</p>
+</dd>
+<dt>No <code class="docutils literal notranslate"><span class="pre">method</span></code> on this stage</dt><dd><p>The hydrograph block is not signed, so the phase has a cost to minimise and
+is handed <code class="docutils literal notranslate"><span class="pre">scipy_nelder_mead</span></code> on its own; <code class="docutils literal notranslate"><span class="pre">--list-phases</span></code> prints the
+choice and why. Write <code class="docutils literal notranslate"><span class="pre">method</span></code> only to run something else, such as
+<code class="docutils literal notranslate"><span class="pre">&quot;cma_es&quot;</span></code> for a global search.</p>
+</dd>
+</dl>
+</section>
+<section id="two-maps-and-two-bounds">
+<h2>Two maps and two bounds<a class="headerlink" href="#two-maps-and-two-bounds" title="Link to this heading">#</a></h2>
+<p>Everything above scores one mapped network. A <code class="docutils literal notranslate"><span class="pre">support</span> <span class="pre">=</span> <span class="pre">&quot;network&quot;</span></code> output
+can carry two, and a transient run can then be scored on a definition of
+“flowing” that holds over a year rather than at one instant. Nothing here
+touches <code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network</span></code>: the protocol still writes the
+paper’s two stages exactly as before, and this is an option of the network
+<em>output</em>, usable in any phase, hand-written or protocol-expanded.</p>
+<p>The maximal map is every mapped reach declared by <code class="docutils literal notranslate"><span class="pre">observed_network</span></code> or
+<code class="docutils literal notranslate"><span class="pre">stream_geometry_path</span></code> — the existing source, and, alone, the default and
+usually the only map a project carries. A minimal map, the <em>permanent</em>
+reaches, may be declared beside it:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration.outputs.seepage_network]</span>
+<span class="n">support</span><span class="w">                      </span><span class="o">=</span><span class="w"> </span><span class="s2">"network"</span>
+<span class="n">stream_geometry_path</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"complete_network.gpkg"</span>
+<span class="n">minimal_stream_geometry_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"permanent_network.gpkg"</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">minimal_observed_network</span> <span class="pre">=</span> <span class="pre">&quot;data.hydrography&quot;</span></code> reads the permanent
+reaches the hydrography data family wrote beside its own network instead of
+naming a second file — it can only do that when the source says which
+reaches are permanent, BD Topage among them. Declare one route or the other
+for the minimal map, never both, and read it as it is: no attribute filter
+runs in calibration, so a source that mixes permanence classes in one file is
+not something a calibration output can split on its own.</p>
+<p>The maximal map scored is the <strong>union</strong> of the two files: wherever the
+minimal map disagrees with the maximal one, the wider of the two is scored,
+never a network the criterion had to fix. <code class="docutils literal notranslate"><span class="pre">frac_minimal_outside_maximal</span></code>
+publishes how much they disagreed, as the share of the minimal map’s cells
+of the scored catchment the maximal map missed before the union. On two
+files digitised independently that share is rarely zero, and it is a
+property of the maps, not of the model — read it once per pair of files, not
+per trial.</p>
+<dl>
+<dt>Steady state, the papers’ case</dt><dd><p>Without a minimal map, the one scored state is compared to the maximal
+map, exactly as every earlier section of this page describes. <strong>With
+both maps declared, the state is compared to the minimal (permanent) map
+instead</strong> — the practice of <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../../theory/bibliography.html#id21" title="R. Abhervé, C. Roques, J.-R. de Dreuzy, T. Van Der Veen, L. Dumaine, E. Chatton, P. Brunner, L. Aquilina, and L. Servière. Projected climate change impacts on groundwater-surface water connectivity in a compartmentalized mountain headwater bedrock aquifer. Water Resources Research, 2025. doi:10.1029/2025WR040083.">Abhervé <em>et al.</em>, 2025</a>]</span> — and the maximal
+map is scored at the same state as a <strong>validation</strong>, published under the
+suffix <code class="docutils literal notranslate"><span class="pre">_maximal_validation</span></code> and never entering the cost. A search
+pointed at <code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code> would therefore find nothing: that key
+does not exist when only one state is scored, by design, so a root
+search cannot silently close on the validation map instead of the map
+that drove it.</p>
+</dd>
+<dt>Transient, the two-bound mode</dt><dd><p>Declaring an <code class="docutils literal notranslate"><span class="pre">extent</span></code> table switches the output from one state to every
+complete calendar year of a transient run:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[calibration.outputs.seepage_network.extent]</span>
+<span class="n">maximal_flowing_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">minimal_dry_steps</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">year_quorum</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="n">visible_flow</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s2">"1 L/s"</span>
+
+<span class="k">[calibration.outputs.seepage_network.extent.weights]</span>
+<span class="n">minimal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="n">maximal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+</pre></div>
+</div>
+<p>For every complete calendar year — a timestep belongs to the year its
+<em>midpoint</em> falls in, and a year the run does not cover whole is dropped —
+two masks are built from the count of timesteps each cell flowed that
+year. A phase <code class="docutils literal notranslate"><span class="pre">scoring_window</span></code> keeps only the complete years it holds,
+which is how the spin-up year leaves the score. A hand-written phase says
+it; the transient stage of <code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network</span></code> writes one by
+default, from one year after the run’s start, so a network block scored
+there leaves its first year out like the hydrograph does:</p>
+<ul class="simple">
+<li><p>the <strong>maximal</strong> simulated mask holds the cells flowing at least
+<code class="docutils literal notranslate"><span class="pre">maximal_flowing_steps</span></code> timesteps of the year;</p></li>
+<li><p>the <strong>minimal</strong> simulated mask holds the cells flowing at every
+timestep of the year but at most <code class="docutils literal notranslate"><span class="pre">minimal_dry_steps</span></code>.</p></li>
+</ul>
+<p><strong>Both count TIMESTEPS, never days</strong>: a weekly or a monthly run would
+otherwise see its rule silently tighten or loosen with the step length. A
+year of 12 monthly steps and <code class="docutils literal notranslate"><span class="pre">maximal_flowing_steps</span> <span class="pre">=</span> <span class="pre">1</span></code> asks a cell to
+flow one month out of twelve; the same default on a daily run asks one day
+out of 365. Declaring <code class="docutils literal notranslate"><span class="pre">minimal_dry_steps</span></code> looser than
+<code class="docutils literal notranslate"><span class="pre">maximal_flowing_steps</span></code> is refused before the first trial, because it
+would make the permanent mask wider than the complete one, an answer that
+contradicts what “permanent” and “complete” mean.</p>
+<p>Across years, a cell enters the <strong>climatological</strong> mask scored — the one
+compared to the map — when it meets its year’s rule in at least
+<code class="docutils literal notranslate"><span class="pre">ceil(year_quorum</span> <span class="pre">*</span> <span class="pre">n_years)</span></code> of the scored years, <code class="docutils literal notranslate"><span class="pre">year_quorum</span></code>
+defaulting to one half. Fewer than three scored years logs a warning: with
+two years, a quorum of one half is their union, which reads less like an
+ordinary “most years” than it sounds.</p>
+<p>The output is refused, before the first trial, on a single steady period,
+on a run covering no complete calendar year, or on a step rule the
+shortest complete year cannot hold (<code class="docutils literal notranslate"><span class="pre">maximal_flowing_steps</span></code> above its
+timestep count, or <code class="docutils literal notranslate"><span class="pre">minimal_dry_steps</span></code> too generous for it).</p>
+<p>Each bound is then scored <strong>once</strong> by the same distance criterion as the
+steady mode (<code class="docutils literal notranslate"><span class="pre">seepage_distance_cost</span></code>): the maximal mask against the
+maximal map, and, when a minimal map is declared, the minimal mask against
+the minimal map. With one map only, the maximal bound alone is scored.
+Each scored year is also scored the same way as a diagnostic, published as
+<code class="docutils literal notranslate"><span class="pre">J_signed_&lt;bound&gt;_y&lt;year&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">n_network_sim_&lt;bound&gt;_y&lt;year&gt;</span></code>, so a
+trend across the record is visible without a second search.</p>
+</dd>
+<dt>“Flowing”, one definition for the criterion and the figures</dt><dd><p>A cell flows at a timestep when it lies in the downstream closure of the
+<em>seepage</em> cells — release above <span class="math notranslate nohighlight">\(\tau \cdot R \cdot A\)</span>, exactly the
+steady mode’s threshold — on the criterion graph, and, unless
+<code class="docutils literal notranslate"><span class="pre">visible_flow</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;0</span> <span class="pre">L/s&quot;</span></code>, when its <strong>routed discharge</strong> also
+reaches <code class="docutils literal notranslate"><span class="pre">visible_flow</span></code>. The routed discharge is the release of the
+seepage cells accumulated down the same graph: a seepage flux, never a
+river discharge, so it carries no runoff and no bed loss. It never
+decreases downstream, so the flowing mask stays closed downstream
+whatever the threshold.</p>
+<p><code class="docutils literal notranslate"><span class="pre">visible_flow</span></code> applies only to this transient mode; the steady, one-state
+paper mode above stays purely geometric (the closure alone), because that
+is the criterion <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../../theory/bibliography.html#id11" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">Abhervé <em>et al.</em>, 2023</a>]</span> published and measured biases
+against. Write it as a discharge with its unit, <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">L/s&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;0.002</span> <span class="pre">m3/s&quot;</span></code>, or as a share of the outlet’s own routed discharge at the
+same timestep, <code class="docutils literal notranslate"><span class="pre">&quot;1%&quot;</span></code>; a bare number is refused, because a metre-cube
+reader and a litre reader would silently disagree. <strong>It is never scaled
+with the cell size</strong>: a cell’s area is a numerical choice, the discharge a
+field observer would see flowing is not.</p>
+<p>No value is agreed in the literature. The closest precedent thresholds a
+<em>simulated</em> discharge at 10 L/s, a small share of the two virtual
+catchments’ own outlet flow, to map their active network
+(<span class="bibtex-citation" id="id4">[<a class="reference internal" href="../../theory/bibliography.html#id37" title="Filippo Zanetti, Nicola Durighetto, Filippo Vingiani, and Gianluca Botter. Stream network dynamics of non-perennial rivers: insights from integrated surface-subsurface hydrological modeling of two virtual catchments. Water Resources Research, 2024. doi:10.1029/2023WR035631.">Zanetti <em>et al.</em>, 2024</a>]</span>); field zero-flow gauge thresholds of
+about 1 to 3 L/s are in use to absorb measurement noise at low flow
+(<span class="bibtex-citation" id="id5">[<a class="reference internal" href="../../theory/bibliography.html#id36" title="Margaret A. Zimmer and others. Zero or not? causes and consequences of zero-flow stream gage readings. WIREs Water, 2020. doi:10.1002/wat2.1436.">Zimmer and others, 2020</a>]</span>). <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">L/s&quot;</span></code>, the default, sits at the low end
+of both. <code class="docutils literal notranslate"><span class="pre">&quot;0</span> <span class="pre">L/s&quot;</span></code> recovers the geometric definition exactly, with no
+discharge test at all.</p>
+</dd>
+<dt>Combining two bounds into one value</dt><dd><p>Each bound has its own root, <span class="math notranslate nohighlight">\(K^*_{minimal}\)</span> and
+<span class="math notranslate nohighlight">\(K^*_{maximal}\)</span>, found by one bisection sweep that brackets both
+residuals — <code class="docutils literal notranslate"><span class="pre">J_signed_minimal</span></code> and <code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code> — on the same
+trials. The value a two-bound search returns is their <strong>weighted geometric
+mean</strong>,</p>
+<div class="math notranslate nohighlight">
+\[\log K = w_{minimal} \log K^*_{minimal} + w_{maximal} \log K^*_{maximal}\]</div>
+<p>with the weights of <code class="docutils literal notranslate"><span class="pre">[calibration.outputs.&lt;name&gt;.extent.weights]</span></code>,
+0.5 / 0.5 by default and required to sum to one. That value is then
+<strong>evaluated once more</strong>, as an ordinary trial, so every number published
+beside it — components, Equation 4, the figures — comes from a real solve
+and not from an interpolation between two others. The report’s
+<code class="docutils literal notranslate"><span class="pre">extra.roots</span></code> carries both roots (their trial, residual, weight and
+final bracket), <code class="docutils literal notranslate"><span class="pre">delta_log10</span> <span class="pre">=</span> <span class="pre">log10(K*_maximal</span> <span class="pre">/</span> <span class="pre">K*_minimal)</span></code> and the
+combined trial id; there is no <code class="docutils literal notranslate"><span class="pre">extra.bracket</span></code> and no
+<code class="docutils literal notranslate"><span class="pre">parameter_intervals</span></code> in this mode, because the interval around one
+value has no meaning between two roots — read <code class="docutils literal notranslate"><span class="pre">delta_log10</span></code> as the
+spread instead. The budget is known before the first solve too: 24
+evaluations inside the declared bounds on the Nancon’s search interval and
+sweep, 26 to 32 after one to four bracket expansions, against 15 to 23 for
+a one-bound search on the same interval.</p>
+<p>A minimising engine (Nelder-Mead, CMA-ES, …) has no root to combine, and
+minimises</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{cost} = w_{minimal} \lvert J_{minimal} \rvert
+              + w_{maximal} \lvert J_{maximal} \rvert\]</div>
+<p>instead — the criterion’s <code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> summed over both weighted
+pairs. <strong>Caveat</strong>: a weighted sum of two V-shaped costs tends to settle at
+one of the two roots rather than at a point between them, since moving off
+either root only ever increases one term. A bisection is the estimator
+this mode was designed for; a minimiser answers a related but different
+question.</p>
+<p>A bound weighted zero is not searched at all: weights <code class="docutils literal notranslate"><span class="pre">{minimal</span> <span class="pre">=</span> <span class="pre">1,</span>
+<span class="pre">maximal</span> <span class="pre">=</span> <span class="pre">0}</span></code> reduce a two-root search to one root on the minimal bound,
+with no wasted solve, the practice of <span class="bibtex-citation" id="id6">[<a class="reference internal" href="../../theory/bibliography.html#id21" title="R. Abhervé, C. Roques, J.-R. de Dreuzy, T. Van Der Veen, L. Dumaine, E. Chatton, P. Brunner, L. Aquilina, and L. Servière. Projected climate change impacts on groundwater-surface water connectivity in a compartmentalized mountain headwater bedrock aquifer. Water Resources Research, 2025. doi:10.1029/2025WR040083.">Abhervé <em>et al.</em>, 2025</a>]</span> read
+literally. Weights other than 0.5 / 0.5 without a minimal map are refused
+at load: they would weigh a bound that is never scored.</p>
+</dd>
+<dt>Reading the component keys</dt><dd><p><code class="docutils literal notranslate"><span class="pre">n_bounds_scored</span></code> (1.0 or 2.0) says how many bounds are in the cost, and
+it is what the search and the reader both key on.</p>
+<ul class="simple">
+<li><p><strong>One bound</strong> (no <code class="docutils literal notranslate"><span class="pre">extent</span></code>, or <code class="docutils literal notranslate"><span class="pre">extent</span></code> with one map): the full set
+of components this page already documents, unsuffixed — <code class="docutils literal notranslate"><span class="pre">J_signed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">D_so</span></code>, <code class="docutils literal notranslate"><span class="pre">D_os</span></code>, <code class="docutils literal notranslate"><span class="pre">Doptim</span></code>, <code class="docutils literal notranslate"><span class="pre">roptim</span></code>, … — plus the same set again
+suffixed <code class="docutils literal notranslate"><span class="pre">_maximal</span></code> (one map) or <code class="docutils literal notranslate"><span class="pre">_minimal</span></code> (one state, both maps).</p></li>
+<li><p><strong>Two bounds</strong> (<code class="docutils literal notranslate"><span class="pre">extent</span></code> and a minimal map, both weights above zero):
+<strong>only</strong> the suffixed sets exist — <code class="docutils literal notranslate"><span class="pre">J_signed_minimal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code>, <code class="docutils literal notranslate"><span class="pre">roptim_minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">roptim_maximal</span></code>, and so on
+— plus <code class="docutils literal notranslate"><span class="pre">weight_minimal</span></code> and <code class="docutils literal notranslate"><span class="pre">weight_maximal</span></code>. There is no unsuffixed
+<code class="docutils literal notranslate"><span class="pre">J_signed</span></code> to read by accident: a single-root bisection pointed at
+this output finds nothing, rather than silently closing on whichever
+bound happens to come first.</p></li>
+<li><p><strong>One state with both maps</strong>: the minimal bound’s set is the cost, both
+unsuffixed and again as <code class="docutils literal notranslate"><span class="pre">_minimal</span></code>; the maximal map’s set is published
+as <code class="docutils literal notranslate"><span class="pre">_maximal_validation</span></code> and never as <code class="docutils literal notranslate"><span class="pre">_maximal</span></code>.</p></li>
+<li><p>The extent mode adds <code class="docutils literal notranslate"><span class="pre">J_signed_&lt;bound&gt;_y&lt;year&gt;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">n_network_sim_&lt;bound&gt;_y&lt;year&gt;</span></code> per scored year and bound, plus
+<code class="docutils literal notranslate"><span class="pre">n_years_scored</span></code>, <code class="docutils literal notranslate"><span class="pre">n_years_required</span></code>, <code class="docutils literal notranslate"><span class="pre">first_year_scored</span></code>,
+<code class="docutils literal notranslate"><span class="pre">last_year_scored</span></code>, <code class="docutils literal notranslate"><span class="pre">n_steps_min_per_year</span></code>, <code class="docutils literal notranslate"><span class="pre">year_quorum</span></code>,
+<code class="docutils literal notranslate"><span class="pre">maximal_flowing_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">minimal_dry_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">visible_flow_m3_s</span></code>
+and <code class="docutils literal notranslate"><span class="pre">visible_flow_outlet_share</span></code>.</p></li>
+<li><p>Any minimal map, in either mode, adds <code class="docutils literal notranslate"><span class="pre">frac_minimal_outside_maximal</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">roptim_verdict</span></code> follows the same split: a two-bound output publishes
+<code class="docutils literal notranslate"><span class="pre">roptim_verdict.&lt;output&gt;_minimal</span></code> and <code class="docutils literal notranslate"><span class="pre">roptim_verdict.&lt;output&gt;_maximal</span></code>
+instead of one unsuffixed entry, each read at the trial the search
+returns and each carrying its own <code class="docutils literal notranslate"><span class="pre">snap</span></code> verdict when
+<code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span> <span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;apply&quot;</span></code>.</p>
+</dd>
+<dt>Deviations to declare</dt><dd><p>A run using the extent table departs from the papers in five ways that
+belong in a methods paragraph beside the calibrated value: it scores
+transient masks over calendar years rather than one steady state; the
+duration rule is counted in timesteps, not days; a climatological quorum
+decides which cells count across years; a visible-flow threshold, not only
+the geometric closure, decides what “flowing” means; and, with two maps,
+the two bounds are combined with declared weights. The
+<code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network</span></code> protocol itself is unchanged by any of
+this: it still writes the paper’s two steady/transient stages, and the
+extent table is something a hand-written phase, or a protocol-expanded one
+edited afterwards, opts into on its network output. The <code class="docutils literal notranslate"><span class="pre">scoring_window</span></code>
+its transient stage prints under <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--expand</span></code>, one year after
+the run’s start unless the file declares one, is the phase’s: it bounds a
+two-bound network block pasted into that stage as well, and is refused
+beside a network block in one state, which has no year to cut.</p>
+</dd>
+<dt>A figure outside any calibration</dt><dd><p><code class="docutils literal notranslate"><span class="pre">network_extent_bounds_map</span></code> draws the maximal and minimal simulated
+extents of a transient run against the two stored maps without running any
+search: point <code class="docutils literal notranslate"><span class="pre">[display].figures</span></code> at it on a run that stored both
+<code class="docutils literal notranslate"><span class="pre">reference</span></code> (the complete network) and <code class="docutils literal notranslate"><span class="pre">reference_permanent</span></code> (the
+permanent one). See <a class="reference internal" href="../figures.html"><span class="doc">Figure Catalog</span></a> for its options; it reports
+cell counts only, no distance.</p>
+</dd>
+</dl>
+</section>
+<section id="measured-on-the-nancon">
+<h2>Measured on the Nancon<a class="headerlink" href="#measured-on-the-nancon" title="Link to this heading">#</a></h2>
+<p>The calibration files of example 04 were run on 2026-09-28, same code and same
+machine. Every stage two scores from 2001-01-01, 2000 being spin-up, and a
+monthly stamp closes its month, so the gauge is compared with the month the
+stamp ends (commit <code class="docutils literal notranslate"><span class="pre">e6c5e50f5</span></code>). A score taken before that fix is not
+comparable with these.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 28.0%" />
+<col style="width: 28.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">run_calibration.toml</span></code>, the protocol</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">run_calibration_by_hand.toml</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">run_calibration_bdtopage.toml</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>stage one</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">K</span></code> = 8.107e-05 m/s, signed gap -1.96 m, 15 trials</p></td>
+<td><p>identical, to the trial</p></td>
+<td><p>two roots, <code class="docutils literal notranslate"><span class="pre">K*</span></code> = 2.564e-05 on the permanent map and 1.358e-06 on
+the complete one, combined 5.9e-06, 24 trials</p></td>
+</tr>
+<tr class="row-odd"><td><p>stage two</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sy</span></code> = 0.045, NSElog 0.916, 8 trials</p></td>
+<td><p>identical, to the trial</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sy</span></code> = 0.056, NSElog 0.922, 6 trials</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The file written by hand reproduces the protocol to the trial, which is what it
+is for: the recipe written out as two phases, each key visible.</p>
+<p>The gauge does not tell the conductivities apart. From 5.9e-06 to 8.1e-05, a
+factor of fourteen, the stage two fit stays between 0.914 and 0.922 of NSElog,
+and the whole simplex of the protocol moves it from 0.9154 to 0.9160. At a
+monthly step the hydrograph follows the recharge it is given: it reads <code class="docutils literal notranslate"><span class="pre">Sy</span></code>,
+within about ten per cent, and leaves <code class="docutils literal notranslate"><span class="pre">K</span></code> to the network. Its volume is short
+by 20 to 21 per cent at every calibrated point, because the recharge and
+runoff files of the example carry 79 per cent of the gauged volume over
+2000-2002, which no parameter changes.</p>
+<p>The two BD Topage roots are 1.28 decades apart, so no homogeneous <code class="docutils literal notranslate"><span class="pre">K</span></code> holds
+both maps. Inside the catchment the simulated extent grows by a factor of about
+1.4 from its yearly minimum to its maximum, the maps by a factor of 2.83. The
+combined value holds neither bound, and the permanent one fails Eq. 4 at it
+(<code class="docutils literal notranslate"><span class="pre">Doptim</span></code> = 209.8 m against 150 m).</p>
+<p>The validity indicator clears its bound at the protocol’s <code class="docutils literal notranslate"><span class="pre">K</span></code>. <code class="docutils literal notranslate"><span class="pre">roptim</span></code> is
+the agreement between the two networks in cells of <code class="docutils literal notranslate"><span class="pre">h_obs</span></code>; example 04
+declares neither an accuracy nor a snap, so its validity length is two cells,
+150 m, and it is valid at 2 and under. It runs from 1.43 to 10.3 over the stage
+one sweep and is 1.51 at the retained <code class="docutils literal notranslate"><span class="pre">K</span></code> (<code class="docutils literal notranslate"><span class="pre">Doptim</span></code> = 113.3 m).
+<code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code> is 0.78 against 0.90: the mapped network agrees
+poorly with the model top, so the distances carry that disagreement on top of
+the hydrogeology. A <code class="docutils literal notranslate"><span class="pre">K</span></code> read off this example is a demonstration, not a number
+to cite, and the ratio <code class="docutils literal notranslate"><span class="pre">K/R</span></code> is what to publish, here with <code class="docutils literal notranslate"><span class="pre">R</span></code> =
+9.075e-09 m/s.</p>
+</section>
+<section id="what-each-choice-buys-you">
+<h2>What each choice buys you<a class="headerlink" href="#what-each-choice-buys-you" title="Link to this heading">#</a></h2>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">&quot;bisection&quot;</span></code></dt><dd><p>A root search, not a minimiser. The criterion has a zero, not a minimum, and
+the two are not the same point. It stops on the width of the bracket, never
+on the size of the residual: the residual is a step function that jumps over
+zero and may never get small. It searches one parameter, and that parameter
+has to declare <code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">=</span> <span class="pre">&quot;log&quot;</span></code>: the width it stops on is a width in
+that variable, so on any other transform it would read as an absolute one.
+A two-parameter space and a non-log transform are both refused.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">sweep_points</span> <span class="pre">=</span> <span class="pre">7</span></code></dt><dd><p>A coarse logarithmic sweep before the bisection. It checks the monotonicity
+the paper assumes rather than supposing it, it sees every crossing, and the
+crossing curves come out of the same solves. Set it to zero for the pure
+bisection of the paper.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">max_iter</span></code> of the bisection</dt><dd><p>Its budget is known before the first solve, so the default <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> lets
+the search count it. With <code class="docutils literal notranslate"><span class="pre">d</span></code> the declared interval in decades,
+<code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">log10(1</span> <span class="pre">+</span> <span class="pre">rel_tol)</span></code>, <code class="docutils literal notranslate"><span class="pre">S</span></code> sweep points (two when <code class="docutils literal notranslate"><span class="pre">sweep_points</span></code> is
+zero), <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">d</span> <span class="pre">/</span> <span class="pre">(S</span> <span class="pre">-</span> <span class="pre">1)</span></code> the sweep step and <code class="docutils literal notranslate"><span class="pre">E</span> <span class="pre">=</span> <span class="pre">bracket_expand</span></code>:</p>
+<ul class="simple">
+<li><p>a root inside the bounds costs <code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">+</span> <span class="pre">ceil(log2(s</span> <span class="pre">/</span> <span class="pre">t))</span></code>, the nominal count;</p></li>
+<li><p>a root found after <code class="docutils literal notranslate"><span class="pre">e</span></code> expansions costs <code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">+</span> <span class="pre">2e</span> <span class="pre">+</span> <span class="pre">ceil(log2(1</span> <span class="pre">/</span> <span class="pre">t))</span></code>,
+since each expansion evaluates two new ends and leaves a bracket one
+decade wide;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> budgets the largest of these, the worst case.</p></li>
+</ul>
+<p>On the Nancon, <code class="docutils literal notranslate"><span class="pre">[1e-7,</span> <span class="pre">1e-3]</span></code> m/s, seven sweep points and one per cent:
+15 inside the bounds, then 17, 19, 21 and 23 after one to four expansions,
+so <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> is 23. The <code class="docutils literal notranslate"><span class="pre">20</span></code> the protocol used as its default covered two
+expansions; the <code class="docutils literal notranslate"><span class="pre">18</span></code> written above covers one, and
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--check</span></code> says so. A number below the nominal count is
+refused, by <code class="docutils literal notranslate"><span class="pre">--check</span></code> and again before the first solve, with the count to
+write. If the budget still runs out, for instance on failed trials, the
+search is granted exactly the halvings its bracket still needs, once, with
+a warning, and only if they fit in half the budget.</p>
+<p>Nelder-Mead, stage two by default, cannot count what it needs and gets no
+extension. Spending <code class="docutils literal notranslate"><span class="pre">max_iter</span></code> before its tolerance leaves the stage not
+converged: the report says so, the session closes as <code class="docutils literal notranslate"><span class="pre">partial</span></code>, nothing
+is frozen and a stage that depends on it is refused. Run it again with a
+larger <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>: the trials already solved come back from the cache.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">[calibration.phases.overrides]</span></code></dt><dd><p>The two stages do not run the same model: the first is steady and reads a
+seepage mask at equilibrium, the second is transient over a span long enough
+to shape the recessions. The flow regime and the simulated period are
+properties of the model rather than of the search, so the phase declares
+them. A phase is refused if it overrides a path another phase freezes, or if
+it rewrites the calibration section under itself.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">points_per_dim</span></code> on a grid phase</dt><dd><p>What sets the number of points, not <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>. The grid adapter defaults
+to five per dimension and <code class="docutils literal notranslate"><span class="pre">max_iter</span></code> is only a ceiling, so a phase asking
+for nine trials without this keyword runs five.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">weighting</span> <span class="pre">=</span> <span class="pre">&quot;area&quot;</span></code></dt><dd><p>Recommended as soon as the mesh is refined along the streams, which is the
+usual refinement: an unweighted mean over-samples the river corridor, where
+distances are smallest. Both weightings are always reported, and their gap
+measures that effect directly.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tau_specific_ratio</span></code></dt><dd><p>A cell releasing less than this fraction of its own recharge is not a
+stream. Zero reproduces the criterion of the paper, which gives no threshold
+at all.</p>
+<p><strong>Leave it at its default, and do not read it as a working knob.</strong> It is
+inert as defined: a cell that releases at all carries the drainage it
+collects from everything upslope, a hundred to a thousand times its own
+recharge, so a fraction of that recharge never excludes anything. Measured on
+the Nancon at the calibrated conductivity, over the 380 cells releasing
+inside the catchment, not one had a flux below the threshold, and raising
+the ratio to 100 still kept 28.</p>
+<p>Thresholding the total release instead was tried and is worse: at
+<code class="docutils literal notranslate"><span class="pre">1e-4</span></code> of <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">*</span> <span class="pre">A</span></code> the cut lands at 4.9e-4 m3/s, above the many small
+releases a low conductivity spreads over the catchment and below the few
+large ones a high conductivity concentrates. The simulated network then
+GROWS with the conductivity instead of retracting, the residual loses its
+monotonicity, and the root moves three decades. What the threshold should be
+a fraction of is an open question; neither answer tried so far is right.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">observed_rasterization</span></code></dt><dd><p>How the mapped network becomes cells. <code class="docutils literal notranslate"><span class="pre">&quot;crossing&quot;</span></code>, the default, keeps the
+cell holding each point where a line crosses the segment joining two
+edge-sharing cell centres: on a structured grid it is WhiteboxTools
+<code class="docutils literal notranslate"><span class="pre">VectorLinesToRaster</span></code>, the paper’s tool, and it draws the map one cell
+wide like the simulated network, so a model that reproduces the map scores
+zero. <code class="docutils literal notranslate"><span class="pre">&quot;touch&quot;</span></code> keeps every cell the line touches, corners included, and
+replays a session made before 2026-09. On the Nancon at 75 m it draws 730
+cells against 490, and the root moves by about ten per cent. Each trial
+records <code class="docutils literal notranslate"><span class="pre">n_observed_cells</span></code> and <code class="docutils literal notranslate"><span class="pre">n_observed_features_fallback</span></code>, the
+reaches that crossed no segment and were kept at their midpoint cell. The
+figures redrawn from a run use the same rule and default.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">objective</span> <span class="pre">=</span> <span class="pre">&quot;nse_log&quot;</span></code> in the second stage</dt><dd><p>The Nash-Sutcliffe efficiency on log-transformed series, which weights the
+recessions. Do not write <code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">=</span> <span class="pre">&quot;log&quot;</span></code> for this: that takes the
+logarithm of an already-computed cost and is an unrelated operation.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">variable</span></code> and <code class="docutils literal notranslate"><span class="pre">objective</span></code> on the second stage only</dt><dd><p>Declaring either one picks the single-metric route for that phase. The
+phase then inherits neither the outputs nor the objective blocks the
+calibration declares, which is what keeps the transient stage off the
+network criterion of the first one. Declaring both conventions on the same
+phase is refused rather than silently resolved.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">scoring_window</span></code> rather than <code class="docutils literal notranslate"><span class="pre">warmup_periods</span></code></dt><dd><p>A window in dates means the same span whatever the output frequency; a count
+of samples does not. The two are mutually exclusive and declaring both is
+refused.</p>
+</dd>
+</dl>
+</section>
+<section id="running-it">
+<h2>Running it<a class="headerlink" href="#running-it" title="Link to this heading">#</a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>hmp<span class="w"> </span>calibrate<span class="w"> </span>calibration.toml
+<span class="gp">$ </span>hmp<span class="w"> </span>calibrate<span class="w"> </span>calibration.toml<span class="w"> </span>--list-phases
+<span class="gp">$ </span>hmp<span class="w"> </span>calibrate<span class="w"> </span>calibration.toml<span class="w"> </span>--phase<span class="w"> </span>steady_conductivity
+</pre></div>
+</div>
+<p>The first form is the one to use. It runs the phases in declaration order and
+is the only form that produces the two-stage result the page describes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--list-phases</span></code> prints the declared phases and exits without running
+anything.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--phase</span></code> selects a single phase, and it only accepts one that does not
+depend on another. On the configuration above that means <code class="docutils literal notranslate"><span class="pre">steady_conductivity</span></code>,
+and nothing else: <code class="docutils literal notranslate"><span class="pre">--phase</span> <span class="pre">transient_storage</span></code> is refused, because
+<code class="docutils literal notranslate"><span class="pre">transient_storage</span></code> declares <code class="docutils literal notranslate"><span class="pre">depends_on</span> <span class="pre">=</span> <span class="pre">&quot;steady_conductivity&quot;</span></code> and a phase whose
+dependency did not run in the same invocation is missing the values that
+dependency freezes. The runner refuses rather than running it against the
+baseline the TOML declares, which would be a different calibration with nothing
+in the result to say so. There is no way to hand a frozen value in from a
+previous invocation: to run the second stage, run both.</p>
+</section>
+<section id="reading-the-output">
+<h2>Reading the output<a class="headerlink" href="#reading-the-output" title="Link to this heading">#</a></h2>
+<p>Every trial writes close to forty diagnostics into <code class="docutils literal notranslate"><span class="pre">trials.jsonl</span></code> and into the
+iteration table. They are all prefixed with the name of the output that
+produced them, so the keys below read <code class="docutils literal notranslate"><span class="pre">seepage_network.J_signed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">seepage_network.roptim</span></code> and so on in the files. They are written whether or
+not a run is promoted; the configuration above promotes one, the best. The ones
+to look at first:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">n_bounds_scored</span></code></dt><dd><p>1.0 for everything on this page above “Two maps and two bounds”, 2.0 for an
+output scoring the transient extent table against both a maximal and a
+minimal map. It decides which of <code class="docutils literal notranslate"><span class="pre">J_signed</span></code> or <code class="docutils literal notranslate"><span class="pre">J_signed_minimal</span></code> /
+<code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code> exists on a trial; see that section’s “Reading the
+component keys” for the full split.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">J_signed</span></code></dt><dd><p>The signed residual. Its sign says which side of the balance the trial is
+on, and it is what the search brackets. If it never changes sign over the
+sweep, the search widens the interval by a decade on each side, up to
+<code class="docutils literal notranslate"><span class="pre">bracket_expand</span></code> times (four by default), then raises and names both ends
+rather than returning the better of the two. One failed evaluation anywhere
+in the sweep skips the widening: the surface is the problem, not the
+interval. A root that only exists outside the declared bounds is returned
+with a warning naming both, because several decades out is usually a
+residual that stopped responding to the parameter rather than a surprising
+value.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">roptim</span></code>, <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code>, <code class="docutils literal notranslate"><span class="pre">validity_length_m</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">roptim</span></code> is <code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">/</span> <span class="pre">h_obs</span></code>, the paper’s Equation 3, kept to compare
+with its Table 1. <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code> is Equation 4, <code class="docutils literal notranslate"><span class="pre">Doptim</span> <span class="pre">&lt;=</span>
+<span class="pre">validity_length_m</span></code>, and <code class="docutils literal notranslate"><span class="pre">validity_length_provenance</span></code> says what set the
+length (“The validity length” above). All three are recorded on every
+trial. The bound <strong>qualifies</strong> the result and does not withhold it: a
+violation warns and the value comes back, unless you set
+<code class="docutils literal notranslate"><span class="pre">on_roptim_violation</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code>, which raises instead. And it measures
+agreement, not correctness, so do not read it as a quality score of the
+model.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">roptim_verdict</span></code></dt><dd><p>The bound of Equation 4, read once, on the trial the search returns, the
+way the paper reads it: “At this point” (HESS p. 3225), not on the way
+there. A report entry per network output, <code class="docutils literal notranslate"><span class="pre">{value,</span> <span class="pre">Doptim,</span> <span class="pre">h_obs_m,</span>
+<span class="pre">validity_length_m,</span> <span class="pre">provenance,</span> <span class="pre">valid,</span> <span class="pre">causes}</span></code>: <code class="docutils literal notranslate"><span class="pre">value</span></code> is <code class="docutils literal notranslate"><span class="pre">roptim</span></code>,
+<code class="docutils literal notranslate"><span class="pre">provenance</span></code> the name of what set the length, and <code class="docutils literal notranslate"><span class="pre">causes</span></code> lists what
+failed, <code class="docutils literal notranslate"><span class="pre">doptim</span></code>, <code class="docutils literal notranslate"><span class="pre">snap</span></code> or <code class="docutils literal notranslate"><span class="pre">empty</span></code>. A <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> that is not a
+number, an empty simulated network at the returned trial, counts as a
+violation. With <code class="docutils literal notranslate"><span class="pre">on_roptim_violation</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code> the raise happens after
+the session is saved, so every trial is still on disk, and a staged
+calibration stops there rather than freezing an unqualified value into a
+dependent phase. An output scoring two bounds (<code class="docutils literal notranslate"><span class="pre">n_bounds_scored</span></code> = 2, see
+“Two maps and two bounds”) has no unsuffixed entry: it publishes
+<code class="docutils literal notranslate"><span class="pre">roptim_verdict.&lt;output&gt;_minimal</span></code> and <code class="docutils literal notranslate"><span class="pre">roptim_verdict.&lt;output&gt;_maximal</span></code>
+instead, each read on the same returned trial against its own length.
+<code class="docutils literal notranslate"><span class="pre">h_obs_m</span></code> in every entry is <code class="docutils literal notranslate"><span class="pre">h_obs</span></code>, not the mesh’s median cell size
+(“Snapping the mapped network” above): the cell size where the mapped
+network itself lies. With <code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span> <span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;apply&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">valid</span></code> also requires the displacement and rejected-share bounds, and
+the entry then carries a <code class="docutils literal notranslate"><span class="pre">snap</span></code> sub-record; see the same section.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code></dt><dd><p>The denominator of the calibrated ratio. It is what makes the result a
+<code class="docutils literal notranslate"><span class="pre">K/R</span></code> rather than a <code class="docutils literal notranslate"><span class="pre">K</span></code>, and comparing it across the trials of a session
+is how you check the first stage really held the recharge still.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code>, <code class="docutils literal notranslate"><span class="pre">d_aquifer_m</span></code> and <code class="docutils literal notranslate"><span class="pre">d_sat_over_d</span></code></dt><dd><p>The paper’s <code class="docutils literal notranslate"><span class="pre">dsat</span></code>: the saturated thickness the model computes, averaged
+by area over the catchment at the state the network is read from, then the
+imposed thickness over the same cells and their ratio. A backend that
+serves no saturated thickness publishes none of these and still scores the
+network.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">d_sat_dry_fraction</span></code>, <code class="docutils literal notranslate"><span class="pre">d_sat_inactive_fraction</span></code> or <code class="docutils literal notranslate"><span class="pre">d_sat_unset_fraction</span></code></dt><dd><p>The share of catchment area left out of <code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code> because its thickness
+is not finite. MODFLOW writes one sentinel for a dry cell (HDRY) and
+another for a cell it never solved (HNOFLO), and the thickness alone
+cannot tell them apart. When the mesh carries an inactive mask (IDOMAIN,
+lake footprints included) the share splits: <code class="docutils literal notranslate"><span class="pre">d_sat_dry_fraction</span></code> is an
+active cell with no water table, a physical state that biases <code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code>
+upward, and <code class="docutils literal notranslate"><span class="pre">d_sat_inactive_fraction</span></code> is outside the solved domain, a
+modelling choice rather than a state. A mesh without that mask publishes
+the single <code class="docutils literal notranslate"><span class="pre">d_sat_unset_fraction</span></code> instead.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_reachable_obs_raw</span></code></dt><dd><p>How much of the criterion’s own measurement is a top-versus-map
+disagreement, and how much of the scored catchment has a descent that
+reaches the mapped network without the sealed outlet. <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code>
+is measured on the model top and
+not on the burned routing DEM, so a low value is not evidence the burning
+was skipped: read it beside the <code class="docutils literal notranslate"><span class="pre">alpha</span></code> of the geographic step, as the
+second item of “Before you start” says. They describe the geometry, not the
+trial, so they are identical across a session: the static geometry is
+rebuilt at every trial from the same topography and comes out the same.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_obs_outside_catchment</span></code></dt><dd><p>The same ratio on the support the criterion actually scores, and the share
+of the mapped cells that sit outside the scored catchment. Outside the
+catchment the mesh is a buffer: nothing there is required to descend into
+the network, so a linework wider than the catchment inflates the closure of
+<code class="docutils literal notranslate"><span class="pre">alpha_obs_closure</span></code> without adding to its numerator. On the Nancon 55 per
+cent of the mapped cells are out, and the two ratios read 0.306 and 0.693
+while one outlet sealed the whole mesh.
+<strong>Read the catchment one to judge the agreement</strong>, and the whole-mesh one
+only to see how much linework the criterion carries beyond the basin. A run
+whose <code class="docutils literal notranslate"><span class="pre">reference</span></code> network is already clipped, which is what the data
+pipeline persists, has the two agree.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code></dt><dd><p>The catchment the criterion scores is read on its own graph: every cell
+whose descent on the model top, flooded from the domain border, reaches the
+outlet. The outlet is the most accumulated cell within two cells of the
+pour point the geographic step snapped. The raster polygon of the
+delineation only builds the domain and places that outlet, and this number
+is the area of their symmetric difference over the area of the polygon. A
+value above 0.05 is logged as a warning: an outlet on another branch, or a
+mesh much coarser than the DEM. On the Nancon grid at 75 m it reads 0.002.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code> and <code class="docutils literal notranslate"><span class="pre">frac_unreachable_os</span></code></dt><dd><p>The share of each support whose descent ends without meeting its target.
+The bound holds on <code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code> alone: its target is the mapped
+network with the outlet sealed in, which does not move between trials, so
+beyond <code class="docutils literal notranslate"><span class="pre">max_unreachable_fraction</span></code> (five per cent by default) the trial
+fails loudly, because averaging over a truncated support is a fiction and
+the cells dropped are never a random sample: they sit upstream of a pit.
+<code class="docutils literal notranslate"><span class="pre">frac_unreachable_os</span></code> is reported and deliberately unbounded. Its target
+is the SIMULATED network, which the calibration moves: at a high
+conductivity the simulated streams retract into the talwegs and mapped cells
+legitimately have nothing left to descend into. Those cells saturate at
+<code class="docutils literal notranslate"><span class="pre">L_cap</span></code>, and the value is the signal the search reads at the high end of
+its bracket, not a broken surface.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">D_so_median</span></code>, <code class="docutils literal notranslate"><span class="pre">D_so_p90</span></code>, <code class="docutils literal notranslate"><span class="pre">D_so_top5_share</span></code></dt><dd><p>The shape of the tail, with <code class="docutils literal notranslate"><span class="pre">D_os_median</span></code>, <code class="docutils literal notranslate"><span class="pre">D_os_p90</span></code> and
+<code class="docutils literal notranslate"><span class="pre">D_os_top5_share</span></code> beside them for the other support. The median is usually
+zero and a few long branches carry most of the value, so the mean is not a
+typical gap.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">n_valid</span></code>, <code class="docutils literal notranslate"><span class="pre">n_excess</span></code>, <code class="docutils literal notranslate"><span class="pre">n_missing</span></code></dt><dd><p>The three-class counts. The criterion balances the last two against each
+other, which is what the confusion map draws.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">D_so_over_D_os</span></code>, the four <code class="docutils literal notranslate"><span class="pre">overlap_*</span></code> indices, <code class="docutils literal notranslate"><span class="pre">n_neither</span></code>, <code class="docutils literal notranslate"><span class="pre">L_sim_m</span></code>, <code class="docutils literal notranslate"><span class="pre">L_obs_m</span></code></dt><dd><p>Secondary diagnostics, never scored, that follow the <code class="docutils literal notranslate"><span class="pre">fuzzy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">total_length</span></code> outputs of the authors’ own published code (Zenodo
+8311547). <code class="docutils literal notranslate"><span class="pre">D_so_over_D_os</span></code> is the ratio it branches its dichotomy on;
+its crossing of one is the zero of <code class="docutils literal notranslate"><span class="pre">J_signed</span></code>, so it adds a scale-free
+reading and no new information. <code class="docutils literal notranslate"><span class="pre">n_neither</span></code> counts a cell neither
+simulated nor mapped, <code class="docutils literal notranslate"><span class="pre">overlap_Ea</span></code> reads the agreement between the two
+network sizes, <code class="docutils literal notranslate"><span class="pre">overlap_Sa</span></code> the excess relative to the mapped size,
+<code class="docutils literal notranslate"><span class="pre">overlap_Na</span></code> the missing share relative to what the map leaves without a
+stream, and <code class="docutils literal notranslate"><span class="pre">overlap_E</span></code> their product. <code class="docutils literal notranslate"><span class="pre">L_sim_m</span></code> and <code class="docutils literal notranslate"><span class="pre">L_obs_m</span></code> are
+each network’s length, the sum of <code class="docutils literal notranslate"><span class="pre">sqrt(cell</span> <span class="pre">area)</span></code> over its cells.
+Three departures from that published code: the counts use the criterion’s
+own supports, the catchment without water bodies, where the published code
+counts every basin pixel; the mapped side is the raw network, as <code class="docutils literal notranslate"><span class="pre">D_os</span></code>
+reads it, where the published code counts it closed downslope; and a
+length sums cell sizes rather than the WhiteboxTools polylines the
+published code vectorises, so it drops no stub and never applies the
+published two-cell, 110 m filter.</p>
+</dd>
+</dl>
+</section>
+<section id="what-it-looks-like-on-a-real-catchment">
+<h2>What it looks like on a real catchment<a class="headerlink" href="#what-it-looks-like-on-a-real-catchment" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">examples/projects/21_nancon_network_calibration</span></code> runs the configuration
+above on the Nancon at Fougeres, 64.64 km2 in Brittany, in two variants: a
+Cauchy drain over the whole surface (<code class="docutils literal notranslate"><span class="pre">auto_drn_full.toml</span></code>) and the main
+reaches routed in SFR (<code class="docutils literal notranslate"><span class="pre">auto_sfr_drn.toml</span></code>). Its <code class="docutils literal notranslate"><span class="pre">README.md</span></code> carries the
+measured numbers and their date, and is the one to read for the current
+figure: the SFR bed elevation was corrected on 2026-09-06, every session
+committed before that date calibrated the wrong geometry, and the README
+says so rather than letting a stale number stand unlabelled. At last
+measurement <code class="docutils literal notranslate"><span class="pre">roptim</span></code> ran from 3.93 to 12.01 over the sweep, above its bound
+of two, so every trial is returned qualified rather than withheld; the two
+known departures the README also carries are a one-layer model against the
+paper’s six, and a mapped drainage density 2.1 times looser than Table 1
+because the linework is filtered to the perennial network. A stage two
+pinning <code class="docutils literal notranslate"><span class="pre">Sy</span></code> on a search bound is what a stage that identifies
+<span class="math notranslate nohighlight">\(S_y/T\)</span> does when it is handed a biased <span class="math notranslate nohighlight">\(T\)</span>: it saturates instead
+of absorbing, rather than a sign that the search failed.</p>
+<p>Two things that example shows and this page cannot: the same catchment
+calibrated under both MODFLOW backends, eleven per cent apart on the root; and
+the same catchment again with the reaches in SFR, which is what puts the
+release union of the previous section under load.</p>
+</section>
+<section id="the-figures">
+<h2>The figures<a class="headerlink" href="#the-figures" title="Link to this heading">#</a></h2>
+<p>Ten figures are registered for this method: <code class="docutils literal notranslate"><span class="pre">downslope_distance_crossing</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bisection_bracket_trace</span></code>, <code class="docutils literal notranslate"><span class="pre">parameter_cost_profile</span></code>,
+<code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network_card</span></code>, <code class="docutils literal notranslate"><span class="pre">seepage_network_reference_overlay</span></code>,
+<code class="docutils literal notranslate"><span class="pre">seepage_network_confusion_map</span></code>, <code class="docutils literal notranslate"><span class="pre">downslope_distance_map</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hydrograph_log_nse</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_network_snap_map</span></code> and
+<code class="docutils literal notranslate"><span class="pre">observed_network_snap_histogram</span></code>. <code class="docutils literal notranslate"><span class="pre">network_extent_bounds_map</span></code>, the two
+simulated extents against the two maps (“Two maps and two bounds” above), is a
+related figure that reads a run directly and needs no calibration session at
+all.</p>
+<p>All ten are declared, never scripted. List them in <code class="docutils literal notranslate"><span class="pre">[display].figures</span></code> of
+the project or of the calibration TOML and the promoted run renders them like
+any other figure of the gallery:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[display]</span>
+<span class="n">figures</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"downslope_distance_crossing"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"bisection_bracket_trace"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"parameter_cost_profile"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"seepage_network_reference_overlay"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"seepage_network_confusion_map"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"downslope_distance_map"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"hydrograph_log_nse"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"matching_hydrographic_network_card"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"observed_network_snap_map"</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">"observed_network_snap_histogram"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>The first four read the trials of the session straight off the run. The three
+network maps rebuild the per-cell partition the criterion scored, through the
+same construction it used
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.core.stream_geometry</span></code>, reached from
+<code class="xref py py-func docutils literal notranslate"><span class="pre">hydromodpy.results.derive.stream_network.network_comparison_from_run()</span></code>),
+so a map cannot disagree with the <code class="docutils literal notranslate"><span class="pre">n_valid</span></code>, <code class="docutils literal notranslate"><span class="pre">n_excess</span></code> and <code class="docutils literal notranslate"><span class="pre">n_missing</span></code>
+the trial published. They need three things from the run and say which one is
+missing when it is: a per-cell <code class="docutils literal notranslate"><span class="pre">release_flux</span></code>, a <code class="docutils literal notranslate"><span class="pre">reference</span></code> hydrographic
+network, and a delineated watershed. The first comes from
+<code class="docutils literal notranslate"><span class="pre">[simulation.results.derived]</span> <span class="pre">release_flux</span> <span class="pre">=</span> <span class="pre">true</span></code>, the second from
+<code class="docutils literal notranslate"><span class="pre">[[data.hydrography.sources]]</span></code>.</p>
+<p>Their knobs go through <code class="docutils literal notranslate"><span class="pre">[display.overrides]</span></code>, so a reader can move the
+threshold the partition depends on, or read the other direction of the
+distance, without touching code:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[display.overrides.seepage_network_confusion_map]</span>
+<span class="n">tau_specific_ratio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="k">[display.overrides.downslope_distance_map]</span>
+<span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"to_simulated"</span>
+</pre></div>
+</div>
+<p>The three maps open on the delineated catchment, because that is where every
+class of the criterion lives: on the Nancon the partition holds 1 681 cells
+out of a mesh of 60 395, and a frame drawn around the mesh spends its page on
+ground that carries no answer. A reader checking what the model does outside
+the basin it was scored on asks for the whole domain instead:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[display.overrides.seepage_network_reference_overlay]</span>
+<span class="n">extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mesh"</span>
+</pre></div>
+</div>
+<p>An eleventh figure, <code class="docutils literal notranslate"><span class="pre">roptim_validity_chart</span></code>, compares the calibrated
+agreement of SEVERAL catchments, and a run holds one. It refuses a run-driven
+render by name rather than drawing one point, and it is fed per-site records
+directly.</p>
+<p>The two snap figures, <code class="docutils literal notranslate"><span class="pre">observed_network_snap_map</span></code> and
+<code class="docutils literal notranslate"><span class="pre">observed_network_snap_histogram</span></code>, are described under “Snapping the mapped
+network” above; both refuse by name on a run whose
+<code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> is <code class="docutils literal notranslate"><span class="pre">off</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">matching_hydrographic_network_card</span></code> is a grid of panels and draws through <code class="docutils literal notranslate"><span class="pre">plot()</span></code>,
+not through <code class="docutils literal notranslate"><span class="pre">render(sim,</span> <span class="pre">ax)</span></code>. It reads the keys the trial published, which follow
+the maps in the cost:</p>
+<ul class="simple">
+<li><p>one bound: the unsuffixed <code class="docutils literal notranslate"><span class="pre">J_signed</span></code>, <code class="docutils literal notranslate"><span class="pre">Doptim</span></code>, <code class="docutils literal notranslate"><span class="pre">validity_length_m</span></code>,
+<code class="docutils literal notranslate"><span class="pre">roptim</span></code>, <code class="docutils literal notranslate"><span class="pre">L_ref</span></code> (<code class="docutils literal notranslate"><span class="pre">h_obs</span></code>) and the three counts, as before;</p></li>
+<li><p>two bounds: one bracket per bound on <code class="docutils literal notranslate"><span class="pre">J_signed_minimal</span></code> and
+<code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code>, and each bound’s <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> against its own length, its
+counts and its Eq. 4 verdict side by side, read at the trial the search
+returned, where the run reads Eq. 4. The two roots, <code class="docutils literal notranslate"><span class="pre">Delta</span></code> and the combined
+value are in the report and not in the trials: pass <code class="docutils literal notranslate"><span class="pre">roots=report.extra[&quot;roots&quot;]</span></code>
+to <code class="docutils literal notranslate"><span class="pre">plot()</span></code> to write them on the card. A bound weighted zero is drawn and
+marked outside the verdict;</p></li>
+<li><p>one state with both maps: the minimal map in the cost, and the maximal map
+scored as a validation (<code class="docutils literal notranslate"><span class="pre">_maximal_validation</span></code>) drawn beside it, with no verdict.</p></li>
+</ul>
+</section>
+<section id="what-to-publish">
+<h2>What to publish<a class="headerlink" href="#what-to-publish" title="Link to this heading">#</a></h2>
+<p>Publish the ratio, not the conductivity. When the search moves the homogeneous
+conductivity alone, <code class="docutils literal notranslate"><span class="pre">flow.param.K.field.value</span></code> written as a value, the report
+carries the derived values of Table 1 of the paper in its <code class="docutils literal notranslate"><span class="pre">extra</span></code> and the CLI
+prints them on one line: <code class="docutils literal notranslate"><span class="pre">k_over_r</span></code>, <code class="docutils literal notranslate"><span class="pre">k_optim_m_s</span></code>, and, when the backend
+serves a saturated thickness, <code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code>, <code class="docutils literal notranslate"><span class="pre">t_over_r_m</span></code> (<code class="docutils literal notranslate"><span class="pre">T/R</span></code>, a length) and
+<code class="docutils literal notranslate"><span class="pre">t_optim_m2_s</span></code>. A search on any other parameter gets none of them, because the
+network criterion drives any parameter and a thickness divided by <code class="docutils literal notranslate"><span class="pre">R</span></code> is not
+<code class="docutils literal notranslate"><span class="pre">K/R</span></code>. The note warns when <code class="docutils literal notranslate"><span class="pre">d_sat_over_d</span></code> exceeds one half: an aquifer that
+runs nearly full makes <code class="docutils literal notranslate"><span class="pre">T/R</span></code> depend on the imposed thickness. State the
+recharge series beside the number: the conductivity inherits it entirely, and
+changing reanalysis moved it by +3, +25 and -28 per cent on the three catchments
+the theory page reports.</p>
+<p>What the code does publish, and what belongs in the paper beside the value, is
+the diagnostic set above: <code class="docutils literal notranslate"><span class="pre">D_so</span></code> and <code class="docutils literal notranslate"><span class="pre">D_os</span></code>, the cost <code class="docutils literal notranslate"><span class="pre">J</span></code> with its signed
+form <code class="docutils literal notranslate"><span class="pre">J_signed</span></code>, <code class="docutils literal notranslate"><span class="pre">Doptim</span></code> and <code class="docutils literal notranslate"><span class="pre">roptim</span></code> with <code class="docutils literal notranslate"><span class="pre">roptim_valid</span></code>. See the
+section on known biases of the theory page before reusing any of them.</p>
+<p>And state the density of the mapped network beside the value, because the bias
+scales with it. On the Nancon the map is the permanent network alone, 0.70 km
+per km2 inside the catchment, and the calibrated conductivity came out 3.3
+times the prior the project declares, inside the documented factor of 2.7 to
+7.5 for a thinned network.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="calibration-uncertainty.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">How wide a calibrated value is</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="comparison.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Comparison Workflow</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#snapping-the-mapped-network">Snapping the mapped network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#naming-the-method">Naming the method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declaring-the-two-stages-by-hand">Declaring the two stages by hand</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scoring-the-second-stage-on-two-criteria">Scoring the second stage on two criteria</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-maps-and-two-bounds">Two maps and two bounds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measured-on-the-nancon">Measured on the Nancon</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-choice-buys-you">What each choice buys you</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-it">Running it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-output">Reading the output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-looks-like-on-a-real-catchment">What it looks like on a real catchment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-figures">The figures</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-publish">What to publish</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
