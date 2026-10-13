@@ -3309,7 +3309,7 @@ Required sections first, then the others in the order of the code.
 `[simulation]`Optional simulation orchestration block loaded from [simulation] and [[simulation.process]].25 user · 4 dev/expert
 `[solver]`Global solver block loaded from [solver]: the backend selector in [solver.backend], plus the backend-agnostic preprocessing switches both MODFLOW backends read (solver.sink_fill, solver.drain_band_depth_m).4 user · 2 dev/expert
 `[modflownwt]`MODFLOW-NWT settings: the structured grid ([modflownwt.sgrid.planar], [modflownwt.sgrid.vertical]), the package options ([modflownwt.process_specific]) and the solver settings ([modflownwt.runtime.<package>], expert keys).12 user · 35 dev/expert
-`[modflow6]`MODFLOW 6 settings: the structured grid ([modflow6.sgrid.planar], [modflow6.sgrid.vertical]), the package options ([modflow6.process_specific]) and the solver settings ([modflow6.runtime], expert keys).12 user · 36 dev/expert
+`[modflow6]`MODFLOW 6 settings: the structured grid ([modflow6.sgrid.planar], [modflow6.sgrid.vertical]), the package options ([modflow6.process_specific]) and the solver settings ([modflow6.runtime], expert keys).12 user · 38 dev/expert
 `[display]`The figures a run draws, loaded from the [display] section.10 user · 2 dev/expert
 `[[export]]`The exports written at the end of a run, one [[export]] block per request, in the order of the file.8 user · 2 dev/expert
 `[observation]`Observation points declared in [observation] and sampled while the run still holds its fields.7 user · 0 dev/expert
@@ -3952,7 +3952,7 @@ A file that writes one of them is refused, unless its line says it still loads.
   - `testbed.catalog.source_manifest_path`
   - `testbed.config_path`
 
-## Added (20)
+## Added (22)
 
 - `[calibration]`
   - `calibration.outputs.<name>.heads_min_drained_area_km2`
@@ -3975,6 +3975,9 @@ A file that writes one of them is refused, unless its line says it still loads.
   - `mesh_catchment.geology.id`
   - `mesh_catchment.geology.landsea`
   - `mesh_catchment.geology.source`
+- `[modflow6]`
+  - `modflow6.runtime.mf6_preconditioner_drop_tolerance`
+  - `modflow6.runtime.mf6_preconditioner_levels`
 - `[simulation]`
   - `simulation.results.keep_per_cell_budget`
 - `[testbed]`
@@ -20376,7 +20379,7 @@ hydrometry.toml · checked against the models
 
 Expert-level MODFLOW 6 configuration organized by concern.
 
-- `modflow6`[table] · optional · 12 user keys, 36 dev or expert
+- `modflow6`[table] · optional · 12 user keys, 38 dev or expert
 - Start a file: `hmp config template --modules modflow6` (download it), then `hmp config check file.toml`. Minimal file
 
 ## `[modflow6.sgrid]`
@@ -20641,6 +20644,18 @@ Connections found in the code (1)
 - `"CG"`no explanation
 - `"BICGSTAB"`no explanation
 **Accepted**: "CG" | "BICGSTAB"
+
+`# mf6_preconditioner_levels = ‹integer›` : IMS ILUT fill: entries kept per row of each incomplete factor. > 0 expert
+**Path**: `modflow6.runtime.mf6_preconditioner_levels`
+**More**: A fill as wide as the matrix band, with a zero drop tolerance, gives a complete factorization. None keeps the preset default (5 for COMPLEX).
+**Accepted**: integer
+**Valid range**: > 0 (refused outside)
+
+`# mf6_preconditioner_drop_tolerance = ‹number›` : IMS ILUT drop tolerance: factor entries below it are dropped. >= 0 expert
+**Path**: `modflow6.runtime.mf6_preconditioner_drop_tolerance`
+**More**: Zero keeps every entry the fill allows. None keeps the preset default (1e-4 for COMPLEX).
+**Accepted**: number
+**Valid range**: >= 0 (refused outside)
 
 `# mf6_under_relaxation = ‹"NONE" | "SIMPLE" | "COOLEY" | "DBD"›` : IMS non-linear under-relaxation scheme. expert
 **Path**: `modflow6.runtime.mf6_under_relaxation`
@@ -26133,7 +26148,7 @@ Catching a parent class catches its subclasses. The command line maps each class
 | `HMPY.E809` | `ImportConflictError` | `CatalogError` | 12 | An imported run or project is already in the catalog. | `results` | |
 | `HMPY.E900` | `ResultsError` | `HydroModPyError` | 1 | Results / postprocessing failure. | - | |
 | `HMPY.E901` | `UnknownFieldError` | `ResultsError` | 1 | Requested field name is not registered in the canonical field registry. | `results` | |
-| `HMPY.E1000` | `TerrainError` | `HydroModPyError` | 15 | Terrain engine failure. | - | |
+| `HMPY.E1000` | `TerrainError` | `HydroModPyError` | 15 | Terrain engine failure. | `spatial` | |
 | `HMPY.E1001` | `TerrainCapabilityError` | `TerrainError` | 15 | The selected terrain engine does not implement the requested option. | `spatial` | |
 | `HMPY.E1002` | `TerrainProductError` | `TerrainError` | 15 | A terrain product does not satisfy what the member it is passed to needs. | `spatial` | |
 | `HMPY.E1003` | `TerrainRequestError` | `TerrainError` | 15 | The request itself is malformed, before any engine is asked to serve it. | `spatial` | |
@@ -31765,6 +31780,18 @@ The keys of the solver options of this page. The keys of each transport process 
 **Accepted**: number
 **Valid range**: > 0 (refused outside)
 
+`# mf6_preconditioner_levels = ‹integer›` : IMS ILUT fill: entries kept per row of each incomplete factor. > 0 expert
+**Path**: `modflow6.runtime.mf6_preconditioner_levels`
+**More**: A fill as wide as the matrix band, with a zero drop tolerance, gives a complete factorization. None keeps the preset default (5 for COMPLEX).
+**Accepted**: integer
+**Valid range**: > 0 (refused outside)
+
+`# mf6_preconditioner_drop_tolerance = ‹number›` : IMS ILUT drop tolerance: factor entries below it are dropped. >= 0 expert
+**Path**: `modflow6.runtime.mf6_preconditioner_drop_tolerance`
+**More**: Zero keeps every entry the fill allows. None keeps the preset default (1e-4 for COMPLEX).
+**Accepted**: number
+**Valid range**: >= 0 (refused outside)
+
 `# mf6_linear_acceleration = ‹"CG" | "BICGSTAB"›` : IMS linear acceleration: CG for symmetric matrices, BICGSTAB for the non-symmetric Newton formulation. expert
 **Path**: `modflow6.runtime.mf6_linear_acceleration`
 **More**: None keeps the preset default.
@@ -32523,7 +32550,7 @@ under a quarter of the threshold a quarter to half half to three quarters three 
 | Growth of a groundwater mound under a rectangle of recharge against Hantush (1967) | 50% | 50% | 50% | 50% | 50% | 50% | |
 | Transient unconfined pumping case against a late-time radial reference | 49% | 49% | 50% | 50% | | 56% | 50% |
 | Propagation of a tide into an unconfined strip against the Ferris solution | 50% | 50% | 50% | 50% | 50% | 50% | |
-| Linearized unconfined transient cases against their analytical references | 66% | 66% | 50% | | 50% | 66% | 50% |
+| Linearized unconfined transient cases against their analytical references | 61% | 66% | 50% | | 50% | 66% | 50% |
 | MODFLOW 6 PRT particle paths in a uniform velocity field | | 0% | | | | | |
 | Stream depletion of a well pumping beside a stream held at a fixed head | 56% | 56% | 71% | 71% | | 71% | 71% |
 | Time steps inside a stress period against a closed-form step response | | | | | | | 73% |
@@ -32600,7 +32627,7 @@ Last measurement
 | Azimuthal spread | 0.0436 m | < 0.088 m | 50% | 1.7% / 3.4% |
 | Minimum land freeboard | 1.96 m | >= 0.98 m | 50% | 76.4% / 38.2% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.51 to 2.63 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.51 to 2.63 m.
 
 Head profile, head
 referenceNWTMF6MF6 triangles
@@ -32675,7 +32702,7 @@ Last measurement
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 0 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.04 to 2.05 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.04 to 2.05 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -32736,7 +32763,7 @@ Last measurement
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.97 to 5 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.97 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -32792,7 +32819,7 @@ Last measurement
 | Maximum positive clearance above topography | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
 | Cross-row head spread | 1.95e-07 m | < 4e-07 m | 49% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.66 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.66 m.
 
 Head profile, head
 referenceBoussinesqBoussinesq default
@@ -32851,9 +32878,9 @@ Last measurement
 | Cross-row head spread | 1.78e-15 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 4.48e-07 m | < 9e-07 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 6.32e-07 m | < 1.3e-06 m | 49% | 0.0% / 0.0% |
-| Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 1.38e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.96 to 5 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.96 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -32915,7 +32942,7 @@ Last measurement
 | Head-profile max abs error | 0.000295 m | < 0.0006 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.9 to 10 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.9 to 10 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -32976,7 +33003,7 @@ Last measurement
 | Head-profile max abs error | 0.000423 m | < 0.00085 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.9 to 10 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.9 to 10 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -33037,7 +33064,7 @@ Last measurement
 | Head-profile max abs error | 0.000489 m | < 0.00098 m | 50% | 0.0% / 0.1% |
 | Cross-row head spread | 0 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.13 to 1.14 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.13 to 1.14 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -33087,7 +33114,7 @@ Last measurement
 
 | Variant | Metric | Measured | Threshold | Share used | Share of the signal |
 | --- | --- | --- | --- | --- | --- |
-| modflow_nwt pass | Radial head-profile RMSE | 0.0495 m | < 0.25 m | 20% | 1.8% / 9.0% |
+| modflow_nwt pass | Radial head-profile RMSE | 0.0496 m | < 0.25 m | 20% | 1.8% / 9.0% |
 | Radial head-profile max abs error | 0.092 m | < 0.5 m | 18% | 3.3% / 17.9% |
 | Azimuthal spread | 0.112 m | < 0.25 m | 45% | 4.0% / 9.0% |
 | Minimum land freeboard | 0.787 m | >= 0.1 m | 13% | 28.2% / 3.6% |
@@ -33112,7 +33139,7 @@ Last measurement
 | Azimuthal spread | 0.0547 m | < 0.11 m | 50% | 1.9% / 3.8% |
 | Minimum land freeboard | 1.9 m | >= 0.95 m | 50% | 65.9% / 32.9% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.79 to 3.01 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.79 to 3.01 m.
 
 Head profile, head
 referenceNWTMF6MF6 triangles
@@ -33185,9 +33212,9 @@ Last measurement
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 3.34e-05 m | < 6.7e-05 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 5.51e-05 m | < 0.00012 m | 46% | 0.0% / 0.0% |
-| Cross-row head spread | 5.84e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 4.96e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.56 to 1.57 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.56 to 1.57 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -33246,9 +33273,9 @@ Last measurement
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 4.07e-05 m | < 8.2e-05 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 9.91e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
-| Cross-row head spread | 1.59e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 1.12e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 to 5 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -33354,7 +33381,7 @@ Last measurement
 | Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_down] pass | modflow6_scaled_down water-table difference vs the reference scenario | 0.000134 m | < 0.002 m | 7% | |
 | Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_up] pass | modflow6_scaled_up water-table difference vs the reference scenario | 6.02e-07 m | < 0.002 m | 0% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.57 to 5.61 m.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.57 to 5.61 m.
 
 Water table, head
 referenceMF6modflow6_scaled_downmodflow6_scaled_up
@@ -33419,9 +33446,9 @@ Last measurement
 | Cross-row head spread | 0 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 9.93e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000146 m | < 0.0003 m | 49% | 0.0% / 0.0% |
-| Cross-row head spread | 9.44e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 1.18e-14 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.18 to 1.19 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.18 to 1.19 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -33470,7 +33497,7 @@ Last measurement
 | modflow6 pass | Distance of the observed order from 1 | 0.0113 | < 0.2 | 6% | |
 | modflow6_no_newton pass | Distance of the observed order from 2 | 0.051 | < 0.2 | 25% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Head RMSE against the cell size, head rmse, log scales
 reference of each runNWTMF6
@@ -33525,7 +33552,7 @@ Last measurement
 | Head-profile max abs error | 0.000369 m | < 0.00075 m | 49% | 0.1% / 0.2% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 0.397 to 0.4 m.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 0.397 to 0.4 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 triangles
@@ -33579,7 +33606,7 @@ Last measurement
 | Head-profile max abs error | 0.000641 m | < 0.0013 m | 49% | 0.0% / 0.1% |
 | Cross-row head spread | 8.88e-16 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.99 to 2 m.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.99 to 2 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 triangles
@@ -33632,7 +33659,7 @@ Last measurement
 | Recharge volume error | 0 mm | < 1e-12 mm | 0% | |
 | Error on the day 95 % of the pulse has drained | 0.0213 d | <= 1 d | 2% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the peak recharge of the closed form, 2.38 to 15.5 mm/d.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the peak recharge of the closed form, 2.38 to 15.5 mm/d.
 
 Daily recharge after a 50 mm pulse, recharge
 reference2.0
@@ -33688,7 +33715,7 @@ Last measurement
 | Maximum positive clearance above topography | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
 | Cross-row head spread | 7.99e-09 m | < 1e-07 m | 8% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the travel of the reference front, 30 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the travel of the reference front, 30 m.
 
 Seepage front position, front position
 referenceBoussinesqBoussinesq default
@@ -33761,7 +33788,7 @@ Last measurement
 | Cross-row head spread | 3.33e-16 m | < 1e-06 m | 0% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 1.24e-05 to 1.42e-05 m3/s.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 1.24e-05 to 1.42e-05 m3/s.
 
 Discharge at the outlet, discharge
 reference of each runNWTMF6
@@ -33858,17 +33885,17 @@ Last measurement
 | Recession coefficient relative error | 0.00312 | < 0.005 | 62% | |
 | Recession exponent error | 0.000271 | < 0.002 | 14% | |
 | Late relative discharge RMSE | 0.00537 | < 0.015 | 36% | |
-| Cross-row head spread | 4.46e-14 m | < 1e-06 m | 0% | |
+| Cross-row head spread | 5.41e-14 m | < 1e-06 m | 0% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 0.000166 to 0.000168 m3/s.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 0.000166 to 0.000168 m3/s.
 
 Discharge at the outlet, discharge
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
 
 Why these thresholds
 
-- Thresholds of `modflow_nwt`, `modflow6`, `modflow6_irregular_tri`: The run stores the mean discharge of each 10-day period, over its 100 backward-Euler steps, and the reference is the mean of the series solution over the same period. Twice the measured error: relative RMSE 8.4e-4 to 9.0e-4, maximum 2.2e-3 to 2.3e-3, on the first period, where the fast modes decay within a few steps. The maximum falls with the step, 6.4e-3, 2.2e-3 and 1.15e-3 at 25, 100 and 400 steps a period on MODFLOW 6, down to a floor of 1.1e-3 on the first two periods that a 5 m grid leaves where it is. Until 2026-10-10 the run stored the discharge of the last step of each period and the reference was read at the period end: RMSE 1.3e-4, maximum 2e-4.
+- Thresholds of `modflow_nwt`, `modflow6`, `modflow6_irregular_tri`: The run stores the mean discharge of each 10-day period, over its 100 backward-Euler steps, and the reference is the mean of the series solution over the same period. Twice the measured error: relative RMSE 8.4e-4 to 9.3e-4, maximum 2.2e-3 to 2.4e-3, on the first period, where the fast modes decay within a few steps. The maximum falls with the step, 6.4e-3, 2.2e-3 and 1.15e-3 at 25, 100 and 400 steps a period on MODFLOW 6, down to a floor of 1.1e-3 on the first two periods that a 5 m grid leaves where it is. Until 2026-10-10 the run stored the discharge of the last step of each period and the reference was read at the period end: RMSE 1.3e-4, maximum 2e-4.
 - Thresholds of `boussinesq`: The band of tolerances.toml, shared with MODFLOW. The PETSc runtime takes the 100 backward-Euler steps a period of the case, as MODFLOW does, stores the mean discharge of each period and reads relative RMSE 8.4e-4, maximum 2.2e-3 against the period means of the series solution, decay rate -0.31 %, |b - 1| 2.7e-4 and late RMSE 0.0054, against 8.4e-4 to 9.0e-4, 2.2e-3 to 2.3e-3, -0.32 to -0.34 %, 2.7e-4 to 4.7e-4 and 0.0057 to 0.0061 for MODFLOW on the grid. With 4 steps a period (before 2026-10-09) the rate came out 7.6 % low.
 - Thresholds of `boussinesq_local`: The band of tolerances.toml, shared with MODFLOW. The default 'auto' engine runs local on these 240 cells and takes the 100 backward-Euler steps a period of the case, as MODFLOW does, and stores the mean discharge of each period. With the Newton closure of the case (1e-12 m3/s, see config_boussinesq_local.toml) it reads relative RMSE 8.4e-4, maximum 2.2e-3 against the period means of the series solution, decay rate -0.31 %, |b - 1| 2.7e-4 and late RMSE 0.0054, the PETSc values to three digits, against 8.4e-4 to 9.0e-4, 2.2e-3 to 2.3e-3, -0.32 to -0.34 %, 2.7e-4 to 4.7e-4 and 0.0057 to 0.0061 for MODFLOW on the grid. Before 2026-10-09 this engine took one step a period whatever the case asked.
 
@@ -33909,7 +33936,7 @@ Last measurement
 | Linear series matches a fine deep strip with an unrecharged outlet strip pass | no metric recorded; the asserts of the test decide |
 | Nonlinear law matches a fine dupuit strip drained on one side pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -33936,7 +33963,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | Largest relative concentration error at 3 times | 0.00265 | < 0.01 | 27% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -33979,11 +34006,11 @@ Last measurement
 | Centre rise max abs error | 0.00445 m | < 0.0089 m | 50% | 0.6% / 1.2% |
 | Final transect RMSE | 0.00122 m | < 0.0025 m | 49% | 0.2% / 0.3% |
 | Final map max abs error | 0.0104 m | < 0.021 m | 50% | 1.4% / 2.8% |
-| Recharge mound matches hantush modflow [modflow_nwt] pass | Transect space-time RMSE | 0.00159 m | < 0.0033 m | 48% | 0.2% / 0.4% |
+| Recharge mound matches hantush modflow [modflow_nwt] pass | Transect space-time RMSE | 0.0016 m | < 0.0033 m | 49% | 0.2% / 0.4% |
 | Transect space-time max abs error | 0.00478 m | < 0.0096 m | 50% | 0.6% / 1.3% |
 | Centre rise max abs error | 0.00478 m | < 0.0096 m | 50% | 0.6% / 1.3% |
-| Final transect RMSE | 0.00128 m | < 0.0027 m | 47% | 0.2% / 0.4% |
-| Final map max abs error | 0.00537 m | < 0.011 m | 49% | 0.7% / 1.5% |
+| Final transect RMSE | 0.0013 m | < 0.0027 m | 48% | 0.2% / 0.4% |
+| Final map max abs error | 0.00543 m | < 0.011 m | 49% | 0.7% / 1.5% |
 | Recharge mound matches hantush modflow [modflow6] pass | Transect space-time RMSE | 0.0016 m | < 0.0033 m | 49% | 0.2% / 0.4% |
 | Transect space-time max abs error | 0.00478 m | < 0.0096 m | 50% | 0.6% / 1.3% |
 | Centre rise max abs error | 0.00478 m | < 0.0096 m | 50% | 0.6% / 1.3% |
@@ -34000,7 +34027,7 @@ Last measurement
 | Final transect RMSE | 0.00202 m | < 0.0041 m | 49% | 0.3% / 0.5% |
 | Final map max abs error | 0.0045 m | < 0.009 m | 50% | 0.6% / 1.2% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.752 to 0.752 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.752 to 0.752 m.
 
 Head profile at the last output time, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34068,10 +34095,10 @@ Last measurement
 | Final-time max abs error | 0.00451 m | < 0.009 m | 50% | 0.5% / 1.1% |
 | Azimuthal spread | 0.00122 m | < 0.0027 m | 45% | 0.1% / 0.3% |
 | Late time unconfined pumping 2d matches late time reference fast solvers [modflow_nwt] pass | Space-time RMSE | 0.00442 m | < 0.009 m | 49% | 0.5% / 1.0% |
-| Space-time max abs error | 0.00975 m | < 0.02 m | 49% | 1.1% / 2.3% |
+| Space-time max abs error | 0.00971 m | < 0.02 m | 49% | 1.1% / 2.3% |
 | Final-time RMSE | 0.00534 m | < 0.011 m | 49% | 0.6% / 1.3% |
-| Final-time max abs error | 0.00975 m | < 0.02 m | 49% | 1.1% / 2.3% |
-| Azimuthal spread | 0 m | < 1e-05 m | 0% | 0.0% / 0.0% |
+| Final-time max abs error | 0.00971 m | < 0.02 m | 49% | 1.1% / 2.3% |
+| Azimuthal spread | 9.54e-07 m | < 1e-05 m | 10% | 0.0% / 0.0% |
 | Late time unconfined pumping 2d matches late time reference fast solvers [modflow6] pass | Space-time RMSE | 0.00442 m | < 0.009 m | 49% | 0.5% / 1.0% |
 | Space-time max abs error | 0.00972 m | < 0.02 m | 49% | 1.1% / 2.3% |
 | Final-time RMSE | 0.00534 m | < 0.011 m | 49% | 0.6% / 1.3% |
@@ -34088,7 +34115,7 @@ Last measurement
 | Final-time max abs error | 0.00766 m | < 0.016 m | 48% | 0.9% / 1.8% |
 | Azimuthal spread | 0.00217 m | < 0.0044 m | 49% | 0.2% / 0.5% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.854 to 0.871 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.854 to 0.871 m.
 
 Drawdown at 59 m from the well, drawdown
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesq defaultrun
@@ -34155,11 +34182,11 @@ Last measurement
 | Lag length relative error | 0.0746 | < 0.15 | 50% | |
 | Tide matches ferris modflow [modflow_nwt] pass | Space-time RMSE | 0.00532 m | < 0.011 m | 48% | 1.1% / 2.2% |
 | Space-time max abs error | 0.0325 m | < 0.066 m | 49% | 6.5% / 13.2% |
-| Cross-row head spread | 4.67e-07 m | < 1e-05 m | 5% | 0.0% / 0.0% |
+| Cross-row head spread | 1.66e-06 m | < 1e-05 m | 17% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.00343 m | < 0.0069 m | 50% | 0.7% / 1.4% |
 | Final-profile max abs error | 0.0102 m | < 0.021 m | 49% | 2.0% / 4.2% |
 | Decay length relative error | 0.0596 | < 0.12 | 50% | |
-| Lag length relative error | 0.0773 | < 0.155 | 50% | |
+| Lag length relative error | 0.0777 | < 0.155 | 50% | |
 | Tide matches ferris modflow [modflow6] pass | Space-time RMSE | 0.00532 m | < 0.011 m | 48% | 1.1% / 2.2% |
 | Space-time max abs error | 0.0325 m | < 0.066 m | 49% | 6.5% / 13.2% |
 | Cross-row head spread | 8.55e-07 m | < 1e-05 m | 9% | 0.0% / 0.0% |
@@ -34182,7 +34209,7 @@ Last measurement
 | Decay length relative error | 0.0592 | < 0.12 | 49% | |
 | Lag length relative error | 0.0715 | < 0.143 | 50% | |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.46 to 0.5 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.46 to 0.5 m.
 
 Head profile at the last output time, head
 reference of each runNWTMF6BoussinesqBoussinesq default
@@ -34296,7 +34323,7 @@ Last measurement
 | Final-profile RMSE | 0.00178 m | < 0.0034 m | 52% | 1.4% / 2.7% |
 | Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-recharge_step] pass | Space-time RMSE | 0.00216 m | < 0.0044 m | 49% | 1.6% / 3.2% |
 | Space-time max abs error | 0.00995 m | < 0.015 m | 66% | 7.2% / 10.8% |
-| Cross-row head spread | 8.96e-14 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 7.84e-14 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.000808 m | < 0.0015 m | 54% | 0.6% / 1.1% |
 | Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-recharge_step_deep] pass | Space-time RMSE | 0.00023 m | < 0.00046 m | 50% | 1.7% / 3.3% |
 | Space-time max abs error | 0.00248 m | < 0.005 m | 50% | 18.0% / 36.4% |
@@ -34306,22 +34333,22 @@ Last measurement
 | Space-time max abs error | 0.0334 m | < 0.067 m | 50% | 11.1% / 22.3% |
 | Cross-row head spread | 0 m | < 1e-05 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.00271 m | < 0.0056 m | 48% | 0.9% / 1.9% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-boundary_step] pass | Space-time RMSE | 0.00135 m | < 0.0028 m | 48% | 1.4% / 2.8% |
-| Space-time max abs error | 0.0122 m | < 0.025 m | 49% | 12.2% / 25.0% |
-| Cross-row head spread | 4.67e-07 m | < 1e-05 m | 5% | 0.0% / 0.0% |
-| Final-profile RMSE | 9e-05 m | < 0.00018 m | 50% | 0.1% / 0.2% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_periodic] pass | Space-time RMSE | 0.00585 m | < 0.01 m | 58% | 4.6% / 7.9% |
-| Space-time max abs error | 0.0136 m | < 0.028 m | 49% | 10.8% / 22.1% |
-| Cross-row head spread | 4.67e-07 m | < 1e-05 m | 5% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.00167 m | < 0.0034 m | 49% | 1.3% / 2.7% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step] pass | Space-time RMSE | 0.00212 m | < 0.0044 m | 48% | 1.5% / 3.2% |
-| Space-time max abs error | 0.00996 m | < 0.015 m | 66% | 7.2% / 10.8% |
-| Cross-row head spread | 4.67e-07 m | < 1e-05 m | 5% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.000641 m | < 0.0015 m | 43% | 0.5% / 1.1% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step_deep] pass | Space-time RMSE | 0.000227 m | < 0.00046 m | 49% | 1.6% / 3.3% |
-| Space-time max abs error | 0.00244 m | < 0.005 m | 49% | 17.6% / 36.0% |
-| Cross-row head spread | 0 m | < 1e-05 m | 0% | 0.0% / 0.1% |
-| Final-profile RMSE | 2.15e-06 m | < 2.1e-05 m | 10% | 0.0% / 0.2% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-boundary_step] pass | Space-time RMSE | 0.00137 m | < 0.0028 m | 49% | 1.4% / 2.8% |
+| Space-time max abs error | 0.012 m | < 0.025 m | 48% | 12.0% / 25.0% |
+| Cross-row head spread | 3.41e-06 m | < 1e-05 m | 34% | 0.0% / 0.0% |
+| Final-profile RMSE | 6.99e-05 m | < 0.00018 m | 39% | 0.1% / 0.2% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_periodic] pass | Space-time RMSE | 0.00536 m | < 0.01 m | 54% | 4.2% / 7.9% |
+| Space-time max abs error | 0.0131 m | < 0.028 m | 47% | 10.3% / 22.1% |
+| Cross-row head spread | 3.81e-06 m | < 1e-05 m | 38% | 0.0% / 0.0% |
+| Final-profile RMSE | 0.000523 m | < 0.0034 m | 15% | 0.4% / 2.7% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step] pass | Space-time RMSE | 0.00203 m | < 0.0044 m | 46% | 1.5% / 3.2% |
+| Space-time max abs error | 0.00916 m | < 0.015 m | 61% | 6.6% / 10.8% |
+| Cross-row head spread | 2.6e-06 m | < 1e-05 m | 26% | 0.0% / 0.0% |
+| Final-profile RMSE | 0.000647 m | < 0.0015 m | 43% | 0.5% / 1.1% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step_deep] pass | Space-time RMSE | 0.000259 m | < 0.00046 m | 56% | 1.9% / 3.3% |
+| Space-time max abs error | 0.00157 m | < 0.005 m | 31% | 11.3% / 36.0% |
+| Cross-row head spread | 3.74e-06 m | < 1e-05 m | 37% | 0.0% / 0.1% |
+| Final-profile RMSE | 2.6e-06 m | < 2.1e-05 m | 12% | 0.0% / 0.2% |
 | Linearized unconfined transient 1d matches reference profiles [modflow6-boundary_piecewise] pass | Space-time RMSE | 0.00609 m | < 0.013 m | 47% | 2.0% / 4.3% |
 | Space-time max abs error | 0.0335 m | < 0.067 m | 50% | 11.2% / 22.3% |
 | Cross-row head spread | 1.44e-06 m | < 1e-05 m | 14% | 0.0% / 0.0% |
@@ -34399,7 +34426,7 @@ Last measurement
 | Cross-row head spread | 0 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.000635 m | < 0.0013 m | 49% | 0.5% / 0.9% |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.0137 to 0.3 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.0137 to 0.3 m.
 
 Head profile at the last output time, head
 reference of each runmodflow_nwt-boundary_piecewisemodflow6-boundary_piecewisemodflow6_irregular_tri-boundary_piecewiseboussinesq-boundary_piecewiseboussinesq_local-boundary_piecewise
@@ -34508,7 +34535,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | Largest relative position error along the track | 1.05e-15 | < 0.01 | 0% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -34587,7 +34614,7 @@ Last measurement
 | Drawdown final-time max abs error | 0.000969 m | < 0.002 m | 48% | 0.3% / 0.6% |
 | Well drawdown over saturated thickness | 0.0357 | < 0.05 | 71% | |
 
-Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.308 to 0.323 m.
+Measured on 2026-10-12, commit `427d8bb47` with uncommitted changes, version 2.0.0a4, a local run; 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.308 to 0.323 m.
 
 Drawdown at 70 m from the well, drawdown
 referenceNWTMF6
@@ -34652,7 +34679,7 @@ Last measurement
 | Substeps are what buys transient accuracy pass | RMSE with 1 step over RMSE with 10 steps | 13.6 | > 10 | 73% | |
 | The column stays semi infinite over the period pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -34698,7 +34725,7 @@ Last measurement
 | - pass | Nash-Sutcliffe efficiency of the drawdown, 9 probes | 1 | > 0.99 | 1% | |
 | Largest relative drawdown error at a probe | 0.0081 | < 0.02 | 40% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.386 m.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.386 m.
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -34753,7 +34780,7 @@ Last measurement
 | Refined-grid largest relative concentration error | 0.00487 | < 0.01 | 49% | |
 | Refined error over production error | 0.218 | < 0.5 | 44% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -34792,7 +34819,7 @@ Last measurement
 | - pass | Nash-Sutcliffe efficiency of the drawdown, 9 probes | 1 | > 0.999 | 14% | |
 | Largest relative drawdown error at a probe | 0.00438 | < 0.01 | 44% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.981 m.
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.981 m.
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -34835,7 +34862,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -34881,7 +34908,7 @@ Last measurement
 | modflow6_irregular_tri_xt3d_off pass, known gap | Head RMSE | 0.00573 m | < 0.0063 m | 91% | |
 | Head max abs error | 0.0119 m | < 0.0132 m | 91% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Head error in plan view, simulated minus reference, one scale for all panels; blank cells are sea or inactive.
 
@@ -34979,7 +35006,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -35019,7 +35046,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -35050,7 +35077,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -35082,7 +35109,7 @@ Last measurement
 | Mms diffusion transient space converges at order two pass | Distance of the observed order from 2 | 0.00802 | < 0.2 | 4% | |
 | Mms diffusion transient time converges at order one pass | Distance of the observed order from 1 | 0.018 | < 0.2 | 9% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 L2 error against grid spacing dx, l2 error, log scales
 referencerun
@@ -35128,7 +35155,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | Distance of the observed order from 2 | 0.00192 | < 0.2 | 1% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 L2 error against grid spacing h, l2 error, log scales
 referencerun
@@ -35177,7 +35204,7 @@ Last measurement
 | - pass | Distance of log10 T to the truth | 4.48e-05 | < 0.3 | 0% | |
 | Distance of log10 S to the truth | 0.000718 | < 0.5 | 0% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -35204,7 +35231,7 @@ Last measurement
 | - pass | Distance of log10 a to the truth | 0.00634 | < 0.2 | 3% | |
 | Distance of b to the truth | 0.0217 | < 0.25 | 9% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -35233,7 +35260,7 @@ Last measurement
 | Two reservoir de recovers truth pass | Distance of log10 k1 to the truth | 0.237 | < 0.5 | 47% | |
 | Distance of log10 k2 to the truth | 0.143 | < 0.5 | 29% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -35295,7 +35322,7 @@ Last measurement
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 1.03e-06 | <= 2.25e-05 | 5% | |
 | scipy_nelder_mead: best fit, distance of K_east to the truth | 3.07e-06 | <= 2.25e-05 | 14% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by random_search_seed017, random_search_seed029, optuna, cma_es, scipy_nelder_mead: objective against each parameter; the truth is marked and the best point of each method is ringed.
 
@@ -35335,7 +35362,7 @@ Last measurement
 | scipy_nelder_mead: evaluations used | 30 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 1.73e-06 | <= 2.5e-05 | 7% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by grid, random_search, optuna, cma_es, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -35379,7 +35406,7 @@ Last measurement
 | Calibration twin dupuit fixed head modflow6 fast grid search smoke pass | grid: evaluations used | 6 | - | - | |
 | grid: best fit, distance of K_global to the truth | 2.38e-06 | <= 2e-05 | 12% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 run. Points evaluated by grid, random_search, optuna, cma_es, scipy_nelder_mead, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -35427,7 +35454,7 @@ Last measurement
 | random_search: runs within tolerance of the truth, out of 3 | 3 | > 1 | 0% | |
 | random_search: runs with a sample within tolerance, out of 3 | 3 | > 1 | 0% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by grid, random_search_seed007, random_search_seed011, random_search_seed019, optuna, cma_es, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -35471,7 +35498,7 @@ Last measurement
 | da_mh_gp: closest sample, distance of K_global to the truth | 7.88e-08 | - | - | |
 | da_mh_gp: a sample within tolerance of the truth on every parameter | 1 | > 0 | 0% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by random_search, optuna, cma_es, gp_mapping, da_mh_gp: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -35523,7 +35550,7 @@ Last measurement
 | da_mh_gp: closest sample, distance of Sy_global to the truth | 0.0291 | - | - | |
 | methods reaching their success target, among random_search, optuna, gp_mapping, da_mh_gp | 1 | > 0 | 75% | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by random_search, optuna, cma_es, scipy_nelder_mead, gp_mapping, da_mh_gp: the two parameters, coloured by objective; the truth is marked and the best point of each method is ringed.
 
@@ -35574,7 +35601,7 @@ Last measurement
 | da_mh_gp: best fit, distance of Sy_global to the truth | 0.00198 | - | - | |
 | da_mh_gp: closest sample, distance of Sy_global to the truth | 0.00198 | - | - | |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Points evaluated by random_search, optuna, cma_es, scipy_nelder_mead, gp_mapping, da_mh_gp: the two parameters, coloured by objective; the truth is marked and the best point of each method is ringed.
 
@@ -35605,7 +35632,7 @@ Last measurement
 | Relative error of the saturation length | 0.000161 | <= 0.001 | 16% | |
 | The mapped network projects back onto the cells it was written from pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `344a70185`, version 2.0.0a5, the nightly CI job (job log).
+Measured on 2026-10-13, commit `91d97cabd`, version 2.0.0a5, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -35691,12 +35718,18 @@ The keys added, removed or changed in the TOML file between two versions are lis
 
 ## Unreleased
 
+### Added
+
+- `[modflow6.runtime] mf6_preconditioner_levels` and `mf6_preconditioner_drop_tolerance` set the fill and the drop tolerance of the IMS ILUT preconditioner; unset keeps the preset.
+
 ### Changed
 
 - MODFLOW-NWT defaults to `options = "MODERATE"`. Under chi-MD, the default linear solver since 2.0.0a5, `"COMPLEX"` runs BiCGSTAB on a level-15 incomplete factorization: on the ten-layer example 12 regression model it diverged at the first solve and NWT stopped on a core dump. `"MODERATE"` (Orthomin, level 1) converges in 60 outer iterations at most, every budget within 0.08 %, where the former GMRES default left -148 % and +91 % in two periods. The Brutsaert recession case gives the same metrics under both presets, and the NWT validation profile keeps `"COMPLEX"`. On the fast example 12 regression the outputs move by 0.02 % (0.12 % on one percentile), the mean water-table depth by 0.9 mm.
 
 ### Fixed
 
+- Depression removal no longer ends the Python process. whitebox-workflows 1.3.5 can lose a thread race in `fill_depressions` (“Error unwrapping ‘output’”), even on one worker, and its panic hook then calls `exit(1)`: a run or a test session stopped with no traceback. The fill and breach tools now run in a child interpreter; a child that lost that race is run again, at most three times, with a warning, and any other failure raises `TerrainError`. The output is bit-identical to the in-process call.
+- A failed MODFLOW 6 run quotes the lines of `mfsim.lst` that say why it stopped in its `HMPY.E401` message, or says that `mfsim.lst` was never written.
 - A resume of a killed run (`hmp run --resume`) works in the scratch folder of the run it continues, instead of letting the sweep of killed runs delete it: the delineation and the mesh are reused, not generated again. A `<run>.holder` file keeps the sweep of other runs away while the resume runs.
 - On Windows, the scratch folders of killed runs are swept too. Liveness is read from the process exit code; `os.kill(pid, 0)` is not used there.
 - `bootstrap_proj()`, run by every `hmp` command, no longer points `PROJ_DATA` at the database of pyproj when a bundled rasterio, pyogrio or fiona ships a newer one. On Windows with Python 3.11 (pyproj 3.7.2, rasterio 1.4.4) every rasterio CRS lookup after the bootstrap failed with “DATABASE.LAYOUT.VERSION.MINOR = 4 whereas a number >= 5 is expected”, in the process and in its workers.
