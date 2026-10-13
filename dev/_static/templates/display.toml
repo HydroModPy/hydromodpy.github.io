@@ -1,0 +1,70 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: display
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Display behaviour resolved from the ``[display]`` TOML section.
+# ----------------------------------------------------------------------
+
+[display]
+# Master switch.
+# When False, no figure is rendered or saved.
+# Type: bool | Default: true
+enabled = true
+
+# Named theme applied before rendering any figure.
+# Type: Literal['default', 'print', 'dark'] | one of: "default", "print", "dark" | Default: "default"
+preset = "default"
+
+# Open an interactive window via ``matplotlib.pyplot.show``.
+# Type: bool | Default: false
+show = false
+
+# Write rendered figures to disk under ``output_dir``.
+# Type: bool | Default: true
+save = true
+
+# Name of the figures directory inside the run directory (<project>/runs/<run>/<output_dir>/).
+# Declared as a name, not a path, so it stays anchored to the run it describes.
+# Type: string | Default: "figures"
+output_dir = "figures"
+
+# Force ONE colormap onto every spatial figure.
+# Writing it at all is the decision, not the value: each figure otherwise picks a scale suited to what it shows, reversed for a depth, diverging for a difference, discrete for an indicator, and this replaces all of them.
+# Writing the default spelled out is therefore NOT a no-op, unlike everywhere else.
+# Leave it out unless one scale for everything is what you want.
+# Type: string | Default: "viridis"
+cmap = "viridis"
+
+# Names of registered figures to auto-render at the end of `hmp run` (and consumed by `hmp viz gallery`).
+# Every name must exist in the figure registry; list them with `hmp viz list`.
+# A figure whose requirements the run does not meet is skipped with an explicit reason.
+# Empty list disables auto-rendering.
+# Disable per-run via `hmp run --no-display` or for an entire Python Project via `Project(..., no_display=True)`.
+# Type: list[str] | REQUIRED
+figures = []
+
+# Behaviour when a figure that IS applicable fails while rendering.
+# 'warn' logs and continues (default, keeps a long run alive); 'raise' propagates, which is what example and CI configs want so a broken figure cannot pass unnoticed.
+# Type: Literal['warn', 'raise'] | one of: "warn", "raise" | Default: "warn"
+on_error = "warn"
+
+# The instant every figure that draws one instant shows: a date ("2002-10-15"), "first" or "last".
+# Each such figure draws the stress period that holds the date, so the same date names the same month on a monthly, a daily or a one-period steady run.
+# A `time` in `[display.overrides.<figure>]` wins over it.
+# Unset, each figure picks its own instant: the last period, or for the stream-network maps the state their calibration criterion read.
+# A date outside a run skips the figure with the reason.
+# Type: UnionType[str, int, NoneType] | Optional
+# time = ""
+
+# Per-figure options, keyed by figure name (e.g.
+# ``{'piezometric_map': {'cmap': 'cividis', 'vmin': 0}}``).
+# A key the figure does not take is refused at load, with the list of the keys it takes.
+# A figure that draws one instant takes `time`.
+# Type: dict[str, dict] | REQUIRED
+# overrides: entries go under [display.overrides.<id>]
+

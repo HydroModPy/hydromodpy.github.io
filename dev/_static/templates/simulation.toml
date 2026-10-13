@@ -1,0 +1,147 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: simulation
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Minimal orchestration block declared under ``[simulation]``.
+# ----------------------------------------------------------------------
+
+[simulation]
+# Human-readable simulation name and the run's identity.
+# When empty, derived from the TOML filename at load time (run_steady_nwt.toml -> steady_nwt); a programmatic run without a name gets a deterministic memorable slug.
+# Type: string | Default: "" | Examples: "cheze_baseline"
+name = ""
+
+# Free-text tags attached at registration; editable later via 'hmp catalog tag'.
+# Type: list[str] | REQUIRED
+tags = []
+
+# Behavior when registering a simulation whose ``name`` already exists in this project.
+# ``version`` (default) mints the next ``stem.vN`` and keeps every run addressable; ``replace`` trashes the predecessor (restorable, keeps its own name and version) and registers the new run under the next free ``stem.vN``; ``fail`` raises an error.
+# Type: Literal['replace', 'fail', 'version'] | one of: "replace", "fail", "version" | Default: "version"
+if_exists = "version"
+
+# Short free-text description of the simulation intent.
+# Type: string | Default: ""
+description = ""
+
+# Scientific objective used for catalog and ML stratification.
+# Type: string (optional) | Optional
+# scientific_objective = ""
+
+# Contact email for the simulation metadata.
+# Type: string (optional) | Optional
+# contact_email = ""
+
+# DOI or reference identifier for the simulation metadata.
+# Type: string (optional) | Optional
+# doi = ""
+
+# Name of the study area, recorded in the run metadata and the catalog.
+# Type: string (optional) | Optional
+# study_area_name = ""
+
+# Easting of the declared study outlet, in metres in the project CRS.
+# It is recorded in the run manifest; the delineation reads [geographic.catchment].
+# Type: float (optional) | Optional
+# outlet_x = 0.0
+
+# Northing of the declared study outlet, in metres in the project CRS.
+# It is recorded in the run manifest; the delineation reads [geographic.catchment].
+# Type: float (optional) | Optional
+# outlet_y = 0.0
+
+# Master RNG seed for the simulation.
+# When set, every stochastic consumer (mesh point sampling, synthetic forcing, ...) derives its own deterministic sub-seed via ``hydromodpy.core.rng.RngManager``.
+# Persisted in ``runs_environment.rng_seed`` so the run can be re-executed from the catalog snapshot.
+# Type: int (optional) | >= 0 | Optional
+# rng_seed = 0
+
+
+# Optional canonical simulation window used to align solver temporal settings and validate forcing coverage.
+# Required for launcher flow processes and for runtime features that explicitly consume simulation-window dates.
+
+# [simulation.time]
+# Simulation window lower datetime bound used by launcher-level time alignment and forcing checks.
+# Type: datetime (optional) | Optional | Examples: "2019-01-01"
+# start_datetime = ""
+
+# Simulation window upper datetime bound, interpreted as inclusive.
+# Must be greater than or equal to start_datetime.
+# Type: datetime (optional) | Optional | Examples: "2025-12-31"
+# end_datetime = ""
+
+# Forcing/stress-period time-step scalar or inline token '<value> <unit>' (for example '30 day').
+# This controls the temporal aggregation step for forcing series (for example recharge/runoff) and the resulting stress periods.
+# Not read by a steady run (flow.flow_regime = 'steady'), which is one stress period over the whole window, its forcings averaged over it.
+# Type: UnionType[int, float, str] | Default: "1 month" | Examples: "1 month", "10 day"
+# step_value = "1 month"
+
+# Unit of a bare-number step_value: the length of the stress periods and of the forcing steps.
+# Type: Literal (optional) | Optional
+# step_unit = "hour"
+
+# What happens to a stress period that a forcing record does not cover.
+# A sample is the rate of the interval up to the next sample, and the last sample stands for one step of the record (the median spacing of its dates).
+# A period that no sample reaches, before the first date or after the end of the last step, is not covered.
+# 'error' stops the run, 'warn' warns once per record, 'ignore' says nothing; under 'warn' and 'ignore' the period takes the nearest sample in time.
+# The rule is the same for a series, a station and a grid: rain, ETP, recharge, runoff and the declared CSV forcings read as rates (aggregate = 'mean').
+# Type: Literal['error', 'warn', 'ignore'] | one of: "error", "warn", "ignore" | Default: "error" | Examples: "error", "warn"
+# coverage_policy = "error"
+
+
+# Results storage loaded from [simulation.results]: what the run writes to the catalog, whether the raw solver files are kept, and how much of the per-cell budget the run keeps.
+
+[simulation.results]
+# Keep the raw solver files (.hds, .cbc, .lst) once their results are stored.
+# Off, they are deleted; turn it on to read the listing file of a run that did not converge.
+# Type: bool | Default: false
+keep_solver_files = false
+
+
+# Simulation-run persistence switch passed to the result catalog (DuckDB rows, Zarr fields, Parquet tables).
+
+[simulation.results.persistence]
+# Persist DuckDB rows (simulations, parameters, metrics, calibration_iterations).
+# When False, catalog writes are skipped.
+# Type: bool | Default: true
+save_catalog = true
+
+# Persist per-simulation field arrays (head, concentration, derived) into the Zarr store.
+# Type: bool | Default: true
+save_zarr = true
+
+# Precision of the time-varying field arrays of fields.zarr: heads, per-cell budget terms, derived fields, concentrations.
+# 'compact' stores float32 with the mantissa rounded to nearest at 16 bits: each value moves by at most 2**-17 of itself (7.6e-6 relative, so at most 1 mm on a 130 m head and 7.6e-9 m3/s on a 1e-3 m3/s cell flux), and a daily run takes about a third of the disk.
+# 'exact' keeps every value as computed, float64.
+# Mesh geometry, topography, layer thickness, indices, coordinates and timestamps are never rounded.
+# Type: Literal['compact', 'exact'] | one of: "compact", "exact" | Default: "compact"
+field_precision = "compact"
+
+# Persist per-simulation tabular outputs (timeseries, budgets, mass_balance) as Parquet files.
+# Type: bool | Default: true
+save_parquet = true
+
+
+# Ordered list of requested processes loaded from [[simulation.process]].
+# At most one process per type is supported.
+# Example entry, one [[simulation.process]] block per entry.
+# [[simulation.process]]
+# User-facing identifier for the process.
+# This id is required and must be unique within the simulation.
+# Type: string | REQUIRED | Examples: "flow_main"
+# id = ""
+
+# Discriminator selecting the 'flow' process family.
+# Type: Literal['flow'] | one of: "flow" | Default: "flow"
+# type = "flow"
+
+# Ordered list of active flow solver names.
+# At least one solver is required for flow processes.
+# Type: list[str] | REQUIRED
+# solvers = []
+

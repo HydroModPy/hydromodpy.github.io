@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Fix a failing architecture gate" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/fix-an-architecture-gate.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="tests/unit/architecture/ holds the structural contracts of the code. CI runs it as the job Architecture / layer matrix. It fails on a pull request when an import, a declaration or an allowlist no l..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="tests/unit/architecture/ holds the structural contracts of the code. CI runs it as the job Architecture / layer matrix. It fails on a pull request when an import, a declaration or an allowlist no l..." />
+
+    <meta property="article:modified_time" content="2026-10-09T02:11:12+02:00" />
+    <title>Fix a failing architecture gate &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/how-to/fix-an-architecture-gate';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/fix-an-architecture-gate.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Cut a release" href="cut-a-release.html" />
+    <link rel="prev" title="Add a test" href="add-a-test.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-09"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Recipes</a><details open="open"><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a block HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a test</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/physics.html">Package: physics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/spatial.html">Package: spatial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/simulation.html">Package: simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catalog.html">Package: catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/analysis.html">Package: analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/reporting.html">Package: reporting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/examples.html">Package: examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artefacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/toml-to-solver-walkthrough.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/comparison-workflow.html">Comparison workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/testbed-workflow-architecture.html">Testbed workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-uml-diagrams.html">Boussinesq solver diagrams</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh architecture</a><details><summary aria-label="Show or hide the pages under Mesh architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/catchment-mesh-architecture.html">Catchment mesh architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/structured-grid-architecture.html">Structured grid architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/gmsh-meshing.html">Conformal Gmsh meshing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/mesh-pivot.html">The HydroMesh pivot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration architecture</a><details><summary aria-label="Show or hide the pages under Calibration architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-architecture.html">Calibration architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-guide.html">How the calibration engine runs</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_loading/index.html">Data loading architecture</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../spatial_support/index.html">Spatial support and hydrography</a><details><summary aria-label="Show or hide the pages under Spatial support and hydrography"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/support-selection-guide.html">Choosing a spatial support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/spatial-support-uml-diagrams.html">Spatial support diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-uml-diagrams.html">Hydrographic network diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-simulated-active-inventory.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../field/index.html">Field layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/process-architecture.html">Process architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/flow-boundary-conditions.html">Flow boundary conditions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/release-contract-v1.html">V1 release contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Recipes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fix a failing architecture gate</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="fix-a-failing-architecture-gate">
+<h1>Fix a failing architecture gate<a class="headerlink" href="#fix-a-failing-architecture-gate" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/</span></code> holds the structural contracts of the code. CI runs
+it as the job <code class="docutils literal notranslate"><span class="pre">Architecture</span> <span class="pre">/</span> <span class="pre">layer</span> <span class="pre">matrix</span></code>. It fails on a pull request when an
+import, a declaration or an allowlist no longer matches the contract, and the
+failure names the rule. This page says how to read it and what to do for each
+kind of failure. The list of every rule, with the file that holds it, is
+generated: <a class="reference internal" href="../generated/guards.html"><span class="doc">Architecture gates</span></a>.</p>
+<section id="run-it">
+<h2>Run it<a class="headerlink" href="#run-it" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/unit/architecture<span class="w"> </span>-q<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span>
+</pre></div>
+</div>
+<p>It takes about a minute and a half with two workers. To run one rule, name the
+file.</p>
+<p>The rule you broke is the file name of the first failure. Find it in the table
+below.</p>
+</section>
+<section id="what-to-do-by-failing-test">
+<h2>What to do, by failing test<a class="headerlink" href="#what-to-do-by-failing-test" title="Link to this heading">#</a></h2>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">test_layer_matrix.py</span></code></dt><dd><p><em>“N layer-matrix violations: physics -&gt; spatial 3 via from”</em>. An import crosses
+a layer boundary that <code class="docutils literal notranslate"><span class="pre">layer_matrix.yaml</span></code> does not grant. The message counts
+the edges by pair, without the lines. List them:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<span class="s">import pathlib</span>
+<span class="s">from tools.audit.build_graph import scan_package</span>
+<span class="s">for e in scan_package(pathlib.Path("hydromodpy")):</span>
+<span class="s">    if (e.src_pkg, e.tgt_pkg) == ("physics", "spatial"):</span>
+<span class="s">        print(f"{e.src_file}:{e.lineno} {e.kind} {e.target_module}")</span>
+<span class="s">PY</span>
+</pre></div>
+</div>
+<p>Replace the pair with the one in the message. Then fix the import. Move the
+symbol down to a layer both sides may import (often <code class="docutils literal notranslate"><span class="pre">core</span></code>), or call it
+through a port the lower layer defines. Do not add the edge to the YAML to make
+the test pass: a new edge that violates the matrix is a regression, so propose
+it in an issue first. An import under <code class="docutils literal notranslate"><span class="pre">TYPE_CHECKING</span></code>, inside a function, or
+written as a string in a lazy-import table counts like any other. The same file
+fails when a package has no row in the matrix, a row has no package, a
+tolerance names an unknown layer or repeats an allowed edge, or a package has no
+page in <a class="reference internal" href="../packages/index.html"><span class="doc">Packages</span></a>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_layer_matrix_page.py</span></code></dt><dd><p><em>“docs/source/contribute/architecture/layer-matrix.partial.rst is stale”</em>. The
+committed fragment is generated from the YAML. Run
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.doc_contracts</span></code> and commit the result.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_package_layouts.py</span></code></dt><dd><p>A package with a <code class="docutils literal notranslate"><span class="pre">&lt;package&gt;_layout.yaml</span></code> (<code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>,
+<code class="docutils literal notranslate"><span class="pre">display</span></code>) orders its parts, and a part may import only the parts in its row.
+The message names the part and the import. Either move the import, or, if the
+dependency is real, reorder the rows in the layout file and in the package
+README together. A row may name only rows above it, so a cycle cannot be
+declared. Another layer may import only the modules listed under <code class="docutils literal notranslate"><span class="pre">public</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_data_source_port_stands_alone.py</span></code> and <code class="docutils literal notranslate"><span class="pre">test_terrain_port_stands_alone.py</span></code></dt><dd><p>A port promises a third-party plugin that it needs nothing of HydroModPy beyond
+the port module and its contracts. The layer matrix cannot see this, because
+the parts sit in one layer. Remove the import: a source must not reach a
+manager, a catalog or a workspace, and a terrain engine must not import another
+part of <code class="docutils literal notranslate"><span class="pre">spatial</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_cli_boundary.py</span></code></dt><dd><p>Only <code class="docutils literal notranslate"><span class="pre">hydromodpy/__main__.py</span></code> may import <code class="docutils literal notranslate"><span class="pre">hydromodpy.cli</span></code>. Put the logic in
+the layer it belongs to and have the command call it. The CLI stays thin.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_storage_boundary.py</span></code></dt><dd><p>A direct <code class="docutils literal notranslate"><span class="pre">duckdb.connect</span></code> in the public API or a user-facing command. Go
+through the catalog or cache adapter. The files allowed to open DuckDB directly are
+listed in <code class="docutils literal notranslate"><span class="pre">ALLOWED_DIRECT_DUCKDB_FILES</span></code> of the test, and the cases are
+described in <a class="reference internal" href="../data-scopes.html#direct-duckdb-access"><span class="std std-ref">Direct DuckDB access</span></a>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_solver_private_attributes.py</span></code></dt><dd><p>A private name (<code class="docutils literal notranslate"><span class="pre">obj._name</span></code>) read inside <code class="docutils literal notranslate"><span class="pre">solver/&lt;package&gt;/</span></code> must be declared
+in that same sub-package. Expose the value through a public method or field of
+the owner. The two MODFLOW backends and the shared helpers are held to it.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_step_payload_keys.py</span></code></dt><dd><p>A pipeline step declares the payload keys it reads and writes, as the class
+attributes <code class="docutils literal notranslate"><span class="pre">reads</span></code> and <code class="docutils literal notranslate"><span class="pre">writes</span></code>, and they must match what its code touches,
+in both directions. Edit the two tuples of the step. A key the step no longer
+touches must go.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_run_context_state_surface.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_run_product_reaches_its_consumer.py</span></code>, <code class="docutils literal notranslate"><span class="pre">test_workflow_context_members_have_a_reader.py</span></code></dt><dd><p>These keep what a solver adapter receives narrow. An adapter reads the view
+<code class="docutils literal notranslate"><span class="pre">ctx.state</span></code> (<code class="docutils literal notranslate"><span class="pre">setup</span></code>, <code class="docutils literal notranslate"><span class="pre">cfg</span></code> and <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>), the model and output folder
+of its own run from <code class="docutils literal notranslate"><span class="pre">ctx.model</span></code> and <code class="docutils literal notranslate"><span class="pre">ctx.output_dir</span></code>, the models it depends
+on from <code class="docutils literal notranslate"><span class="pre">ctx.dependency_models</span></code> and the catalog handle from <code class="docutils literal notranslate"><span class="pre">ctx.store</span></code>. It
+does not reach into the execution registries. A member of <code class="docutils literal notranslate"><span class="pre">WorkflowContext</span></code>
+that nothing reads is removed. A module that really needs a registry is added
+to the short allowlist of the test, which is a decision to state in the pull
+request.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_no_vanilla_raise.py</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">raise</span> <span class="pre">ValueError</span></code> and <code class="docutils literal notranslate"><span class="pre">raise</span> <span class="pre">RuntimeError</span></code> are banned in the modules of its
+<code class="docutils literal notranslate"><span class="pre">SCOPE</span></code>. Raise a typed exception from <code class="docutils literal notranslate"><span class="pre">hydromodpy.core.exceptions</span></code>. Add a
+module to <code class="docutils literal notranslate"><span class="pre">SCOPE</span></code> once it is clean.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_tolerances_single_source.py</span></code></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">tol('&lt;slug&gt;')</span></code> call that matches no row of <code class="docutils literal notranslate"><span class="pre">tests/TOLERANCES.md</span></code>, or a
+documented scalar that is written inline again. Fix the slug, or add the row to
+the table, and read the value through <code class="docutils literal notranslate"><span class="pre">tol()</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_whitebox_tests_run_serially.py</span></code></dt><dd><p>A CI step runs a Whitebox-backed test file in parallel. Exclude the file from
+the parallel step and keep it in the serial one. See <a class="reference internal" href="add-a-test.html#run-the-tests"><span class="std std-ref">Run the tests</span></a>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test_no_legacy_surface.py</span></code></dt><dd><p>A retired name appears in the docs, the examples, the package or the tests.
+Delete it.</p>
+</dd>
+</dl>
+</section>
+<section id="when-the-contract-is-what-is-wrong">
+<h2>When the contract is what is wrong<a class="headerlink" href="#when-the-contract-is-what-is-wrong" title="Link to this heading">#</a></h2>
+<p>Sometimes the code is right and the contract is old. The contract files are
+<code class="docutils literal notranslate"><span class="pre">layer_matrix.yaml</span></code> (rows, tolerances, exempt files) and the three
+<code class="docutils literal notranslate"><span class="pre">*_layout.yaml</span></code> files. Change them in a pull request of their own, with the
+reason in the tolerance entry, because a tolerance without a rationale fails
+review. Then regenerate the pages (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.doc_contracts</span></code>) and update
+the README of the package whose rows moved. Never add a tolerance silently.</p>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="add-a-test.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Add a test</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="cut-a-release.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cut a release</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-it">Run it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-by-failing-test">What to do, by failing test</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-the-contract-is-what-is-wrong">When the contract is what is wrong</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-09.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

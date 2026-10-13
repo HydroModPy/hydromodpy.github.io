@@ -1,0 +1,182 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: transport
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Transport-process configuration.
+# ----------------------------------------------------------------------
+
+[transport]
+# Ordered list of sink/source identifiers that are explicitly activated for this process.
+# An empty list means no sink/source is active.
+# Concrete process configs (e.g.
+# FlowConfig) validate the allowed values.
+# Type: list[str] | REQUIRED
+active_sinks_sources = []
+
+# Ordered list of boundary-condition identifiers that are explicitly activated for this process.
+# An empty list means no boundary-condition package is assembled.
+# Concrete process configs (e.g.
+# FlowConfig) validate the allowed values.
+# Type: list[str] | REQUIRED
+active_bc = []
+
+
+# Modpath solver configuration block.
+
+# Solver parameter block used by Modpath.
+
+[transport.modpath.parameters]
+# Where particles are released: 'domain' (every active cell), 'seepage_clip' (the seepage areas of the flow run, clipped to the watershed), or the path of a raster that marks the release cells.
+# Type: string | Default: "domain"
+zone_partic = "domain"
+
+# Direction particles are tracked in: with the flow ('forward') or against it ('backward', from where water leaves back to where it entered).
+# Type: Literal['forward', 'backward'] | one of: "forward", "backward" | Default: "forward"
+track_dir = "forward"
+
+# Keep one released particle out of this many, in release order.
+# Unset, every particle is kept.
+# A count.
+# Type: int (optional) | >= 1 | Optional
+# sel_slice = 1
+
+
+# MT3DMS solver configuration block.
+
+# Solver parameter block used by Mt3dms.
+
+[transport.mt3dms.parameters]
+# Name of the transported solute, used in the output names.
+# Type: string | Default: "NO3"
+spc_name = "NO3"
+
+# Concentration of the solute in the aquifer at the start of the run, in the mass per volume unit you choose.
+# The run keeps that unit.
+# Type: float | Default: 0.0
+sconc_init = 0.0
+
+# Concentration of the solute in the recharge water, in the same unit as sconc_init.
+# Type: float | Default: 0.0
+sconc_input = 0.0
+
+# Effective (total) porosity [-], the dimensionless volume of interconnected pores per bulk volume.
+# Drives MST pore volume and pore velocity.
+# When omitted, the flow model specific yield is used, which underestimates pore volume and biases transit times low.
+# Type: float (optional) | > 0.0 | <= 1.0 | Optional
+# porosity = 1.0
+
+
+# MODFLOW 6 GWT solver configuration block.
+
+# Solver parameter block used by Modflow6Transport.
+
+[transport.modflow6gwt.parameters]
+# Name of the transported solute, used in the output names.
+# Type: string | Default: "NO3"
+spc_name = "NO3"
+
+# Concentration of the solute in the aquifer at the start of the run, in the mass per volume unit you choose.
+# The run keeps that unit.
+# Type: float | Default: 0.0
+sconc_init = 0.0
+
+# Concentration of the solute in the recharge water, in the same unit as sconc_init.
+# Type: float | Default: 0.0
+sconc_input = 0.0
+
+# Effective (total) porosity [-], the dimensionless volume of interconnected pores per bulk volume.
+# Drives MST pore volume and pore velocity.
+# When omitted, the flow model specific yield is used, which underestimates pore volume and biases transit times low.
+# Type: float (optional) | > 0.0 | <= 1.0 | Optional
+# porosity = 1.0
+
+
+# MODFLOW 6 PRT particle-tracking solver configuration block.
+
+# Solver parameter block used by Modflow6Prt.
+
+[transport.modflow6prt.parameters]
+# Cells particles are released from: 'domain' (every active cell), 'domain_nonriver' (the same without river cells), 'upstream' (the highest cells), 'upstream_nonriver', 'river', 'outlet' (the lowest cells), or 'custom' (the cells particle_cell_ids lists).
+# Type: string | Default: "domain"
+release_zone = "domain"
+
+# Top-elevation quantile used by upstream release zones.
+# A value of 0.90 selects cells in the highest 10 percent of active cell-top elevations.
+# Type: float | >= 0.0 | <= 1.0 | Default: 0.9
+upstream_top_quantile = 0.9
+
+# Bottom-elevation quantile used by the 'outlet' release zone.
+# A value of 0.10 selects cells in the lowest 10 percent of active cell-top elevations.
+# Type: float | >= 0.0 | <= 1.0 | Default: 0.1
+outlet_bottom_quantile = 0.1
+
+# Direction particles are tracked in.
+# MODFLOW 6 PRT tracks with the flow only, so 'forward' is the one value.
+# Type: Literal['forward'] | one of: "forward" | Default: "forward"
+track_dir = "forward"
+
+# Effective (total) porosity [-] for particle tracking (v = q / porosity).
+# When omitted, the flow model specific yield is used where positive, with a warning, since specific yield underestimates pore volume.
+# Type: float (optional) | > 0.0 | <= 1.0 | Optional
+# porosity = 1.0
+
+# Height of the release point inside its cell, from 0 at the bottom to 1 at the top.
+# Type: float | >= 0.0 | <= 1.0 | Default: 0.5
+local_z = 0.5
+
+# Cells to release particles from, by their index in the mesh counted from 0.
+# Type: list (optional) | Optional
+# particle_cell_ids = []
+
+# Most release cells kept after the zone is selected; the kept cells are spread over the zone.
+# Unset, every cell of the zone releases.
+# A count.
+# Type: int (optional) | >= 1 | Optional
+# max_particles = 1
+
+# Keep one release cell out of this many, in cell order, before max_particles applies.
+# A count.
+# Type: int (optional) | >= 1 | Optional
+# sel_slice = 1
+
+# Times particles are released at, in days from the start of the run.
+# Unset, they are released once at the start.
+# Type: list (optional) | Optional
+# release_times_days = []
+
+# Times the particle positions are written at, in days from the start of the run.
+# Type: list (optional) | Optional
+# track_times_days = []
+
+# Spacing, in days, of regular output times from 0 to stop_time_days.
+# track_times_days wins when it is given.
+# It needs stop_time_days.
+# Type: float (optional) | > 0.0 | Optional
+# track_time_step_days = 1.0
+
+# Time all particles stop at, in days from the start of the run.
+# Type: float (optional) | > 0.0 | Optional
+# stop_time_days = 1.0
+
+# Longest time a particle may travel, in days from its release.
+# Type: float (optional) | > 0.0 | Optional
+# stop_travel_time_days = 1.0
+
+# Keep tracking particles after the last flow time step, with the last flow field, when MODFLOW 6 allows it.
+# Type: bool | Default: true
+extend_tracking = true
+
+# Write the particle track CSV file.
+# HydroModPy reads the tracks from it, so turning it off leaves the run with no particle result.
+# Type: bool | Default: true
+write_track_csv = true
+
+# Write the binary particle track file of MODFLOW 6 as well.
+# Type: bool | Default: true
+write_track_binary = true
+

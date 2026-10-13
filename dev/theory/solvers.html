@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="The solvers of the aquifer" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/solvers.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="HydroModPy integrates the groundwater flow equation with one of three solvers: MODFLOW 6, MODFLOW-NWT or the in-house Boussinesq solver. This page says which packages and options HydroModPy writes ..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/solvers_substeps.png" />
+<meta property="og:image:alt" content="Head error at the end of a period against the number of steps, with two geometric partitions of ten steps." />
+<meta name="description" content="HydroModPy integrates the groundwater flow equation with one of three solvers: MODFLOW 6, MODFLOW-NWT or the in-house Boussinesq solver. This page says which packages and options HydroModPy writes ..." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>The solvers of the aquifer &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/solvers';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/solvers.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Boussinesq theory" href="boussinesq.html" />
+    <link rel="prev" title="XT3D on irregular meshes" href="solvers/xt3d-on-irregular-disv-meshes.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The solvers of the aquifer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="the-solvers-of-the-aquifer">
+<h1>The solvers of the aquifer<a class="headerlink" href="#the-solvers-of-the-aquifer" title="Link to this heading">#</a></h1>
+<p>HydroModPy integrates the groundwater flow equation with one of three solvers: MODFLOW 6,
+MODFLOW-NWT or the in-house Boussinesq solver. This page says which packages and options
+HydroModPy writes for each of them, how it sets the time steps, what happens to a cell that
+dries, how the two MODFLOW solvers differ, and how a transport run hooks onto a flow run.
+What each solver supports is listed in <a class="reference internal" href="../reference/solvers.html"><span class="doc">Solvers</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Scope.</strong> The balance of a cell, <a class="reference internal" href="groundwater-flow.html#equation-eq-cell-balance">(17)</a>, is on <a class="reference internal" href="groundwater-flow.html"><span class="doc">The groundwater flow problem</span></a>. The
+Boussinesq solver is on <a class="reference internal" href="boussinesq.html"><span class="doc">Boussinesq theory</span></a> and the XT3D terms on
+<a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>.</p>
+</div>
+<section id="sources">
+<span id="modflow-governing-equation"></span><h2>Sources<a class="headerlink" href="#sources" title="Link to this heading">#</a></h2>
+<p>The MODFLOW equations, packages and numerical methods are documented by the USGS. This page
+does not repeat them. It says which options HydroModPy writes.</p>
+<ul class="simple">
+<li><p>MODFLOW 6 groundwater flow model: control-volume formulation, Newton-Raphson, storage and
+stress packages <span class="bibtex-citation" id="id1">[<a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>.</p></li>
+<li><p>MODFLOW 6 framework and the IMS linear solver <span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id45" title="J. D. Hughes, C. D. Langevin, and E. R. Banta. Documentation for the MODFLOW 6 framework. Techniques and Methods 6-A57, U.S. Geological Survey, 2017. doi:10.3133/tm6A57.">Hughes <em>et al.</em>, 2017</a>]</span>.</p></li>
+<li><p>XT3D option of the <code class="docutils literal notranslate"><span class="pre">NPF</span></code> package <span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id11" title="A. M. Provost, C. D. Langevin, and J. D. Hughes. Documentation for the “XT3D” option in the Node Property Flow (NPF) package of MODFLOW 6. Techniques and Methods 6-A56, U.S. Geological Survey, 2017. doi:10.3133/tm6A56.">Provost <em>et al.</em>, 2017</a>]</span>.</p></li>
+<li><p>MODFLOW-NWT, the Newton formulation of MODFLOW-2005 <span class="bibtex-citation" id="id4">[<a class="reference internal" href="bibliography.html#id9" title="R. G. Niswonger, S. Panday, and M. Ibaraki. MODFLOW-NWT, a Newton formulation for MODFLOW-2005. Techniques and Methods 6-A37, U.S. Geological Survey, 2011. doi:10.3133/tm6A37.">Niswonger <em>et al.</em>, 2011</a>]</span>, on the
+MODFLOW-2005 groundwater flow process <span class="bibtex-citation" id="id5">[<a class="reference internal" href="bibliography.html#id8" title="A. W. Harbaugh. MODFLOW-2005, the U.S. Geological Survey modular ground-water model: the ground-water flow process. Techniques and Methods 6-A16, U.S. Geological Survey, 2005. doi:10.3133/tm6A16.">Harbaugh, 2005</a>]</span>.</p></li>
+<li><p>MODFLOW 6 groundwater transport model <span class="bibtex-citation" id="id6">[<a class="reference internal" href="bibliography.html#id49" title="C. D. Langevin, A. M. Provost, S. Panday, and J. D. Hughes. Documentation for the MODFLOW 6 groundwater transport model. Techniques and Methods 6-A61, U.S. Geological Survey, 2022. doi:10.3133/tm6A61.">Langevin <em>et al.</em>, 2022</a>]</span> and water mover package
+<span class="bibtex-citation" id="id7">[<a class="reference internal" href="bibliography.html#id46" title="E. D. Morway, C. D. Langevin, and J. D. Hughes. Use of the MODFLOW 6 water mover package to represent natural and managed hydrologic connections. Groundwater, 59(6):913–924, 2021. doi:10.1111/gwat.13117.">Morway <em>et al.</em>, 2021</a>]</span>.</p></li>
+<li><p>The <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/mf6io.html">MODFLOW 6 input guide</a> and the
+<a class="reference external" href="https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/">MODFLOW-NWT guide</a>, for the
+definition of each package and option.</p></li>
+</ul>
+</section>
+<section id="the-three-solvers-side-by-side">
+<h2>The three solvers side by side<a class="headerlink" href="#the-three-solvers-side-by-side" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>MODFLOW 6</p></th>
+<th class="head"><p>MODFLOW-NWT</p></th>
+<th class="head"><p>Boussinesq</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Name in <code class="docutils literal notranslate"><span class="pre">solvers</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boussinesq</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Grid</p></td>
+<td><p>DISV for every grid, structured or not</p></td>
+<td><p>structured grid only (DIS)</p></td>
+<td><p>triangular cells of a Gmsh mesh</p></td>
+</tr>
+<tr class="row-even"><td><p>Time</p></td>
+<td><p>backward Euler, equal steps in a period</p></td>
+<td><p>backward Euler, equal steps in a period</p></td>
+<td><p>one backward Euler step per period</p></td>
+</tr>
+<tr class="row-odd"><td><p>Transport</p></td>
+<td><p>GWT and particle tracking</p></td>
+<td><p>MODPATH and MT3DMS</p></td>
+<td><p>refused</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The names in the first row are the values read by <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-process-solvers" title="Ordered list of active flow solver names."><code class="docutils literal notranslate"><span class="pre">simulation.process.solvers</span></code></a>. The
+capabilities of each solver, generated from the code, are on <a class="reference internal" href="../reference/solvers.html"><span class="doc">Solvers</span></a>.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Lengths are in metres and time is in seconds: the run is written in seconds whatever the
+calendar of the file.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p class="sd-card-text">Symbol</p></th>
+<th class="head"><p class="sd-card-text">Meaning</p></th>
+<th class="head"><p class="sd-card-text">Unit</p></th>
+<th class="head"><p class="sd-card-text">Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta t\)</span></p></td>
+<td><p class="sd-card-text">length of a stress period, the stretch of time that gets one forcing value</p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-step_value" title="Forcing/stress-period time-step scalar or inline token '&lt;value&gt; &lt;unit&gt;' (for example '30 day')."><code class="docutils literal notranslate"><span class="pre">step_value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\delta t\)</span></p></td>
+<td><p class="sd-card-text">solver time step, <span class="math notranslate nohighlight">\(\delta t = \Delta t / n_\mathrm{sub}\)</span></p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n_\mathrm{sub}\)</span></p></td>
+<td><p class="sd-card-text">number of solver time steps in a stress period</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-substeps_per_period" title="Number of solver time steps within each stress period, the one knob that buys transient accuracy."><code class="docutils literal notranslate"><span class="pre">substeps_per_period</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(z_\mathrm{top}\)</span></p></td>
+<td><p class="sd-card-text">model top, the land surface</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/data/dem.html#p-data-dem" title="DEM configuration used when 'dem' is listed in data.types."><code class="docutils literal notranslate"><span class="pre">data.dem</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(z'_\mathrm{top}\)</span></p></td>
+<td><p class="sd-card-text">computational top MODFLOW 6 reads, <span class="math notranslate nohighlight">\(z'_\mathrm{top} = z_\mathrm{top} + \max H_1 - H_1\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(H\)</span></p></td>
+<td><p class="sd-card-text">aquifer thickness, <span class="math notranslate nohighlight">\(H = z_\mathrm{top} - z_\mathrm{bot}\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/domain.html#p-domain-depth_model-kind" title="Depth-model kind discriminator."><code class="docutils literal notranslate"><span class="pre">kind</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(H_1\)</span></p></td>
+<td><p class="sd-card-text">thickness of the top layer under the ground</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-vertical-nlay" title="Number of layers for 'constant' and 'decay'. (-)"><code class="docutils literal notranslate"><span class="pre">nlay</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(K\)</span></p></td>
+<td><p class="sd-card-text">horizontal hydraulic conductivity, the same along <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span></p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/param.html#p-flow-param-k-field-value" title="Hydraulic conductivity of the `K` table, in m/s. (m/s)"><code class="docutils literal notranslate"><span class="pre">flow.param.K.field.value</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(K_z\)</span></p></td>
+<td><p class="sd-card-text">vertical hydraulic conductivity, <span class="math notranslate nohighlight">\(K / \beta\)</span>, or the parameter with the id <code class="docutils literal notranslate"><span class="pre">Kv</span></code></p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-process_specific-vka" title="Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka."><code class="docutils literal notranslate"><span class="pre">vka</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\beta\)</span></p></td>
+<td><p class="sd-card-text">ratio <span class="math notranslate nohighlight">\(K / K_z\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-process_specific-vka" title="Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka."><code class="docutils literal notranslate"><span class="pre">vka</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(S_s\)</span></p></td>
+<td><p class="sd-card-text">specific storage</p></td>
+<td><p class="sd-card-text">1/m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/param.html#p-flow-param-ss-field-value" title="Specific storage of the `Ss` table, in 1/m. (1/m)"><code class="docutils literal notranslate"><span class="pre">flow.param.Ss.field.value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(S_y\)</span></p></td>
+<td><p class="sd-card-text">specific yield</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/param.html#p-flow-param-sy-field-value" title="Specific yield of the `Sy` table, dimensionless. (-)"><code class="docutils literal notranslate"><span class="pre">flow.param.Sy.field.value</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details></section>
+<section id="time-steps">
+<span id="solvers-time"></span><h2>Time steps<a class="headerlink" href="#time-steps" title="Link to this heading">#</a></h2>
+<p>The three solvers read the same time grid, built from <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time" title="Optional canonical simulation window used to align solver temporal settings and validate forcing coverage."><code class="docutils literal notranslate"><span class="pre">simulation.time</span></code></a>. Each
+stress period has a length <span class="math notranslate nohighlight">\(\Delta t\)</span> and holds every forcing constant. The two MODFLOW
+solvers cut it into <span class="math notranslate nohighlight">\(n_\mathrm{sub}\)</span> equal steps, <span class="math notranslate nohighlight">\(\delta t = \Delta t / n_\mathrm{sub}\)</span>,
+with a step multiplier of 1: MODFLOW 6 in its <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/sim-tdis.html"><code class="docutils literal notranslate"><span class="pre">TDIS</span></code></a>
+package, MODFLOW-NWT in <code class="docutils literal notranslate"><span class="pre">DIS</span></code>.</p>
+<p>Equal steps are a choice with a test behind it. On a confined column against a closed-form
+solution, <code class="docutils literal notranslate"><span class="pre">test_stress_period_substepping</span></code> finds equal steps more accurate than a geometric
+growth of the steps, in either direction, and one step per period about ten times less
+accurate than ten steps (<a class="reference internal" href="validation.html"><span class="doc">Validation</span></a>). The unconfined problem is nonlinear, so this
+holds there only approximately. The same case reports that one step per period moves the
+monthly discharge of a drained hillslope by tens of per cent against a refined run. One
+step per period is therefore not a neutral choice.</p>
+<figure class="align-default" id="id15">
+<img alt="Head error at the end of a period against the number of steps, with two geometric partitions of ten steps." class="plot-directive" src="../_images/solvers_substeps.png" width="945" height="525" />
+<figcaption>
+<p><span class="caption-number">Fig. 41 </span><span class="caption-text">The confined column of <code class="docutils literal notranslate"><span class="pre">test_stress_period_substepping</span></code>: 200 cells of 5 m, a
+head step of 1 m held for 31 days, with the backward Euler equations MODFLOW 6 solves
+for this linear case. Ten steps that grow or shrink by 2 give the same error, about
+four times that of ten equal steps.</span><a class="headerlink" href="#id15" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>A period is steady or transient. With <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-flow_regime" title="Whether the flow is solved as one equilibrium state or through time over the stress periods of [simulation.time]. (-)"><code class="docutils literal notranslate"><span class="pre">flow.flow_regime</span></code></a> set to <code class="docutils literal notranslate"><span class="pre">&quot;steady&quot;</span></code>, every
+period is steady. With <code class="docutils literal notranslate"><span class="pre">&quot;transient&quot;</span></code>, only the first period is steady, and only when
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-first_period_steady" title="For transient flow, mark the first solver stress period as steady-state. (-)"><code class="docutils literal notranslate"><span class="pre">flow.first_period_steady</span></code></a> is true. With <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_ats" title="Enable MODFLOW 6 adaptive time stepping (ATS) on transient periods."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_ats</span></code></a>, MODFLOW 6
+adds <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/utl-ats.html">adaptive time stepping</a>
+to the transient periods: each period starts at the step above, ATS subdivides it only where
+the solver cannot converge, and it never grows past that step. Steady periods are left out.
+The starting heads are on <a class="reference internal" href="groundwater-flow.html#gwf-start"><span class="std std-ref">The starting heads</span></a>. In the code:
+<code class="docutils literal notranslate"><span class="pre">build_temporal_discretization_from_time_grid</span></code>.</p>
+</section>
+<section id="the-nonlinear-solve">
+<h2>The nonlinear solve<a class="headerlink" href="#the-nonlinear-solve" title="Link to this heading">#</a></h2>
+<p>MODFLOW 6 and MODFLOW-NWT both write the balance <a class="reference internal" href="groundwater-flow.html#equation-eq-cell-balance">(17)</a> for every active
+cell and every step, and solve the nonlinear system by Newton-Raphson outer iterations, with
+a linear solve inside each one <span class="bibtex-citation" id="id8">[<a class="reference internal" href="bibliography.html#id45" title="J. D. Hughes, C. D. Langevin, and E. R. Banta. Documentation for the MODFLOW 6 framework. Techniques and Methods 6-A57, U.S. Geological Survey, 2017. doi:10.3133/tm6A57.">Hughes <em>et al.</em>, 2017</a>, <a class="reference internal" href="bibliography.html#id9" title="R. G. Niswonger, S. Panday, and M. Ibaraki. MODFLOW-NWT, a Newton formulation for MODFLOW-2005. Techniques and Methods 6-A37, U.S. Geological Survey, 2011. doi:10.3133/tm6A37.">Niswonger <em>et al.</em>, 2011</a>]</span>. The tests that
+stop the iteration and the percent discrepancy of the budget are the ones of the listing
+file, defined in the sources above. They do not measure the same thing on the two solvers:
+MODFLOW-NWT tests a norm of the residual over all cells, MODFLOW 6 a maximum over the cells
+of the linear solve. What HydroModPy adds:</p>
+<ul class="simple">
+<li><p>The keys that set the tests are <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_outer_dvclose" title="IMS outer-iteration head-change convergence criterion."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_outer_dvclose</span></code></a>,
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_inner_dvclose" title="IMS inner-iteration head-change convergence criterion."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_inner_dvclose</span></code></a> and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_inner_rclose" title="IMS inner-iteration flow-residual closure (L^3/T in run units)."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_inner_rclose</span></code></a>
+for MODFLOW 6, and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt-headtol" title="Head closure criterion for the NWT nonlinear solver."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.nwt.headtol</span></code></a> and
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt-fluxtol" title="Flux closure criterion of the NWT nonlinear solver, in m3/s: HydroModPy writes MODFLOW-NWT in seconds."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.nwt.fluxtol</span></code></a> for MODFLOW-NWT. Heads are in m, flows in m³/s.
+HydroModPy writes <code class="docutils literal notranslate"><span class="pre">inner_rclose</span></code> with no option, which keeps the absolute largest
+residual of a cell. When the key is unset, the value of the complexity preset applies.</p></li>
+<li><p>The run metrics keep the percent discrepancy of the last step and the worst one of the
+run. A calibration rejects a trial whose last value is above
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/index.html#p-calibration-reject_water_budget_above" title="Percent water-balance discrepancy past which a trial is rejected instead of scored. (%)"><code class="docutils literal notranslate"><span class="pre">calibration.reject_water_budget_above</span></code></a>. The auxiliary steady solve of a
+<code class="docutils literal notranslate"><span class="pre">steady_state</span></code> start accepts its result only within 0.1 per cent.
+In the code: <code class="docutils literal notranslate"><span class="pre">percent_discrepancies</span></code>.</p></li>
+</ul>
+</section>
+<section id="modflow-6-package-by-package">
+<h2>MODFLOW 6, package by package<a class="headerlink" href="#modflow-6-package-by-package" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">run_pre_processing</span></code> assembles the FloPy simulation in this order. A package marked “if”
+is written only when the file asks for it. Each package name links its input-guide page.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Package</p></th>
+<th class="head"><p>Written</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/sim-tdis.html">TDIS</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/sln-ims.html">IMS</a>, GWF (the Newton options), <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-disv.html">DISV</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-ic.html">IC</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-npf.html">NPF</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-sto.html">STO</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-rcha.html">RCHA</a>, <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-oc.html">OC</a></p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/utl-ats.html">ATS</a></p></td>
+<td><p>if <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_ats" title="Enable MODFLOW 6 adaptive time stepping (ATS) on transient periods."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_ats</span></code></a> is true</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-evta.html">EVTA</a> (or <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-evt.html">EVT</a>)</p></td>
+<td><p>if</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-drn.html">DRN</a></p></td>
+<td><p>if the <code class="docutils literal notranslate"><span class="pre">drainage</span></code> boundary is active</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-chd.html">CHD</a></p></td>
+<td><p>if one is active</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-wel.html">WEL</a></p></td>
+<td><p>if a well exists</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-lak.html">LAK</a></p></td>
+<td><p>if a lake is active</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-hfb.html">HFB</a></p></td>
+<td><p>if a barrier exists</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-sfr.html">SFR</a></p></td>
+<td><p>if <code class="docutils literal notranslate"><span class="pre">sfr</span></code> is active</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-mvr.html">MVR</a></p></td>
+<td><p>if one transfer exists</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>HydroModPy writes no UZF, GHB or RIV package. Three notes on the table.</p>
+<ul class="simple">
+<li><p><strong>Storage.</strong> STO receives <span class="math notranslate nohighlight">\(S_y\)</span> and <span class="math notranslate nohighlight">\(S_s\)</span> and a steady or transient flag per period. The
+flags are written only where they change. <span class="math notranslate nohighlight">\(S_s\)</span> matters only where the aquifer is
+confined, but MODFLOW 6 asks for a value. In the code: <code class="docutils literal notranslate"><span class="pre">sto_period_settings</span></code>.</p></li>
+<li><p><strong>Recharge.</strong> RCHA gets one rate per column and per period: the value of
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-values" title="Recharge rate: one number, one number per stress period, a table {period: value}, or the series loaded from [data.recharge], in the unit that 'units' names (mm/day by default). (mm/day)"><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.values</span></code></a>, or the recharge the soil reservoir computes
+(<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>). The cells of a lake that the model makes inactive receive none,
+because LAK handles the rain on the lake. The package also carries a <code class="docutils literal notranslate"><span class="pre">CONCENTRATION</span></code>
+auxiliary variable, which transport uses (<a class="reference internal" href="#solvers-transport-coupling"><span class="std std-ref">Transport coupling</span></a>). In the
+code: <code class="docutils literal notranslate"><span class="pre">mask_recharge_on_lake_cells</span></code>.</p></li>
+<li><p><strong>Output.</strong> OC saves the head at the last step of every stress period and the budget at
+every step, and prints the budget of every step. The catalog keeps one record per stress
+period: the head at its end, each flux as the mean of its steps weighted by their length
+(<a class="reference internal" href="time-alignment.html#alignment-steps"><span class="std std-ref">A period cut into time steps</span></a>).</p></li>
+</ul>
+<section id="the-grid">
+<h3>The grid<a class="headerlink" href="#the-grid" title="Link to this heading">#</a></h3>
+<p>MODFLOW 6 reads every grid as a DISV grid, structured or not: one code path covers both.
+A structured model is a DISV grid whose cells are the DEM pixels. A mesh built from Gmsh
+is, by default, the Voronoi dual of its triangles, which is orthogonal to its connections.
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-grid_dual" title="Applies only to a MODFLOW 6 run on a Gmsh mesh built by the run; ignored for structured grids, MODFLOW-NWT and Boussinesq (which keeps its own triangulation)."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.grid_dual</span></code></a> keeps the triangles as cells instead. The number of
+layers is <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-vertical-nlay" title="Number of layers for 'constant' and 'decay'. (-)"><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.vertical.nlay</span></code></a>. The mesh is the subject of <a class="reference internal" href="mesh.html"><span class="doc">The mesh</span></a>.</p>
+<p id="solvers-computational-top"><strong>The computational top.</strong> Under Newton, MODFLOW 6 builds the horizontal conductance from
+the full thickness of the two cells times the saturation of the upstream cell, where
+MODFLOW-NWT and MODFLOW-USG use the saturated thickness
+(<a class="reference external" href="https://github.com/MODFLOW-ORG/modflow6/blob/6.6.3/src/Model/ModelUtilities/GwfConductanceUtils.f90"><code class="docutils literal notranslate"><span class="pre">GwfConductanceUtils.f90</span></code></a>,
+<a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-npf.html">NPF</a>) <span class="bibtex-citation" id="id9">[<a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>.
+Where the thickness <span class="math notranslate nohighlight">\(H\)</span> changes from one cell to the next, the transmissivity is then too
+low by about <span class="math notranslate nohighlight">\(\Delta H / (2H)\)</span>. The grid MODFLOW 6 reads therefore has a computational top
+<span class="math notranslate nohighlight">\(z'_\mathrm{top} = z_\mathrm{top} + \max H_1 - H_1\)</span>, with <span class="math notranslate nohighlight">\(H_1\)</span> the thickness of the top
+layer under the ground: every cell of the top layer gets the same thickness. A thickness
+that is the same everywhere gives <span class="math notranslate nohighlight">\(z_\mathrm{top}\)</span> back, so no file changes then. This is a
+numerical device of HydroModPy, not a USGS practice. Every package elevation (drains, EVT,
+streambeds, lake banks, barriers, the ocean), the initial heads and the run store keep the
+ground. Water above the ground stays in the aquifer up to <span class="math notranslate nohighlight">\(z'_\mathrm{top}\)</span>, with its
+specific yield, where a cell topped at the ground would turn confined; the drains at the
+ground keep that rise to a few centimetres. Two limits. A lake column keeps its ground, since a raised top would
+reach into the lake, so the thickness still changes at the banks. Only the top of the top
+layer moves: a lower layer whose saturated part changes from cell to cell keeps the bias.
+Anyone who opens the native MODFLOW 6 files (flopy, ModelMuse) sees a top above the ground
+wherever the thickness varies. That is intended; the ground is <code class="docutils literal notranslate"><span class="pre">topography</span></code> in the run
+store. In the code: <code class="docutils literal notranslate"><span class="pre">disv_grid_kwargs</span></code>.</p>
+</section>
+<section id="flow-between-cells-and-xt3d">
+<h3>Flow between cells, and XT3D<a class="headerlink" href="#flow-between-cells-and-xt3d" title="Link to this heading">#</a></h3>
+<p>NPF receives <span class="math notranslate nohighlight">\(K\)</span>, <span class="math notranslate nohighlight">\(K_z = K/\beta\)</span> and the convertible flag. With the two-point conductance
+<a class="reference internal" href="groundwater-flow.html#equation-eq-conductance">(18)</a>, the flux between two cells is exact only when the line between the
+centres is perpendicular to the shared face and the conductivity is isotropic. XT3D adds
+the missing terms <span class="bibtex-citation" id="id10">[<a class="reference internal" href="bibliography.html#id11" title="A. M. Provost, C. D. Langevin, and J. D. Hughes. Documentation for the “XT3D” option in the Node Property Flow (NPF) package of MODFLOW 6. Techniques and Methods 6-A56, U.S. Geological Survey, 2017. doi:10.3133/tm6A56.">Provost <em>et al.</em>, 2017</a>]</span>. HydroModPy decides about it once per run; the
+rule and its trigger are on <a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>. XT3D makes the
+matrix non-symmetric, so the IMS preset is promoted when needed
+(<a class="reference internal" href="#solvers-newton-ims"><span class="std std-ref">The solution: Newton and IMS</span></a>). In the code: <code class="docutils literal notranslate"><span class="pre">resolve_xt3d_decision</span></code>.</p>
+</section>
+<section id="evaporation-drains-lakes-and-streams">
+<h3>Evaporation, drains, lakes and streams<a class="headerlink" href="#evaporation-drains-lakes-and-streams" title="Link to this heading">#</a></h3>
+<p>The laws, conductances and worked cells of these exits are on <a class="reference internal" href="exits.html"><span class="doc">How water leaves the aquifer</span></a>.</p>
+<ul class="simple">
+<li><p><strong>Evaporation.</strong> Under MODFLOW 6, EVTA receives a routed negative recharge
+(<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-negative_to_evt" title="When true, negative recharge values are routed to the solver EVT package and RCH receives the non-negative clipped recharge."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.negative_to_evt</span></code></a>) or, in soil mode, the ETP the soil
+could not meet. The loaded ETP is ignored outside soil mode, with a warning
+(<a class="reference internal" href="exits/drains-and-et.html"><span class="doc">Drains and evapotranspiration at the top of the model</span></a>).</p></li>
+<li><p><strong>Drains.</strong> One drain in the first layer of every active cell that is not an ocean or
+stream constant-head cell. It sits at the ground surface or half a band depth below it.
+<a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-sink_fill" title="Dimensionless."><code class="docutils literal notranslate"><span class="pre">solver.sink_fill</span></code></a> sets it to zero in closed depressions
+(<a class="reference internal" href="exits/drains-and-et.html"><span class="doc">Drains and evapotranspiration at the top of the model</span></a>). In the code: <code class="docutils literal notranslate"><span class="pre">build_drain_stress_period_data</span></code>.</p></li>
+<li><p><strong>Lakes, streams and barriers.</strong> LAK, SFR, MVR and HFB exist under MODFLOW 6 only. LAK
+and SFR are built after the drains, so that the drains that coincide with a stream reach
+can be removed and the drainage of the hillslope can be handed to the stream or lake it
+flows to. MVR is built last, because it names the packages it moves water between
+(<a class="reference internal" href="exits/lakes.html"><span class="doc">Lakes and reservoirs</span></a>, <a class="reference internal" href="exits/streams-and-mover.html"><span class="doc">Streams and the water mover</span></a>).</p></li>
+</ul>
+</section>
+<section id="imposed-heads-and-wells">
+<h3>Imposed heads and wells<a class="headerlink" href="#imposed-heads-and-wells" title="Link to this heading">#</a></h3>
+<p>CHD imposes the head of the ocean, stream and lateral boundaries on their cells. MODFLOW 6
+takes one CHD package, so the three supports are merged, and a cell claimed twice keeps
+the head written last. WEL adds the rate of each well. Under the Newton formulation the
+code sets <code class="docutils literal notranslate"><span class="pre">auto_flow_reduce</span></code> on WEL, so that a well that dewaters its cell tapers its
+extraction instead of making the head oscillate across the threshold. MODFLOW 6 reads it as
+a fraction of the cell height, and the option is one value per package: it is the
+smallest fraction that keeps the interval within a tenth of the aquifer below the ground
+in every well cell, 0.1 when the top is the ground. In the code:
+<code class="docutils literal notranslate"><span class="pre">assemble_constant_head_stress_period_data</span></code>, <code class="docutils literal notranslate"><span class="pre">well_flow_reduce_fraction</span></code>.</p>
+</section>
+<section id="the-solution-newton-and-ims">
+<span id="solvers-newton-ims"></span><h3>The solution: Newton and IMS<a class="headerlink" href="#the-solution-newton-and-ims" title="Link to this heading">#</a></h3>
+<p>The code writes <code class="docutils literal notranslate"><span class="pre">NEWTON</span></code>, and adds <code class="docutils literal notranslate"><span class="pre">UNDER_RELAXATION</span></code> when
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_newton_under_relaxation" title="Enable MODFLOW 6 Newton under-relaxation when mf6_newton is true."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_newton_under_relaxation</span></code></a> is true. Newton is on by default,
+because every layer is convertible. The <code class="docutils literal notranslate"><span class="pre">UNDER_RELAXATION</span></code> of the Newton option damps the
+head of a cell that Newton would push below its bottom. It is not the under-relaxation of
+IMS, which adjusts the update factor of the outer iteration.</p>
+<p>The code passes the closure criteria, the iteration limits and the optional
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_linear_acceleration" title="IMS linear acceleration: CG for symmetric matrices, BICGSTAB for the non-symmetric Newton formulation."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_linear_acceleration</span></code></a>,
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_under_relaxation" title="IMS non-linear under-relaxation scheme."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_under_relaxation</span></code></a> and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_inner_rclose" title="IMS inner-iteration flow-residual closure (L^3/T in run units)."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_inner_rclose</span></code></a>
+to the IMS package. The complexity, <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_ims_complexity" title="IMS complexity preset for MODFLOW 6: SIMPLE, MODERATE, or COMPLEX."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_ims_complexity</span></code></a>, defaults
+to <code class="docutils literal notranslate"><span class="pre">COMPLEX</span></code>. A configured <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code> complexity
+is promoted to <code class="docutils literal notranslate"><span class="pre">COMPLEX</span></code> when XT3D is on, and to at least <code class="docutils literal notranslate"><span class="pre">MODERATE</span></code> under Newton, because
+<code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code> assumes a symmetric, well-conditioned matrix. Two combinations are refused:</p>
+<ul class="simple">
+<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_newton" title="Enable the MODFLOW 6 Newton-Raphson formulation."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_newton</span></code></a> and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_enable_rewet" title="Enable NPF cell rewetting."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_enable_rewet</span></code></a>
+together stop the run with <code class="docutils literal notranslate"><span class="pre">[HMPY.E405]</span></code> when the NPF package is built, because MODFLOW 6
+forbids rewetting under the Newton formulation.</p></li>
+<li><p>Conjugate-gradient acceleration under Newton stops with <code class="docutils literal notranslate"><span class="pre">[HMPY.E406]</span></code>, because the
+Newton Jacobian is not symmetric and CG cannot solve it. The check runs before any grid
+is built. Use <code class="docutils literal notranslate"><span class="pre">BICGSTAB</span></code>, or leave <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_linear_acceleration" title="IMS linear acceleration: CG for symmetric matrices, BICGSTAB for the non-symmetric Newton formulation."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_linear_acceleration</span></code></a>
+unset.</p></li>
+</ul>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">resolve_ims_complexity</span></code>.</p>
+</section>
+</section>
+<section id="modflow-nwt-package-by-package">
+<h2>MODFLOW-NWT, package by package<a class="headerlink" href="#modflow-nwt-package-by-package" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ModflowNwt</span></code> builds the FloPy model in this order, and <code class="docutils literal notranslate"><span class="pre">assemble_flopy_packages</span></code> adds the
+stress packages.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Package</p></th>
+<th class="head"><p>Written</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>NWT: the Newton solver and its closure</p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-odd"><td><p>DIS: the structured grid and the steps of <a class="reference internal" href="#solvers-time"><span class="std std-ref">Time steps</span></a></p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-even"><td><p>CHD: head imposed on the transient ocean and side cells</p></td>
+<td><p>if a transient boundary is active</p></td>
+</tr>
+<tr class="row-odd"><td><p>BAS: active cells (<code class="docutils literal notranslate"><span class="pre">ibound</span></code>), starting heads, the no-flow sentinel</p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-even"><td><p>UPW: <span class="math notranslate nohighlight">\(K\)</span>, <span class="math notranslate nohighlight">\(K_z\)</span>, <span class="math notranslate nohighlight">\(S_y\)</span>, <span class="math notranslate nohighlight">\(S_s\)</span> with upstream weighting</p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-odd"><td><p>EVT</p></td>
+<td><p>if an ETP or a negative recharge exists</p></td>
+</tr>
+<tr class="row-even"><td><p>RCH</p></td>
+<td><p>if a recharge exists</p></td>
+</tr>
+<tr class="row-odd"><td><p>DRN</p></td>
+<td><p>if the <code class="docutils literal notranslate"><span class="pre">drainage</span></code> boundary is active</p></td>
+</tr>
+<tr class="row-even"><td><p>WEL</p></td>
+<td><p>if a well exists</p></td>
+</tr>
+<tr class="row-odd"><td><p>OC: head and budget at every step</p></td>
+<td><p>always</p></td>
+</tr>
+<tr class="row-even"><td><p>LMT: the link file for MT3DMS</p></td>
+<td><p>only when an MT3DMS process follows</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The static ocean and side boundaries are not CHD rows. They are cells with a negative
+<code class="docutils literal notranslate"><span class="pre">ibound</span></code> in BAS, which imposes the starting head on them. Four things differ from
+MODFLOW 6.</p>
+<ul class="simple">
+<li><p><strong>The grid must be structured.</strong> NWT stops with <code class="docutils literal notranslate"><span class="pre">MODFLOW</span> <span class="pre">NWT</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">structured</span> <span class="pre">grid</span></code>.
+A <code class="docutils literal notranslate"><span class="pre">[mesh_catchment]</span></code> section does not change that: the solver keeps the grid it builds
+from the DEM.</p></li>
+<li><p><strong>The unconfined law is the upstream-weighted UPW package</strong> <span class="bibtex-citation" id="id11">[<a class="reference internal" href="bibliography.html#id9" title="R. G. Niswonger, S. Panday, and M. Ibaraki. MODFLOW-NWT, a Newton formulation for MODFLOW-2005. Techniques and Methods 6-A37, U.S. Geological Survey, 2011. doi:10.3133/tm6A37.">Niswonger <em>et al.</em>, 2011</a>]</span>,
+with a smoothing of the saturated thickness set by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt-thickfact" title="Fraction of the cell thickness over which MODFLOW-NWT smooths the saturated thickness, and so the conductance and the storage, to zero near the bottom and the top of a cell (THICKFACT of the NWT package)."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.nwt.thickfact</span></code></a>.</p></li>
+<li><p><strong>EVT uses the topography.</strong> The code sets the EVT surface to the top lowered by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-surface_offset" title="Distance (m) the EVT surface sits below its reference. (m)"><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.etp.surface_offset</span></code></a> and the extinction depth to
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-extinction_depth" title="Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth. (m)"><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.etp.extinction_depth</span></code></a>, with <code class="docutils literal notranslate"><span class="pre">nevtop</span></code> from
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-evt-nevtop" title="EVT option code that defines how ET extinction depth is applied (NEVTOP)."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.evt.nevtop</span></code></a>. The field
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-process_specific-exdp" title="Extinction depth (metres) used by the EVT package (EXDP). (m)"><code class="docutils literal notranslate"><span class="pre">modflownwt.process_specific.exdp</span></code></a> is declared but nothing in the code reads it.
+When no ETP is active, a routed negative recharge uses an offset of 2 m and a depth of
+1 m.</p></li>
+<li><p><strong>No soil reservoir, lakes, streams or barriers.</strong> The checks listed under Limits stop
+the file.</p></li>
+</ul>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">assemble_flopy_packages</span></code>.</p>
+</section>
+<section id="wetting-and-drying">
+<span id="solvers-wetting-drying"></span><h2>Wetting and drying<a class="headerlink" href="#wetting-and-drying" title="Link to this heading">#</a></h2>
+<p>A cell dries when the head falls to its bottom. Under Newton, MODFLOW 6 smooths the
+saturated thickness near the bottom with a fraction of the thickness that it sets
+internally, and HydroModPy has no key for it <span class="bibtex-citation" id="id12">[<a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>. MODFLOW-NWT does the
+same in its <code class="docutils literal notranslate"><span class="pre">SAT_THICK</span></code> function, with the fraction read from
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt-thickfact" title="Fraction of the cell thickness over which MODFLOW-NWT smooths the saturated thickness, and so the conductance and the storage, to zero near the bottom and the top of a cell (THICKFACT of the NWT package)."><code class="docutils literal notranslate"><span class="pre">thickfact</span></code></a> <span class="bibtex-citation" id="id13">[<a class="reference internal" href="bibliography.html#id9" title="R. G. Niswonger, S. Panday, and M. Ibaraki. MODFLOW-NWT, a Newton formulation for MODFLOW-2005. Techniques and Methods 6-A37, U.S. Geological Survey, 2011. doi:10.3133/tm6A37.">Niswonger <em>et al.</em>, 2011</a>]</span>. The smoothing
+keeps the Newton step defined. It does not move the water table. The solvers differ in what
+they do next.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p>What happens</p></th>
+<th class="head"><p>Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MODFLOW 6, Newton</p></td>
+<td><p>The cell stays in the equations. Conductance and storage go to zero smoothly, and <code class="docutils literal notranslate"><span class="pre">UNDER_RELAXATION</span></code> damps the head of a cell that Newton would push below its bottom.</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_newton" title="Enable the MODFLOW 6 Newton-Raphson formulation."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_newton</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_newton_under_relaxation" title="Enable MODFLOW 6 Newton under-relaxation when mf6_newton is true."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_newton_under_relaxation</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>MODFLOW 6, standard formulation with rewet</p></td>
+<td><p>The cell is rewetted by the NPF rewet test. Newton must be off.</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_enable_rewet" title="Enable NPF cell rewetting."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_enable_rewet</span></code></a> and the four <code class="docutils literal notranslate"><span class="pre">mf6_rewet_*</span></code> keys</p></td>
+</tr>
+<tr class="row-even"><td><p>MODFLOW-NWT</p></td>
+<td><p>The cell stays in the equations. A dry cell is written with the dry-head value, and the reader of the results turns that value into a missing value.</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-upw-iphdry" title="UPW dry-cell head output flag (IPHDRY)."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.upw.iphdry</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-upw-hdry" title="UPW dry-cell head value (HDRY)."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.upw.hdry</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Boussinesq</p></td>
+<td><p>The saturated thickness is bounded between zero and the cell thickness, without smoothing (<a class="reference internal" href="groundwater-flow.html#equation-eq-saturated-thickness">(16)</a>).</p></td>
+<td><p>the runtime, see <a class="reference internal" href="boussinesq.html"><span class="doc">Boussinesq theory</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Rewetting is off unless <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_enable_rewet" title="Enable NPF cell rewetting."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_enable_rewet</span></code></a> is true. When it is on,
+the NPF package gets <code class="docutils literal notranslate"><span class="pre">WETFCT</span></code>, <code class="docutils literal notranslate"><span class="pre">IWETIT</span></code> and <code class="docutils literal notranslate"><span class="pre">IHDWET</span></code> from the <code class="docutils literal notranslate"><span class="pre">mf6_rewet_*</span></code> keys, and an
+array <code class="docutils literal notranslate"><span class="pre">WETDRY</span></code> that is zero on inactive cells and the absolute value of
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-mf6_rewet_wetdry" title="MF6 NPF WETDRY threshold used when rewetting is active."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.mf6_rewet_wetdry</span></code></a> elsewhere. In the code: <code class="docutils literal notranslate"><span class="pre">resolve_rewet_npf_options</span></code>.</p>
+</section>
+<section id="modflow-6-against-modflow-nwt">
+<span id="solvers-mf6-vs-nwt"></span><h2>MODFLOW 6 against MODFLOW-NWT<a class="headerlink" href="#modflow-6-against-modflow-nwt" title="Link to this heading">#</a></h2>
+<p>The same project file can run on either. The solver that runs is the first name in
+<a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-process-solvers" title="Ordered list of active flow solver names."><code class="docutils literal notranslate"><span class="pre">simulation.process.solvers</span></code></a> of the <code class="docutils literal notranslate"><span class="pre">flow</span></code> process. <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-backend" title="Active flow backend selector (discriminated union)."><code class="docutils literal notranslate"><span class="pre">solver.backend</span></code></a> is the
+fallback when no process names one, and the key the compatibility checks of a file are run
+against. Write the same name in both. The settings live in <code class="docutils literal notranslate"><span class="pre">[modflownwt]</span></code> and <code class="docutils literal notranslate"><span class="pre">[modflow6]</span></code>.
+This page ranks neither solver.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Topic</p></th>
+<th class="head"><p>MODFLOW-NWT</p></th>
+<th class="head"><p>MODFLOW 6</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Newton</p></td>
+<td><p>always</p></td>
+<td><p>on by default, can be switched off</p></td>
+</tr>
+<tr class="row-odd"><td><p>Dry cells</p></td>
+<td><p>no rewetting (<code class="docutils literal notranslate"><span class="pre">laywet</span> <span class="pre">=</span> <span class="pre">0</span></code>)</p></td>
+<td><p>rewetting off, refused with Newton</p></td>
+</tr>
+<tr class="row-even"><td><p>Non-orthogonal flux</p></td>
+<td><p>not available</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">XT3D</span></code>, automatic on irregular meshes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Output</p></td>
+<td><p>head and budget at every step, stored per period</p></td>
+<td><p>head at the last step, budget at every step, stored per period</p></td>
+</tr>
+<tr class="row-even"><td><p>Loaded ETP</p></td>
+<td><p>drives <code class="docutils literal notranslate"><span class="pre">EVT</span></code></p></td>
+<td><p>ignored outside soil mode</p></td>
+</tr>
+<tr class="row-odd"><td><p>Streams, lakes, barriers</p></td>
+<td><p>refused</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SFR</span></code>, <code class="docutils literal notranslate"><span class="pre">LAK</span></code>, <code class="docutils literal notranslate"><span class="pre">HFB</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Restart, cyclic spin-up</p></td>
+<td><p>refused</p></td>
+<td><p>supported</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The vertical conductivity is a ratio on both, <span class="math notranslate nohighlight">\(K_z = K / \beta\)</span>. The key is
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-process_specific-vka" title="Vertical hydraulic conductivity control passed to the UPW package (VKA)."><code class="docutils literal notranslate"><span class="pre">modflownwt.process_specific.vka</span></code></a> for MODFLOW-NWT, with <code class="docutils literal notranslate"><span class="pre">layvka</span></code> set so that <code class="docutils literal notranslate"><span class="pre">vka</span></code>
+is read as a ratio, and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-process_specific-vka" title="Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka."><code class="docutils literal notranslate"><span class="pre">modflow6.process_specific.vka</span></code></a> for MODFLOW 6.</p>
+<p><strong>Sources and sinks.</strong> Recharge, wells, drains and constant heads are the same quantities
+in both. Two points differ.</p>
+<ul class="simple">
+<li><p><strong>The loaded ETP</strong> is a sink in MODFLOW-NWT, with its surface at the top minus
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-surface_offset" title="Distance (m) the EVT surface sits below its reference. (m)"><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.etp.surface_offset</span></code></a> and the extinction depth
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-extinction_depth" title="Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth. (m)"><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.etp.extinction_depth</span></code></a>. MODFLOW 6 draws none outside soil mode,
+and says so. In soil mode it writes the ETP the soil left unmet (<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>).</p></li>
+<li><p><strong>A negative recharge</strong> sent to <code class="docutils literal notranslate"><span class="pre">EVT</span></code> by <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-negative_to_evt" title="When true, negative recharge values are routed to the solver EVT package and RCH receives the non-negative clipped recharge."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.negative_to_evt</span></code></a>
+follows the same rule in both (<a class="reference internal" href="forcing.html"><span class="doc">Rain and evaporation: the forcing</span></a>), with a different geometry: the model top
+and <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-process_specific-evt_extinction_depth" title="Meters; extinction depth for the EVT sink used when recharge negatives are routed to EVT."><code class="docutils literal notranslate"><span class="pre">modflow6.process_specific.evt_extinction_depth</span></code></a> in MODFLOW 6, the two <code class="docutils literal notranslate"><span class="pre">etp</span></code>
+keys above or fixed constants in MODFLOW-NWT.</p></li>
+</ul>
+<p><strong>Comparing the two.</strong> To compare the solvers, set the head test to the same value on both
+sides (<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt-headtol" title="Head closure criterion for the NWT nonlinear solver."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.nwt.headtol</span></code></a> against the two <code class="docutils literal notranslate"><span class="pre">dvclose</span></code> keys): the residual
+tests do not measure the same thing. <a class="reference internal" href="validation.html"><span class="doc">Validation</span></a> lists the cases that run both solvers
+against the same closed-form solution, and runs both on the catchment of example 04, where
+their heads differ by less than a millimetre. Where the cell thickness changes from one
+cell to the next, the two conductances differ, and the
+<a class="reference internal" href="#solvers-computational-top"><span class="std std-ref">computational top</span></a> brings MODFLOW 6 back to
+MODFLOW-NWT: on the circular-island cases, whose top follows the ground over a flat
+bottom, both sit at the same distance from the closed form. <a class="reference internal" href="validation.html"><span class="doc">Validation</span></a> gives the thresholds and the reason
+for each. A threshold is a bound a test accepts, not a measured error, so it ranks nothing.</p>
+</section>
+<section id="the-boussinesq-solver">
+<h2>The Boussinesq solver<a class="headerlink" href="#the-boussinesq-solver" title="Link to this heading">#</a></h2>
+<p>The in-house solver writes one residual per triangle of a Gmsh mesh. It solves each stress
+period in <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-substeps_per_period" title="Number of solver time steps within each stress period, the one knob that buys transient accuracy."><code class="docutils literal notranslate"><span class="pre">simulation.time.substeps_per_period</span></code></a> backward Euler steps.
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-runtime_backend" title="Engine the Boussinesq solver uses for its nonlinear solve."><code class="docutils literal notranslate"><span class="pre">flow.runtime_backend</span></code></a> picks the nonlinear solver, <code class="docutils literal notranslate"><span class="pre">auto</span></code> by default: the dense <code class="docutils literal notranslate"><span class="pre">local</span></code>
+engine up to 400 cells and the sparse <code class="docutils literal notranslate"><span class="pre">scipy_sparse</span></code> above; a dense engine asked by name
+stops on a larger mesh. <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-surface_interaction_model" title="Optional Boussinesq surface-interaction closure selector."><code class="docutils literal notranslate"><span class="pre">flow.surface_interaction_model</span></code></a> picks the closure for the
+water that reaches the surface. It builds recharge, wells, the side, stream and ocean
+imposed heads, and top drainage, and refuses the rest. Its flux between two cells uses the
+two cell centres only: on triangles far from equilateral it is not consistent, and the
+patch test of <a class="reference internal" href="validation.html"><span class="doc">Validation</span></a> shows the error that refinement does not remove. Its
+equations and closures are on <a class="reference internal" href="boussinesq.html"><span class="doc">Boussinesq theory</span></a>.</p>
+</section>
+<section id="transport-coupling">
+<span id="solvers-transport-coupling"></span><h2>Transport coupling<a class="headerlink" href="#transport-coupling" title="Link to this heading">#</a></h2>
+<p>A transport process attaches to the flow process that came before it. The planner binds
+each transport run to an earlier flow run of the right solver, in the order written in the
+file, and stops with <code class="docutils literal notranslate"><span class="pre">requires</span> <span class="pre">an</span> <span class="pre">earlier</span> <span class="pre">process</span> <span class="pre">using</span> <span class="pre">flow/&lt;solver&gt;</span></code> when there is none.
+The pairs are declared by each adapter as its <code class="docutils literal notranslate"><span class="pre">requires</span></code> attribute.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Transport process</p></th>
+<th class="head"><p>Needs the flow solver</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code> (GWT)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code></p></td>
+<td><p>concentration in the flow field</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">modflow6_prt</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow6</span></code></p></td>
+<td><p>particle tracking, MODFLOW 6 PRT</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modpath</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code></p></td>
+<td><p>particle tracking, MODPATH 6</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mt3dms</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code></p></td>
+<td><p>concentration, MT3DMS</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="modflow-6-gwt">
+<h3>MODFLOW 6 GWT<a class="headerlink" href="#modflow-6-gwt" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Modflow6Transport</span></code> adds a <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwt-nam.html">GWT</a>
+model to the MODFLOW 6 simulation of the flow run <span class="bibtex-citation" id="id14">[<a class="reference internal" href="bibliography.html#id49" title="C. D. Langevin, A. M. Provost, S. Panday, and J. D. Hughes. Documentation for the MODFLOW 6 groundwater transport model. Techniques and Methods 6-A61, U.S. Geological Survey, 2022. doi:10.3133/tm6A61.">Langevin <em>et al.</em>, 2022</a>]</span>. It reuses the
+DISV grid and the <code class="docutils literal notranslate"><span class="pre">idomain</span></code> of the flow model, couples the two models with a <code class="docutils literal notranslate"><span class="pre">GWF6-GWT6</span></code>
+exchange, and gives GWT its own IMS with <code class="docutils literal notranslate"><span class="pre">BICGSTAB</span></code>, because advection makes the matrix
+non-symmetric. The transport solve is linear, so it uses the configured complexity and no
+Newton promotion. What HydroModPy sets in the GWT model:</p>
+<ul class="simple">
+<li><p>advection with the scheme of <a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-scheme" title="Advection scheme for MODFLOW 6 GWT. upstream: robust but diffusive (default). central: least diffusive, may oscillate."><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.scheme</span></code></a>;</p></li>
+<li><p>dispersion only when <a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-disp_long" title="Longitudinal dispersivity [L]."><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.disp_long</span></code></a> or
+<a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-diffu_coeff" title="Molecular diffusion coefficient in m2/s."><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.diffu_coeff</span></code></a> is above zero;</p></li>
+<li><p>the mobile storage with <a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-porosity" title="Effective (total) porosity [-], the dimensionless volume of interconnected pores per bulk volume. (-)"><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.porosity</span></code></a>. Without it,
+the code falls back on the specific yield and warns that this underestimates the pore
+volume, because the pore velocity is the Darcy flux divided by the porosity;</p></li>
+<li><p>decay of order zero or one, from <a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-react_order" title="Reaction order for MODFLOW 6 GWT and MT3DMS: None (no decay), 0 (zero-order, constant rate in mass per volume per second), or 1 (first-order, proportional to concentration, in 1/s)."><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.react_order</span></code></a>
+and <a class="hmp-toml-ref reference external" href="../reference/parameters/transport.html#p-transport-modflow6gwt-parameters-rate_decay" title="Decay rate on the SI SECONDS clock used by the MODFLOW 6 GWT backend: 1/s for first-order (react_order=1), mass per volume per second for zero-order (react_order=0)."><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters.rate_decay</span></code></a>.</p></li>
+</ul>
+<p>Recharge is the only source of solute. Its concentration travels as the <code class="docutils literal notranslate"><span class="pre">CONCENTRATION</span></code>
+auxiliary variable of RCHA, and the source and sink mixing package reads it. Constant-head
+cells and wells bring water in at concentration zero.</p>
+</section>
+<section id="modflow-6-particle-tracking">
+<h3>MODFLOW 6 particle tracking<a class="headerlink" href="#modflow-6-particle-tracking" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">modflow6_prt</span></code> builds a <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/prt-nam.html">PRT</a>
+model on the same flow model. It needs the cell-by-cell velocity that
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-runtime-save_specific_discharge" title="Compute and write the cell-by-cell Darcy velocity (DATA-SPDIS)."><code class="docutils literal notranslate"><span class="pre">modflow6.runtime.save_specific_discharge</span></code></a> writes. Its keys are in
+<a class="reference internal" href="../reference/parameters/transport.html"><span class="doc">[transport]</span></a>.</p>
+</section>
+<section id="modflow-nwt-modpath-and-mt3dms">
+<h3>MODFLOW-NWT: MODPATH and MT3DMS<a class="headerlink" href="#modflow-nwt-modpath-and-mt3dms" title="Link to this heading">#</a></h3>
+<p>MODPATH builds a MODPATH 6 input from the NWT run and stops if the flow model is not
+MODFLOW-NWT. MT3DMS needs the link file that the LMT package writes. NWT adds LMT only when
+an MT3DMS process is planned after it. The file name is
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-lmt-output_file_name" title="LMT output filename used to couple MODFLOW to MT3DMS."><code class="docutils literal notranslate"><span class="pre">modflownwt.runtime.lmt.output_file_name</span></code></a>. In the code: <code class="docutils literal notranslate"><span class="pre">_requires_mt3dms_link</span></code>.</p>
+</section>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Flow is saturated, in one phase, and the head is the only unknown. Water above the water
+table is not modelled: the code writes no UZF package, and the soil reservoir of
+<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a> is a separate daily model that hands a recharge to the solver.</p></li>
+<li><p>Every layer is convertible: it can be confined or unconfined from one step to the next.</p></li>
+<li><p>The horizontal conductivity is isotropic. The vertical one is the horizontal one divided
+by one ratio for the whole model, or a per-cell <span class="math notranslate nohighlight">\(K_z\)</span> field.</p></li>
+</ul>
+</section>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<p>The capability matrix is generated on <a class="reference internal" href="../reference/solvers.html"><span class="doc">Solvers</span></a>. The refusals, with their
+messages, are these.</p>
+<ul class="simple">
+<li><p><strong>Grid.</strong> MODFLOW-NWT works on the structured grid only. The Boussinesq solver works on
+Gmsh triangles only, and a dense runtime asked by name on a mesh of more than 400 cells.</p></li>
+<li><p><strong>Boundaries.</strong> Lakes, reservoirs, SFR and barriers need MODFLOW 6. The <code class="docutils literal notranslate"><span class="pre">stream</span></code> boundary
+needs MODFLOW 6 or Boussinesq. When <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-backend" title="Active flow backend selector (discriminated union)."><code class="docutils literal notranslate"><span class="pre">solver.backend</span></code></a> names <code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code>, the file
+is refused when it is read if it asks for <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-active_bc" title="Boundaries this run builds, by their canonical names: 'ocean', 'stream', 'north_side', 'south_side', 'east_side', 'west_side', 'drainage', 'lake', 'reservoir'."><code class="docutils literal notranslate"><span class="pre">flow.active_bc</span></code></a> with <code class="docutils literal notranslate"><span class="pre">sfr</span></code>, <code class="docutils literal notranslate"><span class="pre">lake</span></code>,
+<code class="docutils literal notranslate"><span class="pre">reservoir</span></code> or <code class="docutils literal notranslate"><span class="pre">stream</span></code>, for flow barriers or a dam cutoff wall, or for a head initial
+condition of type <code class="docutils literal notranslate"><span class="pre">spinup_cyclic</span></code>. <code class="docutils literal notranslate"><span class="pre">does</span> <span class="pre">not</span> <span class="pre">support</span> <span class="pre">the</span> <span class="pre">'sfr'</span> <span class="pre">boundary</span></code> is the start of
+the message for the first case, and
+<code class="docutils literal notranslate"><span class="pre">does</span> <span class="pre">not</span> <span class="pre">support</span> <span class="pre">flow</span> <span class="pre">barriers</span> <span class="pre">/</span> <span class="pre">dam</span> <span class="pre">cutoff</span> <span class="pre">walls</span> <span class="pre">(HFB);</span> <span class="pre">they</span> <span class="pre">require</span> <span class="pre">the</span> <span class="pre">'modflow6'</span> <span class="pre">backend.</span></code>
+is the whole message for barriers. An unstructured mesh stops the build with
+<code class="docutils literal notranslate"><span class="pre">MODFLOW</span> <span class="pre">NWT</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">structured</span> <span class="pre">grid</span></code>.</p></li>
+<li><p><strong>Soil reservoir.</strong> <code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.soil]</span> <span class="pre">is</span> <span class="pre">wired</span> <span class="pre">to</span> <span class="pre">MODFLOW</span> <span class="pre">6</span> <span class="pre">only</span></code>
+stops a file that asks for it with another solver.</p></li>
+<li><p><strong>ETP.</strong> MODFLOW 6 draws no ETP outside soil mode, and only logs a warning.
+Boussinesq rejects it.</p></li>
+<li><p><strong>Hotstart and cyclic spin-up.</strong> <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-restart_from" title="Optional hotstart: path to a prior simulation Zarr store whose last time step seeds the initial heads (and the lake stage), overriding [flow.ic]."><code class="docutils literal notranslate"><span class="pre">flow.restart_from</span></code></a> and a cyclic spin-up need
+MODFLOW 6, the only solver that declares the two capabilities.</p></li>
+<li><p><strong>Newton.</strong> Newton with rewet (<code class="docutils literal notranslate"><span class="pre">HMPY.E405</span></code>) and Newton with conjugate gradients
+(<code class="docutils literal notranslate"><span class="pre">HMPY.E406</span></code>) are refused (<a class="reference internal" href="#solvers-newton-ims"><span class="std std-ref">The solution: Newton and IMS</span></a>).</p></li>
+<li><p><strong>Not represented.</strong> The code writes no unsaturated-zone package (UZF), no
+variable-density package (BUY), no subsidence package (CSUB), and no GHB or RIV
+package.</p></li>
+</ul>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<p>The keys of the solver options of this page. The keys of each transport process are on its
+reference card.</p>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/simulation.html#p-simulation-process">[[simulation.process]]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req" data-path="simulation.process.solvers"><summary><span class="tl-code"><span class="k">solvers</span><span class="eq"> = </span><span class="ph">‹list of string›</span></span><span class="tl-note"><span class="tl-sum">Ordered list of active flow solver names.</span> <span class="tc tc-req">required</span> <span class="tc tc-range">at least 1 item</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.process.solvers</code> <button class="hmp-copy" type="button" data-copy="simulation.process.solvers" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-process-solvers" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>At least one solver is required for flow processes.</p></dd><dt>Accepted</dt><dd>list of string</dd><dt>Valid range</dt><dd>at least 1 item <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[[simulation.process]]
+solvers = &lt;list of string&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/solver.html#p-solver-backend">[solver.backend]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req" data-path="solver.backend.name"><summary><span class="tl-code"><span class="k">name</span><span class="eq"> = </span><span class="ph">‹string›</span></span><span class="tl-note"><span class="tl-sum">Name under which a plugin registered its flow solver.</span> <span class="tc tc-req">required</span> <span class="tc tc-when">only if backend = &quot;custom&quot;</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">solver.backend.name</code> <button class="hmp-copy" type="button" data-copy="solver.backend.name" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-solver-backend-name" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>string</dd><dt>Only if</dt><dd>backend = &quot;custom&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="solver.backend.backend"><summary><span class="tl-code"><span class="cm"># </span><span class="k">backend</span><span class="eq"> = </span><span class="v">&quot;modflow6&quot;</span></span><span class="tl-note"><span class="tl-sum">Flow solver of the run: MODFLOW 6, MODFLOW-NWT, Boussinesq or a plugin.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">solver.backend.backend</code> <button class="hmp-copy" type="button" data-copy="solver.backend.backend" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-solver-backend-backend" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;modflow6&quot;</code> : Select the MODFLOW 6 flow backend.</li><li><code>&quot;modflow_nwt&quot;</code> : Select the MODFLOW-NWT flow backend.</li><li><code>&quot;boussinesq&quot;</code> : Select the Boussinesq flow backend.</li><li><code>&quot;custom&quot;</code> : Plugin-registered flow backend identified by a free-form name.</li></ul></dd><dt>Accepted</dt><dd>&quot;modflow6&quot; | &quot;modflow_nwt&quot; | &quot;boussinesq&quot; | &quot;custom&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[solver.backend]
+name = &lt;string&gt;
+# backend = &quot;modflow6&quot;</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/simulation.html#p-simulation-time">[simulation.time]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="simulation.time.substeps_per_period"><summary><span class="tl-code"><span class="cm"># </span><span class="k">substeps_per_period</span><span class="eq"> = </span><span class="v">1</span></span><span class="tl-note"><span class="tl-sum">Number of solver time steps within each stress period, the one knob that buys transient accuracy.</span> <span class="tc tc-range">&gt;= 1</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.substeps_per_period</code> <button class="hmp-copy" type="button" data-copy="simulation.time.substeps_per_period" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-substeps_per_period" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The default of 1 integrates a whole period in a single backward-Euler step, which is not a neutral choice: on a seasonally recharged hillslope drained by DRN cells it moves the monthly discharge by 4 to 28 % against a refined run, across the whole plausible bedrock range, and a calibration scored on discharge absorbs that into the fitted parameters. The right count compares the aquifer response time <code>tau = L^2 S / (K b)</code> with the period length, and the solver cost is linear in it; 30 gives daily steps inside monthly periods. Consumed by the MODFLOW backends as DIS NSTP / TDIS nstp, and by the Boussinesq backend, which solves each period in as many backward-Euler steps of equal length. Every solver stores one result per period: the head at the end of the period and each flux as the mean of its steps, weighted by their length.</p></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt;= 1 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[simulation.time]</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/flow/index.html#p-flow">[flow]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="flow.flow_regime"><summary><span class="tl-code"><span class="cm"># </span><span class="k">flow_regime</span><span class="eq"> = </span><span class="v">&quot;transient&quot;</span></span><span class="tl-note"><span class="tl-sum">Whether the flow is solved as one equilibrium state or through time over the stress periods of [<span class="hmp-toml-ref">simulation.time</span>].</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.flow_regime</code> <button class="hmp-copy" type="button" data-copy="flow.flow_regime" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-flow_regime" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>See</dt><dd><a class="hmp-toml-ref" href="../reference/parameters/simulation.html#p-simulation-time">simulation.time</a></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;steady&quot;</code> : Solves one equilibrium state, with no storage term: one stress period over the whole [<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/simulation.html#p-simulation-time">simulation.time</a>] window, whatever its step_value says, with the forcings averaged over the window.</li><li><code>&quot;transient&quot;</code> : Solves the heads through time; it starts from the state [<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/flow/ic.html#p-flow-ic">flow.ic</a>] gives.</li></ul></dd><dt>Accepted</dt><dd>&quot;steady&quot; | &quot;transient&quot;</dd><dt>Example</dt><dd><code>&quot;steady&quot;</code>, <code>&quot;transient&quot;</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="flow.first_period_steady"><summary><span class="tl-code"><span class="cm"># </span><span class="k">first_period_steady</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">For transient flow, mark the first solver stress period as steady-state.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.first_period_steady</code> <button class="hmp-copy" type="button" data-copy="flow.first_period_steady" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-first_period_steady" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Ignored for steady flow, where all solver periods are steady.</p></dd><dt>Accepted</dt><dd>true | false</dd><dt>Example</dt><dd><code>true</code>, <code>false</code></dd></dl></div></details></div><pre class="tb-src" hidden>[flow]
+# flow_regime = &quot;transient&quot;
+# first_period_steady = true</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-runtime">[modflow6.runtime]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="11"><span class="hmp-adv-off">show 11 dev/expert keys</span><span class="hmp-adv-on">hide 11 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_ats"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_ats</span><span class="eq"> = </span><span class="v">false</span></span><span class="tl-note"><span class="tl-sum">Enable MODFLOW 6 adaptive time stepping (ATS) on transient periods.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_ats</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_ats" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_ats" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Each period starts at the step <a class="hmp-toml-ref hmp-auto" href="../reference/parameters/simulation.html#p-simulation-time-substeps_per_period">simulation.time.substeps_per_period</a> asked for and MF6 subdivides below it only where the solver cannot converge (e.g. littoral wet/dry under Newton); it never grows past that step, so turning ATS on cannot coarsen a run. When on, OC saves per period end so the extraction still sees one record per period. Default off (baseline).</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_newton"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_newton</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">Enable the MODFLOW 6 Newton-Raphson formulation.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_newton</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_newton" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_newton" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Catchment cells are always convertible (unconfined), so Newton with under-relaxation is the robust default. Unlike MODFLOW-NWT, it builds the horizontal conductance from the full cell thickness times the upstream saturation. The grid MODFLOW 6 reads therefore has a computational top that gives every cell of the top layer the same thickness, so that this conductance is the one of NWT; the ground stays in every package and in the run store.</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_newton_under_relaxation"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_newton_under_relaxation</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">Enable MODFLOW 6 Newton under-relaxation when mf6_newton is true.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_newton_under_relaxation</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_newton_under_relaxation" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_newton_under_relaxation" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_ims_complexity"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_ims_complexity</span><span class="eq"> = </span><span class="v">&quot;COMPLEX&quot;</span></span><span class="tl-note"><span class="tl-sum">IMS complexity preset for MODFLOW 6: SIMPLE, MODERATE, or COMPLEX.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_ims_complexity</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_ims_complexity" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_ims_complexity" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;SIMPLE&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;MODERATE&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;COMPLEX&quot;</code> <span class="hmp-muted">no explanation</span></li></ul></dd><dt>Accepted</dt><dd>&quot;SIMPLE&quot; | &quot;MODERATE&quot; | &quot;COMPLEX&quot;</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_outer_dvclose"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_outer_dvclose</span><span class="eq"> = </span><span class="v">0.0001</span></span><span class="tl-note"><span class="tl-sum">IMS outer-iteration head-change convergence criterion.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_outer_dvclose</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_outer_dvclose" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_outer_dvclose" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_inner_dvclose"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_inner_dvclose</span><span class="eq"> = </span><span class="v">0.0001</span></span><span class="tl-note"><span class="tl-sum">IMS inner-iteration head-change convergence criterion.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_inner_dvclose</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_inner_dvclose" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_inner_dvclose" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="modflow6.runtime.mf6_inner_rclose"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_inner_rclose</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">IMS inner-iteration flow-residual closure (L^3/T in run units).</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_inner_rclose</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_inner_rclose" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_inner_rclose" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>None keeps the complexity-preset default.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="modflow6.runtime.mf6_linear_acceleration"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_linear_acceleration</span><span class="eq"> = </span><span class="ph">‹&quot;CG&quot; | &quot;BICGSTAB&quot;›</span></span><span class="tl-note"><span class="tl-sum">IMS linear acceleration: CG for symmetric matrices, BICGSTAB for the non-symmetric Newton formulation.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_linear_acceleration</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_linear_acceleration" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_linear_acceleration" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>None keeps the preset default.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;CG&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;BICGSTAB&quot;</code> <span class="hmp-muted">no explanation</span></li></ul></dd><dt>Accepted</dt><dd>&quot;CG&quot; | &quot;BICGSTAB&quot;</dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="modflow6.runtime.mf6_under_relaxation"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_under_relaxation</span><span class="eq"> = </span><span class="ph">‹&quot;NONE&quot; | &quot;SIMPLE&quot; | &quot;COOLEY&quot; | &quot;DBD&quot;›</span></span><span class="tl-note"><span class="tl-sum">IMS non-linear under-relaxation scheme.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_under_relaxation</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_under_relaxation" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_under_relaxation" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>DBD is recommended with Newton. None keeps the preset default.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;NONE&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;SIMPLE&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;COOLEY&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;DBD&quot;</code> <span class="hmp-muted">no explanation</span></li></ul></dd><dt>Accepted</dt><dd>&quot;NONE&quot; | &quot;SIMPLE&quot; | &quot;COOLEY&quot; | &quot;DBD&quot;</dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="modflow6.runtime.mf6_enable_rewet"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_enable_rewet</span><span class="eq"> = </span><span class="ph">‹true | false›</span></span><span class="tl-note"><span class="tl-sum">Enable NPF cell rewetting.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_enable_rewet</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_enable_rewet" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_enable_rewet" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>When left to None, HydroModPy keeps rewetting disabled unless explicitly enabled.</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.runtime.mf6_rewet_wetdry"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_rewet_wetdry</span><span class="eq"> = </span><span class="v">0.1</span></span><span class="tl-note"><span class="tl-sum">MF6 NPF WETDRY threshold used when rewetting is active.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_rewet_wetdry</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_rewet_wetdry" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_rewet_wetdry" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.runtime]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-nwt">[modflownwt.runtime.nwt]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="3"><span class="hmp-adv-off">show 3 dev/expert keys</span><span class="hmp-adv-on">hide 3 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.runtime.nwt.headtol"><summary><span class="tl-code"><span class="cm"># </span><span class="k">headtol</span><span class="eq"> = </span><span class="v">0.0001</span></span><span class="tl-note"><span class="tl-sum">Head closure criterion for the NWT nonlinear solver.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.runtime.nwt.headtol</code> <button class="hmp-copy" type="button" data-copy="modflownwt.runtime.nwt.headtol" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-runtime-nwt-headtol" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.runtime.nwt.fluxtol"><summary><span class="tl-code"><span class="cm"># </span><span class="k">fluxtol</span><span class="eq"> = </span><span class="v">0.005787037037037037</span></span><span class="tl-note"><span class="tl-sum">Flux closure criterion of the NWT nonlinear solver, in m3/s: HydroModPy writes MODFLOW-NWT in seconds.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.runtime.nwt.fluxtol</code> <button class="hmp-copy" type="button" data-copy="modflownwt.runtime.nwt.fluxtol" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-runtime-nwt-fluxtol" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The default is the 500 m3/day of the NWT manual. A value of 500 here would be 500 m3/s, a bound no model reaches.</p></dd><dt>Accepted</dt><dd>number</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.runtime.nwt.thickfact"><summary><span class="tl-code"><span class="cm"># </span><span class="k">thickfact</span><span class="eq"> = </span><span class="v">1e-05</span></span><span class="tl-note"><span class="tl-sum">Fraction of the cell thickness over which MODFLOW-NWT smooths the saturated thickness, and so the conductance and the storage, to zero near the bottom and the top of a cell (THICKFACT of the NWT package).</span> <span class="tc tc-range">[0, 0.5[</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.runtime.nwt.thickfact</code> <button class="hmp-copy" type="button" data-copy="modflownwt.runtime.nwt.thickfact" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-runtime-nwt-thickfact" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Dimensionless.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>[0, 0.5[ <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[modflownwt.runtime.nwt]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflownwt.html#p-modflownwt-runtime-upw">[modflownwt.runtime.upw]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="2"><span class="hmp-adv-off">show 2 dev/expert keys</span><span class="hmp-adv-on">hide 2 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.runtime.upw.iphdry"><summary><span class="tl-code"><span class="cm"># </span><span class="k">iphdry</span><span class="eq"> = </span><span class="v">1</span></span><span class="tl-note"><span class="tl-sum">UPW dry-cell head output flag (IPHDRY).</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.runtime.upw.iphdry</code> <button class="hmp-copy" type="button" data-copy="modflownwt.runtime.upw.iphdry" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-runtime-upw-iphdry" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>integer</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.runtime.upw.hdry"><summary><span class="tl-code"><span class="cm"># </span><span class="k">hdry</span><span class="eq"> = </span><span class="v">-100.0</span></span><span class="tl-note"><span class="tl-sum">UPW dry-cell head value (HDRY).</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.runtime.upw.hdry</code> <button class="hmp-copy" type="button" data-copy="modflownwt.runtime.upw.hdry" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-runtime-upw-hdry" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd></dl></div></details></div><pre class="tb-src" hidden>[modflownwt.runtime.upw]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflownwt.html#p-modflownwt-process_specific">[modflownwt.process_specific]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflownwt.process_specific.vka"><summary><span class="tl-code"><span class="cm"># </span><span class="k">vka</span><span class="eq"> = </span><span class="v">1.0</span></span><span class="tl-note"><span class="tl-sum">Vertical hydraulic conductivity control passed to the UPW package (VKA).</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflownwt.process_specific.vka</code> <button class="hmp-copy" type="button" data-copy="modflownwt.process_specific.vka" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflownwt-process_specific-vka" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd></dl></div></details></div><pre class="tb-src" hidden>[modflownwt.process_specific]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-process_specific">[modflow6.process_specific]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.process_specific.vka"><summary><span class="tl-code"><span class="cm"># </span><span class="k">vka</span><span class="eq"> = </span><span class="v">1.0</span></span><span class="tl-note"><span class="tl-sum">Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.process_specific.vka</code> <button class="hmp-copy" type="button" data-copy="modflow6.process_specific.vka" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-process_specific-vka" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Default 1.0 is vertically isotropic. For spatial control declare a per-cell &#x27;Kv&#x27; flow parameter instead, which is mutually exclusive with a non-unit vka and is a direct conductivity, never a mode-switched value. Vertical anisotropy is grid-aligned and needs no XT3D; a horizontal K22 field or an angle (not exposed here) would auto-activate XT3D.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.process_specific]</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/index.html#p-calibration">[calibration]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset tl-cmt" data-path="calibration.reject_water_budget_above"><summary><span class="tl-code"><span class="cm"># </span><span class="k">reject_water_budget_above</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">Percent water-balance discrepancy past which a trial is rejected instead of scored.</span> <span class="tc tc-unit">%</span> <span class="tc tc-range">&gt;= 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.reject_water_budget_above</code> <button class="hmp-copy" type="button" data-copy="calibration.reject_water_budget_above" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-reject_water_budget_above" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The solver reports the figure on every run; unset, it is recorded and nothing acts on it, so a run at twelve per cent is ranked beside one that closed even though part of the water it routed came from nowhere. There is no default because there is no universal value: a steady solve on a coarse mesh closes to a fraction of a per cent, a transient one with a lake and a routed network legitimately sits higher.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>%</dd></dl></div></details></div><pre class="tb-src" hidden>[calibration]
+# reject_water_budget_above = &lt;number&gt;</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div></section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test appears
+here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">232 test files import <code>hydromodpy.solver.modflow6</code>, <code>hydromodpy.solver.modflow_nwt</code>, <code>hydromodpy.solver.modflow_common</code>, <code>hydromodpy.solver.modflow_grid</code>, <code>hydromodpy.solver.boussinesq</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>validation: 4</summary><ul><li title="tests/validation/analytical/transient/test_gwt_first_order_decay.py"><a href="validation.html#val-gwt-first-order-decay">Gwt first order decay.</a></li><li title="tests/validation/analytical/transient/test_prt_uniform_velocity.py"><a href="validation.html#val-prt-uniform-velocity">Prt uniform velocity.</a></li><li title="tests/validation/analytical/transient/test_stress_period_substepping.py"><a href="validation.html#val-stress-period-substepping">Stress period substepping.</a></li><li title="tests/validation/numerical/transient/test_boussinesq_drying_petsc.py"><a href="validation.html#val-boussinesq-drying-petsc">Boussinesq drying petsc.</a></li></ul></details><details class="hmp-tested-tier" open><summary>integration: 18</summary><ul><li title="tests/integration/calibration/test_persist_trial_series_e2e.py">Persist trial series e2e. <span class="hmp-muted">calibration</span></li><li title="tests/integration/solver/test_sfr_lak_mvr.py">Sfr lak mvr. <span class="hmp-muted">solver</span></li><li title="tests/integration/solver/test_sfr_standalone.py">Sfr standalone. <span class="hmp-muted">solver</span></li><li title="tests/integration/solver/test_sfr_store_roundtrip.py">Sfr store roundtrip. <span class="hmp-muted">solver</span></li><li title="tests/integration/test_lake_band_runoff_api.py">Lake band runoff api.</li><li title="tests/integration/test_modflow6_api_runner.py">Modflow6 api runner.</li><li title="tests/integration/test_modflow6_api_subprocess.py">Modflow6 api subprocess.</li><li title="tests/integration/test_modflow6_flow_barrier_hfb.py">Modflow6 flow barrier hfb.</li><li title="tests/integration/test_modflow6_head_calibration_disv.py">Modflow6 head calibration disv.</li><li title="tests/integration/test_modflow6_lake_extractor_e2e.py">Modflow6 lake extractor e2e.</li><li title="tests/integration/test_modflow6_lake_marnage.py">Modflow6 lake marnage.</li><li title="tests/integration/test_modflow6_lake_piecewise_forcing.py">Modflow6 lake piecewise forcing.</li><li title="tests/integration/test_modflow6_lake_ts6_equivalence.py">Modflow6 lake ts6 equivalence.</li><li title="tests/integration/test_modflow6_runner_parity.py">Modflow6 runner parity.</li><li title="tests/integration/test_modflow6_two_lake_sill.py">Modflow6 two lake sill.</li><li title="tests/integration/test_shared_recharge_equivalence.py">Shared recharge equivalence.</li><li title="tests/integration/test_the_computational_top_changes_only_the_mf6_grid.py">The computational top changes only the mf6 grid.</li><li title="tests/integration/test_the_soil_recharge_reaches_modflow6_cell_by_cell.py">The soil recharge reaches modflow6 cell by cell.</li></ul></details><details class="hmp-tested-tier"><summary>e2e: 4</summary><ul><li title="tests/e2e/test_lake_project_e2e.py">Lake project e2e.</li><li title="tests/e2e/test_sfr_cheze_e2e.py">Sfr cheze e2e.</li><li title="tests/e2e/test_sfr_cheze_per_cell_discharge_e2e.py">Sfr cheze per cell discharge e2e.</li><li title="tests/e2e/test_workflow_from_scratch.py">Workflow from scratch.</li></ul></details><details class="hmp-tested-tier"><summary>contract: 1</summary><ul><li title="tests/contract/test_boussinesq_descent_routes_like_whitebox.py">Boussinesq descent routes like whitebox.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 205</summary><ul><li title="tests/unit/calibration/test_a_gauge_snaps_only_when_asked.py">A gauge snaps only when asked. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_a_trial_tells_the_solver_when_its_recharge_is_its_own.py">A trial tells the solver when its recharge is its own. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_lake_bedleak_runtime_reuse.py">Lake bedleak runtime reuse. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_lake_level_calibration.py">Lake level calibration. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_the_dem_conditioning_is_an_offered_departure.py">The dem conditioning is an offered departure. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_the_sandbox_removes_the_recharge_its_trial_wrote.py">The sandbox removes the recharge its trial wrote. <span class="hmp-muted">calibration</span></li><li title="tests/unit/config/test_flow_lake_config.py">Flow lake config. <span class="hmp-muted">config</span></li><li title="tests/unit/config/test_lake_incompatible_backend.py">Lake incompatible backend. <span class="hmp-muted">config</span></li><li title="tests/unit/config/test_pint_units.py">Pint units. <span class="hmp-muted">config</span></li><li title="tests/unit/core/test_a_diagonal_talweg_needs_diagonal_neighbours.py">A diagonal talweg needs diagonal neighbours. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_budget_terms.py">Budget terms. <span class="hmp-muted">core</span></li><li title="tests/unit/geographic/test_terrain_engine_selection.py">Terrain engine selection. <span class="hmp-muted">geographic</span></li><li title="tests/unit/geographic/test_the_regularised_bed_reaches_the_top_and_nothing_else.py">The regularised bed reaches the top and nothing else. <span class="hmp-muted">geographic</span></li><li title="tests/unit/mesh/test_voronoi.py">Voronoi. <span class="hmp-muted">mesh</span></li><li title="tests/unit/physics/test_a_negative_lake_forcing_is_refused.py">A negative lake forcing is refused. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_flow_regime.py">Flow regime. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_lake_and_sfr_rates_are_lengths_per_time.py">Lake and sfr rates are lengths per time. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_lake_flux_forcing_binder.py">Lake flux forcing binder. <span class="hmp-muted">physics</span></li><li title="tests/unit/project/test_spinup.py">Spinup. <span class="hmp-muted">project</span></li><li title="tests/unit/results/test_every_budget_term_has_a_descriptor.py">Every budget term has a descriptor. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_lake_abacus_persistence.py">Lake abacus persistence. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_lake_timeseries_persistence.py">Lake timeseries persistence. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_store_axes.py">Store axes. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_the_dam_foot_is_stored_with_the_descent.py">The dam foot is stored with the descent. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_the_sfr_reach_table_stores_who_drains_into_whom.py">The sfr reach table stores who drains into whom. <span class="hmp-muted">results</span></li><li title="tests/unit/simulation/test_boussinesq_flow_adapter_build.py">Boussinesq flow adapter build. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_boussinesq_flow_adapter_run.py">Boussinesq flow adapter run. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_extract_dry_cell_sentinels.py">Extract dry cell sentinels. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_flow_model_name_resolution.py">Flow model name resolution. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_modflow6_runtime_reuse.py">Modflow6 runtime reuse. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_post_run_hands_the_budget_terms_to_the_extractor.py">Post run hands the budget terms to the extractor. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_results_post_run.py">Results post run. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_runner_process_context.py">Runner process context. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_transport_common.py">Transport common. <span class="hmp-muted">simulation</span></li><li title="tests/unit/solver/modflow_grid/test_a_structured_grid_coarser_than_its_dem_takes_the_zonal_top.py">A structured grid coarser than its dem takes the zonal top. <span class="hmp-muted">solver/modflow_grid</span></li><li title="tests/unit/solver/modflow_grid/test_discretization_zonal_seam.py">Discretization zonal seam. <span class="hmp-muted">solver/modflow_grid</span></li><li title="tests/unit/solver/modflow_grid/test_solver_mesh.py">Solver mesh. <span class="hmp-muted">solver/modflow_grid</span></li><li title="tests/unit/solver/modflow_nwt/test_a_calibration_trial_value_reaches_the_nwt_evt_package.py">A calibration trial value reaches the nwt evt package. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_a_constant_head_below_its_bottom_is_refused.py">A constant head below its bottom is refused. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_discretization.py">Discretization. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_flow_adapter_bas_contract.py">Flow adapter bas contract. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_forcing_boundary_conditions.py">Forcing boundary conditions. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_forcing_recharge_payload.py">Forcing recharge payload. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_forcing_wells.py">Forcing wells. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_masstransfer_backend.py">Masstransfer backend. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_config.py">Modflow config. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_domain_surfaces.py">Modflow domain surfaces. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_options.py">Modflow options. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_modpath_runtime_builder.py">Modpath runtime builder. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_mt3dms_postprocessing.py">Mt3dms postprocessing. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_nwt_budget_extract.py">Nwt budget extract. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_nwt_listing_path.py">Nwt listing path. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_nwt_packages_write_their_budget.py">Nwt packages write their budget. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_postprocess.py">Postprocess. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_property_mapping_requirements.py">Property mapping requirements. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_property_mapping_spatial_support.py">Property mapping spatial support. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_solver_routing_context.py">Solver routing context. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/test_a_binary_download_failure_is_a_network_error.py">A binary download failure is a network error. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_a_calibration_trial_value_reaches_the_npf_k_array.py">A calibration trial value reaches the npf k array. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_a_calibration_trial_value_reaches_the_soil_evt_package.py">A calibration trial value reaches the soil evt package. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_a_stamp_carries_the_period_mean_flux.py">A stamp carries the period mean flux. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_a_trial_that_moves_the_recharge_writes_it_inside_its_own_folder.py">A trial that moves the recharge writes it inside its own folder. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_budget_table.py">Boussinesq budget table. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_dirichlet_cell_budget.py">Boussinesq dirichlet cell budget. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_drain_bed_thickness.py">Boussinesq drain bed thickness. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_drainage_jacobian.py">Boussinesq drainage jacobian. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_dry_equilibrium.py">Boussinesq dry equilibrium. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_export_payload.py">Boussinesq export payload. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_extract_series.py">Boussinesq extract series. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_first_period_steady.py">Boussinesq first period steady. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_initial_conditions.py">Boussinesq initial conditions. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_method_catalog.py">Boussinesq method catalog. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_numerical_contracts.py">Boussinesq numerical contracts. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_partition_release_depth.py">Boussinesq partition release depth. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_period_end_stamps.py">Boussinesq period end stamps. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_smoothing.py">Boussinesq smoothing. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_stationary_failure_diagnostics.py">Boussinesq stationary failure diagnostics. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_stationary_picard_lscheme.py">Boussinesq stationary picard lscheme. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_stationary_robust_solver_matrix.py">Boussinesq stationary robust solver matrix. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_time_steps_and_auto_engine.py">Boussinesq time steps and auto engine. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_transient_driver.py">Boussinesq transient driver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_boussinesq_vi_bounds.py">Boussinesq vi bounds. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_cbc_reader_api_is_real.py">Cbc reader api is real. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_constant_head_roles.py">Constant head roles. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_discharge_routing.py">Discharge routing. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_drain_discharge_band.py">Drain discharge band. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_first_clim_is_one_rule_for_every_solver.py">First clim is one rule for every solver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_flow_barrier_hfb.py">Flow barrier hfb. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_flow_barrier_resolver.py">Flow barrier resolver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_gwt_concentration_file_layout.py">Gwt concentration file layout. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_k33_anisotropy.py">K33 anisotropy. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_lak_builder_p01.py">Lak builder p01. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_lake_band_runoff.py">Lake band runoff. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_lake_band_runoff_wiring.py">Lake band runoff wiring. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_mf6_cbc_reader.py">Mf6 cbc reader. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_mf6_version_parity.py">Mf6 version parity. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_api_isolation_timeout.py">Modflow6 api isolation timeout. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_api_subprocess_progress.py">Modflow6 api subprocess progress. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_ats_perioddata.py">Modflow6 ats perioddata. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_boundary_chd.py">Modflow6 boundary chd. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_budget_components.py">Modflow6 budget components. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_budget_extract.py">Modflow6 budget extract. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_cleanup.py">Modflow6 cleanup. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_discretization_choice.py">Modflow6 discretization choice. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_disv_grid_origin.py">Modflow6 disv grid origin. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_drn_conductance.py">Modflow6 drn conductance. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_evt.py">Modflow6 evt. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_evt_vectorized.py">Modflow6 evt vectorized. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_extractor_geometry.py">Modflow6 extractor geometry. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_flopy_header_cache.py">Modflow6 flopy header cache. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_flow_property_sidecar.py">Modflow6 flow property sidecar. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_gwt_mass_balance.py">Modflow6 gwt mass balance. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_idomain.py">Modflow6 idomain. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_initial_conditions_start_heads.py">Modflow6 initial conditions start heads. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_bed_carve.py">Modflow6 lake bed carve. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_connectiondata.py">Modflow6 lake connectiondata. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_extractor.py">Modflow6 lake extractor. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_idomain_mask.py">Modflow6 lake idomain mask. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_outlets.py">Modflow6 lake outlets. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_rch_evt_masking.py">Modflow6 lake rch evt masking. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_restart_stage.py">Modflow6 lake restart stage. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_table.py">Modflow6 lake table. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_lake_voronoi_grid.py">Modflow6 lake voronoi grid. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_listing_path.py">Modflow6 listing path. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_multilake_preretenue.py">Modflow6 multilake preretenue. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_mvr_lake_cascade.py">Modflow6 mvr lake cascade. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_mvr_records.py">Modflow6 mvr records. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_nstp_indexing.py">Modflow6 nstp indexing. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_output_adapter.py">Modflow6 output adapter. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_porosity.py">Modflow6 porosity. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_postprocessing_budget.py">Modflow6 postprocessing budget. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_postprocessing_flow_mesh.py">Modflow6 postprocessing flow mesh. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_postprocessing_transport_mesh.py">Modflow6 postprocessing transport mesh. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_prt_contracts.py">Modflow6 prt contracts. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_reads_the_etp_only_when_the_soil_sent_it.py">Modflow6 reads the etp only when the soil sent it. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_recharge.py">Modflow6 recharge. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_robustness.py">Modflow6 robustness. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sfr_builder.py">Modflow6 sfr builder. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sfr_extractor.py">Modflow6 sfr extractor. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sfr_mvr_coupling.py">Modflow6 sfr mvr coupling. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sfr_no_lake_imports.py">Modflow6 sfr no lake imports. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sfr_reach_flow_by_cell.py">Modflow6 sfr reach flow by cell. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_sparse_periods.py">Modflow6 sparse periods. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_steady_initial_conditions.py">Modflow6 steady initial conditions. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_steady_recharge_evt.py">Modflow6 steady recharge evt. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_time_coordinate.py">Modflow6 time coordinate. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_time_grid_contract.py">Modflow6 time grid contract. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_time_units.py">Modflow6 time units. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_transport_correctness.py">Modflow6 transport correctness. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_ts6_time_series.py">Modflow6 ts6 time series. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_voronoi_dual_support.py">Modflow6 voronoi dual support. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_watertable.py">Modflow6 watertable. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_well_validation.py">Modflow6 well validation. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_wells.py">Modflow6 wells. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_xt3d_rewet_options.py">Modflow6 xt3d rewet options. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_calibration_extractors.py">Modflow calibration extractors. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_common_helpers.py">Modflow common helpers. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_executables.py">Modflow executables. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_libmf6_resolver.py">Modflow libmf6 resolver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_nwt_budget_components.py">Modflow nwt budget components. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_progress.py">Modflow progress. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow_supported_variants.py">Modflow supported variants. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_observable_extraction.py">Observable extraction. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_observable_refusal_is_one_type.py">Observable refusal is one type. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_partition_triplets.py">Partition triplets. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_petsc_mixed_double_obstacle.py">Petsc mixed double obstacle. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_petsc_ts_vi_obstacle.py">Petsc ts vi obstacle. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_petsc_vi_obstacle.py">Petsc vi obstacle. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_recharge_stack_is_released.py">Recharge stack is released. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_release_flux_field_and_criterion_are_one_union.py">Release flux field and criterion are one union. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_release_union_covers_the_budget.py">Release union covers the budget. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sfr_bed_profile.py">Sfr bed profile. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sfr_drainage_follows_the_descent.py">Sfr drainage follows the descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sfr_picard_follows_the_mover.py">Sfr picard follows the mover. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sfr_rectify.py">Sfr rectify. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sfr_rtp_clamp_order.py">Sfr rtp clamp order. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_shared_lake_cells.py">Shared lake cells. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_sink_fill.py">Sink fill. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_solver_engine_identity.py">Solver engine identity. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_solver_time_units.py">Solver time units. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_adapter_locates_a_cell.py">The adapter locates a cell. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_atelier_etp_still_draws_no_evt_under_modflow6.py">The atelier etp still draws no evt under modflow6. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_build_hands_the_descent_to_the_networks.py">The build hands the descent to the networks. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_build_leaves_the_descent_with_the_dam_feet.py">The build leaves the descent with the dam feet. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_dam_foot_of_a_declared_spillway_draws_the_reach_below_the_dam.py">The dam foot of a declared spillway draws the reach below the dam. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_dam_foot_of_each_lake_is_kept_with_the_descent.py">The dam foot of each lake is kept with the descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_descent_follows_the_channel_tree_a.py">The descent follows the channel tree a. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_descent_sidecar_reads_back_what_the_build_wrote.py">The descent sidecar reads back what the build wrote. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_discharge_is_routed_on_the_descent.py">The discharge is routed on the descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_extractors_store_the_descent_the_build_saved.py">The extractors store the descent the build saved. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_graph_says_what_it_can_drain.py">The graph says what it can drain. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_mf6_grid_carries_a_computational_top.py">The mf6 grid carries a computational top. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_nwt_build_keeps_its_descent.py">The nwt build keeps its descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_recharge_files_keep_their_name_and_bytes.py">The recharge files keep their name and bytes. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_etp_and_a_routed_recharge_deficit_cannot_share_evt.py">The soil etp and a routed recharge deficit cannot share evt. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_rate_goes_to_binary_files.py">The soil evt rate goes to binary files. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_rate_is_zero_on_inactive_lake_and_constant_head_cells.py">The soil evt rate is zero on inactive lake and constant head cells. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_surface_follows_the_drain_elevation.py">The soil evt surface follows the drain elevation. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_solver_mesh_descent_crosses_inactive_lakes.py">The solver mesh descent crosses inactive lakes. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_zonal_channel_mask_keeps_the_stream_background_out.py">The zonal channel mask keeps the stream background out. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_water_budget_is_reported_on_success.py">Water budget is reported on success. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_xt3d_advisor.py">Xt3d advisor. <span class="hmp-muted">solver</span></li><li title="tests/unit/units/test_lake_unit_conversions.py">Lake unit conversions. <span class="hmp-muted">units</span></li><li title="tests/unit/workflow/test_a_trial_moves_the_aquifer_geometry.py">A trial moves the aquifer geometry. <span class="hmp-muted">workflow</span></li><li title="tests/unit/workflow/test_run_environment_engine.py">Run environment engine. <span class="hmp-muted">workflow</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Steps, steady flags, the first period</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_grid/discretization_temporal.py</span></code> (<code class="docutils literal notranslate"><span class="pre">build_temporal_discretization_from_time_grid</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_first_period_steady</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>MODFLOW 6: every package, in order</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/build.py</span></code> (<code class="docutils literal notranslate"><span class="pre">run_pre_processing</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>XT3D decision, IMS complexity</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/solver_options.py</span></code> (<code class="docutils literal notranslate"><span class="pre">resolve_xt3d_decision</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_ims_complexity</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Newton options, guards, IMS options, ATS</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/build.py</span></code> (<code class="docutils literal notranslate"><span class="pre">newton_options</span></code>, <code class="docutils literal notranslate"><span class="pre">guard_newton_rewet</span></code>, <code class="docutils literal notranslate"><span class="pre">guard_newton_linear_acceleration</span></code>, <code class="docutils literal notranslate"><span class="pre">optional_ims_kwargs</span></code>, <code class="docutils literal notranslate"><span class="pre">build_ats_perioddata</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Rewet options, starting heads</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/initial_conditions.py</span></code> (<code class="docutils literal notranslate"><span class="pre">resolve_rewet_npf_options</span></code>, <code class="docutils literal notranslate"><span class="pre">build_start_heads</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Recharge, EVT, drains, constant heads, wells</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/</span></code> (<code class="docutils literal notranslate"><span class="pre">recharge.py</span></code>: <code class="docutils literal notranslate"><span class="pre">recharge_to_spd</span></code>, <code class="docutils literal notranslate"><span class="pre">build_soil_evta_payload</span></code>, <code class="docutils literal notranslate"><span class="pre">mask_recharge_on_lake_cells</span></code>; <code class="docutils literal notranslate"><span class="pre">boundary_conditions.py</span></code>: <code class="docutils literal notranslate"><span class="pre">build_drain_stress_period_data</span></code>, <code class="docutils literal notranslate"><span class="pre">assemble_constant_head_stress_period_data</span></code>; <code class="docutils literal notranslate"><span class="pre">wells.py</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/</span></code> (<code class="docutils literal notranslate"><span class="pre">recharge_evt_routing.py</span></code>, <code class="docutils literal notranslate"><span class="pre">drain_conductance.py</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Lakes, streams, barriers, movers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/</span></code> (<code class="docutils literal notranslate"><span class="pre">lake.py</span></code>, <code class="docutils literal notranslate"><span class="pre">sfr.py</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_barrier.py</span></code>, <code class="docutils literal notranslate"><span class="pre">mvr.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Budget discrepancy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/flow_adapter_helpers.py</span></code> (<code class="docutils literal notranslate"><span class="pre">percent_discrepancies</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/runners/verdict.py</span></code> (<code class="docutils literal notranslate"><span class="pre">water_budget_verdict</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>MODFLOW-NWT: solver and packages</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/nwt_solver.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_build_dis_package</span></code>, <code class="docutils literal notranslate"><span class="pre">_initialize_solver_packages</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/_pre_processing.py</span></code> (<code class="docutils literal notranslate"><span class="pre">assemble_flopy_packages</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Boussinesq: time loop and size limit</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/drivers/transient.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/boussinesq.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Transport solvers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/transport.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/prt.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/mt3dms/mt3dms.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/modpath/modpath.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Which transport follows which flow</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">requires</span></code> of each adapter in <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/*/adapters/</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/simulation/planning/planner.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Solver names, capabilities, refusals at read time</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/registry.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/config/hydromodpy_config.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/flow/boundary_condition_registry.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="groundwater-flow.html"><span class="doc">The groundwater flow problem</span></a>: the balance of a cell.</p></li>
+<li><p><a class="reference internal" href="boussinesq.html"><span class="doc">Boussinesq theory</span></a>: the full Boussinesq theory.</p></li>
+<li><p><a class="reference internal" href="exits.html"><span class="doc">How water leaves the aquifer</span></a>: drains, streams and lakes as exits of the aquifer.</p></li>
+<li><p><a class="reference internal" href="validation.html"><span class="doc">Validation</span></a>: the checks against reference solutions.</p></li>
+<li><p><a class="reference internal" href="../reference/solvers.html"><span class="doc">Solvers</span></a>: the solvers and what each supports.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solvers/xt3d-on-irregular-disv-meshes.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">XT3D on irregular meshes</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="boussinesq.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Boussinesq theory</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sources">Sources</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-three-solvers-side-by-side">The three solvers side by side</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#time-steps">Time steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-nonlinear-solve">The nonlinear solve</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-6-package-by-package">MODFLOW 6, package by package</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-grid">The grid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flow-between-cells-and-xt3d">Flow between cells, and XT3D</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaporation-drains-lakes-and-streams">Evaporation, drains, lakes and streams</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imposed-heads-and-wells">Imposed heads and wells</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-solution-newton-and-ims">The solution: Newton and IMS</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-nwt-package-by-package">MODFLOW-NWT, package by package</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wetting-and-drying">Wetting and drying</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-6-against-modflow-nwt">MODFLOW 6 against MODFLOW-NWT</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-boussinesq-solver">The Boussinesq solver</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transport-coupling">Transport coupling</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-6-gwt">MODFLOW 6 GWT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-6-particle-tracking">MODFLOW 6 particle tracking</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modflow-nwt-modpath-and-mt3dms">MODFLOW-NWT: MODPATH and MT3DMS</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

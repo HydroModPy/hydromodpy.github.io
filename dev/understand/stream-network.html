@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="How the model makes streams" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/understand/stream-network.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="HydroModPy does not draw rivers. It computes a water table. Where the water table reaches the ground, water leaves the aquifer. Those exits are the sources of the streams, and the stream network is..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="HydroModPy does not draw rivers. It computes a water table. Where the water table reaches the ground, water leaves the aquifer. Those exits are the sources of the streams, and the stream network is..." />
+
+    <meta property="article:modified_time" content="2026-10-09T10:30:42+02:00" />
+    <title>How the model makes streams &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'understand/stream-network';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/understand/stream-network.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scoring a simulated stream network" href="network-metrics.html" />
+    <link rel="prev" title="Reading the results" href="reading-results.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-09"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="in-five-minutes.html">In five minutes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="what-it-computes.html">What the model computes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reading-results.html">Reading the results</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">How the model makes streams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="network-metrics.html">Scoring a simulated stream network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-sure.html">How sure is the model?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="what-validated-means.html">What “validated” means here</a></li>
+<li class="toctree-l1"><a class="reference internal" href="where-the-data-come-from.html">Where the data come from</a></li>
+<li class="toctree-l1"><a class="reference internal" href="can-i-check-what-was-run.html">Can I check what was run?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Understand HydroModPy</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How the model makes streams</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Understand" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="how-the-model-makes-streams">
+<h1>How the model makes streams<a class="headerlink" href="#how-the-model-makes-streams" title="Link to this heading">#</a></h1>
+<p>HydroModPy does not draw rivers. It computes a <a class="reference internal" href="glossary.html#term-water-table"><span class="xref std std-term">water table</span></a>. Where the water table reaches
+the ground, water leaves the <a class="reference internal" href="glossary.html#term-aquifer"><span class="xref std std-term">aquifer</span></a>. Those exits are the sources of the streams, and
+the stream network is what they generate downhill.</p>
+<p>This page follows that chain: the exits, the network they generate, why the network breathes
+with the seasons, and how it is compared with a map. It uses no equation. The equations are in
+<a class="reference internal" href="../theory/downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a>.</p>
+<section id="where-the-water-table-reaches-the-ground">
+<h2>Where the water table reaches the ground<a class="headerlink" href="#where-the-water-table-reaches-the-ground" title="Link to this heading">#</a></h2>
+<p>With the drainage condition, the model places a <a class="reference internal" href="glossary.html#term-drain"><span class="xref std std-term">drain</span></a> in every cell that has no fixed
+head, at the elevation of the ground. A drain lets water out when the water table rises to the
+ground surface, and in that direction only. Water that has left does not come back, and a river
+does not feed the aquifer in this setup.</p>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/method_seepage_drainage_operator.svg"><img alt="Sketch of a ground surface and a water table above it in places. Where the water table head exceeds the ground elevation, water is released as seepage. Elsewhere the cell stays dry." src="../_images/method_seepage_drainage_operator.svg" style="width: 90%;" width="1280" height="740" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 10 </span><span class="caption-text"><strong>Look at:</strong> the cells where the head of the water table is above the ground line: only they
+release water. <strong>Does not show:</strong> how much water a drain releases, or a real catchment.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>How much water a drain passes for a given rise of the water table depends on the
+<a class="reference internal" href="glossary.html#term-hydraulic-conductivity"><span class="xref std std-term">hydraulic conductivity</span></a> K of the cell: the more permeable the ground, the more freely it
+drains. The drain is not a free exit. Unless you declare a <a class="reference internal" href="glossary.html#term-conductance"><span class="xref std std-term">conductance</span></a>, the model derives
+it from K and from the thickness of the clogging layer of the drain bed (the thin, less permeable
+film that lines a stream bed). The drain follows K, and this
+is why the extent of the network carries information on K.</p>
+<p>In example 04, drains are the only way water leaves the aquifer: the list of boundary
+conditions of the model names the drain and nothing else.</p>
+</section>
+<section id="a-seepage-cell-is-a-point-not-a-stream">
+<h2>A seepage cell is a point, not a stream<a class="headerlink" href="#a-seepage-cell-is-a-point-not-a-stream" title="Link to this heading">#</a></h2>
+<p>A cell where the aquifer gives water back to the ground is a <em>seepage cell</em>. It is a point
+where water appears, a spring, and not a stretch of river. Isolated cells and short lines of
+cells are normal.</p>
+<figure class="align-default" id="id2">
+<a class="hmp-light dark-light reference internal image-reference" href="../_images/ex04_seepage_map.webp"><img alt="Map of the Nançon catchment in October 2002. Blue cells, isolated or in short lines, are the cells where the water table is at or above the ground." class="hmp-light dark-light" src="../_images/ex04_seepage_map.webp" style="width: 75%;" width="850" height="944" loading="lazy" decoding="async" />
+</a>
+<a class="hmp-dark dark-light reference internal image-reference" href="../_images/ex04_seepage_map-dark.webp"><img alt="Map of the Nançon catchment in October 2002. Blue cells, isolated or in short lines, are the cells where the water table is at or above the ground." class="hmp-dark dark-light" src="../_images/ex04_seepage_map-dark.webp" style="width: 75%;" width="850" height="944" loading="lazy" decoding="async" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 11 </span><span class="caption-text"><span class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning">Indicative</span> <strong>Look at:</strong> the isolated blue cells, each a point where water leaves the aquifer.
+<strong>Does not show:</strong> any stream, which is drawn in the next step.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+<figcaption>
+<div class="legend">
+<p>The <code class="docutils literal notranslate"><span class="pre">seepage_map</span></code> of example 04, October 2002, the driest month of the series according to the
+comments of the example file (<a class="reference internal" href="reading-results.html"><span class="doc">Reading the results</span></a>).</p>
+</div>
+</figcaption>
+</figure>
+<p>The map above shows the raw state of the water table. For the network, the model asks a
+slightly different question: how much water leaves the cell. A cell counts as a source when it
+gives back more than a small share of the mean <a class="reference internal" href="glossary.html#term-recharge"><span class="xref std std-term">recharge</span></a> over its area
+(the <a class="reference internal" href="glossary.html#term-seepage-threshold"><span class="xref std std-term">seepage threshold</span></a>). The test is
+made on the flux because the water budget fixes the flux, while “the head touches the ground”
+is a geometric condition that changes a lot when the drain conductance moves. The setting
+is <a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-tau_specific_ratio" title="A cell releasing less than this fraction of its own recharge is not a seepage face. (-)"><code class="docutils literal notranslate"><span class="pre">tau_specific_ratio</span></code></a>.</p>
+</section>
+<section id="seepage-cells-draw-the-network">
+<h2>Seepage cells draw the network<a class="headerlink" href="#seepage-cells-draw-the-network" title="Link to this heading">#</a></h2>
+<p>The water that leaves the aquifer in a seepage cell flows downhill over the ground. The
+<em>simulated network</em> is every cell this water goes through, from each source as far as
+the slope leads it. The slope is the one of the <a class="reference internal" href="glossary.html#term-digital-elevation-model"><span class="xref std std-term">digital elevation model</span></a>, read on the
+model cells. Pits (cells lower than all their neighbours, where water would be trapped) are
+filled first, so that every cell has a way down.</p>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/method_simulated_active_postprocess.svg"><img alt="Sketch of seepage sources on surface cells whose outflow is routed downstream and added up. A threshold turns the routed flow into an active mask, a diagnostic view of the water budget." src="../_images/method_simulated_active_postprocess.svg" style="width: 90%;" width="1280" height="740" loading="lazy" decoding="async" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 12 </span><span class="caption-text"><strong>Look at:</strong> the order of the steps: sources, routing downstream, then a threshold that gives the
+active network. <strong>Does not show:</strong> a river volume. The network is a view drawn after the
+computation, and the water budget fields stay untouched.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id4">
+<a class="hmp-light dark-light reference internal image-reference" href="../_images/ex04_flow_intermittence_map.webp"><img alt="Map of the Nançon catchment for the year 2002. Perennial streams in blue form a trunk and its main branches. Intermittent streams in orange are at the upstream ends and on side branches. The rest of the catchment is dry, in gray." class="hmp-light dark-light" src="../_images/ex04_flow_intermittence_map.webp" style="width: 75%;" width="1020" height="974" loading="lazy" decoding="async" />
+</a>
+<a class="hmp-dark dark-light reference internal image-reference" href="../_images/ex04_flow_intermittence_map-dark.webp"><img alt="Map of the Nançon catchment for the year 2002. Perennial streams in blue form a trunk and its main branches. Intermittent streams in orange are at the upstream ends and on side branches. The rest of the catchment is dry, in gray." class="hmp-dark dark-light" src="../_images/ex04_flow_intermittence_map-dark.webp" style="width: 75%;" width="1020" height="974" loading="lazy" decoding="async" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 13 </span><span class="caption-text"><span class="sd-sphinx-override sd-badge sd-bg-warning sd-bg-text-warning">Indicative</span> <strong>Look at:</strong> the blue trunk and the orange upstream ends. <strong>Does not show:</strong> which
+reaches dry up in the field.</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
+<figcaption>
+<div class="legend">
+<p>The <code class="docutils literal notranslate"><span class="pre">flow_intermittence_map</span></code> of example 04, year 2002, from the calibrated run. Blue cells flow
+every month of the year, orange cells some months, gray cells never.</p>
+</div>
+</figcaption>
+</figure>
+<p>Three things follow from this construction.</p>
+<ul class="simple">
+<li><p><strong>The network has no width, depth or velocity.</strong> In the drain setup, the model does not
+compute the river. A cell “flows” means that the aquifer feeds it, directly or from upstream.
+There is no water level, no flood and no travel time in the channel. The routed streams
+described <a class="reference internal" href="#other-exits"><span class="std std-ref">below</span></a> are the exception.</p></li>
+<li><p><strong>Its shape depends on the relief.</strong> A coarser cell size or a different digital elevation
+model moves the paths. A stream occupies one cell, so a map is read at the scale of the
+hillside, not of the field (see <a class="reference internal" href="glossary.html#term-resolution"><span class="xref std std-term">resolution</span></a>).</p></li>
+<li><p><strong>A flow threshold keeps only cells that carry water.</strong> On the flow maps, a downstream cell
+flows only if the water routed to it reaches a minimum discharge
+(the <a class="reference internal" href="glossary.html#term-visible-flow"><span class="xref std std-term">visible flow</span></a>). It is a convention. See
+<a class="reference internal" href="glossary.html#term-visible-flow"><span class="xref std std-term">visible flow</span></a>.</p></li>
+</ul>
+</section>
+<section id="why-the-network-grows-in-winter-and-shrinks-in-summer">
+<h2>Why the network grows in winter and shrinks in summer<a class="headerlink" href="#why-the-network-grows-in-winter-and-shrinks-in-summer" title="Link to this heading">#</a></h2>
+<p>The recharge feeds the water table. In winter the recharge is large and the water table
+rises. More cells reach the ground and give back water above the threshold, and the water of
+each of them reaches farther downhill. In summer the recharge is small, the water table
+drops, and the sources retreat toward the valley bottoms. The upstream ends of the streams
+dry up first, and only the reaches fed by the lowest water table keep flowing.</p>
+<p>The model repeats this at every <a class="reference internal" href="glossary.html#term-stress-period"><span class="xref std std-term">stress period</span></a>, a month in example 04. For each period it finds
+the seepage cells, draws the network, and counts the cells that flow. Over a year, a cell is then:</p>
+<ul class="simple">
+<li><p><em>perennial</em>, if it flows at every time step of the year;</p></li>
+<li><p><em>intermittent</em>, if it flows at some time steps and not all;</p></li>
+<li><p><em>dry</em>, if it never flows.</p></li>
+</ul>
+<p>Example 04 shows it. The comment of its configuration file says that the seepage cells and
+the active network expand and contract with the wet winters and the dry summers. The maps of
+the example draw October 2002 because it is the driest month of the record.</p>
+<p>Two limits come with a monthly step. A reach that dries up for two weeks does not appear,
+and “intermittent” means dry for at least one <a class="reference internal" href="glossary.html#term-time-step"><span class="xref std std-term">time step</span></a>.</p>
+</section>
+<section id="what-sets-the-size-of-the-network">
+<h2>What sets the size of the network<a class="headerlink" href="#what-sets-the-size-of-the-network" title="Link to this heading">#</a></h2>
+<p>Two quantities compete: how fast the ground carries water away (K) and how much water arrives
+(the recharge). If the ground is permeable compared with the recharge, the water table stays
+deep, and the network retracts into the valley bottoms. If it is not, the water table reaches
+the ground on the hillsides, and the network reaches the upper slopes. The extent of the
+network is a function of the ratio of K to the recharge. This is what the <a class="reference internal" href="glossary.html#term-calibration"><span class="xref std std-term">calibration</span></a> on
+the stream network exploits (<a class="reference internal" href="../theory/downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a>). In example 04,
+the discharge at the outlet does not tell values of K apart, but the extent of the seepage
+does.</p>
+</section>
+<section id="what-else-can-take-water-out">
+<span id="other-exits"></span><h2>What else can take water out<a class="headerlink" href="#what-else-can-take-water-out" title="Link to this heading">#</a></h2>
+<p>The drain is the way the model lets the aquifer produce streams. Other conditions exist, and
+they answer other questions. They should not be confused with it.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>You want</p></th>
+<th class="head"><p>The model uses</p></th>
+<th class="head"><p>What you give</p></th>
+<th class="head"><p>What the model computes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The model to decide where water emerges</p></td>
+<td><p>A drain at the ground (the default)</p></td>
+<td><p>Nothing, or a drain conductance (<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/bc.html#p-flow-bc-name-value" title="Boundary-condition value, scalar or one value per stress period."><code class="docutils literal notranslate"><span class="pre">flow.bc.&lt;name&gt;.value</span></code></a>)</p></td>
+<td><p>Where the water table reaches the ground, and how much water leaves</p></td>
+</tr>
+<tr class="row-odd"><td><p>To impose the water level of a river on known cells</p></td>
+<td><p>A fixed-head stream boundary (<code class="docutils literal notranslate"><span class="pre">stream</span></code> in <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-active_bc" title="Boundaries this run builds, by their canonical names: 'ocean', 'stream', 'north_side', 'south_side', 'east_side', 'west_side', 'drainage', 'lake', 'reservoir'."><code class="docutils literal notranslate"><span class="pre">flow.active_bc</span></code></a>)</p></td>
+<td><p>The head, on the cells tagged as river</p></td>
+<td><p>The exchange with the aquifer, in either direction</p></td>
+</tr>
+<tr class="row-even"><td><p>The water that leaves to travel down a river</p></td>
+<td><p>A routed stream network (<a class="reference internal" href="../reference/parameters/flow/sinks_sources/sfr.html"><span class="doc">[flow.sinks_sources.sfr]</span></a>)</p></td>
+<td><p>The reaches and their properties</p></td>
+<td><p>The routing of the water along the reaches</p></td>
+</tr>
+<tr class="row-odd"><td><p>A lake whose level moves</p></td>
+<td><p>A lake package (<a class="reference internal" href="../reference/parameters/flow/sinks_sources/lakes.html"><span class="doc">[flow.sinks_sources.lakes]</span></a>)</p></td>
+<td><p>A footprint and a stage-volume-area table</p></td>
+<td><p>The stage and the exchange with the aquifer</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The stream boundary is not available with MODFLOW-NWT. It prescribes a level: it supposes you
+know where the river is and how high its water stands. A drain supposes neither. Choose the
+drain when the network is the question.</p>
+<figure class="align-default" id="id5">
+<a class="reference internal image-reference" href="../_images/method_stream_stage_boundary.svg"><img alt="Sketch of a river drawn as a line on the ground surface. A water level is imposed on the line, the head of the water table is solved, and the exchange between river and aquifer is computed." src="../_images/method_stream_stage_boundary.svg" style="width: 90%;" width="1280" height="740" loading="lazy" decoding="async" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 14 </span><span class="caption-text"><strong>Look at:</strong> the direction of the arrows. With a stream boundary, you impose the water level of
+the river and the model computes the exchange. <strong>Does not show:</strong> the drain, which decides by
+itself where water comes out.</span><a class="headerlink" href="#id5" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>Whatever the condition, the network is read from the same quantity: the water the aquifer
+releases to the surface in each cell, summed over every condition that releases water.</p>
+</section>
+<section id="comparing-with-a-mapped-network">
+<h2>Comparing with a mapped network<a class="headerlink" href="#comparing-with-a-mapped-network" title="Link to this heading">#</a></h2>
+<p>A <a class="reference internal" href="glossary.html#term-mapped-network"><span class="xref std std-term">mapped network</span></a> is the set of streams drawn on a map, such as the permanent reaches of
+the <a class="reference internal" href="glossary.html#term-BD-TOPO"><span class="xref std std-term">BD TOPO</span></a>. It is a reference. The model never receives it.</p>
+<ul class="simple">
+<li><p>It is not burned into the relief.</p></li>
+<li><p>It does not place drains.</p></li>
+<li><p>It does not set K.</p></li>
+</ul>
+<p>The model is built from the relief, the geology, the recharge and the thickness. The map is
+read afterwards, to score and to draw (<a class="reference internal" href="reading-results.html"><span class="doc">Reading the results</span></a>). You declare it as a data source (<a class="reference internal" href="../reference/parameters/data/hydrography.html"><span class="doc">[data.hydrography]</span></a>), and the code treats it as a <a class="reference internal" href="glossary.html#term-diagnostic"><span class="xref std std-term">diagnostic</span></a>, not as a model input.</p>
+<p>To compare the two networks, the lines of the map are first placed on the model cells.
+By default HydroModPy keeps only the places where the map says a stream starts, and lets the
+slope of the model draw the path below them
+(<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-observed_rasterization" title="How the mapped network is drawn on the mesh cells."><code class="docutils literal notranslate"><span class="pre">observed_rasterization</span></code></a>). Field ditches and rectified
+reaches follow paths that a model on a digital elevation model cannot reproduce, and drawn
+cell by cell they would count as errors of the model.</p>
+<p>Then the comparison goes both ways, along the slope.</p>
+<ul class="simple">
+<li><p>From each cell of the simulated network, follow the slope down until you meet the mapped
+network. A long walk means the model makes a stream where the map has none: an excess.</p></li>
+<li><p>From each cell of the mapped network, follow the slope down until you meet the simulated
+network. A long walk means the model misses a stream of the map: a deficit.</p></li>
+</ul>
+<p>When K increases, the simulated network retracts and the deficit grows. When K decreases, the
+network spreads and the excess grows. The calibration looks for the value of K where the two
+mean walks are equal. <a class="reference internal" href="network-metrics.html"><span class="doc">Scoring a simulated stream network</span></a> says how to read these scores, and
+<a class="reference internal" href="../theory/downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a> defines the distances.</p>
+<p>Calibrating on the map is not <a class="reference internal" href="glossary.html#term-validation"><span class="xref std std-term">validating</span></a> against it. The agreement of a calibrated run with
+the map is what the calibration looked for.</p>
+</section>
+<section id="what-the-network-is-not">
+<h2>What the network is not<a class="headerlink" href="#what-the-network-is-not" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>It is not a river model. In the drain setup there is no hydraulics in the channel.</p></li>
+<li><p>It is not a budget term. The water that leaves the aquifer is the release of the drains.
+The network is a way to read where it leaves and where it goes.</p></li>
+<li><p>It is not a measurement. It becomes evidence only through a comparison with a map that the
+calibration has not seen.</p></li>
+<li><p>It is not a line. It is a set of cells, one set for each time step.</p></li>
+</ul>
+</section>
+<section id="where-to-go-next">
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="reading-results.html"><span class="doc">Reading the results</span></a>: the maps of example 04, one by one.</p></li>
+<li><p><a class="reference internal" href="network-metrics.html"><span class="doc">Scoring a simulated stream network</span></a>: how a simulated network is scored.</p></li>
+<li><p><a class="reference internal" href="../reference/parameters/calibration/outputs.html"><span class="doc">[calibration.outputs]</span></a>: the network criterion of a calibration.</p></li>
+<li><p><a class="reference internal" href="../theory/downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a>: the distances and the criterion, with equations.</p></li>
+<li><p><a class="reference internal" href="../theory/exits.html"><span class="doc">How water leaves the aquifer</span></a>: how water leaves the aquifer.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="reading-results.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Reading the results</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="network-metrics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Scoring a simulated stream network</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-the-water-table-reaches-the-ground">Where the water table reaches the ground</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-seepage-cell-is-a-point-not-a-stream">A seepage cell is a point, not a stream</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seepage-cells-draw-the-network">Seepage cells draw the network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-network-grows-in-winter-and-shrinks-in-summer">Why the network grows in winter and shrinks in summer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-sets-the-size-of-the-network">What sets the size of the network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-else-can-take-water-out">What else can take water out</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-with-a-mapped-network">Comparing with a mapped network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-network-is-not">What the network is not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-go-next">Where to go next</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-09.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,296 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: geographic
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Geographic configuration for watershed delineation.
+# ----------------------------------------------------------------------
+
+[geographic]
+# Where the model domain comes from.
+# 'standard' delineates it from a DEM, an outlet or a polygon ([geographic.catchment]).
+# 'synthetic' builds one analytical support from [geographic.synthetic].
+# Type: Literal['standard', 'synthetic'] | one of: "standard", "synthetic" | Default: "standard"
+source_mode = "standard"
+
+# How the model domain is defined.
+# Required when source_mode='standard', left out when it is 'synthetic'.
+# The shape is chosen by 'catch_def' on the nested table: 'dem' | 'txt' | 'from_outlet_coord' | 'from_polyg_shp'.
+# Type: Annotated (optional) | REQUIRED
+catchment = ""
+
+# Target projected CRS for all outputs (e.g.
+# 'EPSG:2154').
+# If not set, derived from the input DEM.
+# Type: string (optional) | Optional
+# crs_project = ""
+
+# How the DEM is conditioned before the catchment is delineated.
+# 'fill' (default) only raises cells: each closed depression is raised to its spill level, then a small gradient on the flats lets every cell drain.
+# 'breach' mostly lowers cells: it carves a path through the barrier that closes a depression, after raising single-cell pits to their lowest neighbour, with no limit on length or depth and no fill afterwards (least-cost breaching, Lindsay 2016); it changes far fewer cells than 'fill' and can dig deep.
+# 'capped_breach' lowers and raises: it breaches only within the limits of [geographic.capped_breach] (a maximum cumulative lowering and a maximum length, in metres), then fills every depression the limits refused (the hybrid of Lindsay 2016).
+# The depth limit is a sum over the cells of a path, so it does not give the same landscape at every grid resolution.
+# 'fill' is the default because it is the tool of the paper behind the network criterion (FillDepressions, Abherve et al.
+# 2023), and the criterion itself fills the model top on the mesh by a priority flood: one conditioning rule from the DEM to the score.
+# Type: Literal['breach', 'fill', 'capped_breach'] | one of: "breach", "fill", "capped_breach" | Default: "fill"
+dem_correc_type = "fill"
+
+# Flow-routing engine that conditions the DEM and delineates the catchment.
+# Unset uses the engine this build defaults to.
+# A string and not an enumeration: the values that resolve depend on what is installed beside HydroModPy, which is how a third-party engine is named without a patch.
+# Type: string (optional) | Optional
+# terrain_engine = ""
+
+# Selects the DEM surface used for the domain.
+# 'box' (default) keeps the full buffered rectangular support.
+# 'watershed' / 'watershed_buff' select the catchment (optionally with a buffer ring) surface.
+# Note: the MODFLOW 6 mesh still covers the buffered box (the buffer stays active for inter-basin exchange); out-of-watershed drainage is kept out of the catchment discharge by the DRN watershed-routing, not by an idomain mask.
+# Experimental.
+# Type: Literal['box', 'watershed_buff', 'watershed'] | one of: "box", "watershed_buff", "watershed" | Default: "box"
+domain_extent = "box"
+
+# If true, reuse previously generated geographic artifacts when the cached fingerprint matches the current DEM, outlet/polygon and geographic settings.
+# This is useful for profiling repeated simulation runs in the same workspace.
+# Type: bool | Default: false
+reuse_existing_outputs = false
+
+
+# Limits of the 'capped_breach' conditioning: max_depth (default 0.5 m) and max_distance (default 200 m).
+# Omitted, a 'capped_breach' run uses those defaults.
+# Declaring it with any other dem_correc_type is refused: 'fill' and 'breach' have no limit to set, and a section that is silently ignored reads as a limit that was applied.
+
+# [geographic.capped_breach]
+# Largest cumulative lowering, in metres, of one breach path (the 'max_cost' of Whitebox): the lowering summed over the cells of the path, not the depth of one cell.
+# Measured on the Flume at 25 m with 8-cell paths, the realised maximum lowering of a cell follows it within 0.01 m.
+# On a finer grid a thick embankment spreads the cost over more cells, so it is filled instead of dug: the same value does not give the same landscape at every resolution.
+# A depression whose cheapest breach costs more is filled.
+# Paths overlap, so the lowering of a cell can exceed it (Nancon 75 m: 0.56 m for 0.5 m).
+# The realised depth is measured after the call, logged, and warned about when it exceeds this value.
+# Accepts inline units (e.g.
+# 0.5, '0.5 m').
+# Type: float | > 0.0 | Default: 0.5
+# max_depth = 0.5
+
+# Longest breach path, in metres.
+# Translated to the DEM grid as ceil(max_distance / cell size) cells, at least one, and counted in cells along the path: a diagonal step counts one cell, so a diagonal breach can be up to 1.41 times longer than max_distance.
+# A depression with no way out within this length is filled.
+# Accepts inline units (e.g.
+# 200, '0.2 km').
+# Type: float | > 0.0 | Default: 200.0
+# max_distance = 200.0
+
+
+# Synthetic geographic support used when source_mode='synthetic'.
+# This analytical mode bypasses watershed delineation from external DEM files.
+
+[geographic.synthetic]
+# Identifier used by local case runners and outputs.
+# Type: string | Default: "flat20"
+case_id = "flat20"
+
+
+# Synthetic grid definition (extent and cell size).
+
+[geographic.synthetic.grid]
+# Total domain length along x (metres).
+# Accepts inline units, e.g.
+# '0.1 km'.
+# Type: float | > 0.0 | Default: 100.0
+length_x = 100.0
+
+# Total domain length along y (metres).
+# Accepts inline units, e.g.
+# '1 m'.
+# Type: float | > 0.0 | Default: 1.0
+length_y = 1.0
+
+# Number of grid cells along x, over length_x.
+# Type: int | > 0 | Default: 100
+nx = 100
+
+# Number of grid cells along y, over length_y.
+# 1 makes a cross-section.
+# Type: int | > 0 | Default: 1
+ny = 1
+
+
+# Synthetic topography definition (shape, elevations, slope).
+
+[geographic.synthetic.topography]
+# Analytical topography law: 'flat' keeps one constant elevation.
+# Type: Literal['flat'] | one of: "flat" | Default: "flat"
+kind = "flat"
+
+# Elevation of the flat ground surface, in metres.
+# Type: float | Default: 20.0
+base_elevation = 20.0
+
+
+# Optional DEM-derived river-network extraction settings.
+# When disabled, no stream network is generated in geographic preprocessing.
+
+[geographic.river_network]
+# Enable DEM-based river-network extraction from flow accumulation during geographic preprocessing.
+# Type: bool | Default: false
+enabled = false
+
+# Stream-initiation threshold selector.
+# 'area_km2' uses contributing area in km^2.
+# 'cells' uses contributing-cell count directly.
+# Type: Literal['area_km2', 'cells'] | one of: "area_km2", "cells" | Default: "area_km2"
+threshold_mode = "area_km2"
+
+# Contributing area threshold (km^2), required when threshold_mode='area_km2'.
+# Type: float (optional) | Optional
+# threshold_area_km2 = 0.0
+
+# Number of upstream cells a cell must drain to start a stream.
+# A count of DEM cells.
+# Type: float (optional) | Optional
+# threshold_cells = 0.0
+
+# If true, remove short stream segments after extraction.
+# Type: bool | Default: false
+prune_short_streams = false
+
+# Minimum stream length (metres) used by short-segment pruning.
+# Accepts inline units (e.g.
+# 0, 250, '250 m', '0.5 km').
+# Type: float | >= 0.0 | Default: 0.0
+min_stream_length_m = 0.0
+
+# Compute Strahler order raster from extracted streams.
+# Type: bool | Default: true
+compute_strahler_order = true
+
+# Compute stream-link identifier raster from extracted streams.
+# Type: bool | Default: true
+compute_stream_links = true
+
+# Forwarded to Whitebox raster_streams_to_vector.
+# False keeps a lighter vector geometry.
+# Type: bool | Default: false
+all_vertices = false
+
+
+# Optional lake hydro-enforcement of the routing DEM: carve the lake footprints so streams route into the lakes and drain to the outlet, without touching the model grid top.
+
+[geographic.enforce_lakes]
+# Carve the lake footprints into the routing DEM before D8 so streams converge into the lakes and drain to the outlet through them.
+# Type: bool | Default: false
+enabled = false
+
+# Lake footprint polygons (gpkg/shp) to carve.
+# A bare filename resolves against <workspace>/data/lake_geometry/.
+# Required when enabled.
+# Type: path (optional) | Optional
+# lake_geometry_path = ""
+
+# Ramp gradient, in metres per metre of distance to the outlet.
+# Small and positive so each lake slopes gently toward the outlet with no flat depression (a flat sink would make the breach crawl).
+# Type: float | > 0.0 | Default: 0.003
+slope = 0.003
+
+# Buffer (metres) applied to each lake footprint to bridge inter-lake sills and knit the shoreline into the carve.
+# Type: float | >= 0.0 | Default: 15.0
+buffer_m = 15.0
+
+# If > 0, run a SECOND delineation pass: any stream that dead-ends within this distance of a lake (a near-miss over a flat forebay) is carved to the lake and re-delineated, so its channel reaches the shoreline.
+# 0 disables the capture pass (lake carve only).
+# Type: float | >= 0.0 | Default: 0.0
+capture_radius_m = 0.0
+
+
+# Optional dam structure-carve of the ground: lower the dam footprint to the valley floor, for the routing chain and the model top alike, so a cutoff wall sits at the dam on a raw DEM.
+
+[geographic.dam_carve]
+# Carve the dam footprint of the ground down to the local valley floor, so the routing chain and the model top both see the dam removed and the cutoff wall sits at the true dam on a raw DEM.
+# Type: bool | Default: false
+enabled = false
+
+# Dam trace (gpkg/shp/csv) along which the ground is carved.
+# A bare filename resolves against <workspace>/data/cutoff_wall/.
+# Usually the same surveyed voile axis as the cutoff_wall.
+# Required when enabled.
+# Type: path (optional) | Optional
+# line_path = ""
+
+# Half-width (metres) of the carved corridor around the dam trace.
+# Make it a bit wider than one DEM/cell size so the whole dam body is brought to the valley floor.
+# Type: float | > 0.0 | Default: 40.0
+buffer_m = 40.0
+
+# Radius (metres) of the neighborhood whose minimum elevation defines the valley floor the corridor is carved to.
+# When omitted, derives 3 * buffer_m.
+# Type: Annotated (optional) | > 0.0 | Optional
+# search_radius_m = ""
+
+
+# Optional notch of the ground at the roads, railways and bridges that cross the generated channel tree: the embankment is lowered to the bed level read on both sides, and the catchment is delineated again on the notched ground.
+
+[geographic.crossings]
+# Notch the ground at the crossings of the channel tree with the declared structures, then delineate again on the notched ground.
+# Needs [geographic.river_network] enabled.
+# Type: bool | Default: false
+enabled = false
+
+# Vector file of the structures, with the columns 'kind', 'source', 'name' and 'drop_m' of the crossings data variable.
+# When left empty and enabled, it is filled from [[data.crossings.sources]], so the structures are named once.
+# Required when enabled, from one of the two.
+# Type: path (optional) | Optional
+# path = ""
+
+# Structure kinds to notch.
+# Weirs and dams are never notched.
+# Type: list[Literal] | REQUIRED
+kinds = []
+
+# Width of the notch across the embankment, in metres.
+# The channel pixel itself is always lowered, so a width below the cell size cuts one pixel.
+# The width is applied along the embankment only, the run of channel pixels that stand above the bed line, never to the two pixels where the bed is read.
+# Accepts inline units (e.g.
+# 10, '10 m').
+# Type: float | > 0.0 | Default: 10.0
+notch_width = 10.0
+
+# Distance along the channel, on each side of the crossing, where the bed level is read, in metres.
+# The embankment is assumed narrower than twice this.
+# The notch is the straight line between the two bed levels.
+# A bed end that falls on the embankment of another crossing is read further along the channel, beyond it.
+# Accepts inline units (e.g.
+# 50, '50 m').
+# Type: float | > 0.0 | Default: 50.0
+bed_reach = 50.0
+
+# Largest lowering of any pixel, in metres.
+# A pixel that would be lowered more is lowered by this and counted as capped in the report: the embankment is then higher than the cap allows for, or the crossing sits on a ridge.
+# Accepts inline units (e.g.
+# 3, '3 m').
+# Type: float | > 0.0 | Default: 3.0
+max_depth = 3.0
+
+# A point structure (a bridge of the ROE) farther than this from the channel tree is ignored, and so is a channel pixel farther than this from its crossing, in metres.
+# A dam or a weir of the file, or a dam_carve line, within this distance of a crossing stops its notch.
+# Accepts inline units (e.g.
+# 30, '30 m').
+# Type: float | > 0.0 | Default: 30.0
+snap_radius = 30.0
+
+
+# Optional least-change regularisation of the channel bed in the model top, on the pixels of the generated channel tree: the bed never rises downstream, crossing notches are gaps and declared weirs are drops.
+
+[geographic.bed_regularization]
+# Regularise the channel bed of the model top: the least-change fit of the ground that never rises downstream along the channel tree, with the crossing notches as gaps and the declared weirs and dams as drops.
+# Needs [geographic.river_network] enabled.
+# Type: bool | Default: false
+enabled = false
+
+# Minimum drop of the fitted bed per metre along the channel (m/m), given to the flats the fit pools.
+# The SFR default slope.
+# Type: float | >= 0.0 | Default: 0.0001
+min_slope = 0.0001
+

@@ -1,0 +1,1287 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: data
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Top-level ``[data]`` configuration for manager families.
+# ----------------------------------------------------------------------
+
+[data]
+# Ordered list of data-manager types explicitly requested in [data].
+# The launcher may append inferred types deduced from other sections (for example domain.zone_ids, flow.active_bc).
+# Allowed values: 'crossings', 'dem', 'etp', 'geology', 'humidity', 'hydrography', 'hydrometry', 'intermittency', 'lake_abacus', 'lake_bathymetry', 'lake_geometry', 'lake_inflow', 'lake_levels', 'lake_outflow', 'lake_withdrawal', 'oceanic', 'piezometry', 'precipitation', 'radiation', 'recharge', 'runoff', 'soil_capacity', 'soil_moisture', 'substratum', 'temperature', 'water_quality', 'wind'.
+# Type: list[str] | REQUIRED
+types = []
+
+# Policy applied when the planner infers types not explicitly listed in data.types.
+# 'warn': keep inferred types and continue even if data.<type> is missing.
+# 'strict': raise when an inferred type has no explicit data.<type> section (except geology, which can use its default typed config).
+# Type: Literal['warn', 'strict'] | one of: "warn", "strict" | Default: "warn"
+inference_mode = "warn"
+
+
+# Crossings configuration (roads, railways, bridges, weirs and dams laid across the channels, read by [geographic.crossings]).
+
+# [data.crossings]
+# SHP/GPKG/GeoJSON/TIF whose bounds are the box the API sources are asked over.
+# A project run has it filled in from the delineated watershed; a standalone call names it.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+
+# At least one crossings data source.
+# [[data.crossings.sources]]
+# Discriminator tag selecting the 'custom' crossings provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a vector file (SHP, GPKG, GeoJSON) or to a folder holding one.
+# It must carry a 'kind' column.
+# Type: path | REQUIRED
+# path = ""
+
+# Fallback CRS used only when the file carries none of its own.
+# Defaults to RGF93/Lambert-93 (EPSG:2154).
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# DEM configuration used when 'dem' is listed in data.types.
+
+# At least one DEM data source.
+# [[data.dem.sources]]
+# Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over.
+# A project run fills it with the delineated watershed.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Discriminator tag selecting the 'custom' DEM provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to custom DEM file or directory (TIF, ASC, NC).
+# Type: path | REQUIRED | Examples: "dem.tif"
+# path = ""
+
+
+# Geology configuration used when 'geology' is listed in data.types.
+
+# [data.geology]
+# Identifier of the geology spatial field.
+# Type: string | Default: "field_geology"
+# id = "field_geology"
+
+
+# At least one geology data source.
+# Defaults to BRGM 1:1M.
+# [[data.geology.sources]]
+# Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over.
+# A project run fills it with the delineated watershed.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Discriminator tag selecting the BRGM 1:1M geology provider.
+# Type: Literal['brgm_1m'] | one of: "brgm_1m" | Default: "brgm_1m"
+# source = "brgm_1m"
+
+
+# Hydrography configuration (stream network vector data).
+
+# [data.hydrography]
+# SHP/GPKG/GeoJSON/TIF whose shape the network is clipped to and whose bounds are the box the API sources are asked over.
+# A project run has it filled in from the delineated watershed; a standalone call names it.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+
+# At least one hydrography data source.
+# [[data.hydrography.sources]]
+# Data provider.
+# Any source id this installation resolves and that serves river linework is accepted, so a third-party source registered on the 'hydromodpy.data.source' entry-point group is named here by its id.
+# Type: string | REQUIRED | Examples: "custom"
+# source = ""
+
+# Path to a vector file (SHP/GPKG/GeoJSON), raster (TIF/TIFF), or directory containing one.
+# Type: path (optional) | Optional
+# path = ""
+
+# Attribute column whose values are written into the stream raster.
+# A column the layer lacks, or a column of text, is replaced by a sequential number per feature.
+# Type: string | Default: "FID"
+# rasterize_field = "FID"
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+
+# Hydrometry configuration (discharge time-series).
+
+# [data.hydrometry]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.hydrometry.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files, 'hubeau' for Hub'Eau API.
+# Type: Literal['custom', 'hubeau'] | one of: "custom", "hubeau" | Default: "hubeau"
+# source = "hubeau"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+# Hub'Eau variable code (e.g.
+# 'QmnJ', 'QmM', 'HmnJ').
+# Type: string (optional) | Default: "QmnJ"
+# product = "QmnJ"
+
+# Maximum number of Hub'Eau stations to KEEP.
+# Stations that return no observation in the window do not count against it, so a preview run over a larger territory gets this many stations carrying data, not this many tried.
+# Type: int (optional) | > 0 | Optional
+# max_stations = 1
+
+
+# Intermittency configuration (ONDE stream flow-state observations).
+
+# [data.intermittency]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.intermittency.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files, 'hubeau' for Hub'Eau stream-flow API.
+# Type: Literal['custom', 'hubeau'] | one of: "custom", "hubeau" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+# INSEE department codes to filter Hub'Eau station discovery.
+# Type: list (optional) | Optional
+# code_departement = []
+
+
+# Lake abacus configuration (stage-volume-area lookup table).
+
+# At least one lake-abacus data source.
+# [[data.lake_abacus.sources]]
+# Discriminator tag selecting the 'custom' lake-abacus provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a custom lake-abacus table file (CSV with stage,volume,sarea).
+# Type: path | REQUIRED
+# path = ""
+
+# Lake identifier injected into the table when the file omits a lake_id column.
+# Type: string (optional) | Optional
+# lake_id = ""
+
+
+# Lake bathymetry configuration (lake-bed elevation raster).
+
+# At least one lake-bathymetry data source.
+# [[data.lake_bathymetry.sources]]
+# Discriminator tag selecting the 'custom' lake-bathymetry provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a custom lake-bathymetry raster file (GeoTIFF, ASC).
+# Type: path | REQUIRED
+# path = ""
+
+# CRS assumed for a raster that carries none of its own.
+# Defaults to RGF93/Lambert-93 (EPSG:2154); set it to the site CRS for a non-French dataset.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# Lake geometry configuration (lake/reservoir footprint vector).
+
+# At least one lake-geometry data source.
+# [[data.lake_geometry.sources]]
+# Discriminator tag selecting the 'custom' lake-geometry provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a custom lake-geometry vector file (SHP, GPKG, GeoJSON).
+# Type: path | REQUIRED
+# path = ""
+
+# CRS assumed for a file that carries none of its own.
+# Defaults to RGF93/Lambert-93 (EPSG:2154); set it to the site CRS for a non-French dataset.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# Lake inflow configuration (observed inflow volumetric time series).
+
+# [data.lake_inflow]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one lake-inflow data source.
+# [[data.lake_inflow.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files.
+# Type: Literal['custom'] | one of: "custom" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Lake levels configuration (observed water-level time series).
+
+# [data.lake_levels]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one lake-levels data source.
+# [[data.lake_levels.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files.
+# Type: Literal['custom'] | one of: "custom" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Lake outflow configuration (observed outflow volumetric time series).
+
+# [data.lake_outflow]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one lake-outflow data source.
+# [[data.lake_outflow.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files.
+# Type: Literal['custom'] | one of: "custom" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Lake withdrawal configuration (observed withdrawal volumetric time series).
+
+# [data.lake_withdrawal]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one lake-withdrawal data source.
+# [[data.lake_withdrawal.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files.
+# Type: Literal['custom'] | one of: "custom" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Oceanic configuration used when 'oceanic' is listed in data.types.
+
+# [data.oceanic]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.oceanic.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV/NC/TIF files, 'shom' for SHOM API, 'constant' for fixed MSL.
+# Type: Literal['custom', 'shom', 'constant'] | one of: "custom", "shom", "constant" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+# Constant mean sea-level value in metres.
+# Type: float (optional) | Optional
+# value = 0.0
+
+
+# Piezometry configuration (groundwater level time-series).
+
+# [data.piezometry]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.piezometry.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Where the groundwater-level records come from: your own files or the Hub'Eau API.
+# Type: Literal['custom', 'hubeau'] | one of: "custom", "hubeau" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+# Hub'Eau measurement type: 'level' or 'depth'.
+# Type: Literal (optional) | Optional
+# product = "level"
+
+
+# Water quality configuration (physico-chemical parameters).
+
+# [data.water_quality]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.water_quality.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user files, 'hubeau' for Hub'Eau API.
+# Type: Literal['custom', 'hubeau'] | one of: "custom", "hubeau" | REQUIRED
+# source = "custom"
+
+# Type of site: 'river' (qualite_rivieres) or 'piezometer' (qualite_nappes).
+# Type: Literal['river', 'piezometer'] | one of: "river", "piezometer" | Default: "river"
+# site_type = "river"
+
+# Parameters to keep (e.g.
+# ['pH', 'Nitrates']).
+# None = all parameters.
+# Type: list (optional) | Optional
+# parameters = []
+
+# Directory containing location file and chronicle CSVs.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Recharge configuration (drainage / soil infiltration time series).
+
+# [data.recharge]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.recharge.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip grid.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# If omitted for NetCDF, units are inferred from variable metadata when available.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API, 'synthetic' for generated series.
+# Type: Literal['custom', 'sim2', 'synthetic'] | one of: "custom", "sim2", "synthetic" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+# Recharge values in mm/day.
+# Single value for constant, list for time-varying.
+# Type: list (optional) | Optional
+# values = []
+
+# Start date for synthetic series (ISO format, e.g.
+# '2020-01-01').
+# Type: string (optional) | Optional
+# start_date = ""
+
+
+# Runoff configuration (surface runoff time series).
+
+# [data.runoff]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.runoff.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Precipitation configuration (liquid and solid precipitation).
+
+# [data.precipitation]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.precipitation.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API, 'explore2' for a local DRIAS Explore2 NetCDF (no network).
+# Type: Literal['custom', 'sim2', 'explore2'] | one of: "custom", "sim2", "explore2" | REQUIRED
+# source = "custom"
+
+# Precipitation components: 'liquid' (rain), 'solid' (snow), 'total' (sum of both).
+# Type: list[Literal] | Default: ["total"]
+# components = ["total"]
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# For source = 'explore2', the local DRIAS Explore2 NetCDF to read.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# ETP configuration (potential evapotranspiration).
+
+# [data.etp]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.etp.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API, 'explore2' for a local DRIAS Explore2 NetCDF (no network).
+# Type: Literal['custom', 'sim2', 'explore2'] | one of: "custom", "sim2", "explore2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# For source = 'explore2', the local DRIAS Explore2 NetCDF to read.
+# Type: path (optional) | Optional
+# path = ""
+
+# Optional CRS fallback for custom gridded NetCDF inputs that do not declare CRS metadata.
+# Type: string (optional) | Optional
+# crs = ""
+
+# Optional nodata fallback for custom gridded NetCDF inputs that do not declare nodata metadata.
+# Type: UnionType[float, int, str, NoneType] | Optional
+# nodata = 0.0
+
+
+# Temperature configuration (air temperature time series).
+
+# [data.temperature]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.temperature.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Wind configuration (wind speed time series).
+
+# [data.wind]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.wind.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Humidity configuration (relative humidity time series).
+
+# [data.humidity]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.humidity.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Radiation configuration (atmospheric and visible radiation).
+
+# [data.radiation]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.radiation.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Radiation components: 'atmospheric' (DLI_Q) and/or 'visible' (SSI_Q).
+# Type: list[Literal] | Default: ["atmospheric", "visible"]
+# components = ["atmospheric", "visible"]
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Soil moisture configuration (soil moisture index).
+
+# [data.soil_moisture]
+# Start of the data window (ISO date, e.g.
+# '2019-01-01').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].start_datetime, or [overview].date_start in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_end.
+# Type: string (optional) | Optional | Examples: "2019-01-01"
+# date_start = ""
+
+# End of the data window (ISO date, e.g.
+# '2025-12-31').
+# Optional: when neither bound is declared, the loader inherits [simulation.time].end_datetime, or [overview].date_end in overview mode.
+# Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs.
+# Must be declared together with date_start.
+# Type: string (optional) | Optional | Examples: "2025-12-31"
+# date_end = ""
+
+
+# At least one data source.
+# [[data.soil_moisture.sources]]
+# Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
+# Type: list (optional) | Optional
+# station_ids = []
+
+# Download this source again instead of reading the cache.
+# Type: bool | Default: false
+# force_refresh = false
+
+# Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources.
+# Type: path (optional) | Optional
+# mask_path = ""
+
+# Optional source unit for custom gridded .nc/.tif inputs.
+# When omitted for NetCDF, units are inferred from variable metadata.
+# Type: string (optional) | Optional
+# source_unit = ""
+
+# Name of the column that holds the dates in your chronicle CSV files.
+# Type: string | Default: "datetime"
+# col_datetime = "datetime"
+
+# Name of the column that holds the values in your chronicle CSV files.
+# Type: string | Default: "value"
+# col_value = "value"
+
+# Data provider: 'custom' for user CSV files, 'sim2' for SIM2 EDR API.
+# Type: Literal['custom', 'sim2'] | one of: "custom", "sim2" | REQUIRED
+# source = "custom"
+
+# Directory containing location file and chronicle CSVs, or a single .nc/.tif file.
+# Type: path (optional) | Optional
+# path = ""
+
+
+# Substratum configuration (aquifer-bottom raster, elevation or thickness).
+
+# Exactly one substratum data source: one bottom surface per model.
+# [[data.substratum.sources]]
+# Discriminator tag selecting the 'custom' substratum provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a custom substratum raster file (GeoTIFF, ASC).
+# Type: path | REQUIRED
+# path = ""
+
+# CRS assumed for a raster that carries none of its own.
+# Defaults to RGF93/Lambert-93 (EPSG:2154); set it to the site CRS for a non-French dataset.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# Soil capacity configuration (RU raster read by the soil reservoir, [flow.sinks_sources.recharge.soil]).
+
+# Exactly one soil capacity raster.
+# It spreads the ru of [flow.sinks_sources.recharge.soil] over classes inside each SAFRAN cell; ru stays the mean capacity of the cells.
+# [[data.soil_capacity.sources]]
+# Discriminator tag selecting the 'custom' soil capacity provider.
+# Type: Literal['custom'] | one of: "custom" | Default: "custom"
+# source = "custom"
+
+# Path to a raster of soil available water capacity in mm (GeoTIFF, ASC).
+# Read only by [flow.sinks_sources.recharge.soil].
+# Type: path | REQUIRED
+# path = ""
+
+# CRS assumed for a raster that carries none of its own.
+# Defaults to RGF93/Lambert-93 (EPSG:2154); set it to the site CRS for a non-French dataset.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+

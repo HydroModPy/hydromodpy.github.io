@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Add a data source" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/add-a-data-source.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A source is one value a user may write in source = for an existing variable: a public API, the user’s own files ( custom), or a generator ( constant, synthetic). For a brand-new variable family, se..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="A source is one value a user may write in source = for an existing variable: a public API, the user’s own files ( custom), or a generator ( constant, synthetic). For a brand-new variable family, se..." />
+
+    <meta property="article:modified_time" content="2026-10-09T02:11:12+02:00" />
+    <title>Add a data source &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/how-to/add-a-data-source';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/add-a-data-source.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Add a figure" href="add-a-figure.html" />
+    <link rel="prev" title="Add a data variable" href="add-a-data-variable.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-09"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Recipes</a><details open="open"><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a block HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/physics.html">Package: physics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/spatial.html">Package: spatial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/simulation.html">Package: simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catalog.html">Package: catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/analysis.html">Package: analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/reporting.html">Package: reporting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/examples.html">Package: examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artefacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/toml-to-solver-walkthrough.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/comparison-workflow.html">Comparison workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/testbed-workflow-architecture.html">Testbed workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-uml-diagrams.html">Boussinesq solver diagrams</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh architecture</a><details><summary aria-label="Show or hide the pages under Mesh architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/catchment-mesh-architecture.html">Catchment mesh architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/structured-grid-architecture.html">Structured grid architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/gmsh-meshing.html">Conformal Gmsh meshing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/mesh-pivot.html">The HydroMesh pivot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration architecture</a><details><summary aria-label="Show or hide the pages under Calibration architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-architecture.html">Calibration architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-guide.html">How the calibration engine runs</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_loading/index.html">Data loading architecture</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../spatial_support/index.html">Spatial support and hydrography</a><details><summary aria-label="Show or hide the pages under Spatial support and hydrography"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/support-selection-guide.html">Choosing a spatial support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/spatial-support-uml-diagrams.html">Spatial support diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-uml-diagrams.html">Hydrographic network diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-simulated-active-inventory.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../field/index.html">Field layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/process-architecture.html">Process architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/flow-boundary-conditions.html">Flow boundary conditions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/release-contract-v1.html">V1 release contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Recipes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Add a data source</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="add-a-data-source">
+<h1>Add a data source<a class="headerlink" href="#add-a-data-source" title="Link to this heading">#</a></h1>
+<p>A <em>source</em> is one value a user may write in <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span></code> for an existing
+variable: a public API, the user’s own files (<code class="docutils literal notranslate"><span class="pre">custom</span></code>), or a generator
+(<code class="docutils literal notranslate"><span class="pre">constant</span></code>, <code class="docutils literal notranslate"><span class="pre">synthetic</span></code>). For a brand-new variable family, see
+<a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a data variable</span></a> first.</p>
+<section id="two-paths-and-which-one-you-are-on">
+<h2>Two paths, and which one you are on<a class="headerlink" href="#two-paths-and-which-one-you-are-on" title="Link to this heading">#</a></h2>
+<p><strong>In this repository</strong>, a provider is a function in the variable’s package
+and one entry in its manager’s <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code> table. That is how every shipped
+variable reaches Hub’Eau, SIM2, the BRGM, the IGN or the SHOM.</p>
+<p><strong>Out of tree</strong>, a provider is a <code class="docutils literal notranslate"><span class="pre">DataSource</span></code> class (the port,
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/port.py</span></code>) published on the
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code> entry-point group. It is nameable in a
+<code class="docutils literal notranslate"><span class="pre">[data.hydrography]</span></code> section when it serves a river network, and for any
+payload kind under the <code class="docutils literal notranslate"><span class="pre">installed</span></code> member of a data request, without a
+patch to this repository.</p>
+</section>
+<section id="an-in-tree-provider">
+<h2>An in-tree provider<a class="headerlink" href="#an-in-tree-provider" title="Link to this heading">#</a></h2>
+<p>Four edits: three inside the variable’s package, and one entry in the source table
+of <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/sources.py</span></code>:</p>
+<ol class="arabic simple">
+<li><p>the provider module, <code class="docutils literal notranslate"><span class="pre">variables/&lt;variable&gt;/apis/&lt;provider&gt;.py</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">common/clients/</span></code> when several variables share it, as SIM2 does);</p></li>
+<li><p>the value in the <code class="docutils literal notranslate"><span class="pre">source</span></code> field of <code class="docutils literal notranslate"><span class="pre">variables/&lt;variable&gt;/config.py</span></code>;</p></li>
+<li><p>the entry in the manager’s <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code> table;</p></li>
+<li><p>an entry (licence, network hosts) in <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/sources.py</span></code>.</p></li>
+</ol>
+<p>A station provider has the form
+<code class="docutils literal notranslate"><span class="pre">fetch(cfg,</span> <span class="pre">*,</span> <span class="pre">bbox,</span> <span class="pre">station_ids,</span> <span class="pre">start,</span> <span class="pre">end,</span> <span class="pre">context)</span></code>, a gridded one
+<code class="docutils literal notranslate"><span class="pre">fetch(cfg,</span> <span class="pre">*,</span> <span class="pre">bbox,</span> <span class="pre">period,</span> <span class="pre">context)</span></code>. <code class="docutils literal notranslate"><span class="pre">cfg</span></code> is the validated source
+section, <code class="docutils literal notranslate"><span class="pre">bbox</span></code> the box the manager resolved for the provider’s CRS, and
+<code class="docutils literal notranslate"><span class="pre">context</span></code> a <code class="docutils literal notranslate"><span class="pre">SourceContext</span></code>: project extent, cache folder, section dates,
+nearest point.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/apis/acme.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.contracts.spatial_field</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldRecord</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FieldRecord</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Wind speed from the Acme grid service, over bbox and period."""</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/config.py</span>
+<span class="n">source</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"custom"</span><span class="p">,</span> <span class="s2">"sim2"</span><span class="p">,</span> <span class="s2">"acme"</span><span class="p">],</span> <span class="n">Profile</span><span class="o">.</span><span class="n">USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Data provider."</span><span class="p">,</span>
+    <span class="n">json_schema_extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"value_docs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"acme"</span><span class="p">:</span> <span class="s2">"Wind speed from the Acme service."</span><span class="p">}},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># hydromodpy/data/variables/wind/manager.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.variables.wind.apis</span><span class="w"> </span><span class="kn">import</span> <span class="n">acme</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WindManager</span><span class="p">(</span><span class="n">BaseFieldManager</span><span class="p">):</span>
+    <span class="n">VARIABLE_NAME</span> <span class="o">=</span> <span class="s2">"wind"</span>
+    <span class="n">INTERNAL_UNIT</span> <span class="o">=</span> <span class="s2">"m/s"</span>
+    <span class="n">SOURCES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sim2"</span><span class="p">:</span> <span class="n">sim2_source</span><span class="p">(</span><span class="s2">"wind"</span><span class="p">),</span> <span class="s2">"acme"</span><span class="p">:</span> <span class="n">acme</span><span class="o">.</span><span class="n">fetch</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The manager owns the cache: <code class="docutils literal notranslate"><span class="pre">BaseFieldManager</span></code> keeps grids as NetCDF,
+<code class="docutils literal notranslate"><span class="pre">BaseVariableManager</span></code> keeps chronicles per station and asks the provider
+only for the missing periods. A provider never opens the catalogue.</p>
+<p>A grid provider is cached only when it can say which variables it returns:
+give the function a <code class="docutils literal notranslate"><span class="pre">variables(cfg)</span></code> attribute, as <code class="docutils literal notranslate"><span class="pre">sim2_source</span></code> does.
+Without it the provider is called on every load and receives
+<code class="docutils literal notranslate"><span class="pre">bbox=None</span></code>, which is right for a local generator and wrong for a download.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">get_json</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/common/api_client.py</span></code>) or <code class="docutils literal notranslate"><span class="pre">HTTPClient</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/io/http_client.py</span></code>) rather than raw <code class="docutils literal notranslate"><span class="pre">requests</span></code>: they
+handle retry, backoff and timeout.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/data/test_the_variable_families_agree.py</span></code> checks that the
+<code class="docutils literal notranslate"><span class="pre">source</span></code> values of each variable (<code class="docutils literal notranslate"><span class="pre">custom</span></code> aside) are exactly the keys of
+its <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>, and that each has an entry in <code class="docutils literal notranslate"><span class="pre">schema/sources.py</span></code>; a
+missing edit fails there with the file to complete. <code class="docutils literal notranslate"><span class="pre">value_docs</span></code> renders
+the explanation of each value on the card of the key, at the next
+documentation build.</p>
+<p>The source section is <strong>one flat model</strong>: every source’s fields sit side by
+side and <code class="docutils literal notranslate"><span class="pre">source</span></code> selects which are read. <code class="docutils literal notranslate"><span class="pre">extra=&quot;forbid&quot;</span></code> refuses an
+unknown key, not a field of another source of the same section, so a field
+name is never reused across two sources of one variable.</p>
+</section>
+<section id="custom-files-and-generators">
+<h2>Custom files and generators<a class="headerlink" href="#custom-files-and-generators" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code> never appears in <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code>: the base class loads the
+user’s files with <code class="docutils literal notranslate"><span class="pre">load_custom</span></code>, from the manager’s <code class="docutils literal notranslate"><span class="pre">VARIABLE_NAME</span></code> and
+<code class="docutils literal notranslate"><span class="pre">INTERNAL_UNIT</span></code>. A variable whose files need real work overrides it, or
+keeps a <code class="docutils literal notranslate"><span class="pre">custom.py</span></code> beside its manager. A generator is a module named after
+its value (<code class="docutils literal notranslate"><span class="pre">recharge/synthetic.py</span></code>, <code class="docutils literal notranslate"><span class="pre">oceanic/constant.py</span></code>) with the same
+signature as a provider.</p>
+</section>
+<section id="a-plugin-source">
+<h2>A plugin source<a class="headerlink" href="#a-plugin-source" title="Link to this heading">#</a></h2>
+<p>Eight members, seven of them class-level declarations read <em>before</em> any fetch
+runs, and one <code class="docutils literal notranslate"><span class="pre">fetch</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># mypackage/acme_radar.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.data.source.port</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FetchRequest</span><span class="p">,</span>
+    <span class="n">FetchResult</span><span class="p">,</span>
+    <span class="n">PayloadKind</span><span class="p">,</span>
+    <span class="n">PeriodNeed</span><span class="p">,</span>
+    <span class="n">Selector</span><span class="p">,</span>
+    <span class="n">extent_for</span><span class="p">,</span>
+    <span class="n">require_period</span><span class="p">,</span>
+    <span class="n">require_selectors</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AcmeRadarSource</span><span class="p">:</span>
+    <span class="n">source_id</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"acme-radar"</span>
+    <span class="n">payload_kind</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">PayloadKind</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"fields"</span>
+    <span class="n">extent_crs</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"EPSG:3035"</span>
+    <span class="n">selectors</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Selector</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"extent"</span><span class="p">,)</span>
+    <span class="n">period_need</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">PeriodNeed</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"required"</span>
+    <span class="n">hosts</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"radar.acme.example"</span><span class="p">,)</span>
+    <span class="n">writes_out_dir</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sweep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"long"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sweep</span> <span class="o">=</span> <span class="n">sweep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"radar_rainfall"</span><span class="p">,)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">FetchRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
+        <span class="n">require_selectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">require_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="n">extent_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>  <span class="c1"># converted into extent_crs</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">variables</span></code> belongs to the instance, because a source configured one way
+may serve fewer variables than the class can. Everything else is a
+<code class="docutils literal notranslate"><span class="pre">ClassVar</span></code>, so the registry refuses a non-conforming class when it is
+registered, not mid-fetch.</p>
+<p>A source must <strong>not</strong> know the DuckDB catalogue, the project workspace, a
+lock or a cache. It receives an <code class="docutils literal notranslate"><span class="pre">Extent</span></code> carrying its own CRS, an optional
+<code class="docutils literal notranslate"><span class="pre">Period</span></code> and an <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> scratch it owns alone.</p>
+<p>Publish it from your own distribution:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># your package's pyproject.toml</span>
+<span class="k">[project.entry-points.</span><span class="s2">"hydromodpy.data.source"</span><span class="k">]</span>
+<span class="n">acme-radar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mypackage.acme_radar:AcmeRadarSource"</span>
+</pre></div>
+</div>
+<p>The entry-point name must equal the <code class="docutils literal notranslate"><span class="pre">source_id</span></code> the class declares: a
+request writes the name and a result is stamped with the <code class="docutils literal notranslate"><span class="pre">source_id</span></code>. A
+name this build already ships is refused. A plugin that fails any check is
+skipped with a warning naming what is wrong, never raised: one broken plugin
+must not take down a host that asked for a different source.</p>
+</section>
+<section id="name-it-from-a-document">
+<h2>Name it from a document<a class="headerlink" href="#name-it-from-a-document" title="Link to this heading">#</a></h2>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># not checked: acme-linework is the placeholder source of this recipe</span>
+<span class="c1"># A project TOML. The section names a source whose payload kind is</span>
+<span class="c1"># "features"; a source of another kind is refused by the document.</span>
+<span class="k">[[data.hydrography.sources]]</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"acme-linework"</span>
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"data-request"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"inputs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"installed"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acme-radar"</span><span class="p">,</span><span class="w"> </span><span class="nt">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"sweep"</span><span class="p">:</span><span class="w"> </span><span class="s2">"short"</span><span class="p">}}],</span>
+<span class="w">    </span><span class="nt">"extent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"bbox"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">-1.85</span><span class="p">,</span><span class="w"> </span><span class="mf">48.05</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.55</span><span class="p">,</span><span class="w"> </span><span class="mf">48.25</span><span class="p">],</span><span class="w"> </span><span class="nt">"crs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EPSG:4326"</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-01"</span><span class="p">,</span><span class="w"> </span><span class="nt">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-31"</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> is handed to the constructor as keyword arguments and bound
+against its signature before anything runs, so an argument the source cannot
+take is refused by name. An installed source does not appear in the process
+description, which ships frozen in the wheel, and the hosts it reaches are
+not in <code class="docutils literal notranslate"><span class="pre">hmp:invocation.network</span></code>; <code class="docutils literal notranslate"><span class="pre">outputs/request.json</span></code> names the source
+of each file the run wrote.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">[[data.hydrography.sources]]</span></code> section is flat and shared by every source
+it can name, so the binder hands a plugin <strong>the section field its constructor
+names, and nothing else</strong>. A name the section does not carry keeps your
+default; a positional-only parameter without a default is refused.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/contract/test_data_source_contract.py</span></code> holds every shipped source to
+the port: the payload kind it claims, the CRS the provider is really asked
+in, whether a period is really required, whether <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> is left alone.</p>
+</section>
+<section id="tests-to-add">
+<h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>the config: a value the section refuses, a field that belongs to another
+source;</p></li>
+<li><p>the provider on a recorded answer, so the tier runs offline;</p></li>
+<li><p>for a plugin, the contract suite parametrised on your class, in your own
+distribution.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../packages/data.html"><span class="doc">Package: data</span></a> for the variable inventory and the manager template.</p></li>
+<li><p><a class="reference internal" href="add-a-data-variable.html"><span class="doc">Add a data variable</span></a> for a new variable family.</p></li>
+<li><p><a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a config field</span></a> for a new field on an existing source.</p></li>
+<li><p><a class="reference internal" href="../../../reference/data-sources.html"><span class="doc">Data sources</span></a> for the generated catalog of providers.</p></li>
+<li><p><a class="reference internal" href="add-a-process.html"><span class="doc">Add a process</span></a> for exposing work as a capability an orchestrator runs,
+which is what <code class="docutils literal notranslate"><span class="pre">data-request</span></code> is.</p></li>
+</ul>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="add-a-data-variable.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Add a data variable</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="add-a-figure.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Add a figure</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-paths-and-which-one-you-are-on">Two paths, and which one you are on</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-in-tree-provider">An in-tree provider</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-files-and-generators">Custom files and generators</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-plugin-source">A plugin source</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-it-from-a-document">Name it from a document</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-09.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

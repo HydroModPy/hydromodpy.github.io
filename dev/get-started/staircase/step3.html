@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Step 3: the same data, from the APIs" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/get-started/staircase/step3.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Task, Fetch the river network and the gauge from the BD Topage and Hub’Eau APIs instead of local files.,, Time, About 40 s for the run once the data are cached. The first launch adds the downloads...." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/hydrographic_network_permanence.webp" />
+<meta property="og:image:alt" content="Two maps of the BD Topage network over the catchment. On the left every mapped reach, on the right only the reaches that flow all year." />
+<meta name="description" content="Task, Fetch the river network and the gauge from the BD Topage and Hub’Eau APIs instead of local files.,, Time, About 40 s for the run once the data are cached. The first launch adds the downloads...." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>Step 3: the same data, from the APIs &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../_static/hmp.js?v=d773d96e"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'get-started/staircase/step3';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/get-started/staircase/step3.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Step 4: the transient run" href="step4.html" />
+    <link rel="prev" title="Step 2: the mapped network and the gauge" href="step2.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">The staircase</a><details open="open"><summary aria-label="Show or hide the pages under The staircase"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="step1.html">Step 1: minimal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="step2.html">Step 2: local data</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Step 3: API data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="step4.html">Step 4: transient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="step5.html">Step 5: export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="step6.html">Step 6: soil reservoir</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="next.html">After the staircase</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Get started</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">The staircase</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Step 3: the same data, from the APIs</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Get started" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="step-3-the-same-data-from-the-apis">
+<h1>Step 3: the same data, from the APIs<a class="headerlink" href="#step-3-the-same-data-from-the-apis" title="Link to this heading">#</a></h1>
+<div class="hmp-task docutils container">
+<dl class="simple myst">
+<dt>Task</dt><dd><p>Fetch the river network and the gauge from the BD Topage and Hub’Eau APIs instead of local files.</p>
+</dd>
+<dt>Time</dt><dd><p>About 40 s for the run once the data are cached. The first launch adds the downloads.</p>
+</dd>
+<dt>Needs</dt><dd><p><strong>Network access</strong> on the first run, no key. The example files (<a class="reference internal" href="index.html"><span class="doc">The staircase</span></a>).</p>
+</dd>
+<dt>Gives</dt><dd><p>Five figures and six files, with the permanent reaches of the network as a GeoPackage of their own.</p>
+</dd>
+</dl>
+</div>
+<p>Step 3 is step 2 with other sources. The network comes from BD Topage and the gauge from
+Hub’Eau, two French national APIs, instead of files on disk. Nothing else changes in the
+model. The answers are cached after the first launch, so a second run needs no network.</p>
+<a class="only-light reference internal image-reference" href="../../_images/hydrographic_network_permanence.webp"><img alt="Two maps of the BD Topage network over the catchment. On the left every mapped reach, on the right only the reaches that flow all year." class="only-light align-center" src="../../_images/hydrographic_network_permanence.webp" style="width: 80%;" width="1187" height="887" />
+</a>
+<a class="only-dark reference internal image-reference" href="../../_images/hydrographic_network_permanence-dark.webp"><img alt="Two maps of the BD Topage network over the catchment. On the left every mapped reach, on the right only the reaches that flow all year." class="only-dark align-center" src="../../_images/hydrographic_network_permanence-dark.webp" style="width: 80%;" width="1187" height="887" loading="lazy" decoding="async" />
+</a>
+<section id="the-file">
+<h2>The file<a class="headerlink" href="#the-file" title="Link to this heading">#</a></h2>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+The file</label><div class="sd-tab-content docutils">
+<div class="hmp-toml-wrap"><div class="hmp-toml-cap"><code>step3_api_data.toml</code> inherits <code>step2_local_data.toml</code> · <span class="mk-add">+</span> new · <span class="mk-chg">~</span> changed · <span class="hmp-muted">keys link to their card</span></div><pre class="hmp-toml"><span class="ln">1</span><span class="mk"></span><span class="c"># Step 3: step 2 with the network and the gauge fetched from French national</span>
+<span class="ln">2</span><span class="mk"></span><span class="c"># APIs, BD Topage and Hub&#x27;Eau, instead of read off disk. Only the sources</span>
+<span class="ln">3</span><span class="mk"></span><span class="c"># change. Needs network access, no key.</span>
+<span class="ln">4</span><span class="mk"></span><span class="c">#</span>
+<span class="ln">5</span><span class="mk"></span><span class="c">#   hmp run step3_api_data.toml</span>
+<span class="ln">6</span><span class="mk"></span><span class="c"></span>
+<span class="ln">7</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/grammar.html#base-config" title="Inherit every table of another file">base_config</a></span> = <span class="s">&quot;step2_local_data.toml&quot;</span><span class="c"></span>
+<span class="ln">8</span><span class="mk"></span><span class="c"></span>
+<span class="ln">9</span><span class="mk mk-none"></span><span class="h">[<a href="../../reference/parameters/simulation.html#p-simulation" title="Optional simulation orchestration block loaded from [simulation] and [[simulation.process]].">simulation</a>]</span><span class="c"></span>
+<span class="ln">10</span><span class="mk mk-chg">~</span><span class="k"><a href="../../reference/parameters/simulation.html#p-simulation-name" title="Human-readable simulation name and the run&#x27;s identity.">name</a></span> = <span class="s">&quot;nancon_step3_api&quot;</span><span class="c"></span>
+<span class="ln">11</span><span class="mk"></span><span class="c"></span>
+<span class="ln">12</span><span class="mk"></span><span class="c"># `sources__delete` drops step 2&#x27;s list, so no local key leaks into the new one.</span>
+<span class="ln">13</span><span class="mk mk-none"></span><span class="h">[<a href="../../reference/parameters/data/hydrography.html#p-data-hydrography" title="Hydrography configuration (stream network vector data).">data.hydrography</a>]</span><span class="c"></span>
+<span class="ln">14</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/data/hydrography.html#p-data-hydrography-sources" title="At least one hydrography data source.">sources__delete</a></span> = <span class="v">true</span><span class="c"></span>
+<span class="ln">15</span><span class="mk"></span><span class="c"></span>
+<span class="ln">16</span><span class="mk"></span><span class="c"># BD Topage: every reach with its permanence, the permanent ones kept apart.</span>
+<span class="ln">17</span><span class="mk"></span><span class="c"># The download box comes from the delineated watershed.</span>
+<span class="ln">18</span><span class="mk mk-none"></span><span class="h">[[<a href="../../reference/parameters/data/hydrography.html#p-data-hydrography-sources" title="At least one hydrography data source.">data.hydrography.sources</a>]]</span><span class="c"></span>
+<span class="ln">19</span><span class="mk mk-none"></span><span class="k"><a href="../../reference/parameters/data/hydrography.html#p-data-hydrography-sources-source" title="Data provider.">source</a></span> = <span class="s">&quot;bdtopage&quot;</span><span class="c"></span>
+<span class="ln">20</span><span class="mk"></span><span class="c"></span>
+<span class="ln">21</span><span class="mk"></span><span class="c"># An API needs a period; the one step 4 simulates.</span>
+<span class="ln">22</span><span class="mk mk-none"></span><span class="h">[<a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry" title="Hydrometry configuration (discharge time-series).">data.hydrometry</a>]</span><span class="c"></span>
+<span class="ln">23</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources" title="At least one data source.">sources__delete</a></span> = <span class="v">true</span><span class="c"></span>
+<span class="ln">24</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-date_start" title="Start of the data window (ISO date, e.g. &#x27;2019-01-01&#x27;).">date_start</a></span> = <span class="s">&quot;2000-01-01&quot;</span><span class="c"></span>
+<span class="ln">25</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-date_end" title="End of the data window (ISO date, e.g. &#x27;2025-12-31&#x27;).">date_end</a></span> = <span class="s">&quot;2002-12-31&quot;</span><span class="c"></span>
+<span class="ln">26</span><span class="mk"></span><span class="c"></span>
+<span class="ln">27</span><span class="mk"></span><span class="c"># Hub&#x27;Eau daily mean discharge of &quot;Le Nançon à Lécousse - Pont aux Anes&quot;.</span>
+<span class="ln">28</span><span class="mk mk-none"></span><span class="h">[[<a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources" title="At least one data source.">data.hydrometry.sources</a>]]</span><span class="c"></span>
+<span class="ln">29</span><span class="mk mk-none"></span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources-source" title="Data provider: &#x27;custom&#x27; for user files, &#x27;hubeau&#x27; for Hub&#x27;Eau API.">source</a></span> = <span class="s">&quot;hubeau&quot;</span><span class="c"></span>
+<span class="ln">30</span><span class="mk mk-none"></span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources-product" title="Hub&#x27;Eau variable code (e.g. &#x27;QmnJ&#x27;, &#x27;QmM&#x27;, &#x27;HmnJ&#x27;).">product</a></span> = <span class="s">&quot;QmnJ&quot;</span><span class="c"></span>
+<span class="ln">31</span><span class="mk mk-none"></span><span class="k"><a href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources-station_ids" title="Explicit station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub&#x27;Eau.">station_ids</a></span> = <span class="v">[&quot;J001401001&quot;]</span><span class="c"></span>
+<span class="ln">32</span><span class="mk"></span><span class="c"></span>
+<span class="ln">33</span><span class="mk"></span><span class="c"># The BD Topage network, all reaches then the permanent class, then the</span>
+<span class="ln">34</span><span class="mk"></span><span class="c"># simulated seepage against all reaches.</span>
+<span class="ln">35</span><span class="mk mk-none"></span><span class="h">[<a href="../../reference/parameters/display.html#p-display" title="The figures a run draws, loaded from the [display] section.">display</a>]</span><span class="c"></span>
+<span class="ln">36</span><span class="mk mk-chg">~</span><span class="k"><a href="../../reference/parameters/display.html#p-display-figures" title="Names of registered figures to auto-render at the end of `hmp run` (and consumed by `hmp viz gallery`).">figures</a></span> = <span class="v">[</span><span class="c"></span>
+<span class="ln">37</span><span class="mk"></span>    &quot;watershed_id_card&quot;,
+<span class="ln">38</span><span class="mk"></span>    &quot;hydrographic_network_reference&quot;,
+<span class="ln">39</span><span class="mk"></span>    &quot;hydrographic_network_permanence&quot;,
+<span class="ln">40</span><span class="mk"></span>    &quot;seepage_network_confusion_map&quot;,
+<span class="ln">41</span><span class="mk"></span>    &quot;downslope_distance_map&quot;,
+<span class="ln">42</span><span class="mk"></span>]
+<span class="ln">43</span><span class="mk"></span><span class="c"></span>
+<span class="ln">44</span><span class="mk"></span><span class="c"># Step 2&#x27;s exports, where the network is now all BD Topage reaches, plus the</span>
+<span class="ln">45</span><span class="mk"></span><span class="c"># permanent reaches as a GeoPackage of their own.</span>
+<span class="ln">46</span><span class="mk mk-add">+</span><span class="h">[[<a href="../../reference/parameters/export.html#p-export" title="The exports written at the end of a run, one [[export]] block per request, in the order of the file.">export__append</a>]]</span><span class="c"></span>
+<span class="ln">47</span><span class="mk mk-add">+</span><span class="k"><a href="../../reference/parameters/export.html#p-export-variables" title="What to export: a name, a list of names, or &quot;all&quot; for everything the run holds.">variables</a></span> = <span class="s">&quot;hydrographic_network_reference_permanent&quot;</span><span class="c"></span></pre></div></div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+Changed vs step 2</label><div class="sd-tab-content docutils">
+<p>The resolved file of step 3 against the resolved file of step 2.</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">--- step2_local_data</span>
+<span class="gi">+++ step3_api_data</span>
+<span class="gu">@@ -7,3 +7,3 @@</span>
+<span class="w"> </span>[simulation]
+<span class="gd">-name = "nancon_step2_local"</span>
+<span class="gi">+name = "nancon_step3_api"</span>
+<span class="w"> </span>
+<span class="gu">@@ -62,2 +62,3 @@</span>
+<span class="w"> </span>    "hydrographic_network_reference",
+<span class="gi">+    "hydrographic_network_permanence",</span>
+<span class="w"> </span>    "seepage_network_confusion_map",
+<span class="gu">@@ -85,2 +86,5 @@</span>
+<span class="w"> </span>
+<span class="gi">+[[export]]</span>
+<span class="gi">+variables = "hydrographic_network_reference_permanent"</span>
+<span class="gi">+</span>
+<span class="w"> </span>[data]
+<span class="gu">@@ -93,10 +97,14 @@</span>
+<span class="w"> </span>sources = [
+<span class="gd">-    { source = "custom", path = "nancon_stream_network.gpkg" },</span>
+<span class="gi">+    { source = "bdtopage" },</span>
+<span class="w"> </span>]
+<span class="w"> </span>
+<span class="gi">+[data.hydrometry]</span>
+<span class="gi">+date_start = "2000-01-01"</span>
+<span class="gi">+date_end = "2002-12-31"</span>
+<span class="gi">+</span>
+<span class="w"> </span>[[data.hydrometry.sources]]
+<span class="gd">-source = "custom"</span>
+<span class="gd">-path = "hydrometry"</span>
+<span class="gi">+source = "hubeau"</span>
+<span class="gi">+product = "QmnJ"</span>
+<span class="w"> </span>station_ids = [
+<span class="gd">-    "NANCON",</span>
+<span class="gi">+    "J001401001",</span>
+<span class="w"> </span>]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="run-it">
+<h2>Run it<a class="headerlink" href="#run-it" title="Link to this heading">#</a></h2>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="api" data-sync-id="cli" for="sd-tab-item-2">
+Command line</label><div class="sd-tab-content docutils">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>run<span class="w"> </span>step3_api_data.toml
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" data-sync-group="api" data-sync-id="python" for="sd-tab-item-3">
+Python</label><div class="sd-tab-content docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hydromodpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">hmp</span>
+
+<span class="n">run</span> <span class="o">=</span> <span class="n">hmp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">"step3_api_data.toml"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The first launch downloads from BD Topage and Hub’Eau. The later ones read the cache.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sources__delete</span> <span class="pre">=</span> <span class="pre">true</span></code> empties the inherited list of sources before the new one is
+written, so no local key leaks into it. An API also needs a period, which the file gives:
+the three years that step 4 simulates.</p>
+</section>
+<section id="what-you-get">
+<h2>What you get<a class="headerlink" href="#what-you-get" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Figure</p></th>
+<th class="head"><p>What it shows</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">watershed_id_card</span></code></p></td>
+<td><p>As in step 1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_reference</span></code></p></td>
+<td><p>Every BD Topage reach</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydrographic_network_permanence</span></code></p></td>
+<td><p>Two maps of the network: all the mapped reaches, and only those that flow all year</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seepage_network_confusion_map</span></code></p></td>
+<td><p>As in step 2, against every reach of BD Topage</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">downslope_distance_map</span></code></p></td>
+<td><p>As in step 2</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The exports are step 2’s four, plus the permanent reaches as a GeoPackage of their own:
+six files in <code class="docutils literal notranslate"><span class="pre">share/nancon_step3_api/</span></code>.</p>
+</section>
+<section id="key-fields">
+<h2>Key fields<a class="headerlink" href="#key-fields" title="Link to this heading">#</a></h2>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/data/hydrography.html#p-data-hydrography-sources">[[data.hydrography.sources]]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req-ex" data-path="data.hydrography.sources.source"><summary><span class="tl-code"><span class="k">source</span><span class="eq"> = </span><span class="v">&quot;custom&quot;</span></span><span class="tl-note"><span class="tl-sum">Data provider.</span> <span class="tc tc-req">required</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">data.hydrography.sources.source</code> <button class="hmp-copy" type="button" data-copy="data.hydrography.sources.source" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-data-hydrography-sources-source" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Any source id this installation resolves and that serves river linework is accepted, so a third-party source registered on the &#x27;hydromodpy.data.source&#x27; entry-point group is named here by its id.</p></dd><dt>Accepted</dt><dd>string</dd><dt>Example</dt><dd><code>&quot;custom&quot;</code></dd></dl></div></details></div><pre class="tb-src" hidden>[[data.hydrography.sources]]
+source = &quot;custom&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry-sources">[[data.hydrometry.sources]]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="data.hydrometry.sources.source"><summary><span class="tl-code"><span class="cm"># </span><span class="k">source</span><span class="eq"> = </span><span class="v">&quot;hubeau&quot;</span></span><span class="tl-note"><span class="tl-sum">Data provider: &#x27;custom&#x27; for user files, &#x27;hubeau&#x27; for Hub&#x27;Eau API.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">data.hydrometry.sources.source</code> <button class="hmp-copy" type="button" data-copy="data.hydrometry.sources.source" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-data-hydrometry-sources-source" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;custom&quot;</code></li><li><code>&quot;hubeau&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;custom&quot; | &quot;hubeau&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="data.hydrometry.sources.product"><summary><span class="tl-code"><span class="cm"># </span><span class="k">product</span><span class="eq"> = </span><span class="v">&quot;QmnJ&quot;</span></span><span class="tl-note"><span class="tl-sum">Hub&#x27;Eau variable code (e.g. &#x27;QmnJ&#x27;, &#x27;QmM&#x27;, &#x27;HmnJ&#x27;).</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">data.hydrometry.sources.product</code> <button class="hmp-copy" type="button" data-copy="data.hydrometry.sources.product" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-data-hydrometry-sources-product" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>string</dd></dl></div></details></div><pre class="tb-src" hidden>[[data.hydrometry.sources]]
+# source = &quot;hubeau&quot;
+# product = &quot;QmnJ&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/data/hydrometry.html#p-data-hydrometry">[data.hydrometry]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset-ex tl-cmt" data-path="data.hydrometry.date_start"><summary><span class="tl-code"><span class="cm"># </span><span class="k">date_start</span><span class="eq"> = </span><span class="v">&quot;2019-01-01&quot;</span></span><span class="tl-note"><span class="tl-sum">Start of the data window (ISO date, e.g. &#x27;2019-01-01&#x27;).</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">data.hydrometry.date_start</code> <button class="hmp-copy" type="button" data-copy="data.hydrometry.date_start" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-data-hydrometry-date_start" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Optional: when neither bound is declared, the loader inherits [<a class="hmp-toml-ref hmp-auto" href="../../reference/parameters/simulation.html#p-simulation-time">simulation.time</a>].start_datetime, or [overview].date_start in overview mode. Declare it only to fetch a window WIDER than the simulation, typically a cache shared by several runs. Must be declared together with date_end.</p></dd><dt>Accepted</dt><dd>string</dd><dt>Example</dt><dd><code>&quot;2019-01-01&quot;</code></dd></dl></div></details></div><pre class="tb-src" hidden>[data.hydrometry]
+# date_start = &quot;2019-01-01&quot;</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div></section>
+<section id="what-can-go-wrong">
+<h2>What can go wrong<a class="headerlink" href="#what-can-go-wrong" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">step</span> <span class="pre">'load_data'</span> <span class="pre">failed:</span> <span class="pre">NetworkError:</span> <span class="pre">Failed</span> <span class="pre">to</span> <span class="pre">load</span> <span class="pre">data</span> <span class="pre">manager</span> <span class="pre">'hydrography':</span> <span class="pre">HTTP</span> <span class="pre">GET</span> <span class="pre">https://services.sandre.eaufrance.fr/geo/sandre</span> <span class="pre">failed</span> <span class="pre">after</span> <span class="pre">4</span> <span class="pre">retries</span></code>, exit code 16 (after four <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> lines with the same URL)</p></td>
+<td><p>The first launch has to reach BD Topage and the machine has no route to it, or the service is down. The run stops: a source the file declares is never skipped.</p></td>
+<td><p>Run again when the network is back. Behind a proxy, set <code class="docutils literal notranslate"><span class="pre">HTTPS_PROXY</span></code>. To run offline, run step 2, which reads local files, or run step 3 once online: the cache then holds its data, and <a class="reference internal" href="../../reference/cli/run.html"><span class="doc">hmp run –frozen</span></a> refuses any new download.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The exit codes are listed on <a class="reference internal" href="../../reference/cli/exit-codes.html"><span class="doc">Exit codes</span></a>.</p>
+<p>Next: <a class="reference internal" href="step4.html"><span class="doc">Step 4: the transient run</span></a>. It repeats the local data of <a class="reference internal" href="step2.html"><span class="doc">Step 2: the mapped network and the gauge</span></a>.</p>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="step2.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Step 2: the mapped network and the gauge</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="step4.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Step 4: the transient run</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-file">The file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-it">Run it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-you-get">What you get</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-fields">Key fields</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-can-go-wrong">What can go wrong</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

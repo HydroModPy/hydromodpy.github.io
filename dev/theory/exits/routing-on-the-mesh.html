@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Routing on the mesh: the descent D" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/exits/routing-on-the-mesh.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Where the water of a drain goes next is a question of routing. A mesh top has pits that a DEM routed on its own grid never had, and a pit holds the water it receives. Routing needs a surface on whi..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/exits_pit.png" />
+<meta property="og:image:alt" content="Two 3 by 3 grids. On the left, the tops: 5 m everywhere except 3 m in the centre and 4 m on the south side. On the right, the filled copy, where the centre holds 4.001 m, and arrows from each cell to its receiver." />
+<meta name="description" content="Where the water of a drain goes next is a question of routing. A mesh top has pits that a DEM routed on its own grid never had, and a pit holds the water it receives. Routing needs a surface on whi..." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>Routing on the mesh: the descent D &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../_static/hmp.js?v=d773d96e"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/exits/routing-on-the-mesh';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/exits/routing-on-the-mesh.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Drains and evapotranspiration at the top of the model" href="drains-and-et.html" />
+    <link rel="prev" title="Fixed heads: the sea, the rivers and the sides" href="head-boundaries.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../exits.html">How water leaves the aquifer</a><details open="open"><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validation.html">Validation</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../exits.html" class="nav-link">How water leaves the aquifer</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Routing on the mesh: the descent D</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="routing-on-the-mesh-the-descent-d">
+<h1>Routing on the mesh: the descent D<a class="headerlink" href="#routing-on-the-mesh-the-descent-d" title="Link to this heading">#</a></h1>
+<p>Where the water of a drain goes next is a question of routing. A mesh top has pits
+that a DEM routed on its own grid never had, and a pit holds the water it receives.
+Routing needs a surface on which every cell has a way down. The model top is not
+that surface, and raising it would change the ground the solver sees. The descent
+<span class="math notranslate nohighlight">\(D\)</span> solves this on a copy: the copy is filled, the receivers of every cell are read
+on it, and it never goes back to the solver. The drain elevations, the streambeds
+and the reach tops keep reading <span class="math notranslate nohighlight">\(z_\mathrm{top}\)</span>.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p class="sd-card-text">Symbol</p></th>
+<th class="head"><p class="sd-card-text">Meaning</p></th>
+<th class="head"><p class="sd-card-text">Unit</p></th>
+<th class="head"><p class="sd-card-text">Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(z_\mathrm{top}\)</span></p></td>
+<td><p class="sd-card-text">model top, the land surface</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../../reference/parameters/data/dem.html#p-data-dem" title="DEM configuration used when 'dem' is listed in data.types."><code class="docutils literal notranslate"><span class="pre">data.dem</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n, m\)</span></p></td>
+<td><p class="sd-card-text">cell indices; <span class="math notranslate nohighlight">\(\mathcal{N}(n)\)</span> is the set of cells that share a face with <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">the grid, <a class="reference internal" href="../mesh.html"><span class="doc">The mesh</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\tilde z\)</span></p></td>
+<td><p class="sd-card-text">the filled copy of the model top that <span class="math notranslate nohighlight">\(D\)</span> descends; never given to the solver</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\epsilon\)</span></p></td>
+<td><p class="sd-card-text">rise per step of the priority flood inside a filled depression</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">1 mm, a constant of the code</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\eta\)</span></p></td>
+<td><p class="sd-card-text">tolerance of the flood: a cell within it of the flood level is raised too</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived from the relief</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(r(n)\)</span></p></td>
+<td><p class="sd-card-text">receiver of cell <span class="math notranslate nohighlight">\(n\)</span>, the one cell it drains to; <span class="math notranslate nohighlight">\(-1\)</span> when it has none</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\mathcal{N}_D(n)\)</span></p></td>
+<td><p class="sd-card-text">neighbours a cell may drain to: the cells sharing a node on a quad mesh, a face on any other</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-diagonal_neighbors" title="Descend over shared nodes, the eight D8 neighbours of a quad mesh."><code class="docutils literal notranslate"><span class="pre">diagonal_neighbors</span></code></a> for the criterion</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(D\)</span></p></td>
+<td><p class="sd-card-text">the descent of the model top</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">built with every MODFLOW grid</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details><section id="the-flood">
+<span id="routing-flood"></span><h2>The flood<a class="headerlink" href="#the-flood" title="Link to this heading">#</a></h2>
+<p><span class="math notranslate nohighlight">\(D\)</span> is the result of a priority flood <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id33" title="Richard Barnes, Clarence Lehman, and David Mulla. Priority-flood: an optimal depression-filling and watershed-labeling algorithm for digital elevation models. Computers and Geosciences, 62:117–127, 2014. doi:10.1016/j.cageo.2013.04.024.">Barnes <em>et al.</em>, 2014</a>]</span>. Its seeds
+are the cells of the rim of the routable domain and the fixed-head cells
+(<a class="reference internal" href="head-boundaries.html"><span class="doc">Fixed heads: the sea, the rivers and the sides</span></a>). The flood visits the cells in order of their filled
+level, from the lowest seed up. A cell <span class="math notranslate nohighlight">\(m\)</span> reached from a cell <span class="math notranslate nohighlight">\(n\)</span> of filled level
+<span class="math notranslate nohighlight">\(\tilde z_n\)</span> takes</p>
+<div class="math notranslate nohighlight" id="equation-eq-flood">
+<span class="eqno">(32)<a class="headerlink" href="#equation-eq-flood" title="Link to this equation">#</a></span>\[\begin{split}
+\tilde z_m =
+\begin{cases}
+\tilde z_n + \epsilon_m &amp; \text{if } z_{\mathrm{top},m} \leq \tilde z_n + \eta,\\
+z_{\mathrm{top},m} &amp; \text{otherwise.}
+\end{cases}
+\end{split}\]</div>
+<p>The step <span class="math notranslate nohighlight">\(\epsilon_m\)</span> is 1 mm. When the run has a channel network (below), the
+step is 1 mm on the channel cells and 2 mm elsewhere, so that a filled flat
+climbs faster away from the channel than along it and its steepest descent heads
+into the channel.</p>
+<p>The tolerance <span class="math notranslate nohighlight">\(\eta\)</span> is twice the drop under which the receiver graph sees no
+descent. With <span class="math notranslate nohighlight">\(\Delta z\)</span> the range of the top over the routable cells, in metres,</p>
+<div class="math notranslate nohighlight" id="equation-eq-flood-tolerance">
+<span class="eqno">(33)<a class="headerlink" href="#equation-eq-flood-tolerance" title="Link to this equation">#</a></span>\[
+\eta = 2 \max\bigl(10^{-9},\ 10^{-9} \max(\Delta z,\ 1)\bigr)\ \mathrm{m},
+\]</div>
+<p>that is <span class="math notranslate nohighlight">\(2 \times 10^{-9}\)</span> m when the relief is under a metre, and
+<span class="math notranslate nohighlight">\(2 \times 10^{-9}\)</span> times the relief above. A cell within <span class="math notranslate nohighlight">\(\eta\)</span> of the flood
+level is raised too, so that no link of the receiver graph drops by less than the
+tolerance of that graph.</p>
+<p>A lake is crossed, never used as a seed. Its cells keep their top and are
+flooded to their spill level like any depression, so the lake drains through its
+outlet and the cells below a dam keep draining downstream. The role of a sink
+belongs to the walks that read <span class="math notranslate nohighlight">\(D\)</span>: they stop at the first lake cell.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">build_descent</span></code>.</p>
+</section>
+<section id="the-receivers">
+<span id="routing-receivers"></span><h2>The receivers<a class="headerlink" href="#the-receivers" title="Link to this heading">#</a></h2>
+<p>On the filled copy, the receiver <span class="math notranslate nohighlight">\(r(n)\)</span> of a cell is its steepest-descent
+neighbour <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../bibliography.html#id47" title="J. F. O'Callaghan and D. M. Mark. The extraction of drainage networks from digital elevation data. Computer Vision, Graphics, and Image Processing, 28(3):323–344, 1984. doi:10.1016/S0734-189X(84)80011-0.">O'Callaghan and Mark, 1984</a>]</span>. Only the neighbours lower by more than the
+tolerance <span class="math notranslate nohighlight">\(\eta_r = 10^{-9} \max(\Delta\tilde z,\ 1)\)</span> m count, where
+<span class="math notranslate nohighlight">\(\Delta\tilde z\)</span> is the range of the filled copy:</p>
+<div class="math notranslate nohighlight" id="equation-eq-receiver">
+<span class="eqno">(34)<a class="headerlink" href="#equation-eq-receiver" title="Link to this equation">#</a></span>\[
+r(n) = \underset{m \in \mathcal{N}_D(n),\ \tilde z_n - \tilde z_m &gt; \eta_r}{\arg\max}\
+\frac{\tilde z_n - \tilde z_m}{\lVert x_n - x_m \rVert},
+\qquad r(n) = -1 \text{ if there is none.}
+\]</div>
+<p>The filled range is a little wider than the range of the top, and the factor 2 of
+<a class="reference internal" href="#equation-eq-flood-tolerance">(33)</a> covers that difference. The distance is between cell
+centres, so a diagonal step on a square grid is <span class="math notranslate nohighlight">\(\sqrt 2\)</span> cells long and wins only
+when it is steeper.</p>
+<p>The neighbours <span class="math notranslate nohighlight">\(\mathcal{N}_D(n)\)</span> are the cells that share a node with <span class="math notranslate nohighlight">\(n\)</span> on a
+quad mesh (diagonals included, as in the D8 descent) and the cells that share a
+face on any other mesh. A seed keeps its steepest descent too, so that an
+accumulation passes through a fixed-head cell. The walks that must end where water
+leaves the model read the receiver with <span class="math notranslate nohighlight">\(-1\)</span> on the fixed-head cells.</p>
+<p>Every link of <span class="math notranslate nohighlight">\(D\)</span> descends, so the receiver chains never cycle and every routable
+cell reaches a seed. The build refuses a <span class="math notranslate nohighlight">\(D\)</span> where a cell has no way down.</p>
+</section>
+<section id="a-pit-by-hand">
+<span id="routing-pit"></span><h2>A pit, by hand<a class="headerlink" href="#a-pit-by-hand" title="Link to this heading">#</a></h2>
+<p>A 3 by 3 grid of squares of 10 m, with a pit in the middle and a lower cell on
+the south side. The seeds are the eight rim cells, and a seed keeps its top. The
+flood starts at the lowest, the south cell at 4 m, and reaches the centre. The
+centre is below the flood level, so it takes <span class="math notranslate nohighlight">\(4 + 0.001\)</span> m.</p>
+<figure class="align-default" id="id3">
+<img alt="Two 3 by 3 grids. On the left, the tops: 5 m everywhere except 3 m in the centre and 4 m on the south side. On the right, the filled copy, where the centre holds 4.001 m, and arrows from each cell to its receiver." class="plot-directive" src="../../_images/exits_pit.png" width="907" height="498" />
+<figcaption>
+<p><span class="caption-number">Fig. 51 </span><span class="caption-text">The model top, and the filled copy with the receiver of each cell, from one
+call of <code class="docutils literal notranslate"><span class="pre">build_descent</span></code>. The five northern cells drain to the centre, now
+the lowest neighbour. The two southern corners drain to the south cell: it
+drops 1 m over 10 m, the centre 0.999 m over 14.1 m. The centre drains south.
+The south cell has no lower neighbour, and water leaves the model there. The
+pit is raised on <span class="math notranslate nohighlight">\(D\)</span> only: its top in the solver stays 3 m.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="the-channel-tree">
+<span id="routing-channel"></span><h2>The channel tree<a class="headerlink" href="#the-channel-tree" title="Link to this heading">#</a></h2>
+<p>When the run generates a stream network (see <a class="reference internal" href="streams-and-mover.html"><span class="doc">Streams and the water mover</span></a>), <span class="math notranslate nohighlight">\(D\)</span>
+follows it. That network was traced on the D8 pointer of the DEM routing. On the
+mesh, a cell that holds a pixel of it is a channel cell, and it is pinned to the
+next channel cell along the network. A pinned cell drains to its pin, adjacent or
+not, even where the top climbs along the channel. Without the pins, <span class="math notranslate nohighlight">\(D\)</span> would
+descend its own flats by flood order and run beside the channel. A cell outside
+the channel keeps its steepest descent. A run with
+<a class="hmp-toml-ref reference external" href="../../reference/parameters/geographic.html#p-geographic-river_network-enabled" title="Enable DEM-based river-network extraction from flow accumulation during geographic preprocessing."><code class="docutils literal notranslate"><span class="pre">geographic.river_network.enabled</span></code></a> off has no pinned cell.</p>
+</section>
+<section id="what-d-is-used-for">
+<span id="routing-uses"></span><h2>What D is used for<a class="headerlink" href="#what-d-is-used-for" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Stream reaches and drainage routing (<a class="reference internal" href="streams-and-mover.html"><span class="doc">Streams and the water mover</span></a>).</p></li>
+<li><p>Accumulation of the outflow of each cell (<a class="reference internal" href="simulated-network.html"><span class="doc">Where the water table reaches the surface</span></a>).</p></li>
+<li><p>The flow direction figure, and the foot of each dam read by the heads rule of
+the stream criterion.</p></li>
+</ul>
+<p>Both MODFLOW solvers build it at every run and store it with the mesh. A run
+stored without it gets one rebuilt on read from the stored top, without pins,
+fixed-head seeds or lakes, and the log says so. MODFLOW-NWT seeds <span class="math notranslate nohighlight">\(D\)</span> on the cells
+it writes as a fixed head, and builds no stream head and no lake.</p>
+</section>
+<section id="the-graph-of-the-stream-criterion">
+<span id="routing-criterion-graph"></span><h2>The graph of the stream criterion<a class="headerlink" href="#the-graph-of-the-stream-criterion" title="Link to this heading">#</a></h2>
+<p>The stream-network criterion (<a class="reference internal" href="../downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a>) does not read <span class="math notranslate nohighlight">\(D\)</span>.
+It floods its own copy of the model top with the same flood, and reads its
+receivers with <a class="reference internal" href="#equation-eq-receiver">(34)</a>. The two answer two questions: <span class="math notranslate nohighlight">\(D\)</span> routes water
+in the model, the criterion graph measures distances on the top. They differ in
+these ways.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>The descent <span class="math notranslate nohighlight">\(D\)</span></p></th>
+<th class="head"><p>The criterion graph</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Seeds</p></td>
+<td><p>the rim of the routable domain and the fixed-head cells</p></td>
+<td><p>the border of the active domain</p></td>
+</tr>
+<tr class="row-odd"><td><p>Lakes</p></td>
+<td><p>crossed, flooded to their spill level</p></td>
+<td><p>part of the graph, removed from the supports of the means</p></td>
+</tr>
+<tr class="row-even"><td><p>Channel</p></td>
+<td><p>pinned to the generated network</p></td>
+<td><p>free</p></td>
+</tr>
+<tr class="row-odd"><td><p>Raised cells</p></td>
+<td><p>below the flood level, or within <span class="math notranslate nohighlight">\(\eta\)</span> above it</p></td>
+<td><p>below the flood level</p></td>
+</tr>
+<tr class="row-even"><td><p>Neighbours</p></td>
+<td><p>D8 on a quad mesh</p></td>
+<td><p>D8 on a quad mesh unless <a class="hmp-toml-ref reference external" href="../../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-diagonal_neighbors" title="Descend over shared nodes, the eight D8 neighbours of a quad mesh."><code class="docutils literal notranslate"><span class="pre">diagonal_neighbors</span></code></a> is false</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Both use the step <span class="math notranslate nohighlight">\(\epsilon\)</span> of 1 mm off a channel. The flood and the receivers
+always read the same neighbour graph: a flood that walked eight neighbours while
+the receivers read four would leave filled cells that spill over a diagonal the
+receivers cannot take.</p>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Water leaves a cell by one receiver (single flow direction).</p></li>
+<li><p>The filled copy is a computation. It changes no head and no elevation the
+solver reads.</p></li>
+</ul>
+</section>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Meshes without diagonals.</strong> On a mesh whose faces are not all quadrilaterals,
+the neighbours are the cells sharing a face, whatever the key asks.</p></li>
+<li><p><strong>A run stored before <span class="math notranslate nohighlight">\(D\)</span> was kept</strong> routes on a <span class="math notranslate nohighlight">\(D\)</span> rebuilt without pins,
+fixed-head seeds or lakes.</p></li>
+</ul>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/geographic.html#p-geographic-river_network">[geographic.river_network]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="geographic.river_network.enabled"><summary><span class="tl-code"><span class="cm"># </span><span class="k">enabled</span><span class="eq"> = </span><span class="v">false</span></span><span class="tl-note"><span class="tl-sum">Enable DEM-based river-network extraction from flow accumulation during geographic preprocessing.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">geographic.river_network.enabled</code> <button class="hmp-copy" type="button" data-copy="geographic.river_network.enabled" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-geographic-river_network-enabled" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details></div><pre class="tb-src" hidden>[geographic.river_network]
+# enabled = false</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/calibration/outputs.html#p-calibration-outputs-name">[calibration.outputs.&lt;name&gt;]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.diagonal_neighbors"><summary><span class="tl-code"><span class="cm"># </span><span class="k">diagonal_neighbors</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">Descend over shared nodes, the eight D8 neighbours of a quad mesh.</span> <span class="tc tc-when">only if support = &quot;network&quot;</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.diagonal_neighbors</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.diagonal_neighbors" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-diagonal_neighbors" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>True is the paper: its distances are traced by WhiteboxTools on a D8 pointer, and the delineation that produced the catchment uses one too. False descends over shared edges only, four neighbours (D4), and departs from the paper. It is not a second-decimal choice: on a synthetic valley whose talweg runs along the grid diagonal, the most accumulated cell collects 100 per cent of the domain over shared nodes and 6.6 per cent over shared edges. On a mesh whose faces are not all quadrilaterals no cell has a diagonal and the descent walks shared edges either way; on a Voronoi mesh the two graphs are the same one.</p></dd><dt>Accepted</dt><dd>true | false</dd><dt>Only if</dt><dd>support = &quot;network&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;]
+# diagonal_neighbors = true</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div></section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test
+appears here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">25 test files import <code>hydromodpy.core.descent</code>, <code>hydromodpy.core.depression_filling</code>, <code>hydromodpy.solver.modflow_common.mesh_descent</code>. Their names say what they check.</p><details class="hmp-tested-tier"><summary>contract: 1</summary><ul><li title="tests/contract/test_boussinesq_descent_routes_like_whitebox.py">Boussinesq descent routes like whitebox.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 24</summary><ul><li title="tests/unit/calibration/test_a_gauge_snaps_only_when_asked.py">A gauge snaps only when asked. <span class="hmp-muted">calibration</span></li><li title="tests/unit/core/test_a_cell_a_hair_above_the_flood_is_raised.py">A cell a hair above the flood is raised. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_a_flat_beside_the_channel_drains_into_it.py">A flat beside the channel drains into it. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_a_stored_descent_rebuilds_its_graph_from_two_arrays.py">A stored descent rebuilds its graph from two arrays. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_depression_filling.py">Depression filling. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_every_cell_of_the_descent_drains_to_a_seed.py">Every cell of the descent drains to a seed. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_the_descent_takes_diagonals_on_quads_and_faces_elsewhere.py">The descent takes diagonals on quads and faces elsewhere. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_without_pins_the_descent_is_the_plain_flood.py">Without pins the descent is the plain flood. <span class="hmp-muted">core</span></li><li title="tests/unit/display/test_depression_map.py">Depression map. <span class="hmp-muted">display</span></li><li title="tests/unit/results/test_a_stored_descent_reads_back_as_it_was_written.py">A stored descent reads back as it was written. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_accumulation_rebuilt_on_read.py">Accumulation rebuilt on read. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_the_dam_foot_is_stored_with_the_descent.py">The dam foot is stored with the descent. <span class="hmp-muted">results</span></li><li title="tests/unit/solver/test_discharge_routing.py">Discharge routing. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_build_hands_the_descent_to_the_networks.py">The build hands the descent to the networks. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_build_leaves_the_descent_with_the_dam_feet.py">The build leaves the descent with the dam feet. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_dam_foot_of_a_declared_spillway_draws_the_reach_below_the_dam.py">The dam foot of a declared spillway draws the reach below the dam. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_dam_foot_of_each_lake_is_kept_with_the_descent.py">The dam foot of each lake is kept with the descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_descent_follows_the_channel_tree_a.py">The descent follows the channel tree a. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_descent_sidecar_reads_back_what_the_build_wrote.py">The descent sidecar reads back what the build wrote. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_discharge_is_routed_on_the_descent.py">The discharge is routed on the descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_extractors_store_the_descent_the_build_saved.py">The extractors store the descent the build saved. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_graph_says_what_it_can_drain.py">The graph says what it can drain. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_nwt_build_keeps_its_descent.py">The nwt build keeps its descent. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_solver_mesh_descent_crosses_inactive_lakes.py">The solver mesh descent crosses inactive lakes. <span class="hmp-muted">solver</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The flood, the receivers, the pins</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/descent.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The flood of the criterion</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/depression_filling.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(D\)</span> on a solver mesh, the channel pins</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/mesh_descent.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(D\)</span> in the run store</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/descent_store.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="head-boundaries.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fixed heads: the sea, the rivers and the sides</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="drains-and-et.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Drains and evapotranspiration at the top of the model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-flood">The flood</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-receivers">The receivers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-pit-by-hand">A pit, by hand</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-channel-tree">The channel tree</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-d-is-used-for">What D is used for</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-graph-of-the-stream-criterion">The graph of the stream criterion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

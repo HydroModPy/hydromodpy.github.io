@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="CI workflows" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/generated/ci.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Built from.github/workflows/*.yml each time the site is built. Fix a wrong row there. 15 workflows. A trigger with path filters runs only when a changed file matches one of them; the filters are in..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="Built from.github/workflows/*.yml each time the site is built. Fix a wrong row there. 15 workflows. A trigger with path filters runs only when a changed file matches one of them; the filters are in..." />
+
+    <meta property="article:modified_time" content="2026-10-09T02:11:12+02:00" />
+    <title>CI workflows &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/generated/ci';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/generated/ci.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Test inventory" href="tests.html" />
+    <link rel="prev" title="V1 release contract" href="../../project/release-contract-v1.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-09"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/index.html">Recipes</a><details><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-block-html-report.html">Add a block HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/physics.html">Package: physics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/spatial.html">Package: spatial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/simulation.html">Package: simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catalog.html">Package: catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/analysis.html">Package: analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/reporting.html">Package: reporting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/examples.html">Package: examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artefacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/toml-to-solver-walkthrough.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/comparison-workflow.html">Comparison workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulation/testbed-workflow-architecture.html">Testbed workflow architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../solver/boussinesq-uml-diagrams.html">Boussinesq solver diagrams</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../mesh/index.html">Mesh architecture</a><details><summary aria-label="Show or hide the pages under Mesh architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/catchment-mesh-architecture.html">Catchment mesh architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/structured-grid-architecture.html">Structured grid architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/gmsh-meshing.html">Conformal Gmsh meshing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mesh/mesh-pivot.html">The HydroMesh pivot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../calibration/index.html">Calibration architecture</a><details><summary aria-label="Show or hide the pages under Calibration architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-architecture.html">Calibration architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../calibration/calibration-guide.html">How the calibration engine runs</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_loading/index.html">Data loading architecture</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../spatial_support/index.html">Spatial support and hydrography</a><details><summary aria-label="Show or hide the pages under Spatial support and hydrography"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/support-selection-guide.html">Choosing a spatial support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/spatial-support-uml-diagrams.html">Spatial support diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-uml-diagrams.html">Hydrographic network diagrams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../spatial_support/hydrographic-network-simulated-active-inventory.html">Simulated active network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../field/index.html">Field layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/process-architecture.html">Process architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process/flow-boundary-conditions.html">Flow boundary conditions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../project/index.html">Project</a><details open="open"><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/release-contract-v1.html">V1 release contract</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../project/index.html" class="nav-link">Project</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">CI workflows</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section class="tex2jax_ignore mathjax_ignore" id="ci-workflows">
+<h1>CI workflows<a class="headerlink" href="#ci-workflows" title="Link to this heading">#</a></h1>
+<p>Built from <code class="docutils literal notranslate"><span class="pre">.github/workflows/*.yml</span></code> each time the site is built. Fix a wrong row there.</p>
+<p>15 workflows. A trigger with path filters runs only when a changed file matches one of them; the filters are in the file.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Workflow</p></th>
+<th class="head"><p>File</p></th>
+<th class="head"><p>Triggers</p></th>
+<th class="head"><p>Jobs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Nightly / PETSc validation</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">ci-nightly-petsc.yml</span></code></td>
+<td><ul class="simple">
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">5</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Nightly / Linux Suites</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">ci-nightly.yml</span></code></td>
+<td><ul class="simple">
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">5</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-even"><td><p>Weekly / Cross Platform</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">ci-weekly.yml</span></code></td>
+<td><ul class="simple">
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">5</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">0</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-odd"><td><p>Docker / Build Smoke</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">docker-build.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev; 4 path filters)</p></li>
+<li><p>pull_request (branches main, dev; 4 path filters)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Docs / Deploy Pages (multi-version)</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">docs-deploy-pages.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev; tags v*, !v*a*, !v*b*, !v*rc*; 9 path filters)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Docs / Get started</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">docs-get-started.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev; 6 path filters)</p></li>
+<li><p>pull_request (branches main, dev; 6 path filters)</p></li>
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">4</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">1</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Docs / External links</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">docs-links.yml</span></code></td>
+<td><ul class="simple">
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">6</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">1</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Docs / Sphinx</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">docs.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev; 13 path filters)</p></li>
+<li><p>pull_request (branches main, dev; 13 path filters)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><p>CI / Main Gate</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">main-ci.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev)</p></li>
+<li><p>pull_request (branches main, dev)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-odd"><td><p>Performance / Benchmarks</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">perf.yml</span></code></td>
+<td><ul class="simple">
+<li><p>pull_request (branches main, dev; 5 path filters)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Solver / PETSc Smoke</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">petsc-smoke.yml</span></code></td>
+<td><ul class="simple">
+<li><p>pull_request (8 path filters)</p></li>
+<li><p>push (branches main, dev; 8 path filters)</p></li>
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">17</span> <span class="pre">4</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">1</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Release / PyPI</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">publish.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (tags v*.*.*)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>4</p></td>
+</tr>
+<tr class="row-even"><td><p>Security / Dependency Audit</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">security-audit.yml</span></code></td>
+<td><ul class="simple">
+<li><p>pull_request (branches main, dev; 6 path filters)</p></li>
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">20</span> <span class="pre">5</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">1</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Weekly install &amp; examples (v1.0)</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">weekly-install-test.yml</span></code></td>
+<td><ul class="simple">
+<li><p>schedule <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">6</span> <span class="pre">*</span> <span class="pre">*</span> <span class="pre">1</span></code> (UTC)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>CI / Workflow Lint</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">workflow-lint.yml</span></code></td>
+<td><ul class="simple">
+<li><p>push (branches main, dev; 1 path filters)</p></li>
+<li><p>pull_request (branches main, dev; 1 path filters)</p></li>
+<li><p>workflow_dispatch</p></li>
+</ul>
+</td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="hmp-contribute-ci-nightly-petsc-validation">
+<h2>Nightly / PETSc validation<a class="headerlink" href="#hmp-contribute-ci-nightly-petsc-validation" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/ci-nightly-petsc.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Nightly / validation PETSc on ${{ matrix.target_branch }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Set up Miniforge</p></li>
+<li><p>Install PETSc test environment</p></li>
+<li><p>Run PETSc validation tests</p></li>
+<li><p>Merge validation results</p></li>
+<li><p>Upload validation results</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-nightly-linux-suites">
+<h2>Nightly / Linux Suites<a class="headerlink" href="#hmp-contribute-ci-nightly-linux-suites" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/ci-nightly.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Nightly / extensive regression on ${{ matrix.target_branch }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install system libraries</p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Drop coverage .pth shim</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run extensive regression</p></li>
+<li><p>Run Whitebox-backed extensive regression (serial)</p></li>
+<li><p>Combine and report coverage</p></li>
+<li><p>Upload coverage to Codecov</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Nightly / validation no PETSc on ${{ matrix.target_branch }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install system libraries</p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Drop coverage .pth shim</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run validation tests</p></li>
+<li><p>Merge validation results</p></li>
+<li><p>Upload validation results</p></li>
+<li><p>Report coverage</p></li>
+<li><p>Upload coverage to Codecov</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Nightly / integration coverage on ${{ matrix.target_branch }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install system libraries</p></li>
+<li><p>Install package, test and mesh extras</p></li>
+<li><p>Drop coverage .pth shim</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run integration tests</p></li>
+<li><p>Report coverage</p></li>
+<li><p>Upload coverage to Codecov</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-weekly-cross-platform">
+<h2>Weekly / Cross Platform<a class="headerlink" href="#hmp-contribute-ci-weekly-cross-platform" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/ci-weekly.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Weekly / ${{ matrix.os }} py${{ matrix.python-version }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package, test and docs extras</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run unit tests (parallel, without whitebox backend)</p></li>
+<li><p>Run whitebox backend tests (serial)</p></li>
+<li><p>Run fast regression</p></li>
+<li><p>Run Whitebox-backed fast regression (serial)</p></li>
+<li><p>Run analytical validation</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Weekly / end-to-end Linux</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install system libraries</p></li>
+<li><p>Install package, test and mesh extras</p></li>
+<li><p>Drop coverage .pth shim</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run e2e tests</p></li>
+<li><p>Report coverage</p></li>
+<li><p>Upload coverage to Codecov</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Weekly / full regression Linux</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install system libraries</p></li>
+<li><p>Install package, test and mesh extras</p></li>
+<li><p>Install solver binaries</p></li>
+<li><p>Run full regression</p></li>
+<li><p>Run Whitebox-backed regression (serial)</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-docker-build-smoke">
+<h2>Docker / Build Smoke<a class="headerlink" href="#hmp-contribute-ci-docker-build-smoke" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/docker-build.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Docker / build and CLI smoke</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Set up Docker Buildx</p></li>
+<li><p>Build image (no push)</p></li>
+<li><p>Smoke test image entrypoints</p></li>
+<li><p>Run hmp doctor inside image (advisory)</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-docs-deploy-pages-multi-version">
+<h2>Docs / Deploy Pages (multi-version)<a class="headerlink" href="#hmp-contribute-ci-docs-deploy-pages-multi-version" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/docs-deploy-pages.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Build ${{ github.ref_name }} and publish</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and docs extras</p></li>
+<li><p>Fetch the nightly validation results</p></li>
+<li><p>Build this version only</p></li>
+<li><p>Prepare the root files and the versions to remove</p></li>
+<li><p>Publish this version</p></li>
+<li><p>Publish the root files</p></li>
+<li><p>Remove the versions the site no longer keeps</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-docs-get-started">
+<h2>Docs / Get started<a class="headerlink" href="#hmp-contribute-ci-docs-get-started" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/docs-get-started.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Docs / Quick start py${{ matrix.python-version }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install the package</p></li>
+<li><p>Run the Quick start of the page</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-docs-external-links">
+<h2>Docs / External links<a class="headerlink" href="#hmp-contribute-ci-docs-external-links" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/docs-links.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Docs / lychee</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and docs extras</p></li>
+<li><p>Build the site</p></li>
+<li><p>Restore the lychee cache</p></li>
+<li><p>Check the external links</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-docs-sphinx">
+<h2>Docs / Sphinx<a class="headerlink" href="#hmp-contribute-ci-docs-sphinx" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/docs.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Docs / html-strict py3.13</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and docs extras</p></li>
+<li><p>Build Sphinx html-strict</p></li>
+<li><p>Check the written pages</p></li>
+<li><p>Check the built site</p></li>
+<li><p>Check the old URLs</p></li>
+<li><p>Moved pages must be redirected</p></li>
+<li><p>Generated documentation must match its source</p></li>
+<li><p>Upload built HTML</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Docs / typos</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install typos</p></li>
+<li><p>Check the spelling of the written pages</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Docs / Vale</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Install Vale</p></li>
+<li><p>Check the house style of the written pages</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Docs / guard tests</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install package, test extras and sybil</p></li>
+<li><p>Run the guard tests of the documentation</p></li>
+<li><p>Check the references to docs paths</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Docs / browser probe</p>
+<p>(after html-strict)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-node&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/download-artifact&#64;v4</span></code></p></li>
+<li><p>Install the browser and axe-core</p></li>
+<li><p>Probe the built site</p></li>
+<li><p>Check the references against the built site</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-ci-main-gate">
+<h2>CI / Main Gate<a class="headerlink" href="#hmp-contribute-ci-ci-main-gate" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/main-ci.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Quality / ruff</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install ruff</p></li>
+<li><p>Check lint rules</p></li>
+<li><p>Check formatting</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Security / gitleaks</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Run Gitleaks CLI</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Architecture / layer matrix</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Run architecture contract tests</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Characterization / produced run py3.13</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Install the solver binary the characterization run needs</p></li>
+<li><p>Run characterization tier</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Tests / fast marker py${{ matrix.python-version }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Install external validity_frame package</p></li>
+<li><p>Install solver binaries for fast tests</p></li>
+<li><p>Collection gate</p></li>
+<li><p>Run fast marker suite</p></li>
+<li><p>Run Whitebox-backed fast tests (serial)</p></li>
+<li><p>Run contract tests</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Tests / unit py3.13</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package, test, docs and mesh extras</p></li>
+<li><p>Install external validity_frame package</p></li>
+<li><p>Run docstring examples</p></li>
+<li><p>Run unit tests in parallel</p></li>
+<li><p>Run Whitebox-backed unit tests (serial)</p></li>
+<li><p>Write unit coverage XML</p></li>
+<li><p>Upload unit coverage to Codecov</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Tests / integration py3.13</p>
+<p>(after unit)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package, test and mesh extras</p></li>
+<li><p>Install solver binaries for integration tests</p></li>
+<li><p>Run integration suite</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Regression / fast solvers py3.12</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package and test extras</p></li>
+<li><p>Install solver binaries for regression tests</p></li>
+<li><p>Run fast regression suite</p></li>
+<li><p>Run Whitebox-backed fast regression (serial)</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Package / wheel smoke py3.12</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install build tooling</p></li>
+<li><p>Build wheel and sdist</p></li>
+<li><p>Install wheel into fresh venv</p></li>
+<li><p>Run hmp doctor from wheel install</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Typing / mypy baseline py3.12 (advisory)</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install package and mypy</p></li>
+<li><p>Run mypy baseline</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-performance-benchmarks">
+<h2>Performance / Benchmarks<a class="headerlink" href="#hmp-contribute-ci-performance-benchmarks" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/perf.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Performance / pairwise drift vs baseline</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install Linux system libraries</p></li>
+<li><p>Install package, test and performance extras</p></li>
+<li><p>Run benchmark suite (serial, JSON dump)</p></li>
+<li><p>Compare current vs baseline (fail if any ratio drifts &gt; 50 pct)</p></li>
+<li><p>Upload benchmark report</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-solver-petsc-smoke">
+<h2>Solver / PETSc Smoke<a class="headerlink" href="#hmp-contribute-ci-solver-petsc-smoke" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/petsc-smoke.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Solver / PETSc smoke Linux</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Set up Miniforge</p></li>
+<li><p>Install PETSc test environment</p></li>
+<li><p>Run PETSc smoke tests</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-release-pypi">
+<h2>Release / PyPI<a class="headerlink" href="#hmp-contribute-ci-release-pypi" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/publish.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Release / build sdist and wheel</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install build tooling</p></li>
+<li><p>Build distributions</p></li>
+<li><p>Verify version matches tag</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/upload-artifact&#64;v4</span></code></p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Release / generate CycloneDX SBOM</p>
+<p>(after build)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/download-artifact&#64;v4</span></code></p></li>
+<li><p>Install SBOM tooling</p></li>
+<li><p>Install built wheel into fresh venv</p></li>
+<li><p>Generate CycloneDX SBOM (JSON)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/upload-artifact&#64;v4</span></code></p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>Release / upload to PyPI</p>
+<p>(after build)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/download-artifact&#64;v4</span></code></p></li>
+<li><p>Publish to PyPI</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Release / create GitHub release</p>
+<p>(after publish, sbom)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/download-artifact&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/download-artifact&#64;v4</span></code></p></li>
+<li><p>Extract CHANGELOG section for tag</p></li>
+<li><p>Classify release tag</p></li>
+<li><p>Create release</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-security-dependency-audit">
+<h2>Security / Dependency Audit<a class="headerlink" href="#hmp-contribute-ci-security-dependency-audit" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/security-audit.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Security / pip-audit</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>Install pip-audit</p></li>
+<li><p>Audit declared Python dependencies</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-weekly-install-examples-v1-0">
+<h2>Weekly install &amp; examples (v1.0)<a class="headerlink" href="#hmp-contribute-ci-weekly-install-examples-v1-0" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/weekly-install-test.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>pip-${{ matrix.method }} ${{ matrix.os }} py${{ matrix.python }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/setup-python&#64;v5</span></code></p></li>
+<li><p>System libraries for VTK/Qt (Linux only)</p></li>
+<li><p>Install (pip ${{ matrix.method }})</p></li>
+<li><p>Import smoke test</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>conda-${{ matrix.envfile }} ${{ matrix.os }} py${{ matrix.python }}</p>
+<p>(matrix)</p>
+</td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conda-incubator/setup-miniconda&#64;v3</span></code></p></li>
+<li><p>System libraries for VTK/Qt (Linux only)</p></li>
+<li><p>Create env from ${{ matrix.envfile }}</p></li>
+<li><p>Install package + verify Python</p></li>
+<li><p>Run examples (headless, cross-OS)</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="hmp-contribute-ci-ci-workflow-lint">
+<h2>CI / Workflow Lint<a class="headerlink" href="#hmp-contribute-ci-ci-workflow-lint" title="Link to this heading">#</a></h2>
+<p>File <code class="docutils literal notranslate"><span class="pre">.github/workflows/workflow-lint.yml</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Job</p></th>
+<th class="head"><p>Steps</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CI / actionlint</p></td>
+<td><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">actions/checkout&#64;v4</span></code></p></li>
+<li><p>Lint workflow files</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../project/release-contract-v1.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">V1 release contract</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tests.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Test inventory</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-nightly-petsc-validation">Nightly / PETSc validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-nightly-linux-suites">Nightly / Linux Suites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-weekly-cross-platform">Weekly / Cross Platform</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-docker-build-smoke">Docker / Build Smoke</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-docs-deploy-pages-multi-version">Docs / Deploy Pages (multi-version)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-docs-get-started">Docs / Get started</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-docs-external-links">Docs / External links</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-docs-sphinx">Docs / Sphinx</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-ci-main-gate">CI / Main Gate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-performance-benchmarks">Performance / Benchmarks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-solver-petsc-smoke">Solver / PETSc Smoke</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-release-pypi">Release / PyPI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-security-dependency-audit">Security / Dependency Audit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-weekly-install-examples-v1-0">Weekly install &amp; examples (v1.0)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hmp-contribute-ci-ci-workflow-lint">CI / Workflow Lint</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-09.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

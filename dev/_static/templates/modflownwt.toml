@@ -1,0 +1,82 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: modflownwt
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Expert-level MODFLOW configuration organized by concern.
+# ----------------------------------------------------------------------
+
+# Spatial-grid payload split into `[...sgrid.planar]` and `[...sgrid.vertical]`.
+
+[modflownwt.sgrid]
+# Applies only to a MODFLOW 6 run on a Gmsh mesh built by the run; ignored for structured grids, MODFLOW-NWT and Boussinesq (which keeps its own triangulation).
+# 'voronoi' uses the PEBI dual (exact CVFD orthogonality, ~half the cells) and is the default; 'triangle' keeps the triangulation cells as the DISV grid for simplex comparison runs.
+# Type: Literal['voronoi', 'triangle'] | one of: "voronoi", "triangle" | Default: "voronoi"
+grid_dual = "voronoi"
+
+
+# Planar discretization of the solver grid.
+
+[modflownwt.sgrid.planar]
+# Planar solver-grid mode: keep the native domain support or resample to an explicit (ny, nx) target shape.
+# Type: Literal['keep_native', 'resample_to_shape'] | one of: "keep_native", "resample_to_shape" | Default: "keep_native"
+mode = "keep_native"
+
+# Target number of columns when planar mode is 'resample_to_shape'.
+# Type: Annotated (optional) | Optional
+# nx = ""
+
+# Target number of rows when planar mode is 'resample_to_shape'.
+# Type: Annotated (optional) | Optional
+# ny = ""
+
+
+# Vertical layering of the solver grid.
+
+[modflownwt.sgrid.vertical]
+# How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, or the fractions you list.
+# Type: Literal['constant', 'decay', 'list'] | one of: "constant", "decay", "list" | Default: "constant"
+genmtd_lay = "constant"
+
+# Number of layers for 'constant' and 'decay'.
+# With 'list', the number of fractions sets it.
+# Type: int (optional) | Default: 1
+nlay = 1
+
+# Ratio of each layer's thickness to the thickness of the layer above it, above 1.
+# With 2, each layer is twice as thick as the one above.
+# Type: float (optional) | Optional | Examples: 2.0
+# lay_decay = 0.0
+
+# Share of the thickness each layer takes, from the top.
+# The shares must sum to 1.
+# Type: list (optional) | Optional | Examples: [0.2, 0.3, 0.5]
+# lay_proportions = []
+
+
+# How the top of the solver grid is sampled from the DEM.
+
+[modflownwt.sgrid.top_sampling]
+# Top-sampling strategy.
+# 'centroid' samples the DEM at each cell generator, or resamples it to a structured grid (fast, the current behaviour, byte-identical default).
+# 'zonal' reduces every DEM pixel inside a cell with per-class stats.
+# Type: Literal['centroid', 'zonal'] | one of: "centroid", "zonal" | Default: "centroid"
+mode = "centroid"
+
+# Zonal statistic over non-channel (hillslope) pixels inside a cell.
+# Type: Literal['mean', 'median', 'min', 'max', 'p10', 'p25'] | one of: "mean", "median", "min", "max", "p10", "p25" | Default: "median"
+hillslope_stat = "median"
+
+# Zonal statistic over channel pixels inside a cell (thalweg-preserving; 'min' keeps the incised low).
+# Type: Literal['min', 'p10', 'p25', 'median', 'mean'] | one of: "min", "p10", "p25", "median", "mean" | Default: "min"
+channel_stat = "min"
+
+# Where channel pixels come from when mode='zonal'.
+# 'streams_raster' uses the delineated river-network raster reprojected onto the DEM grid; 'none' disables the channel class (every pixel is hillslope).
+# Type: Literal['none', 'streams_raster'] | one of: "none", "streams_raster" | Default: "streams_raster"
+channel_source = "streams_raster"
+

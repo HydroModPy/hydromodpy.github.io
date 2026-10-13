@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="The mesh" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/mesh.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The solver does not see the DEM. It sees cells, and one top elevation, one bottom elevation and one centre for each of them. This page gives the rules that turn the DEM into those cells: how the ce..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/mesh_size.png" />
+<meta property="og:image:alt" content="Cell size against the distance to an interface, with the lower bound unset and set to 20 m." />
+<meta name="description" content="The solver does not see the DEM. It sees cells, and one top elevation, one bottom elevation and one centre for each of them. This page gives the rules that turn the DEM into those cells: how the ce..." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>The mesh &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/mesh';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/mesh.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="XT3D on irregular meshes" href="solvers/xt3d-on-irregular-disv-meshes.html" />
+    <link rel="prev" title="From a zone map to the cells" href="solvers/field-to-cell-parameter-transfer.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The mesh</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="the-mesh">
+<h1>The mesh<a class="headerlink" href="#the-mesh" title="Link to this heading">#</a></h1>
+<p>The solver does not see the DEM. It sees cells, and one top elevation, one bottom
+elevation and one centre for each of them. This page gives the rules that turn the
+DEM into those cells: how the cells are laid out, how the top of a cell is read from
+the DEM, how many cells a given size costs, and which checks the code runs on the
+result.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Scope.</strong> The cell layout below is the one of MODFLOW 6, which reads every grid as a
+DISV grid. MODFLOW-NWT builds a structured grid only and ignores a runtime mesh.
+Boussinesq uses the triangles of the Gmsh mesh as its cells, so the Voronoi dual of
+<a class="reference internal" href="#mesh-voronoi"><span class="std std-ref">3. The Voronoi dual</span></a> does not apply to it, and it ignores the top sampling of
+<a class="reference internal" href="#mesh-top"><span class="std std-ref">5. The top of a cell</span></a>. What the solver does with the cells is on <a class="reference internal" href="solvers.html"><span class="doc">The solvers of the aquifer</span></a>.
+The extra terms XT3D adds on a non-orthogonal mesh are on
+<a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>. To set up a mesh, see
+<a class="reference internal" href="../reference/parameters/mesh_catchment.html"><span class="doc">[mesh_catchment]</span></a>.</p>
+</div>
+<section id="the-chain-in-one-list">
+<h2>The chain in one list<a class="headerlink" href="#the-chain-in-one-list" title="Link to this heading">#</a></h2>
+<p>The code builds the cells in this order. Each step is a section below.</p>
+<ol class="arabic simple">
+<li><p>Two surfaces: the top from the DEM <span class="math notranslate nohighlight">\(Z\)</span> and the bottom from the depth model.</p></li>
+<li><p>A planar support, from one of two sources: the pixels of the DEM (a structured
+grid, <a class="reference internal" href="#mesh-structured"><span class="std std-ref">1. A structured grid</span></a>), or a Gmsh triangulation built at run time
+(<a class="reference internal" href="#mesh-gmsh"><span class="std std-ref">2. A runtime mesh from Gmsh</span></a>), which MODFLOW 6 turns into its Voronoi dual by default
+(<a class="reference internal" href="#mesh-voronoi"><span class="std std-ref">3. The Voronoi dual</span></a>).</p></li>
+<li><p>One top elevation per cell (<a class="reference internal" href="#mesh-top"><span class="std std-ref">5. The top of a cell</span></a>) and one bottom elevation per cell.</p></li>
+<li><p>A check of the thickness (<a class="reference internal" href="#mesh-acceptance"><span class="std std-ref">8. The checks the code applies</span></a>), then the layers
+(<a class="reference internal" href="#mesh-layers"><span class="std std-ref">6. Thickness and layers</span></a>).</p></li>
+<li><p>The export to MODFLOW 6 as a DISV grid. The cells that have no valid top or bottom
+are written inactive.</p></li>
+</ol>
+<p>Example 04 uses the first source: its files declare neither a <code class="docutils literal notranslate"><span class="pre">[mesh_catchment]</span></code> section
+nor a <code class="docutils literal notranslate"><span class="pre">[modflow6.sgrid]</span></code> section, so every cell is one DEM pixel. The header of
+<code class="docutils literal notranslate"><span class="pre">step1_minimal.toml</span></code> counts 21406 cells of 75 m for this domain.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p class="sd-card-text">Symbol</p></th>
+<th class="head"><p class="sd-card-text">Meaning</p></th>
+<th class="head"><p class="sd-card-text">Unit</p></th>
+<th class="head"><p class="sd-card-text">Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n, m\)</span></p></td>
+<td><p class="sd-card-text">cell indices; <span class="math notranslate nohighlight">\(\mathcal{N}(n)\)</span> is the set of cells that share a face with <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">the grid, <a class="reference internal" href="#"><span class="doc">The mesh</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(a_n\)</span></p></td>
+<td><p class="sd-card-text">plan area of cell <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p class="sd-card-text">m²</p></td>
+<td><p class="sd-card-text">the grid</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(G_{nm}\)</span></p></td>
+<td><p class="sd-card-text">conductance between cells <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(m\)</span></p></td>
+<td><p class="sd-card-text">m²/s</p></td>
+<td><p class="sd-card-text">derived from <span class="math notranslate nohighlight">\(K\)</span>, the geometry and the heads</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Omega\)</span></p></td>
+<td><p class="sd-card-text">the meshed domain</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">the catchment, its buffer and <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-domain-kind" title="Where the outline of the meshed domain comes from."><code class="docutils literal notranslate"><span class="pre">kind</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(A_\Omega\)</span></p></td>
+<td><p class="sd-card-text">area of the meshed domain</p></td>
+<td><p class="sd-card-text">m²</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(Z\)</span></p></td>
+<td><p class="sd-card-text">the DEM, one value <span class="math notranslate nohighlight">\(Z_p\)</span> per pixel <span class="math notranslate nohighlight">\(p\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/data/dem.html#p-data-dem" title="DEM configuration used when 'dem' is listed in data.types."><code class="docutils literal notranslate"><span class="pre">data.dem</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta\)</span></p></td>
+<td><p class="sd-card-text">side of a DEM pixel</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">the DEM</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(N_S, N_T, N_V\)</span></p></td>
+<td><p class="sd-card-text">number of cells of a structured grid, of a triangle mesh, of its Voronoi dual</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n_v, n_b\)</span></p></td>
+<td><p class="sd-card-text">number of vertices of the triangulation, and of those on its outline</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\ell_g\)</span></p></td>
+<td><p class="sd-card-text">background cell size</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-global_size" title="Baseline target cell size in projected metres over the full support domain. (m)"><code class="docutils literal notranslate"><span class="pre">global_size</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\ell_s\)</span></p></td>
+<td><p class="sd-card-text">cell size on an interface</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-interface_size" title="Target local size, in projected metres, close to constrained interfaces."><code class="docutils literal notranslate"><span class="pre">interface_size</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\xi_s\)</span></p></td>
+<td><p class="sd-card-text">distance over which the size grows back to <span class="math notranslate nohighlight">\(\ell_g\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-interface_distance" title="Influence distance, in projected metres, over which the local interface refinement fades back to the background size."><code class="docutils literal notranslate"><span class="pre">interface_distance</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\xi\)</span></p></td>
+<td><p class="sd-card-text">distance from a point to the nearest interface</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\ell_{\min}, \ell_{\max}\)</span></p></td>
+<td><p class="sd-card-text">lower and upper bound of the size</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-min_size" title="Lower bound on local cell size in projected metres. (m)"><code class="docutils literal notranslate"><span class="pre">min_size</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-max_size" title="Upper bound on local cell size in projected metres. (m)"><code class="docutils literal notranslate"><span class="pre">max_size</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\mathbf{s}_i\)</span></p></td>
+<td><p class="sd-card-text">seed of Voronoi cell <span class="math notranslate nohighlight">\(i\)</span>, a vertex of the triangulation</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\mathbf{d}_{nm}\)</span></p></td>
+<td><p class="sd-card-text">vector from the centre of <span class="math notranslate nohighlight">\(n\)</span> to the centre of <span class="math notranslate nohighlight">\(m\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">the grid</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\mathbf{n}_{nm}\)</span></p></td>
+<td><p class="sd-card-text">unit normal of the face shared by <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(m\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">the grid</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\varphi_{nm}\)</span></p></td>
+<td><p class="sd-card-text">non-orthogonality of a connection, the angle between <span class="math notranslate nohighlight">\(\mathbf{d}_{nm}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{n}_{nm}\)</span></p></td>
+<td><p class="sd-card-text">degree</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(P_c, P_c^{\mathrm{ch}}\)</span></p></td>
+<td><p class="sd-card-text">DEM pixels whose centre falls in cell <span class="math notranslate nohighlight">\(c\)</span>, and those of them on a channel</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n_{\min}\)</span></p></td>
+<td><p class="sd-card-text">pixels a cell needs for a hillslope statistic</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-min_pixels" title="Minimum DEM pixels inside a cell to trust a hillslope zonal statistic; below this the cell falls back to the centroid sample."><code class="docutils literal notranslate"><span class="pre">min_pixels</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\varepsilon_z\)</span></p></td>
+<td><p class="sd-card-text">spike tolerance of the zonal top</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-spike_guard_tol_m" title="Revert a hillslope cell's zonal value to the centroid sample when it deviates more than this many metres (guards nodata/edge spikes); channel cells are exempt since they are lowered on purpose. (m)"><code class="docutils literal notranslate"><span class="pre">spike_guard_tol_m</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(b_{\min}\)</span></p></td>
+<td><p class="sd-card-text">smallest thickness kept under a zonal top</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-min_thickness_m" title="Minimum layer-0 thickness (m) kept after zonal top lowering, so a carved channel top never collides with the aquifer bottom. (m)"><code class="docutils literal notranslate"><span class="pre">min_thickness_m</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(z_{\mathrm{top},c}, z_{\mathrm{bot},c}\)</span></p></td>
+<td><p class="sd-card-text">top and bottom of cell <span class="math notranslate nohighlight">\(c\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\tilde z_c\)</span></p></td>
+<td><p class="sd-card-text">DEM value interpolated at the centre of cell <span class="math notranslate nohighlight">\(c\)</span></p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details></section>
+<section id="a-structured-grid">
+<span id="mesh-structured"></span><h2>1. A structured grid<a class="headerlink" href="#a-structured-grid" title="Link to this heading">#</a></h2>
+<p>With <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-planar-mode" title="Planar solver-grid mode: keep the native domain support or resample to an explicit (ny, nx) target shape."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.planar.mode</span></code></a> at its default, the cells are the pixels of the
+top raster, with the same size and the same extent. A cell <span class="math notranslate nohighlight">\((i,j)\)</span> takes the value of
+pixel <span class="math notranslate nohighlight">\((i,j)\)</span>, with no interpolation:</p>
+<div class="math notranslate nohighlight">
+\[
+z_{\mathrm{top},ij} = Z_{ij}, \qquad N_S = n_{\mathrm{row}}\, n_{\mathrm{col}}, \qquad
+a_{ij} = \Delta_x \Delta_y .
+\]</div>
+<p>A pixel that is nodata makes the cell inactive. The cell still exists in the grid, so
+<span class="math notranslate nohighlight">\(N_S\)</span> counts the active and the inactive cells.</p>
+<p>With <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-planar-mode" title="Planar solver-grid mode: keep the native domain support or resample to an explicit (ny, nx) target shape."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.planar.mode</span></code></a> set to resample the grid to a shape, top and
+bottom are resampled to <span class="math notranslate nohighlight">\(n_{\mathrm{row}} \times n_{\mathrm{col}}\)</span> cells over the same
+extent, with the rule of <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-planar-resampling" title="Resampling rule applied when planar mode is 'resample_to_shape'."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.planar.resampling</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">project_surfaces_to_planar_grid</span></code>). If a cell then covers at least two DEM pixels, the
+top of the cell is the zonal statistic of <a class="reference internal" href="#mesh-top"><span class="std std-ref">5. The top of a cell</span></a> instead of the
+resampled value (<code class="docutils literal notranslate"><span class="pre">_cells_cover_pixels</span></code>, <code class="docutils literal notranslate"><span class="pre">_zonal_structured_top</span></code>). A grid whose cells are
+the pixels is never touched by the zonal top.</p>
+<p>MODFLOW 6 reads this grid as a DISV grid. MODFLOW-NWT reads it as a DIS grid.</p>
+</section>
+<section id="a-runtime-mesh-from-gmsh">
+<span id="mesh-gmsh"></span><h2>2. A runtime mesh from Gmsh<a class="headerlink" href="#a-runtime-mesh-from-gmsh" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">[mesh_catchment]</span></code> section makes the run build a triangulation of <span class="math notranslate nohighlight">\(\Omega\)</span> with Gmsh
+before the solver is prepared (<code class="docutils literal notranslate"><span class="pre">run_mesh_phase</span></code>). The project refuses a file that has both a
+<code class="docutils literal notranslate"><span class="pre">[mesh_catchment]</span></code> and a <code class="docutils literal notranslate"><span class="pre">[mesh_input]</span></code> section (<code class="docutils literal notranslate"><span class="pre">Embedded</span> <span class="pre">[mesh_catchment]</span> <span class="pre">and</span> <span class="pre">external</span> <span class="pre">[mesh_input]</span> <span class="pre">are</span> <span class="pre">mutually</span></code>):
+they are two sources for the same mesh. A mesh that already exists is declared with
+<a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_input.html#p-mesh_input-mesh_path" title="Path to the external planar mesh file (typically a ``.msh``)."><code class="docutils literal notranslate"><span class="pre">mesh_input.mesh_path</span></code></a> or <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_input.html#p-mesh_input-bundle_dir" title="Path to the solver-exchange mesh bundle directory associated with the external mesh."><code class="docutils literal notranslate"><span class="pre">mesh_input.bundle_dir</span></code></a> instead, and goes through
+the steps below like a mesh the run built.</p>
+<p>The triangle sizes come from a size field, in the sense of the Gmsh manual
+(<span class="bibtex-citation" id="id1">[<a class="reference internal" href="bibliography.html#id48" title="C. Geuzaine and J.-F. Remacle. Gmsh: a 3-d finite element mesh generator with built-in pre- and post-processing facilities. International Journal for Numerical Methods in Engineering, 79(11):1309–1331, 2009. doi:10.1002/nme.2579.">Geuzaine and Remacle, 2009</a>]</span>, <a class="reference external" href="https://gmsh.info/doc/texinfo/gmsh.html">reference manual</a>):
+a Distance field to some curves, a Threshold field on it, and the minimum of all fields.
+Around the interface curves (rivers, geology interfaces, the catchment boundary), when
+<a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-refine_interfaces" title="Enable a distance-based size field around geology or river interfaces."><code class="docutils literal notranslate"><span class="pre">mesh_catchment.zone_meshing.refine_interfaces</span></code></a> is on, the code sets the lower
+distance of the Threshold to zero. With <span class="math notranslate nohighlight">\(\xi\)</span> the distance to the nearest interface, the
+wanted size is linear between the two limits:</p>
+<div class="math notranslate nohighlight" id="equation-eq-mesh-size">
+<span class="eqno">(21)<a class="headerlink" href="#equation-eq-mesh-size" title="Link to this equation">#</a></span>\[
+\ell_0(\xi) = \ell_s + (\ell_g - \ell_s)\,\min\!\left(1, \frac{\xi}{\xi_s}\right).
+\]</div>
+<p>When the refinement policy is on, there is one such field per family of curves, with its
+own <span class="math notranslate nohighlight">\(\ell_s\)</span> and <span class="math notranslate nohighlight">\(\xi_s\)</span> (<code class="docutils literal notranslate"><span class="pre">apply_family_refinement_fields</span></code>). The size actually used is
+bounded by Gmsh options the code sets from the three keys of the section
+(<code class="docutils literal notranslate"><span class="pre">apply_mesh_options</span></code>):</p>
+<div class="math notranslate nohighlight" id="equation-eq-mesh-size-bounds">
+<span class="eqno">(22)<a class="headerlink" href="#equation-eq-mesh-size-bounds" title="Link to this equation">#</a></span>\[\begin{split}
+\ell(\mathbf{x}) = \min\!\bigl(\ell_{\max}',\ \max(\ell_{\min}',\ \ell_0(\mathbf{x}))\bigr),
+\qquad
+\ell_{\min}' = \begin{cases}\ell_{\min} &amp; \text{if set,}\\ \ell_g &amp; \text{otherwise,}\end{cases}
+\qquad
+\ell_{\max}' = \begin{cases}\ell_{\max} &amp; \text{if set,}\\ \ell_g &amp; \text{otherwise.}\end{cases}
+\end{split}\]</div>
+<p>The fields of the lakes, of the refinement zones and of the coarsening outside the
+catchment join the interface fields (<code class="docutils literal notranslate"><span class="pre">set_background_mesh_from_fields</span></code>). The upper bound is
+raised to the largest size of such a regional field when the section declares one
+(<code class="docutils literal notranslate"><span class="pre">compute_effective_max_size</span></code>). The lower bound has a consequence that the keys do not
+announce: with no
+<a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-min_size" title="Lower bound on local cell size in projected metres. (m)"><code class="docutils literal notranslate"><span class="pre">mesh_catchment.zone_meshing.min_size</span></code></a>, <span class="math notranslate nohighlight">\(\ell_{\min}' = \ell_g\)</span>, and every size
+below <span class="math notranslate nohighlight">\(\ell_g\)</span> is raised back to <span class="math notranslate nohighlight">\(\ell_g\)</span>. An <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-interface_size" title="Target local size, in projected metres, close to constrained interfaces."><code class="docutils literal notranslate"><span class="pre">interface_size\</span></code></a>
+below the background size then changes nothing (<a class="reference internal" href="#mesh-limits"><span class="std std-ref">Limits</span></a>).</p>
+<figure class="align-default" id="id3">
+<img alt="Cell size against the distance to an interface, with the lower bound unset and set to 20 m." class="plot-directive" src="../_images/mesh_size.png" width="945" height="495" />
+<figcaption>
+<p><span class="caption-number">Fig. 29 </span><span class="caption-text">The size of <a class="reference internal" href="#equation-eq-mesh-size">(21)</a> (dotted) and the size Gmsh keeps under the
+bounds that <code class="docutils literal notranslate"><span class="pre">apply_mesh_options</span></code> sets, for <span class="math notranslate nohighlight">\(\ell_s = 20\)</span> m,
+<span class="math notranslate nohighlight">\(\ell_g = 100\)</span> m and <span class="math notranslate nohighlight">\(\xi_s = 300\)</span> m. Look at the shaded band: without
+<code class="docutils literal notranslate"><span class="pre">min_size</span></code> the refinement near the interface is lost.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The 2D algorithm is the one named by <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-algorithm" title="Planar Gmsh algorithm name."><code class="docutils literal notranslate"><span class="pre">mesh_catchment.zone_meshing.algorithm</span></code></a>. The
+code knows four names and maps them to the Gmsh codes. Gmsh does not give the same
+triangulation twice for the same input. <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-cache" title="If true, reuse a previously generated mesh when its inputs (domain geometry, river constraint, lake/dam refinement, mesh and delineation configuration) are unchanged, instead of regenerating it."><code class="docutils literal notranslate"><span class="pre">mesh_catchment.cache</span></code></a> keeps the first one
+and reuses it while the inputs that shape the mesh are unchanged.</p>
+</section>
+<section id="the-voronoi-dual">
+<span id="mesh-voronoi"></span><h2>3. The Voronoi dual<a class="headerlink" href="#the-voronoi-dual" title="Link to this heading">#</a></h2>
+<p>MODFLOW 6 does not take the triangles as cells by default. With
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-grid_dual" title="Applies only to a MODFLOW 6 run on a Gmsh mesh built by the run; ignored for structured grids, MODFLOW-NWT and Boussinesq (which keeps its own triangulation)."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.grid_dual</span></code></a> at its default, the code takes the vertices of the
+triangulation as seeds <span class="math notranslate nohighlight">\(\mathbf{s}_i\)</span> and builds the Voronoi (PEBI) cell of each seed,
+that is the set of points closer to it than to any other seed, clipped to the outline
+<span class="math notranslate nohighlight">\(\Omega\)</span> of the triangulation.</p>
+<p>The cell centre written to the DISV file is the seed itself. Three rules complete the
+construction:</p>
+<ul class="simple">
+<li><p>A seed whose cell falls entirely outside <span class="math notranslate nohighlight">\(\Omega\)</span> is dropped.</p></li>
+<li><p>When the clip splits a cell, the piece that contains the seed is kept.</p></li>
+<li><p>If no piece contains the seed, the largest piece is kept and its representative point
+becomes the centre.</p></li>
+</ul>
+<p>The outline <span class="math notranslate nohighlight">\(\Omega\)</span> is rebuilt from the edges that belong to exactly one triangle. The
+coordinates of the vertices are rounded to 1 mm so
+that the corners shared by two cells are one vertex, which assumes a projected CRS in
+metres.</p>
+<p>Three consequences follow.</p>
+<p><strong>The number of cells.</strong> The dual has one cell per seed, so <span class="math notranslate nohighlight">\(N_V = n_v\)</span>, the number of
+vertices. By Euler’s formula a triangulation of a region without holes has
+<span class="math notranslate nohighlight">\(N_T = 2 n_v - n_b - 2\)</span> triangles, <span class="math notranslate nohighlight">\(n_b\)</span> being the vertices on its outline, so
+<span class="math notranslate nohighlight">\(N_V \approx N_T / 2\)</span> when <span class="math notranslate nohighlight">\(n_b\)</span> is small against <span class="math notranslate nohighlight">\(n_v\)</span>.</p>
+<p><strong>The faces.</strong> The face between two cells is the perpendicular bisector of the segment
+between their seeds. The faces are not the edges of the triangulation. A river that was
+a chain of triangle edges runs through the middle of a chain of Voronoi cells: it is no
+longer the boundary of any cell.</p>
+<p><strong>The orthogonality.</strong> The line between the two centres is perpendicular to the face, so
+<span class="math notranslate nohighlight">\(\varphi_{nm} = 0\)</span> on every connection whose two cells kept their seed as centre.
+<a class="reference internal" href="#mesh-angle"><span class="std std-ref">4. Flow between two cells, and the angle</span></a> says why this matters. As a check, 36 seeds on a <span class="math notranslate nohighlight">\(6 \times 6\)</span> lattice
+(the 16 inner ones moved at random, <span class="math notranslate nohighlight">\(n_b = 20\)</span>) give 50 triangles, and
+<code class="docutils literal notranslate"><span class="pre">voronoi_dual_of_mesh</span></code> returns 36 cells with <span class="math notranslate nohighlight">\(0^\circ\)</span> on every connection.</p>
+<p><strong>The features.</strong> Wells and boundaries are placed on the dual cells, not on the
+triangles. A well goes in the cell that holds its point. A side boundary takes the
+cells whose seed lies on that side, so the head is held on the boundary and not in a
+clipped inner cell that only touches it; a corner cell belongs to both sides. A side
+with no seed on it falls back to the cells with a face on it, with a warning. The
+stream boundary takes the cells the river runs through.</p>
+<p>With <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-grid_dual" title="Applies only to a MODFLOW 6 run on a Gmsh mesh built by the run; ignored for structured grids, MODFLOW-NWT and Boussinesq (which keeps its own triangulation)."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.grid_dual</span></code></a> set to <code class="docutils literal notranslate"><span class="pre">&quot;triangle&quot;</span></code>, the triangles are the cells
+and the centre of a cell is the mean of its three vertices.</p>
+</section>
+<section id="flow-between-two-cells-and-the-angle">
+<span id="mesh-angle"></span><h2>4. Flow between two cells, and the angle<a class="headerlink" href="#flow-between-two-cells-and-the-angle" title="Link to this heading">#</a></h2>
+<p>MODFLOW 6 writes the flow between two cells with the two-point finite-difference term
+<span class="math notranslate nohighlight">\(G_{nm}\,(h_m - h_n)\)</span> of <a class="reference internal" href="groundwater-flow.html#equation-eq-cell-balance">(17)</a> <span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id8" title="A. W. Harbaugh. MODFLOW-2005, the U.S. Geological Survey modular ground-water model: the ground-water flow process. Techniques and Methods 6-A16, U.S. Geological Survey, 2005. doi:10.3133/tm6A16.">Harbaugh, 2005</a>, <a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>. It is
+exact only when the conductivity is isotropic in the plane and the line between the
+centres is perpendicular to the shared face. HydroModPy measures the departure from
+that condition on every connection, as an angle. With <span class="math notranslate nohighlight">\(\mathbf{d}_{nm}\)</span> the vector
+between the two centres and <span class="math notranslate nohighlight">\(\mathbf{n}_{nm}\)</span> the unit normal of the shared edge:</p>
+<div class="math notranslate nohighlight" id="equation-eq-nonorthogonality">
+<span class="eqno">(23)<a class="headerlink" href="#equation-eq-nonorthogonality" title="Link to this equation">#</a></span>\[
+\varphi_{nm} = \arccos\!\left(\frac{\lvert \mathbf{d}_{nm} \cdot \mathbf{n}_{nm} \rvert}
+{\lVert \mathbf{d}_{nm} \rVert}\right).
+\]</div>
+<p>Only an edge shared by exactly two cells counts as a connection. The summary the code
+keeps is the median, the 95th and 99th percentiles, the maximum and the share of
+connections above 30 degrees. What the angle does to the flux, and when the code turns
+on the XT3D option that corrects it, is on <a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>.</p>
+<p><strong>Two triangles.</strong> Cut a <span class="math notranslate nohighlight">\(2 \times 1\)</span> rectangle along its diagonal. The shared edge goes
+from <span class="math notranslate nohighlight">\((2,0)\)</span> to <span class="math notranslate nohighlight">\((0,1)\)</span>, with a normal along <span class="math notranslate nohighlight">\((1,2)\)</span>. The centres are the vertex means,
+<span class="math notranslate nohighlight">\((2/3, 1/3)\)</span> and <span class="math notranslate nohighlight">\((4/3, 2/3)\)</span>, so <span class="math notranslate nohighlight">\(\mathbf{d} = (2/3, 1/3)\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[
+\cos\varphi = \frac{\lvert (2,1)\cdot(1,2) \rvert}{\sqrt5\,\sqrt5} = \frac{4}{5},
+\qquad \varphi \approx 36.9^\circ .
+\]</div>
+<p><strong>The same corners, as seeds.</strong> The four corners of the rectangle, taken as seeds, give
+four cells of <span class="math notranslate nohighlight">\(1 \times 0.5\)</span> with four connections, all at <span class="math notranslate nohighlight">\(0^\circ\)</span>. Both results were
+checked with <code class="docutils literal notranslate"><span class="pre">connection_nonorthogonality_deg</span></code>, and the four cells with
+<code class="docutils literal notranslate"><span class="pre">voronoi_planar_mesh</span></code>.</p>
+<figure class="align-default" id="id5">
+<img alt="Two triangles with their connection vector and face normal, and a triangulation of 36 seeds with its Voronoi dual." class="plot-directive" src="../_images/mesh_voronoi.png" width="940" height="522" loading="lazy" decoding="async" />
+<figcaption>
+<p><span class="caption-number">Fig. 31 </span><span class="caption-text">Left: the two triangles above, with <span class="math notranslate nohighlight">\(\mathbf{d}_{nm}\)</span> between the
+centres and <span class="math notranslate nohighlight">\(\mathbf{n}_{nm}\)</span> normal to the shared face; the angle comes from
+<code class="docutils literal notranslate"><span class="pre">connection_nonorthogonality_deg</span></code>. Right: the 36 seeds of the check of
+<a class="reference internal" href="#mesh-voronoi"><span class="std std-ref">3. The Voronoi dual</span></a>, their 50 triangles (dotted) and the 36 cells of
+<code class="docutils literal notranslate"><span class="pre">voronoi_dual_of_mesh</span></code> (blue). Look at the title: the triangles reach 35°, every
+connection of the dual is at 0°.</span><a class="headerlink" href="#id5" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="the-top-of-a-cell">
+<span id="mesh-top"></span><h2>5. The top of a cell<a class="headerlink" href="#the-top-of-a-cell" title="Link to this heading">#</a></h2>
+<p>The top of a cell is one number, read from the DEM <span class="math notranslate nohighlight">\(Z\)</span>. Two rules exist, set by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-mode" title="Top-sampling strategy."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.top_sampling.mode</span></code></a>. The bottom is always read by the first rule.</p>
+<section id="centroid">
+<h3>Centroid<a class="headerlink" href="#centroid" title="Link to this heading">#</a></h3>
+<p>The DEM is sampled at the centre of the cell with a bilinear interpolation between the
+four pixel centres around it. The weights <span class="math notranslate nohighlight">\(w_k\)</span> are the
+bilinear ones, and a nodata pixel gets a weight of zero before the sum is normalised:</p>
+<div class="math notranslate nohighlight">
+\[
+\tilde z_c = \frac{\sum_{k=1}^{4} w_k\, Z_k\, \mathbf{1}[Z_k \text{ valid}]}
+{\sum_{k=1}^{4} w_k\, \mathbf{1}[Z_k \text{ valid}]} .
+\]</div>
+<p>The result is undefined, and the cell inactive, when the centre is outside the raster or
+the four pixels are nodata. On an incised channel the centre of a
+cell often falls on a bank, not on the thalweg, and the cell is then too high.</p>
+</section>
+<section id="zonal">
+<h3>Zonal<a class="headerlink" href="#zonal" title="Link to this heading">#</a></h3>
+<p>The zonal rule reduces every pixel whose centre falls in the cell. A pixel belongs to the cell that contains
+its centre: for a mesh, the code burns each cell polygon into a raster of the DEM; for a
+structured grid, it computes the row and column by arithmetic. A pixel is channel when the stream raster of the
+delineation says so, with the mask widened by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-channel_buffer_px" title="Dilate the channel pixel mask by this many pixels before reducing, to capture a channel that grazes a cell without a pixel centre on it."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.top_sampling.channel_buffer_px</span></code></a> pixels. The raster is read only when
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-channel_source" title="Where channel pixels come from when mode='zonal'."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.top_sampling.channel_source</span></code></a> asks for it.
+Without a stream raster, every pixel is a hillslope pixel.</p>
+<p>With <span class="math notranslate nohighlight">\(\operatorname{stat}\)</span> the statistic named by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-channel_stat" title="Zonal statistic over channel pixels inside a cell (thalweg-preserving; 'min' keeps the incised low)."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.top_sampling.channel_stat</span></code></a> on the channel pixels, and by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling-hillslope_stat" title="Zonal statistic over non-channel (hillslope) pixels inside a cell."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.top_sampling.hillslope_stat</span></code></a> on the others (<code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>,
+<code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, and the 10th and 25th percentiles):</p>
+<div class="math notranslate nohighlight" id="equation-eq-zonal-top">
+<span class="eqno">(24)<a class="headerlink" href="#equation-eq-zonal-top" title="Link to this equation">#</a></span>\[\begin{split}
+z_{\mathrm{top},c} =
+\begin{cases}
+\operatorname{stat}_{\mathrm{ch}}\{Z_p : p \in P_c^{\mathrm{ch}}\}
+  &amp; P_c^{\mathrm{ch}} \neq \emptyset, \\[0.5ex]
+\operatorname{stat}_{\mathrm{hill}}\{Z_p : p \in P_c\}
+  &amp; P_c^{\mathrm{ch}} = \emptyset \text{ and } \lvert P_c \rvert \ge n_{\min}, \\[0.5ex]
+\tilde z_c &amp; \text{otherwise.}
+\end{cases}
+\end{split}\]</div>
+<p>A channel cell needs one channel pixel. A hillslope cell needs <span class="math notranslate nohighlight">\(n_{\min}\)</span> pixels, and a
+cell finer than the DEM falls back to the centroid value. Two corrections follow, in this
+order:</p>
+<div class="math notranslate nohighlight">
+\[
+\text{if } \lvert z_{\mathrm{top},c} - \tilde z_c \rvert &gt; \varepsilon_z
+\text{ on a hillslope cell:}\quad z_{\mathrm{top},c} \leftarrow \tilde z_c,
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+z_{\mathrm{top},c} \leftarrow \max\bigl(z_{\mathrm{top},c},\ z_{\mathrm{bot},c} + b_{\min}\bigr)
+\quad \text{on every active cell.}
+\]</div>
+<p>The first one guards against a nodata edge: channel cells are exempt, since they are
+lowered on purpose. It is off when <span class="math notranslate nohighlight">\(\varepsilon_z = 0\)</span>. The second one keeps a lowered top
+above the bottom. Only the top is zonal; the bottom keeps its centroid value, so a
+lowered top thins every layer of that column. The code logs, once per build, how many cells
+took a zonal value, how many are channel cells, and how far the tops were lowered.</p>
+<figure class="align-default" id="id7">
+<img alt="A hexagonal cell over a DEM with an incised channel, and the elevations of its pixels with three candidate tops." class="plot-directive" src="../_images/mesh_zonal_top.png" width="871" height="490" loading="lazy" decoding="async" />
+<figcaption>
+<p><span class="caption-number">Fig. 33 </span><span class="caption-text">A cell of 32 m radius over a DEM of 5 m pixels, its centre on a bank 18 m from
+a channel incised 2 m (blue). Right: the elevation of each pixel inside the cell,
+and the top three rules give, from <code class="docutils literal notranslate"><span class="pre">zonal_top</span></code> with <code class="docutils literal notranslate"><span class="pre">channel_stat</span> <span class="pre">=</span> <span class="pre">&quot;min&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">hillslope_stat</span> <span class="pre">=</span> <span class="pre">&quot;median&quot;</span></code>. Look at the gap: the centroid sample and the
+hillslope median sit on the bank, about 4 m above the channel minimum the cell
+takes when the stream raster is read.</span><a class="headerlink" href="#id7" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The zonal rule falls back to the centroid value, with a message in the log, in three
+cases: a surface with no georeferencing (<code class="docutils literal notranslate"><span class="pre">Zonal</span> <span class="pre">top</span> <span class="pre">sampling</span> <span class="pre">needs</span> <span class="pre">a</span> <span class="pre">georeferenced</span> <span class="pre">surface;</span> <span class="pre">using</span> <span class="pre">centroid</span> <span class="pre">sample.</span></code>),
+a channel source with no stream raster (<code class="docutils literal notranslate"><span class="pre">Zonal</span> <span class="pre">channel_source=%s</span> <span class="pre">but</span> <span class="pre">no</span> <span class="pre">stream</span> <span class="pre">raster</span> <span class="pre">found</span></code>;
+the channel class is then off), and a structured grid whose cells cover fewer than two DEM
+pixels (<code class="docutils literal notranslate"><span class="pre">Zonal</span> <span class="pre">top</span> <span class="pre">sampling</span> <span class="pre">skipped:</span> <span class="pre">a</span> <span class="pre">grid</span> <span class="pre">cell</span></code>). In the code: <code class="docutils literal notranslate"><span class="pre">zonal_top</span></code>.</p>
+</section>
+</section>
+<section id="thickness-and-layers">
+<span id="mesh-layers"></span><h2>6. Thickness and layers<a class="headerlink" href="#thickness-and-layers" title="Link to this heading">#</a></h2>
+<p>The column of each cell is cut into layers by shares of its thickness, the same shares in
+every cell, set by <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-vertical-genmtd_lay" title="How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, or the fractions you list."><code class="docutils literal notranslate"><span class="pre">modflow6.sgrid.vertical.genmtd_lay</span></code></a>. The rule,
+<a class="reference internal" href="groundwater-flow.html#equation-eq-layer-bottom">(14)</a>, and its three strategies are on <a class="reference internal" href="groundwater-flow.html#gwf-layers"><span class="std std-ref">The solver grid and its layers</span></a>.</p>
+<p>Every layer shares the cells of the plan: the mesh is a vertical extrusion. A cell is inactive in every layer when its top or its bottom is nodata,
+not finite, or at or below the nodata value.</p>
+</section>
+<section id="how-many-cells-a-size-costs">
+<span id="mesh-budget"></span><h2>7. How many cells a size costs<a class="headerlink" href="#how-many-cells-a-size-costs" title="Link to this heading">#</a></h2>
+<p>The cost of a run grows with the number of cells, so a structured grid and a mesh are
+compared at equal cell count. The ideal count below assumes cells of one uniform size over
+an area <span class="math notranslate nohighlight">\(A_\Omega\)</span>.</p>
+<p>For a structured grid of pixel side <span class="math notranslate nohighlight">\(\Delta\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[
+N_S = \frac{A_\Omega}{\Delta^2}.
+\]</div>
+<p>For a triangulation of equilateral triangles of side <span class="math notranslate nohighlight">\(\ell\)</span>, the triangle area is
+<span class="math notranslate nohighlight">\(\frac{\sqrt3}{4}\ell^2\)</span>. The Voronoi cells are hexagons, whose area is
+<span class="math notranslate nohighlight">\(\frac{\sqrt3}{2}\ell^2\)</span> when two neighbouring seeds are <span class="math notranslate nohighlight">\(\ell\)</span> apart:</p>
+<div class="math notranslate nohighlight" id="equation-eq-cell-count">
+<span class="eqno">(25)<a class="headerlink" href="#equation-eq-cell-count" title="Link to this equation">#</a></span>\[
+N_T = \frac{4}{\sqrt3}\,\frac{A_\Omega}{\ell^2} \approx 2.31\,\frac{A_\Omega}{\ell^2},
+\qquad
+N_V = \frac{2}{\sqrt3}\,\frac{A_\Omega}{\ell^2} \approx 1.15\,\frac{A_\Omega}{\ell^2}.
+\]</div>
+<p>Equal counts then give the edge length that costs the same as a grid of side <span class="math notranslate nohighlight">\(\Delta\)</span>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Cells</p></th>
+<th class="head"><p>Count for an area <span class="math notranslate nohighlight">\(A_\Omega\)</span></p></th>
+<th class="head"><p>Edge length at the cost of the grid of side <span class="math notranslate nohighlight">\(\Delta\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Square pixels</p></td>
+<td><p><span class="math notranslate nohighlight">\(A_\Omega/\Delta^2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\Delta\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Voronoi cells</p></td>
+<td><p><span class="math notranslate nohighlight">\(\approx 1.15\,A_\Omega/\ell^2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\ell = \Delta \sqrt{2/\sqrt3} \approx 1.07\,\Delta\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Triangles</p></td>
+<td><p><span class="math notranslate nohighlight">\(\approx 2.31\,A_\Omega/\ell^2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\ell = \Delta \sqrt{4/\sqrt3} \approx 1.52\,\Delta\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Worked example.</strong> The 21406 cells of 75 m of the header of <code class="docutils literal notranslate"><span class="pre">step1_minimal.toml</span></code> (the file does not say if
+the count includes the inactive cells) cover
+<span class="math notranslate nohighlight">\(21406 \times 75^2\ \mathrm{m^2} \approx 120\ \mathrm{km^2}\)</span>. The same count on a
+Voronoi mesh means seeds about <span class="math notranslate nohighlight">\(81\ \mathrm{m}\)</span> apart; on a triangle mesh, triangles of
+about <span class="math notranslate nohighlight">\(114\ \mathrm{m}\)</span> side. These are ideal figures: a real mesh refines near the
+interfaces, and the count of a run is the number of cells (<span class="math notranslate nohighlight">\(\mathrm{ncpl}\)</span>) of its DISV
+file.</p>
+<figure class="align-default" id="id9">
+<img alt="Number of cells against cell size for square pixels, Voronoi cells and triangles, on log axes." class="plot-directive" src="../_images/mesh_cell_count.png" width="945" height="525" loading="lazy" decoding="async" />
+<figcaption>
+<p><span class="caption-number">Fig. 35 </span><span class="caption-text"><a class="reference internal" href="#equation-eq-cell-count">(25)</a> for <span class="math notranslate nohighlight">\(A_\Omega\)</span> = 120 km². The three lines are
+parallel: halving the size multiplies the count by four for every layout. Look at
+the dots, 21406 cells each: 75 m pixels, Voronoi seeds 81 m apart, triangles of
+114 m.</span><a class="headerlink" href="#id9" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p><span class="math notranslate nohighlight">\(N_S\)</span> counts the cells of the whole raster box, active or not (<a class="reference internal" href="#mesh-structured"><span class="std std-ref">1. A structured grid</span></a>);
+every cell of a mesh lies in <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
+</section>
+<section id="the-checks-the-code-applies">
+<span id="mesh-acceptance"></span><h2>8. The checks the code applies<a class="headerlink" href="#the-checks-the-code-applies" title="Link to this heading">#</a></h2>
+<p>The code does not compute a minimum angle, an aspect ratio, a skewness or a ratio of the
+areas of two neighbours, and it refuses no mesh for its shape. The table lists what it
+does check. Where a limit is a number, the table names the constant that holds it.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What is checked</p></th>
+<th class="head"><p>Rule</p></th>
+<th class="head"><p>What happens</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Top and bottom overlap</p></td>
+<td><p>at least one cell where both are valid</p></td>
+<td><p>refused: <code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">finite</span> <span class="pre">overlapping</span> <span class="pre">valid</span> <span class="pre">cells</span> <span class="pre">found</span> <span class="pre">between</span> <span class="pre">top</span> <span class="pre">and</span> <span class="pre">bottom</span> <span class="pre">surfaces.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_assert_bottom_below_top</span></code> in <code class="docutils literal notranslate"><span class="pre">discretization_spatial.py</span></code>, and the same check in <code class="docutils literal notranslate"><span class="pre">sgrid_generation.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Bottom below top</p></td>
+<td><p>strictly, on every valid cell</p></td>
+<td><p>refused: <code class="docutils literal notranslate"><span class="pre">Bottom</span> <span class="pre">surface</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">strictly</span> <span class="pre">below</span> <span class="pre">top</span> <span class="pre">surface</span> <span class="pre">on</span> <span class="pre">valid</span> <span class="pre">cells</span></code></p></td>
+<td><p>the same two functions</p></td>
+</tr>
+<tr class="row-even"><td><p>Cells much thicker than the rest</p></td>
+<td><p>thickness above the larger of 10 times the median and 500 m</p></td>
+<td><p>warning only, runtime mesh only: <code class="docutils literal notranslate"><span class="pre">Aquifer</span> <span class="pre">thickness</span> <span class="pre">outliers:</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_warn_on_outlier_thickness</span></code>; constants <code class="docutils literal notranslate"><span class="pre">_THICKNESS_OUTLIER_FACTOR</span></code> and <code class="docutils literal notranslate"><span class="pre">_THICKNESS_OUTLIER_FLOOR_M</span></code> in <code class="docutils literal notranslate"><span class="pre">discretization_spatial.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Non-orthogonality</p></td>
+<td><p>the trigger of <a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a></p></td>
+<td><p>XT3D switched on, not a refusal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">resolve_xt3d_decision</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Zonal top</p></td>
+<td><p><span class="math notranslate nohighlight">\(n_{\min}\)</span> pixels, <span class="math notranslate nohighlight">\(\varepsilon_z\)</span>, <span class="math notranslate nohighlight">\(b_{\min}\)</span></p></td>
+<td><p>fallback or clamp, counted in the log</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">zonal_top</span></code> in <code class="docutils literal notranslate"><span class="pre">zonal_stats.py</span></code>; the keys are on the cards below</p></td>
+</tr>
+<tr class="row-odd"><td><p>Structured grid for the zonal top</p></td>
+<td><p>each cell covers at least two DEM pixels</p></td>
+<td><p>zonal top skipped, resampled top kept</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_cells_cover_pixels</span></code> (argument <code class="docutils literal notranslate"><span class="pre">min_pixels</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Size keys of the mesher</p></td>
+<td><p><span class="math notranslate nohighlight">\(\ell_s \leq \ell_g\)</span>, <span class="math notranslate nohighlight">\(\ell_{\min} \leq \ell_{\max}\)</span></p></td>
+<td><p>refused when the file is read: <code class="docutils literal notranslate"><span class="pre">interface_size</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&lt;=</span> <span class="pre">global_size</span> <span class="pre">when</span> <span class="pre">refine_interfaces=true</span></code>, <code class="docutils literal notranslate"><span class="pre">min_size</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&lt;=</span> <span class="pre">max_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ZoneMeshingSettings</span></code> in <code class="docutils literal notranslate"><span class="pre">zone_meshing/config.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Geology</p></td>
+<td><p>a geology section when the mode asks for geology</p></td>
+<td><p>refused: <code class="docutils literal notranslate"><span class="pre">geology</span> <span class="pre">section</span> <span class="pre">is</span> <span class="pre">required</span> <span class="pre">when</span> <span class="pre">constraints_mode</span> <span class="pre">includes</span> <span class="pre">geology.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeshCatchmentConfig</span></code> in <code class="docutils literal notranslate"><span class="pre">mesh/config/main.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Zones that overlap</p></td>
+<td><p>priorities must settle every overlap</p></td>
+<td><p>refused: <code class="docutils literal notranslate"><span class="pre">Overlapping</span> <span class="pre">zones</span> <span class="pre">detected</span> <span class="pre">without</span> <span class="pre">priority</span> <span class="pre">resolution</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">resolve_zone_overlaps</span></code> in <code class="docutils literal notranslate"><span class="pre">_polygon_cleaning.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Gap between the zones and the domain</p></td>
+<td><p>the uncovered area is below a tolerance, and the constraint curves exist</p></td>
+<td><p>recorded in the summary file of the mesh (<code class="docutils literal notranslate"><span class="pre">qa_checks</span></code>, <code class="docutils literal notranslate"><span class="pre">constraints_qa</span></code>), never enforced</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ZoneConformalQaChecks</span></code> in <code class="docutils literal notranslate"><span class="pre">_summary_sidecar.py</span></code>, <code class="docutils literal notranslate"><span class="pre">_build_constraints_qa_contract</span></code> in <code class="docutils literal notranslate"><span class="pre">reporting.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The last row matters for the reading of a mesh: the summary file says whether the
+constraints were embedded, and no code of <code class="docutils literal notranslate"><span class="pre">hydromodpy</span></code> reads that verdict. A mesh whose
+summary says <code class="docutils literal notranslate"><span class="pre">overall_pass:</span> <span class="pre">false</span></code> still runs.</p>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>A cell has one top and one bottom. The surface inside the cell is flat.</p></li>
+<li><p>A mesh is fixed for the run. It does not move with the water table.</p></li>
+<li><p>The conductivity is isotropic in the plane. The code writes no input for horizontal
+anisotropy.</p></li>
+<li><p>The coordinates are in a projected CRS in metres. The merge of the vertices of the dual
+(1 mm) and every size of the mesher read this.</p></li>
+<li><p>The zonal rule treats a channel pixel as a pixel of the stream raster of the
+delineation. It does not read the observed network.</p></li>
+</ul>
+</section>
+<section id="limits">
+<span id="mesh-limits"></span><h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>No refinement without <code class="docutils literal notranslate"><span class="pre">min_size</span></code>.</strong> With <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-refine_interfaces" title="Enable a distance-based size field around geology or river interfaces."><code class="docutils literal notranslate"><span class="pre">mesh_catchment.zone_meshing.refine_interfaces</span></code></a>
+on and <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing-min_size" title="Lower bound on local cell size in projected metres. (m)"><code class="docutils literal notranslate"><span class="pre">mesh_catchment.zone_meshing.min_size</span></code></a> unset, the lower bound of the size is
+<span class="math notranslate nohighlight">\(\ell_g\)</span>, and Gmsh raises every size to it (figure of <a class="reference internal" href="#mesh-gmsh"><span class="std std-ref">2. A runtime mesh from Gmsh</span></a>). In a test with
+Gmsh 4.15.2, on a <span class="math notranslate nohighlight">\(1000\ \mathrm{m}\)</span> square refined along one side, the mesh had 250
+triangles with the lower bound at <span class="math notranslate nohighlight">\(\ell_g\)</span> and 602 with it at 20 m. Set <code class="docutils literal notranslate"><span class="pre">min_size</span></code> at
+or below <code class="docutils literal notranslate"><span class="pre">interface_size</span></code>.</p></li>
+<li><p><strong>The dual does not follow the constraints.</strong> It keeps the outline of the domain, not
+the river traces or the geology interfaces. A cell can hold both sides of an interface.</p></li>
+<li><p><strong>A mesh bundle written for the triangles does not fit the dual.</strong> The bundle holds one
+conductivity per triangle, and the dual has about half as many cells. The code then
+logs a warning that ends with <code class="docutils literal notranslate"><span class="pre">Configure</span> <span class="pre">K</span> <span class="pre">in</span> <span class="pre">[flow]</span> <span class="pre">or</span> <span class="pre">set</span> <span class="pre">grid_dual='triangle'</span> <span class="pre">to</span> <span class="pre">reuse</span> <span class="pre">the</span> <span class="pre">bundle.</span></code>
+and ignores the bundle value.</p></li>
+<li><p><strong>No shape check.</strong> A sliver, an abrupt change of size or a high non-orthogonality does
+not stop a run. The non-orthogonality is the only shape measure the code reads, and it
+decides about XT3D, not about the mesh. <code class="docutils literal notranslate"><span class="pre">connection_nonorthogonality_deg</span></code> and
+<code class="docutils literal notranslate"><span class="pre">nonorthogonality_summary</span></code> can be called on any planar <code class="docutils literal notranslate"><span class="pre">HydroMesh</span></code> for a closer look.</p></li>
+<li><p><strong>MODFLOW-NWT is structured.</strong> Its zonal top needs
+<a class="hmp-toml-ref reference external" href="../reference/parameters/modflownwt.html#p-modflownwt-sgrid-top_sampling-channel_source" title="Where channel pixels come from when mode='zonal'."><code class="docutils literal notranslate"><span class="pre">modflownwt.sgrid.top_sampling.channel_source</span></code></a> at <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>: the file is refused
+otherwise.</p></li>
+<li><p><strong>Boussinesq ignores <code class="docutils literal notranslate"><span class="pre">grid_dual</span></code> and the top sampling.</strong> It works on the triangles.</p></li>
+<li><p><strong>Gmsh is not reproducible.</strong> Two builds of the same input give meshes with different
+cell counts. The mesh cache, <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-cache" title="If true, reuse a previously generated mesh when its inputs (domain geometry, river constraint, lake/dam refinement, mesh and delineation configuration) are unchanged, instead of regenerating it."><code class="docutils literal notranslate"><span class="pre">mesh_catchment.cache</span></code></a>, pins the first one
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/mesh_cache.py</span></code>).</p></li>
+<li><p><strong>Not a 3D mesh.</strong> The layers are an extrusion of the plan. A footprint that changes
+from one layer to the next, or a refinement in depth, is not represented.</p></li>
+<li><p><strong>An outlier thickness only warns.</strong> A nodata value read as an elevation gives a cell
+that is kilometres deep, with a clean top, and the run converges. The warning of
+<a class="reference internal" href="#mesh-acceptance"><span class="std std-ref">8. The checks the code applies</span></a> is the only sign, and a structured grid does not emit it.</p></li>
+</ul>
+<p>The keys of the structured grid are in <a class="reference internal" href="../reference/parameters/modflow6.html"><span class="doc">[modflow6]</span></a>
+and those of the runtime mesh in <a class="reference internal" href="../reference/parameters/mesh_catchment.html"><span class="doc">[mesh_catchment]</span></a>.</p>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<p>The keys that choose the layout, the size and the top. The cards show the defaults and the
+allowed values. The three keys of <code class="docutils literal notranslate"><span class="pre">[mesh_catchment.zone_meshing]</span></code> that bound the size are
+in the first group.</p>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment">[mesh_catchment]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req-ex" data-path="mesh_catchment.constraints_mode"><summary><span class="tl-code"><span class="k">constraints_mode</span><span class="eq"> = </span><span class="v">&quot;rivers_only&quot;</span></span><span class="tl-note"><span class="tl-sum">Meshing compliance target, required in every [mesh_catchment] table.</span> <span class="tc tc-req">required</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.constraints_mode</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.constraints_mode" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-constraints_mode" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;geology_only&#x27; conforms the mesh to geology interfaces only, &#x27;rivers_only&#x27; conforms the mesh to river traces only, and &#x27;geology_rivers&#x27; enforces both sets of constraints in one mesh.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;geology_only&quot;</code></li><li><code>&quot;rivers_only&quot;</code></li><li><code>&quot;geology_rivers&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;geology_only&quot; | &quot;rivers_only&quot; | &quot;geology_rivers&quot;</dd><dt>Example</dt><dd><code>&quot;rivers_only&quot;</code>, <code>&quot;geology_rivers&quot;</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="mesh_catchment.cache"><summary><span class="tl-code"><span class="cm"># </span><span class="k">cache</span><span class="eq"> = </span><span class="v">false</span></span><span class="tl-note"><span class="tl-sum">If true, reuse a previously generated mesh when its inputs (domain geometry, river constraint, lake/dam refinement, mesh and delineation configuration) are unchanged, instead of regenerating it.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.cache</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.cache" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-cache" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Gmsh is not reproducible run to run (it reseeds from the system clock), so regeneration yields a different mesh and makes results and calibration objectives irreproducible; caching pins the mesh. Default off (regenerate every run). See hydromodpy.spatial.mesh.mesh_cache.</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details></div><pre class="tb-src" hidden>[mesh_catchment]
+constraints_mode = &quot;rivers_only&quot;
+# cache = false</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/mesh_catchment.html#p-mesh_catchment-zone_meshing">[mesh_catchment.zone_meshing]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="2"><span class="hmp-adv-off">show 2 dev/expert keys</span><span class="hmp-adv-on">hide 2 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="mesh_catchment.zone_meshing.algorithm"><summary><span class="tl-code"><span class="cm"># </span><span class="k">algorithm</span><span class="eq"> = </span><span class="v">&quot;delaunay&quot;</span></span><span class="tl-note"><span class="tl-sum">Planar Gmsh algorithm name.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.algorithm</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.algorithm" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-algorithm" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>In practice the examples use &#x27;delaunay&#x27;, which is a robust default for irregular geological and river-constrained domains.</p></dd><dt>Accepted</dt><dd>string</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="mesh_catchment.zone_meshing.global_size"><summary><span class="tl-code"><span class="cm"># </span><span class="k">global_size</span><span class="eq"> = </span><span class="v">250.0</span></span><span class="tl-note"><span class="tl-sum">Baseline target cell size in projected metres over the full support domain.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt;= 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.global_size</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.global_size" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-global_size" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Think of it as the coarse background resolution before local interface refinement is added.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="mesh_catchment.zone_meshing.min_size"><summary><span class="tl-code"><span class="cm"># </span><span class="k">min_size</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">Lower bound on local cell size in projected metres.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt;= 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.min_size</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.min_size" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-min_size" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Use it to prevent extreme refinement from generating very small cells in narrow features.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="mesh_catchment.zone_meshing.max_size"><summary><span class="tl-code"><span class="cm"># </span><span class="k">max_size</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">Upper bound on local cell size in projected metres.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt;= 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.max_size</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.max_size" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-max_size" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Use it when you want to cap the coarsening far from interfaces.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="mesh_catchment.zone_meshing.refine_interfaces"><summary><span class="tl-code"><span class="cm"># </span><span class="k">refine_interfaces</span><span class="eq"> = </span><span class="v">false</span></span><span class="tl-note"><span class="tl-sum">Enable a distance-based size field around geology or river interfaces.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.refine_interfaces</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.refine_interfaces" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-refine_interfaces" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>When false, the mesh uses only the global background size constraints.</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="mesh_catchment.zone_meshing.interface_size"><summary><span class="tl-code"><span class="cm"># </span><span class="k">interface_size</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">Target local size, in projected metres, close to constrained interfaces.</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.interface_size</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.interface_size" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-interface_size" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>When omitted and refine_interfaces=true, the schema derives a conservative default from global_size/min_size.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-unset tl-adv tl-cmt" data-path="mesh_catchment.zone_meshing.interface_distance"><summary><span class="tl-code"><span class="cm"># </span><span class="k">interface_distance</span><span class="eq"> = </span><span class="ph">‹number›</span></span><span class="tl-note"><span class="tl-sum">Influence distance, in projected metres, over which the local interface refinement fades back to the background size.</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_catchment.zone_meshing.interface_distance</code> <button class="hmp-copy" type="button" data-copy="mesh_catchment.zone_meshing.interface_distance" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_catchment-zone_meshing-interface_distance" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Larger values spread refinement farther away from the interface network.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[mesh_catchment.zone_meshing]
+# algorithm = &quot;delaunay&quot;
+# global_size = 250.0
+# min_size = &lt;number&gt;
+# max_size = &lt;number&gt;
+# refine_interfaces = false</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/mesh_input.html#p-mesh_input">[mesh_input]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset tl-cmt" data-path="mesh_input.mesh_path"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mesh_path</span><span class="eq"> = </span><span class="ph">‹path›</span></span><span class="tl-note"><span class="tl-sum">Path to the external planar mesh file (typically a <code>.msh</code>).</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_input.mesh_path</code> <button class="hmp-copy" type="button" data-copy="mesh_input.mesh_path" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_input-mesh_path" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Required when <code>bundle_dir</code> is not provided. Relative paths are resolved against the TOML directory.</p></dd><dt>Accepted</dt><dd>path</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="mesh_input.bundle_dir"><summary><span class="tl-code"><span class="cm"># </span><span class="k">bundle_dir</span><span class="eq"> = </span><span class="ph">‹path›</span></span><span class="tl-note"><span class="tl-sum">Path to the solver-exchange mesh bundle directory associated with the external mesh.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">mesh_input.bundle_dir</code> <button class="hmp-copy" type="button" data-copy="mesh_input.bundle_dir" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-mesh_input-bundle_dir" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Required when <code>mesh_path</code> is not provided. Relative paths are resolved against the TOML directory.</p></dd><dt>Accepted</dt><dd>path</dd></dl></div></details></div><pre class="tb-src" hidden>[mesh_input]
+# mesh_path = &lt;path&gt;
+# bundle_dir = &lt;path&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-planar">[modflow6.sgrid.planar]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.planar.mode"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mode</span><span class="eq"> = </span><span class="v">&quot;keep_native&quot;</span></span><span class="tl-note"><span class="tl-sum">Planar solver-grid mode: keep the native domain support or resample to an explicit (ny, nx) target shape.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.planar.mode</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.planar.mode" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-planar-mode" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;keep_native&quot;</code> : Keeps the top raster&#x27;s native shape and resolution, no resampling.</li><li><code>&quot;resample_to_shape&quot;</code> : Resamples top and bottom onto an explicit (ny, nx) grid, keeping the same extent.</li></ul></dd><dt>Accepted</dt><dd>&quot;keep_native&quot; | &quot;resample_to_shape&quot;</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="modflow6.sgrid.planar.nx"><summary><span class="tl-code"><span class="cm"># </span><span class="k">nx</span><span class="eq"> = </span><span class="ph">‹integer›</span></span><span class="tl-note"><span class="tl-sum">Target number of columns when planar mode is &#x27;resample_to_shape&#x27;.</span> <span class="tc tc-unit">-</span> <span class="tc tc-range">&gt; 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.planar.nx</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.planar.nx" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-planar-nx" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>-</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="modflow6.sgrid.planar.ny"><summary><span class="tl-code"><span class="cm"># </span><span class="k">ny</span><span class="eq"> = </span><span class="ph">‹integer›</span></span><span class="tl-note"><span class="tl-sum">Target number of rows when planar mode is &#x27;resample_to_shape&#x27;.</span> <span class="tc tc-unit">-</span> <span class="tc tc-range">&gt; 0</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.planar.ny</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.planar.ny" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-planar-ny" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>-</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.sgrid.planar.resampling"><summary><span class="tl-code"><span class="cm"># </span><span class="k">resampling</span><span class="eq"> = </span><span class="v">&quot;bilinear&quot;</span></span><span class="tl-note"><span class="tl-sum">Resampling rule applied when planar mode is &#x27;resample_to_shape&#x27;.</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.planar.resampling</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.planar.resampling" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-planar-resampling" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;bilinear&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;average&quot;</code> <span class="hmp-muted">no explanation</span></li><li><code>&quot;nearest&quot;</code> <span class="hmp-muted">no explanation</span></li></ul></dd><dt>Accepted</dt><dd>&quot;bilinear&quot; | &quot;average&quot; | &quot;nearest&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.sgrid.planar]
+# mode = &quot;keep_native&quot;
+# nx = &lt;integer&gt;
+# ny = &lt;integer&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-sgrid">[modflow6.sgrid]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.grid_dual"><summary><span class="tl-code"><span class="cm"># </span><span class="k">grid_dual</span><span class="eq"> = </span><span class="v">&quot;voronoi&quot;</span></span><span class="tl-note"><span class="tl-sum">Applies only to a MODFLOW 6 run on a Gmsh mesh built by the run; ignored for structured grids, MODFLOW-NWT and Boussinesq (which keeps its own triangulation).</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.grid_dual</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.grid_dual" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-grid_dual" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;voronoi&#x27; uses the PEBI dual (exact CVFD orthogonality, ~half the cells) and is the default; &#x27;triangle&#x27; keeps the triangulation cells as the DISV grid for simplex comparison runs.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;voronoi&quot;</code></li><li><code>&quot;triangle&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;voronoi&quot; | &quot;triangle&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.sgrid]
+# grid_dual = &quot;voronoi&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-top_sampling">[modflow6.sgrid.top_sampling]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="4"><span class="hmp-adv-off">show 4 dev/expert keys</span><span class="hmp-adv-on">hide 4 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.top_sampling.mode"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mode</span><span class="eq"> = </span><span class="v">&quot;centroid&quot;</span></span><span class="tl-note"><span class="tl-sum">Top-sampling strategy.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.mode</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.mode" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-mode" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;centroid&#x27; samples the DEM at each cell generator, or resamples it to a structured grid (fast, the current behaviour, byte-identical default). &#x27;zonal&#x27; reduces every DEM pixel inside a cell with per-class stats.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;centroid&quot;</code></li><li><code>&quot;zonal&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;centroid&quot; | &quot;zonal&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.top_sampling.hillslope_stat"><summary><span class="tl-code"><span class="cm"># </span><span class="k">hillslope_stat</span><span class="eq"> = </span><span class="v">&quot;median&quot;</span></span><span class="tl-note"><span class="tl-sum">Zonal statistic over non-channel (hillslope) pixels inside a cell.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.hillslope_stat</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.hillslope_stat" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-hillslope_stat" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;mean&quot;</code> : Averages every hillslope pixel in the cell to set its top elevation.</li><li><code>&quot;median&quot;</code> : Uses the median hillslope pixel elevation, robust to outlier pixels.</li><li><code>&quot;min&quot;</code> : Uses the lowest hillslope pixel elevation found inside the cell.</li><li><code>&quot;max&quot;</code> : Uses the highest hillslope pixel elevation found inside the cell.</li><li><code>&quot;p10&quot;</code> : Uses the 10th percentile of hillslope pixel elevations inside the cell.</li><li><code>&quot;p25&quot;</code> : Uses the 25th percentile of hillslope pixel elevations inside the cell.</li></ul></dd><dt>Accepted</dt><dd>&quot;mean&quot; | &quot;median&quot; | &quot;min&quot; | &quot;max&quot; | &quot;p10&quot; | &quot;p25&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.top_sampling.channel_stat"><summary><span class="tl-code"><span class="cm"># </span><span class="k">channel_stat</span><span class="eq"> = </span><span class="v">&quot;min&quot;</span></span><span class="tl-note"><span class="tl-sum">Zonal statistic over channel pixels inside a cell (thalweg-preserving; &#x27;min&#x27; keeps the incised low).</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.channel_stat</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.channel_stat" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-channel_stat" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;min&quot;</code> : Uses the lowest channel pixel elevation, keeping the incised thalweg low.</li><li><code>&quot;p10&quot;</code> : Uses the 10th percentile of channel pixel elevations, near the thalweg low.</li><li><code>&quot;p25&quot;</code> : Uses the 25th percentile of channel pixel elevations, above the thalweg low.</li><li><code>&quot;median&quot;</code> : Uses the median channel pixel elevation, less aggressive than the thalweg low.</li><li><code>&quot;mean&quot;</code> : Averages channel pixel elevations, smoothing over the incised thalweg.</li></ul></dd><dt>Accepted</dt><dd>&quot;min&quot; | &quot;p10&quot; | &quot;p25&quot; | &quot;median&quot; | &quot;mean&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.top_sampling.channel_source"><summary><span class="tl-code"><span class="cm"># </span><span class="k">channel_source</span><span class="eq"> = </span><span class="v">&quot;streams_raster&quot;</span></span><span class="tl-note"><span class="tl-sum">Where channel pixels come from when mode=&#x27;zonal&#x27;.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.channel_source</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.channel_source" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-channel_source" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;streams_raster&#x27; uses the delineated river-network raster reprojected onto the DEM grid; &#x27;none&#x27; disables the channel class (every pixel is hillslope).</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;none&quot;</code></li><li><code>&quot;streams_raster&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;none&quot; | &quot;streams_raster&quot;</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.sgrid.top_sampling.channel_buffer_px"><summary><span class="tl-code"><span class="cm"># </span><span class="k">channel_buffer_px</span><span class="eq"> = </span><span class="v">0</span></span><span class="tl-note"><span class="tl-sum">Dilate the channel pixel mask by this many pixels before reducing, to capture a channel that grazes a cell without a pixel centre on it.</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.channel_buffer_px</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.channel_buffer_px" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-channel_buffer_px" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.sgrid.top_sampling.spike_guard_tol_m"><summary><span class="tl-code"><span class="cm"># </span><span class="k">spike_guard_tol_m</span><span class="eq"> = </span><span class="v">2.0</span></span><span class="tl-note"><span class="tl-sum">Revert a hillslope cell&#x27;s zonal value to the centroid sample when it deviates more than this many metres (guards nodata/edge spikes); channel cells are exempt since they are lowered on purpose.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.spike_guard_tol_m</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.spike_guard_tol_m" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-spike_guard_tol_m" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>0 disables the guard.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.sgrid.top_sampling.min_pixels"><summary><span class="tl-code"><span class="cm"># </span><span class="k">min_pixels</span><span class="eq"> = </span><span class="v">3</span></span><span class="tl-note"><span class="tl-sum">Minimum DEM pixels inside a cell to trust a hillslope zonal statistic; below this the cell falls back to the centroid sample.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.min_pixels</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.min_pixels" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-min_pixels" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A channel cell uses its channel stat from a single thalweg pixel.</p></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.sgrid.top_sampling.min_thickness_m"><summary><span class="tl-code"><span class="cm"># </span><span class="k">min_thickness_m</span><span class="eq"> = </span><span class="v">0.1</span></span><span class="tl-note"><span class="tl-sum">Minimum layer-0 thickness (m) kept after zonal top lowering, so a carved channel top never collides with the aquifer bottom.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.top_sampling.min_thickness_m</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.top_sampling.min_thickness_m" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-top_sampling-min_thickness_m" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.sgrid.top_sampling]
+# mode = &quot;centroid&quot;
+# hillslope_stat = &quot;median&quot;
+# channel_stat = &quot;min&quot;
+# channel_source = &quot;streams_raster&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-sgrid-vertical">[modflow6.sgrid.vertical]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.vertical.genmtd_lay"><summary><span class="tl-code"><span class="cm"># </span><span class="k">genmtd_lay</span><span class="eq"> = </span><span class="v">&quot;constant&quot;</span></span><span class="tl-note"><span class="tl-sum">How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, or the fractions you list.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.vertical.genmtd_lay</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.vertical.genmtd_lay" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-vertical-genmtd_lay" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;constant&quot;</code> : Splits local thickness into nlay equal-fraction layers at every cell.</li><li><code>&quot;decay&quot;</code> : Grows layer thickness geometrically with depth when lay_decay is above one.</li><li><code>&quot;list&quot;</code> : Uses the explicit per-layer thickness fractions given in lay_proportions.</li></ul></dd><dt>Accepted</dt><dd>&quot;constant&quot; | &quot;decay&quot; | &quot;list&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="modflow6.sgrid.vertical.nlay"><summary><span class="tl-code"><span class="cm"># </span><span class="k">nlay</span><span class="eq"> = </span><span class="v">1</span></span><span class="tl-note"><span class="tl-sum">Number of layers for &#x27;constant&#x27; and &#x27;decay&#x27;.</span> <span class="tc tc-unit">-</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.vertical.nlay</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.vertical.nlay" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-vertical-nlay" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>With &#x27;list&#x27;, the number of fractions sets it.</p></dd><dt>Accepted</dt><dd>integer</dd><dt>Unit</dt><dd>-</dd></dl></div></details><details class="tl tl-unset-ex tl-cmt" data-path="modflow6.sgrid.vertical.lay_decay"><summary><span class="tl-code"><span class="cm"># </span><span class="k">lay_decay</span><span class="eq"> = </span><span class="v">2.0</span></span><span class="tl-note"><span class="tl-sum">Ratio of each layer&#x27;s thickness to the thickness of the layer above it, above 1.</span> <span class="tc tc-unit">-</span> <span class="tc tc-when">only if genmtd_lay = &quot;decay&quot;</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.vertical.lay_decay</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.vertical.lay_decay" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-vertical-lay_decay" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>With 2, each layer is twice as thick as the one above.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Unit</dt><dd>-</dd><dt>Example</dt><dd><code>2.0</code></dd><dt>Only if</dt><dd>genmtd_lay = &quot;decay&quot;</dd></dl></div></details><details class="tl tl-unset-ex tl-cmt" data-path="modflow6.sgrid.vertical.lay_proportions"><summary><span class="tl-code"><span class="cm"># </span><span class="k">lay_proportions</span><span class="eq"> = </span><span class="v">[0.2, 0.3, 0.5]</span></span><span class="tl-note"><span class="tl-sum">Share of the thickness each layer takes, from the top.</span> <span class="tc tc-when">only if genmtd_lay = &quot;list&quot;</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.sgrid.vertical.lay_proportions</code> <button class="hmp-copy" type="button" data-copy="modflow6.sgrid.vertical.lay_proportions" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-sgrid-vertical-lay_proportions" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The shares must sum to 1.</p></dd><dt>Accepted</dt><dd>list of number</dd><dt>Example</dt><dd><code>[0.2, 0.3, 0.5]</code></dd><dt>Only if</dt><dd>genmtd_lay = &quot;list&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.sgrid.vertical]
+# genmtd_lay = &quot;constant&quot;
+# nlay = 1
+# lay_decay = 2.0
+# lay_proportions = [0.2, 0.3, 0.5]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-runtime">[modflow6.runtime]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset tl-adv tl-cmt" data-path="modflow6.runtime.mf6_enable_xt3d"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mf6_enable_xt3d</span><span class="eq"> = </span><span class="ph">‹true | false›</span></span><span class="tl-note"><span class="tl-sum">Enable MF6 NPF XT3D terms.</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.runtime.mf6_enable_xt3d</code> <button class="hmp-copy" type="button" data-copy="modflow6.runtime.mf6_enable_xt3d" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-runtime-mf6_enable_xt3d" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>When left to None, XT3D is auto-enabled only when the mesh is significantly non-orthogonal or anisotropic K is configured; the default Voronoi/PEBI dual grid is near-orthogonal, so XT3D stays off there. It adds cost but improves accuracy on non-orthogonal or anisotropic grids.</p></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.runtime]</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div></section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test appears
+here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">27 test files import <code>hydromodpy.spatial.mesh.ops.voronoi</code>, <code>hydromodpy.spatial.mesh.ops.zonal_stats</code>, <code>hydromodpy.spatial.mesh.ops.mesh_orthogonality</code>, <code>hydromodpy.spatial.mesh.cartesian_grid.sgrid_generation</code>, <code>hydromodpy.spatial.mesh.cartesian_grid.sgrid_config</code>, <code>hydromodpy.spatial.mesh.gmsh_grid.zone_meshing</code>, <code>hydromodpy.spatial.mesh.mesh_cache</code>, <code>hydromodpy.solver.modflow_grid.discretization_spatial</code>, <code>hydromodpy.solver.modflow6.builders.solver_options</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>integration: 1</summary><ul><li title="tests/integration/mesh/gmsh_grid/test_zone_conformal_runner_toml_entry.py">Zone conformal runner toml entry. <span class="hmp-muted">mesh/gmsh_grid</span></li></ul></details><details class="hmp-tested-tier"><summary>unit: 26</summary><ul><li title="tests/unit/config/test_a_template_carries_the_variant_it_was_given.py">A template carries the variant it was given. <span class="hmp-muted">config</span></li><li title="tests/unit/config/test_taught_keys_are_user_keys.py">Taught keys are user keys. <span class="hmp-muted">config</span></li><li title="tests/unit/geographic/test_the_regularised_bed_reaches_the_top_and_nothing_else.py">The regularised bed reaches the top and nothing else. <span class="hmp-muted">geographic</span></li><li title="tests/unit/mesh/cartesian_grid/field_discretization/test_sgrid_fieldparam_discretization.py">Sgrid fieldparam discretization. <span class="hmp-muted">mesh/cartesian_grid/field_discretization</span></li><li title="tests/unit/mesh/cartesian_grid/test_sgrid_generation.py">Sgrid generation. <span class="hmp-muted">mesh/cartesian_grid</span></li><li title="tests/unit/mesh/gmsh_grid/test_gmsh_driver_helpers.py">Gmsh driver helpers. <span class="hmp-muted">mesh/gmsh_grid</span></li><li title="tests/unit/mesh/gmsh_grid/test_reference_2d_geology_conformal_planning.py">Reference 2d geology conformal planning. <span class="hmp-muted">mesh/gmsh_grid</span></li><li title="tests/unit/mesh/gmsh_grid/test_refinement_grid.py">Refinement grid. <span class="hmp-muted">mesh/gmsh_grid</span></li><li title="tests/unit/mesh/gmsh_grid/test_refinement_policy.py">Refinement policy. <span class="hmp-muted">mesh/gmsh_grid</span></li><li title="tests/unit/mesh/gmsh_grid/test_zone_conformal_meshing.py">Zone conformal meshing. <span class="hmp-muted">mesh/gmsh_grid</span></li><li title="tests/unit/mesh/test_ragged_consumers.py">Ragged consumers. <span class="hmp-muted">mesh</span></li><li title="tests/unit/mesh/test_voronoi.py">Voronoi. <span class="hmp-muted">mesh</span></li><li title="tests/unit/solver/modflow_grid/test_a_structured_grid_coarser_than_its_dem_takes_the_zonal_top.py">A structured grid coarser than its dem takes the zonal top. <span class="hmp-muted">solver/modflow_grid</span></li><li title="tests/unit/solver/modflow_grid/test_discretization_zonal_seam.py">Discretization zonal seam. <span class="hmp-muted">solver/modflow_grid</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_config.py">Modflow config. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_domain_surfaces.py">Modflow domain surfaces. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/test_a_calibration_trial_value_reaches_the_npf_k_array.py">A calibration trial value reaches the npf k array. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_robustness.py">Modflow6 robustness. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_voronoi_dual_support.py">Modflow6 voronoi dual support. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_zonal_channel_mask_keeps_the_stream_background_out.py">The zonal channel mask keeps the stream background out. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_xt3d_advisor.py">Xt3d advisor. <span class="hmp-muted">solver</span></li><li title="tests/unit/spatial/test_mesh_cache.py">Mesh cache. <span class="hmp-muted">spatial</span></li><li title="tests/unit/spatial/test_mesh_refinement.py">Mesh refinement. <span class="hmp-muted">spatial</span></li><li title="tests/unit/spatial/test_the_bed_regularisation_keeps_the_cached_mesh.py">The bed regularisation keeps the cached mesh. <span class="hmp-muted">spatial</span></li><li title="tests/unit/spatial/test_zonal_stats.py">Zonal stats. <span class="hmp-muted">spatial</span></li><li title="tests/unit/workflow/test_a_trial_moves_the_aquifer_geometry.py">A trial moves the aquifer geometry. <span class="hmp-muted">workflow</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The surfaces, the plan, the top, the layers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_grid/discretization_spatial.py</span></code> (<code class="docutils literal notranslate"><span class="pre">build_spatial_discretization</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_domain_surfaces</span></code>, <code class="docutils literal notranslate"><span class="pre">project_surfaces_to_planar_grid</span></code>, <code class="docutils literal notranslate"><span class="pre">_build_extruded_solver_mesh_from_runtime_planar</span></code>, <code class="docutils literal notranslate"><span class="pre">_compute_layer_proportions</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The structured grid</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/cartesian_grid/sgrid_generation.py</span></code> (<code class="docutils literal notranslate"><span class="pre">StructuredGridBuilder.build_from_surfaces</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The keys of the grid</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/cartesian_grid/sgrid_config.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The centroid sample</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/surface_sampling.py</span></code> (<code class="docutils literal notranslate"><span class="pre">PreparedSurfaceSampler.sample</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The zonal top</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/ops/zonal_stats.py</span></code> (<code class="docutils literal notranslate"><span class="pre">zonal_top</span></code>), <code class="docutils literal notranslate"><span class="pre">discretization_spatial.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_zonal_top_flat</span></code>, <code class="docutils literal notranslate"><span class="pre">_zonal_structured_top</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The channel mask</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/build.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_resolve_channel_mask_for_zonal</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The Voronoi dual</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/ops/voronoi.py</span></code> (<code class="docutils literal notranslate"><span class="pre">voronoi_dual_of_mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">voronoi_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">domain_polygon_from_mesh</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The angle of a connection</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/ops/mesh_orthogonality.py</span></code> (<code class="docutils literal notranslate"><span class="pre">connection_nonorthogonality_deg</span></code>, <code class="docutils literal notranslate"><span class="pre">nonorthogonality_summary</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The XT3D decision</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/solver_options.py</span></code> (<code class="docutils literal notranslate"><span class="pre">resolve_xt3d_decision</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The Gmsh sizes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/gmsh_grid/zone_meshing/_gmsh_fields.py</span></code>, <code class="docutils literal notranslate"><span class="pre">_gmsh_occ.py</span></code> (<code class="docutils literal notranslate"><span class="pre">apply_mesh_options</span></code>), <code class="docutils literal notranslate"><span class="pre">_build_context.py</span></code> (<code class="docutils literal notranslate"><span class="pre">compute_effective_max_size</span></code>), <code class="docutils literal notranslate"><span class="pre">config.py</span></code> (<code class="docutils literal notranslate"><span class="pre">ZoneMeshingSettings</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The mesh phase and its cache</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/mesh.py</span></code> (<code class="docutils literal notranslate"><span class="pre">run_mesh_phase</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/mesh_cache.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The DISV export</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/adapters/flopy_adapter.py</span></code> (<code class="docutils literal notranslate"><span class="pre">to_flopy_disv_args</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/build.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The QA summary of a mesh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/gmsh_grid/zone_meshing/_summary_sidecar.py</span></code>, <code class="docutils literal notranslate"><span class="pre">orchestration/reporting.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="solvers.html"><span class="doc">The solvers of the aquifer</span></a>: what the solvers do with the cells.</p></li>
+<li><p><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>: the XT3D terms and their trigger.</p></li>
+<li><p><a class="reference internal" href="groundwater-flow.html"><span class="doc">The groundwater flow problem</span></a>: the equation the cells discretise.</p></li>
+<li><p><a class="reference internal" href="../reference/parameters/mesh_catchment.html"><span class="doc">[mesh_catchment]</span></a>: the mesher section as a reference page.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solvers/field-to-cell-parameter-transfer.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">From a zone map to the cells</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="solvers/xt3d-on-irregular-disv-meshes.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">XT3D on irregular meshes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-chain-in-one-list">The chain in one list</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-structured-grid">1. A structured grid</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-runtime-mesh-from-gmsh">2. A runtime mesh from Gmsh</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-voronoi-dual">3. The Voronoi dual</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flow-between-two-cells-and-the-angle">4. Flow between two cells, and the angle</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-top-of-a-cell">5. The top of a cell</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#centroid">Centroid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#zonal">Zonal</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thickness-and-layers">6. Thickness and layers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-many-cells-a-size-costs">7. How many cells a size costs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-checks-the-code-applies">8. The checks the code applies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

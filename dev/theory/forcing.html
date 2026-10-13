@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Rain and evaporation: the forcing" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/forcing.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The aquifer model does not see days: it sees stress periods, and one rate per cell for each period. This page gives the rules that turn daily series and daily grids into those rates. How the output..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/forcing_period.png" />
+<meta property="og:image:alt" content="Six monthly periods and a weekly record with a gap over March that ends in late April. January, February and April take the mean of their samples; March and May take the sample in force; June is not covered." />
+<meta name="description" content="The aquifer model does not see days: it sees stress periods, and one rate per cell for each period. This page gives the rules that turn daily series and daily grids into those rates. How the output..." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>Rain and evaporation: the forcing &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/forcing';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/forcing.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The daily soil reservoir" href="soil-reservoir.html" />
+    <link rel="prev" title="Theory" href="index.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Rain and evaporation: the forcing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="rain-and-evaporation-the-forcing">
+<h1>Rain and evaporation: the forcing<a class="headerlink" href="#rain-and-evaporation-the-forcing" title="Link to this heading">#</a></h1>
+<p>The aquifer model does not see days: it sees stress periods, and one rate per
+cell for each period. This page gives the rules that turn daily series and daily
+grids into those rates. How the outputs are put back on the same periods is on
+<a class="reference internal" href="time-alignment.html"><span class="doc">Time alignment of outputs and observations</span></a>. The keys are in
+<a class="reference internal" href="../reference/parameters/flow/sinks_sources/recharge.html"><span class="doc">[flow.sinks_sources.recharge]</span></a>
+and <a class="reference internal" href="../reference/parameters/simulation.html"><span class="doc">[simulation]</span></a>.</p>
+<p>The period, unit, coverage and runoff rules are the same under the three solvers;
+sections 5 and 7 note where they differ. The daily soil reservoir
+(<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>) is here one more source of daily grids.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text"><span class="math notranslate nohighlight">\(k\)</span> is a stress period, <span class="math notranslate nohighlight">\(n_\mathrm{per}\)</span> the number of periods. <span class="math notranslate nohighlight">\(j\)</span> is one sample
+of a record, stamped <span class="math notranslate nohighlight">\(t_j\)</span>. Rates are volumes per area and per time, so lengths
+per time. A positive recharge adds water to the aquifer; a positive ETP removes
+it. Every symbol of the site is on <a class="reference internal" href="notation.html"><span class="doc">Notation</span></a>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p class="sd-card-text">Symbol</p></th>
+<th class="head"><p class="sd-card-text">Meaning</p></th>
+<th class="head"><p class="sd-card-text">Unit</p></th>
+<th class="head"><p class="sd-card-text">Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta t\)</span></p></td>
+<td><p class="sd-card-text">length of a stress period, the stretch of time that gets one forcing value</p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-step_value" title="Forcing/stress-period time-step scalar or inline token '&lt;value&gt; &lt;unit&gt;' (for example '30 day')."><code class="docutils literal notranslate"><span class="pre">step_value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(A\)</span></p></td>
+<td><p class="sd-card-text">catchment area</p></td>
+<td><p class="sd-card-text">m²</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/geographic.html#p-geographic-catchment" title="How the model domain is defined."><code class="docutils literal notranslate"><span class="pre">geographic.catchment</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(N\)</span></p></td>
+<td><p class="sd-card-text">recharge rate, positive into the aquifer</p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge" title="Diffuse recharge configuration."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(t_0, t_\mathrm{end}\)</span></p></td>
+<td><p class="sd-card-text">first and last day of the run, the last day included</p></td>
+<td><p class="sd-card-text">date</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-start_datetime" title="Simulation window lower datetime bound used by launcher-level time alignment and forcing checks."><code class="docutils literal notranslate"><span class="pre">start_datetime</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-end_datetime" title="Simulation window upper datetime bound, interpreted as inclusive."><code class="docutils literal notranslate"><span class="pre">end_datetime</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(b_k\)</span></p></td>
+<td><p class="sd-card-text">edge <span class="math notranslate nohighlight">\(k\)</span> of the stress periods; period <span class="math notranslate nohighlight">\(k\)</span> is <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span> and is stamped <span class="math notranslate nohighlight">\(b_{k+1}\)</span></p></td>
+<td><p class="sd-card-text">date</p></td>
+<td><p class="sd-card-text">derived from <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-step_value" title="Forcing/stress-period time-step scalar or inline token '&lt;value&gt; &lt;unit&gt;' (for example '30 day')."><code class="docutils literal notranslate"><span class="pre">step_value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(n_\mathrm{per}\)</span></p></td>
+<td><p class="sd-card-text">number of stress periods of the run</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(x_j, t_j\)</span></p></td>
+<td><p class="sd-card-text">sample <span class="math notranslate nohighlight">\(j\)</span> of a forcing record, and its stamp</p></td>
+<td><p class="sd-card-text">mm/day, date</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/data/precipitation.html#p-data-precipitation" title="Precipitation configuration (liquid and solid precipitation)."><code class="docutils literal notranslate"><span class="pre">data.precipitation</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/data/etp.html#p-data-etp" title="ETP configuration (potential evapotranspiration)."><code class="docutils literal notranslate"><span class="pre">data.etp</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/data/recharge.html#p-data-recharge" title="Recharge configuration (drainage / soil infiltration time series)."><code class="docutils literal notranslate"><span class="pre">data.recharge</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/data/runoff.html#p-data-runoff" title="Runoff configuration (surface runoff time series)."><code class="docutils literal notranslate"><span class="pre">data.runoff</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta t_r\)</span></p></td>
+<td><p class="sd-card-text">step of a record: the median spacing of its stamps, the interval the last sample stands for</p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\bar x_k\)</span></p></td>
+<td><p class="sd-card-text">value stress period <span class="math notranslate nohighlight">\(k\)</span> takes from a record</p></td>
+<td><p class="sd-card-text">mm/day, then m/s</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(N_k, E_k\)</span></p></td>
+<td><p class="sd-card-text">recharge and ETP rate of stress period <span class="math notranslate nohighlight">\(k\)</span></p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-values" title="Recharge rate: one number, one number per stress period, a table {period: value}, or the series loaded from [data.recharge], in the unit that 'units' names (mm/day by default). (mm/day)"><code class="docutils literal notranslate"><span class="pre">values</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-values" title="Evapotranspiration rate, in the unit that units names (mm/day by default): one number, one number per stress period, a table {period: value}, or the series loaded from [data.etp]."><code class="docutils literal notranslate"><span class="pre">values</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\hat N\)</span></p></td>
+<td><p class="sd-card-text">rate a steady stress period takes</p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-first_clim" title="Recharge rate of every steady stress period: every period of a steady run, and the first period of a transient run when flow.first_period_steady is true."><code class="docutils literal notranslate"><span class="pre">first_clim</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(N^+_k, N^-_k\)</span></p></td>
+<td><p class="sd-card-text">recharge part and deficit part of a net recharge</p></td>
+<td><p class="sd-card-text">m/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-negative_to_evt" title="When true, negative recharge values are routed to the solver EVT package and RCH receives the non-negative clipped recharge."><code class="docutils literal notranslate"><span class="pre">negative_to_evt</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(Q^\mathrm{ro}_k\)</span></p></td>
+<td><p class="sd-card-text">catchment runoff of period <span class="math notranslate nohighlight">\(k\)</span>, as a volume per time</p></td>
+<td><p class="sd-card-text">m³/s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/data/runoff.html#p-data-runoff" title="Runoff configuration (surface runoff time series)."><code class="docutils literal notranslate"><span class="pre">data.runoff</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(d_\mathrm{ext}\)</span></p></td>
+<td><p class="sd-card-text">extinction depth of the evapotranspiration, below its surface</p></td>
+<td><p class="sd-card-text">m</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-extinction_depth" title="Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth. (m)"><code class="docutils literal notranslate"><span class="pre">extinction_depth</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/modflow6.html#p-modflow6-process_specific-evt_extinction_depth" title="Meters; extinction depth for the EVT sink used when recharge negatives are routed to EVT."><code class="docutils literal notranslate"><span class="pre">evt_extinction_depth</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details><section id="the-window-is-cut-into-periods">
+<span id="forcing-window"></span><h2>1. The window is cut into periods<a class="headerlink" href="#the-window-is-cut-into-periods" title="Link to this heading">#</a></h2>
+<p>The edges start at <span class="math notranslate nohighlight">\(b_0 = t_0\)</span> and advance by one step <span class="math notranslate nohighlight">\(\Delta t\)</span> until the first
+edge that reaches the end of the last day:</p>
+<div class="math notranslate nohighlight" id="equation-eq-period-edges">
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-period-edges" title="Link to this equation">#</a></span>\[
+b_{k+1} = b_k + \Delta t,
+\qquad
+b_{n_\mathrm{per}} = t_\mathrm{end} + 1\ \text{day}\quad(+ 1\ \text{hour for an hourly step}).
+\]</div>
+<p>Period <span class="math notranslate nohighlight">\(k\)</span> is the half-open interval <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span>. The end date is part of the
+run, so the last edge is the day after it. A step that does not land on that edge
+is refused: the window is not aligned with the step.</p>
+<p>Edges can also be given explicitly, as <code class="docutils literal notranslate"><span class="pre">window.period_bounds</span></code>. The code sets them,
+and no TOML key does. <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/ic.html#p-flow-ic" title="Validated flow initial-condition structure parsed from [flow.ic]."><code class="docutils literal notranslate"><span class="pre">flow.ic</span></code></a> of type <code class="docutils literal notranslate"><span class="pre">steady_state</span></code> uses this for its
+auxiliary steady model: one period that spans the whole window
+(<a class="reference internal" href="#forcing-steady"><span class="std std-ref">5. Steady periods and first_clim</span></a>).</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">build_simulation_time_boundaries</span></code>.</p>
+</section>
+<section id="one-series-per-variable">
+<span id="forcing-series"></span><h2>2. One series per variable<a class="headerlink" href="#one-series-per-variable" title="Link to this heading">#</a></h2>
+<p>The data layer hands a variable over as station records or as grids. Two rules
+reduce them to the shape the flow needs.</p>
+<p><strong>Stations.</strong> Several stations are averaged at each stamp, with equal weights. A
+single station is used as it is.</p>
+<p><strong>Spatial mode.</strong> <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-spatial_mode" title="How to interpret spatial data: 'auto' (points-&gt;homogeneous, fields-&gt;heterogeneous), 'homogeneous' (force spatial averaging), 'heterogeneous' (force per-cell discretization, including point-to-grid interpolation when stations have coordinates)."><code class="docutils literal notranslate"><span class="pre">spatial_mode</span></code></a>
+decides what stays a series and what stays a grid:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Stations</p></th>
+<th class="head"><p>Grids</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">auto</span></code></p></td>
+<td><p>one series</p></td>
+<td><p>kept as a grid</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">homogeneous</span></code></p></td>
+<td><p>one series</p></td>
+<td><p>reduced to one spatial mean per stamp</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">heterogeneous</span></code></p></td>
+<td><p>placed on the cells if they have coordinates, else one series</p></td>
+<td><p>kept as a grid</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Under <code class="docutils literal notranslate"><span class="pre">auto</span></code>, station records with coordinates become a grid only when no series
+can be built from them. A grid is not resampled when it is loaded: it is placed
+on the cells of the solver mesh once the mesh exists, by the method of
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-interpolation_method" title="Spatial interpolation method for gridded/point data onto the MODFLOW grid."><code class="docutils literal notranslate"><span class="pre">interpolation_method</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">nearest</span></code>, <code class="docutils literal notranslate"><span class="pre">linear</span></code> or <code class="docutils literal notranslate"><span class="pre">idw</span></code>). The ETP has the same two keys.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">resolve_forcing</span></code>.</p>
+</section>
+<section id="units">
+<span id="forcing-units"></span><h2>3. Units<a class="headerlink" href="#units" title="Link to this heading">#</a></h2>
+<p>Every data manager hands rain, ETP, recharge and runoff over in mm/day. The
+binders convert them with the fixed factor <span class="math notranslate nohighlight">\(1/(1000 \times 86400)\)</span> m/s per mm/day,
+whatever <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-units" title="Unit of 'values' and of the recharge data source."><code class="docutils literal notranslate"><span class="pre">units</span></code></a> says. That key is read
+for a rate written in the file:
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-values" title="Recharge rate: one number, one number per stress period, a table {period: value}, or the series loaded from [data.recharge], in the unit that 'units' names (mm/day by default). (mm/day)"><code class="docutils literal notranslate"><span class="pre">values</span></code></a> and a numeric
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-first_clim" title="Recharge rate of every steady stress period: every period of a steady run, and the first period of a transient run when flow.first_period_steady is true."><code class="docutils literal notranslate"><span class="pre">first_clim</span></code></a> are converted from it
+to m/s when the flow is built.</p>
+<p>A sample is a rate. The code averages samples and never sums them: a monthly
+total in mm must be turned into mm/day before it is given to the model.</p>
+</section>
+<section id="a-record-gets-one-value-per-period">
+<span id="forcing-coverage"></span><h2>4. A record gets one value per period<a class="headerlink" href="#a-record-gets-one-value-per-period" title="Link to this heading">#</a></h2>
+<p>One rule holds for every forcing record: a series, a station, or a grid with a
+time axis, which is averaged cell by cell of its own grid before it is placed on
+the mesh.</p>
+<p><strong>Samples inside the period.</strong> Period <span class="math notranslate nohighlight">\(k\)</span> takes the equal-weight mean of the
+<span class="math notranslate nohighlight">\(n_k\)</span> samples stamped inside it:</p>
+<div class="math notranslate nohighlight" id="equation-eq-period-value">
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-period-value" title="Link to this equation">#</a></span>\[
+\bar x_k = \frac{1}{n_k} \sum_{t_j \in [b_k,\, b_{k+1})} x_j \qquad \text{if } n_k &gt; 0 .
+\]</div>
+<p>The mean has equal weights, so it is the time mean only for a record with one
+sample per equal step. Several gridded records that cover one period are averaged
+the same way, with equal weights.</p>
+<p><strong>No sample inside.</strong> A sample is the rate of the interval from its stamp to the
+next stamp. The last sample stands for one step <span class="math notranslate nohighlight">\(\Delta t_r\)</span> of the record, the
+median spacing of its stamps, and a record of one sample stands for all later
+time. A period with no sample inside is covered when the interval of the latest
+earlier sample reaches into it, and takes that sample. So daily data on hourly
+periods, and a gap inside a record, are covered.</p>
+<p><strong>Not covered.</strong> A period that no interval reaches, before the first stamp or
+after the end of the last step, is not covered.
+<a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-coverage_policy" title="What happens to a stress period that a forcing record does not cover."><code class="docutils literal notranslate"><span class="pre">coverage_policy</span></code></a> decides: <code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code>, the
+default, stops the run and names the periods; <code class="docutils literal notranslate"><span class="pre">&quot;warn&quot;</span></code> warns once per record;
+<code class="docutils literal notranslate"><span class="pre">&quot;ignore&quot;</span></code> says nothing. Under the last two, the period takes the nearest sample
+in time: the last one after the record, the first one before it.</p>
+<figure class="align-default" id="id3">
+<img alt="Six monthly periods and a weekly record with a gap over March that ends in late April. January, February and April take the mean of their samples; March and May take the sample in force; June is not covered." class="plot-directive" src="../_images/forcing_period.png" width="917" height="491" />
+<figcaption>
+<p><span class="caption-number">Fig. 15 </span><span class="caption-text">A weekly record on six monthly periods, matched by <code class="docutils literal notranslate"><span class="pre">samples_by_period</span></code>.
+Each sample stands for the interval up to the next one, and the last for one
+step. March holds no sample and takes the one in force; May is still inside
+the last step; June is past it and stops the run by default.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>Four records on monthly periods from 1 January 2000, from calls of
+<code class="docutils literal notranslate"><span class="pre">align_forcing_series_to_simulation_window</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>The record</p></th>
+<th class="head"><p>Window</p></th>
+<th class="head"><p>Under <code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code></p></th>
+<th class="head"><p>The periods take</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>daily, 1 mm/day in January, 3 in February, 5 in March</p></td>
+<td><p>January to March</p></td>
+<td><p>runs</p></td>
+<td><p>1, 3, 5</p></td>
+</tr>
+<tr class="row-odd"><td><p>2 on 1 January and 6 on 1 March</p></td>
+<td><p>January to March</p></td>
+<td><p>runs</p></td>
+<td><p>2, 2 (in force), 6</p></td>
+</tr>
+<tr class="row-even"><td><p>one sample, 4 on 1 February</p></td>
+<td><p>January to March</p></td>
+<td><p>stops: January is before the first stamp</p></td>
+<td><p>4, 4, 4 under <code class="docutils literal notranslate"><span class="pre">&quot;warn&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>60 daily samples from 1 January, valued 0 to 59</p></td>
+<td><p>January to June</p></td>
+<td><p>stops: March to June are after the last step</p></td>
+<td><p>15, 45, then 59 four times under <code class="docutils literal notranslate"><span class="pre">&quot;warn&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>The <code class="docutils literal notranslate"><span class="pre">last</span></code> rule.</strong> A forcing declared by a CSV file under a well, a lake, a
+stream network or a boundary has an <code class="docutils literal notranslate"><span class="pre">aggregate</span></code> key, for example
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/lakes.html#p-flow-sinks_sources-lakes-name-rainfall-aggregate" title="Stress-period aggregation method."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.lakes.&lt;name&gt;.rainfall.aggregate</span></code></a>. <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code> is the rule
+above. <code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code> reads the record as a state that holds until it changes: period
+<span class="math notranslate nohighlight">\(k\)</span> takes the latest sample at or before <span class="math notranslate nohighlight">\(b_k\)</span>, and no coverage check applies.
+The rain, ETP, recharge and runoff of the data layer have no such key.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">samples_by_period</span></code>, <code class="docutils literal notranslate"><span class="pre">enforce_coverage</span></code>.</p>
+</section>
+<section id="steady-periods-and-first-clim">
+<span id="forcing-steady"></span><h2>5. Steady periods and <code class="docutils literal notranslate"><span class="pre">first_clim</span></code><a class="headerlink" href="#steady-periods-and-first-clim" title="Link to this heading">#</a></h2>
+<p>A steady period stands for the long-term state a run starts from. It does not
+take the rate of its own dates.
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-first_clim" title="Recharge rate of every steady stress period: every period of a steady run, and the first period of a transient run when flow.first_period_steady is true."><code class="docutils literal notranslate"><span class="pre">first_clim</span></code></a> sets the rate <span class="math notranslate nohighlight">\(\hat N\)</span>
+of every steady stress period, and of no other period:</p>
+<div class="math notranslate nohighlight" id="equation-eq-steady-rate">
+<span class="eqno">(3)<a class="headerlink" href="#equation-eq-steady-rate" title="Link to this equation">#</a></span>\[\begin{split}
+\hat N =
+\begin{cases}
+\dfrac{1}{n_\mathrm{per}} \displaystyle\sum_{k=0}^{n_\mathrm{per}-1} N_k &amp; \texttt{&quot;mean&quot;},\\[1.5ex]
+N_0 &amp; \texttt{&quot;first&quot;},\\[0.5ex]
+F &amp; \text{a number } F,\ \text{in the units of the values.}
+\end{cases}
+\end{split}\]</div>
+<p>The mean has one weight per period, whatever the length of the period. The
+steady periods are every period of a steady run, and period 0 of a transient run
+when <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-first_period_steady" title="For transient flow, mark the first solver stress period as steady-state. (-)"><code class="docutils literal notranslate"><span class="pre">flow.first_period_steady</span></code></a> is true, in the three solvers. A transient
+period keeps its own rate, whatever its index. Under MODFLOW-NWT the ETP follows the same rule
+with <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-first_clim" title="ETP rate of every steady stress period, read by MODFLOW-NWT: every period of a steady run, and the first period of a transient run when flow.first_period_steady is true."><code class="docutils literal notranslate"><span class="pre">first_clim</span></code></a>.</p>
+<p>Four periods with rates 2, 4, 9 and 1, from calls of <code class="docutils literal notranslate"><span class="pre">apply_first_clim</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Period 0</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code></p></th>
+<th class="head"><p>the number 7</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>first period steady</p></td>
+<td><p>4</p></td>
+<td><p>2</p></td>
+<td><p>7</p></td>
+</tr>
+<tr class="row-odd"><td><p>first period transient</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Periods 1 to 3 keep 4, 9 and 1 in both rows.</p>
+<p>A run that starts from a steady state of its own (<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/ic.html#p-flow-ic" title="Validated flow initial-condition structure parsed from [flow.ic]."><code class="docutils literal notranslate"><span class="pre">flow.ic</span></code></a>, type
+<code class="docutils literal notranslate"><span class="pre">steady_state</span></code>) builds an auxiliary steady model for that state, with
+<code class="docutils literal notranslate"><span class="pre">first_clim</span></code> set to <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, or to the prescribed rate. The starting states are
+the types of <a class="reference internal" href="../reference/parameters/flow/ic.html"><span class="doc">[flow.ic]</span></a>.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">apply_first_clim</span></code>.</p>
+</section>
+<section id="negative-recharge-goes-to-the-etp-package">
+<span id="forcing-negative"></span><h2>6. Negative recharge goes to the ETP package<a class="headerlink" href="#negative-recharge-goes-to-the-etp-package" title="Link to this heading">#</a></h2>
+<p>A net recharge can be negative: a series of rain minus ETP, for example. With
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-negative_to_evt" title="When true, negative recharge values are routed to the solver EVT package and RCH receives the non-negative clipped recharge."><code class="docutils literal notranslate"><span class="pre">negative_to_evt</span></code></a>, it is split
+into a recharge part and a deficit part:</p>
+<div class="math notranslate nohighlight" id="equation-eq-recharge-split">
+<span class="eqno">(4)<a class="headerlink" href="#equation-eq-recharge-split" title="Link to this equation">#</a></span>\[
+N^+_k = \max(N_k,\, 0), \qquad N^-_k = \max(-N_k,\, 0).
+\]</div>
+<p>The recharge package receives <span class="math notranslate nohighlight">\(N^+_k\)</span> and the evapotranspiration package
+<span class="math notranslate nohighlight">\(N^-_k\)</span>. A transient period keeps its own split. A steady period takes
+<code class="docutils literal notranslate"><span class="pre">first_clim</span></code> on each part: <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code> gives the mean of <span class="math notranslate nohighlight">\(N^+_k\)</span> and the mean of
+<span class="math notranslate nohighlight">\(N^-_k\)</span>, <code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code> gives <span class="math notranslate nohighlight">\(N^+_0\)</span> and <span class="math notranslate nohighlight">\(N^-_0\)</span>, and a number <span class="math notranslate nohighlight">\(F\)</span> gives <span class="math notranslate nohighlight">\(\max(F, 0)\)</span>
+and <span class="math notranslate nohighlight">\(\max(-F, 0)\)</span>. So the net rate of a steady period, <span class="math notranslate nohighlight">\(\hat N^+ - \hat N^-\)</span>, is
+always the one <code class="docutils literal notranslate"><span class="pre">first_clim</span></code> states: the mean of the net rates, <span class="math notranslate nohighlight">\(N_0\)</span>, or <span class="math notranslate nohighlight">\(F\)</span>.</p>
+<p>A negative number for <code class="docutils literal notranslate"><span class="pre">first_clim</span></code> needs <code class="docutils literal notranslate"><span class="pre">negative_to_evt</span></code>, or the file is
+refused. With <code class="docutils literal notranslate"><span class="pre">negative_to_evt</span></code> off, a negative rate in the file is refused when
+it is read. The deficit is drawn from the water table near the top of each cell,
+down to the extinction depth <span class="math notranslate nohighlight">\(d_\mathrm{ext}\)</span>, and not under the sea, a river
+head or a lake (<a class="reference internal" href="exits/drains-and-et.html"><span class="doc">Drains and evapotranspiration at the top of the model</span></a>).</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">split_net_recharge</span></code>.</p>
+</section>
+<section id="what-the-solver-does-with-n-and-e">
+<span id="forcing-solver"></span><h2>7. What the solver does with N and E<a class="headerlink" href="#what-the-solver-does-with-n-and-e" title="Link to this heading">#</a></h2>
+<p>The recharge package adds <span class="math notranslate nohighlight">\(N_k\)</span> times the cell area to each cell, and the
+evapotranspiration package removes at most <span class="math notranslate nohighlight">\(E_k\)</span>, less as the head falls to the
+extinction depth. Both are constant during a stress period. The packages are
+documented by MODFLOW: <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-rcha.html">RCHA</a>
+and <a class="reference external" href="https://modflow6.readthedocs.io/en/latest/_mf6io/gwf-evta.html">EVTA</a> in
+MODFLOW 6 (<span class="bibtex-citation" id="id1">[<a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>), RCH and EVT in MODFLOW-2005 and MODFLOW-NWT
+(<span class="bibtex-citation" id="id2">[<a class="reference internal" href="bibliography.html#id8" title="A. W. Harbaugh. MODFLOW-2005, the U.S. Geological Survey modular ground-water model: the ground-water flow process. Techniques and Methods 6-A16, U.S. Geological Survey, 2005. doi:10.3133/tm6A16.">Harbaugh, 2005</a>, <a class="reference internal" href="bibliography.html#id9" title="R. G. Niswonger, S. Panday, and M. Ibaraki. MODFLOW-NWT, a Newton formulation for MODFLOW-2005. Techniques and Methods 6-A37, U.S. Geological Survey, 2011. doi:10.3133/tm6A37.">Niswonger <em>et al.</em>, 2011</a>]</span>). What HydroModPy decides is which rate
+reaches the ETP package:</p>
+<ul class="simple">
+<li><p><strong>MODFLOW-NWT.</strong> The loaded ETP drives the package, with the deficit of
+<a class="reference internal" href="#forcing-negative"><span class="std std-ref">6. Negative recharge goes to the ETP package</span></a>.</p></li>
+<li><p><strong>MODFLOW 6 without a soil reservoir.</strong> The loaded ETP is ignored, with a
+warning if <code class="docutils literal notranslate"><span class="pre">&quot;etp&quot;</span></code> is in <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-active_sinks_sources" title="Explicitly activated sink/source names for this flow run: 'recharge', 'wells', 'etp'."><code class="docutils literal notranslate"><span class="pre">flow.active_sinks_sources</span></code></a>. Only the deficit
+reaches the package.</p></li>
+<li><p><strong>MODFLOW 6 with a soil reservoir.</strong> The ETP the soil could not meet reaches the
+package.</p></li>
+<li><p><strong>Boussinesq.</strong> <code class="docutils literal notranslate"><span class="pre">&quot;etp&quot;</span></code> in <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-active_sinks_sources" title="Explicitly activated sink/source names for this flow run: 'recharge', 'wells', 'etp'."><code class="docutils literal notranslate"><span class="pre">flow.active_sinks_sources</span></code></a> is refused.</p></li>
+</ul>
+<p>Under MODFLOW 6 the recharge is set to zero on lake cells: the lake gets its own
+rain through the lake package. The law, the surface and the depth of the ETP
+package are on <a class="reference internal" href="exits/drains-and-et.html"><span class="doc">Drains and evapotranspiration at the top of the model</span></a>.</p>
+</section>
+<section id="runoff-is-not-recharge">
+<span id="forcing-runoff"></span><h2>8. Runoff is not recharge<a class="headerlink" href="#runoff-is-not-recharge" title="Link to this heading">#</a></h2>
+<p>The runoff of the data layer, <a class="hmp-toml-ref reference external" href="../reference/parameters/data/runoff.html#p-data-runoff" title="Runoff configuration (surface runoff time series)."><code class="docutils literal notranslate"><span class="pre">data.runoff</span></code></a>, never enters the aquifer as a
+diffuse term. It enters the model, when it enters at all, as a volume per time:</p>
+<div class="math notranslate nohighlight" id="equation-eq-runoff">
+<span class="eqno">(5)<a class="headerlink" href="#equation-eq-runoff" title="Link to this equation">#</a></span>\[
+Q^\mathrm{ro}_k = \bar q^\mathrm{ro}_k\,A ,
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(\bar q^\mathrm{ro}_k\)</span> is the catchment mean of the runoff, in m/s, put on
+the periods by the rule of <a class="reference internal" href="#forcing-coverage"><span class="std std-ref">4. A record gets one value per period</span></a>, and <span class="math notranslate nohighlight">\(A\)</span> the catchment area.</p>
+<ul class="simple">
+<li><p>With an active stream network, <span class="math notranslate nohighlight">\(Q^\mathrm{ro}_k\)</span> is shared among the reaches by
+their length and routed downstream. A forcing written in the file wins over the
+loaded series, and a lake then gets no direct share, so the same water is not
+counted twice (<a class="reference internal" href="exits/streams-and-mover.html"><span class="doc">Streams and the water mover</span></a>).</p></li>
+<li><p>Without a network, a declared lake receives <span class="math notranslate nohighlight">\(Q^\mathrm{ro}_k\)</span> directly
+(<a class="reference internal" href="exits/lakes.html"><span class="doc">Lakes and reservoirs</span></a>).</p></li>
+<li><p>Without either, the runoff stays outside the flow.</p></li>
+</ul>
+<p>A lake also gets the catchment mean of the loaded rain and ETP as open-water
+rates, unless it declares its own.</p>
+<p>When a calibration compares a simulated drain budget with a gauge, the runoff is
+added to the simulated discharge, averaged on each period and multiplied by the
+catchment area, or by the area the gauge drains (<a class="reference internal" href="time-alignment.html"><span class="doc">Time alignment of outputs and observations</span></a>). If a
+stream network already carries the runoff, nothing is added.</p>
+</section>
+<section id="the-soil-reservoir-as-a-source-of-grids">
+<span id="forcing-soil"></span><h2>9. The soil reservoir as a source of grids<a class="headerlink" href="#the-soil-reservoir-as-a-source-of-grids" title="Link to this heading">#</a></h2>
+<p>With a soil reservoir (<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.soil</span></code></a>), the data layer
+loads rain and ETP, and the reservoir computes three daily grids in mm/day:
+recharge, the ETP it could not meet, and runoff. The binders take them where they
+would take a loaded recharge, ETP and runoff, so they go through the rules of
+<a class="reference internal" href="#forcing-coverage"><span class="std std-ref">4. A record gets one value per period</span></a> and <a class="reference internal" href="#forcing-runoff"><span class="std std-ref">8. Runoff is not recharge</span></a>. A daily step gives one slice per period; a monthly step
+gives the mean of the daily slices of the month.</p>
+<p>A soil run refuses a steady first period, since that period would hold the
+recharge of one day only. A soil run therefore has no steady period, and
+<code class="docutils literal notranslate"><span class="pre">first_clim</span></code> acts on none of its periods. The daily rules are on
+<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>.</p>
+</section>
+<section id="assumptions-and-limits">
+<h2>Assumptions and limits<a class="headerlink" href="#assumptions-and-limits" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Constant within the period.</strong> Rain, ETP and runoff are one value per period
+and per cell. Recharge is a flux set from outside and does not read the water
+table.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code> weights each period equally.</strong> On periods of unequal length, the
+steady rate is not the time mean of the record.</p></li>
+<li><p><strong>The ETP is not read under MODFLOW 6 outside soil mode.</strong> A loaded ETP is
+ignored, with a warning.</p></li>
+<li><p><strong>Aggregation by <code class="docutils literal notranslate"><span class="pre">last</span></code> exists for declared forcings only.</strong> The data layer
+always takes the mean.</p></li>
+</ul>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/simulation.html#p-simulation-time">[simulation.time]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset-ex tl-cmt" data-path="simulation.time.start_datetime"><summary><span class="tl-code"><span class="cm"># </span><span class="k">start_datetime</span><span class="eq"> = </span><span class="v">&quot;2019-01-01&quot;</span></span><span class="tl-note"><span class="tl-sum">Simulation window lower datetime bound used by launcher-level time alignment and forcing checks.</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.start_datetime</code> <button class="hmp-copy" type="button" data-copy="simulation.time.start_datetime" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-start_datetime" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>date &quot;YYYY-MM-DD&quot;</dd><dt>Example</dt><dd><code>&quot;2019-01-01&quot;</code></dd></dl></div></details><details class="tl tl-unset-ex tl-cmt" data-path="simulation.time.end_datetime"><summary><span class="tl-code"><span class="cm"># </span><span class="k">end_datetime</span><span class="eq"> = </span><span class="v">&quot;2025-12-31&quot;</span></span><span class="tl-note"><span class="tl-sum">Simulation window upper datetime bound, interpreted as inclusive.</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.end_datetime</code> <button class="hmp-copy" type="button" data-copy="simulation.time.end_datetime" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-end_datetime" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Must be greater than or equal to start_datetime.</p></dd><dt>Accepted</dt><dd>date &quot;YYYY-MM-DD&quot;</dd><dt>Example</dt><dd><code>&quot;2025-12-31&quot;</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="simulation.time.step_value"><summary><span class="tl-code"><span class="cm"># </span><span class="k">step_value</span><span class="eq"> = </span><span class="v">&quot;1 month&quot;</span></span><span class="tl-note"><span class="tl-sum">Forcing/stress-period time-step scalar or inline token &#x27;&lt;value&gt; &lt;unit&gt;&#x27; (for example &#x27;30 day&#x27;).</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.step_value</code> <button class="hmp-copy" type="button" data-copy="simulation.time.step_value" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-step_value" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>This controls the temporal aggregation step for forcing series (for example recharge/runoff) and the resulting stress periods. Not read by a steady run (<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/flow/index.html#p-flow-flow_regime">flow.flow_regime</a> = &#x27;steady&#x27;), which is one stress period over the whole window, its forcings averaged over it.</p></dd><dt>Accepted</dt><dd>integer or number or string</dd><dt>Example</dt><dd><code>&quot;1 month&quot;</code>, <code>&quot;10 day&quot;</code></dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="simulation.time.step_unit"><summary><span class="tl-code"><span class="cm"># </span><span class="k">step_unit</span><span class="eq"> = </span><span class="ph">‹&quot;hour&quot; | &quot;day&quot; | &quot;month&quot; | &quot;year&quot;›</span></span><span class="tl-note"><span class="tl-sum">Unit of a bare-number step_value: the length of the stress periods and of the forcing steps.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.step_unit</code> <button class="hmp-copy" type="button" data-copy="simulation.time.step_unit" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-step_unit" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;hour&quot;</code> : Treats step_value as whole hours, for sub-daily forcing and stress periods.</li><li><code>&quot;day&quot;</code> : Treats step_value as whole days, the common granularity for daily forcing series.</li><li><code>&quot;month&quot;</code> : Treats step_value as calendar months, so the step length varies by month.</li><li><code>&quot;year&quot;</code> : Treats step_value as calendar years, so the step length varies with leap years.</li></ul></dd><dt>Accepted</dt><dd>&quot;hour&quot; | &quot;day&quot; | &quot;month&quot; | &quot;year&quot;</dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="simulation.time.coverage_policy"><summary><span class="tl-code"><span class="cm"># </span><span class="k">coverage_policy</span><span class="eq"> = </span><span class="v">&quot;error&quot;</span></span><span class="tl-note"><span class="tl-sum">What happens to a stress period that a forcing record does not cover.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">simulation.time.coverage_policy</code> <button class="hmp-copy" type="button" data-copy="simulation.time.coverage_policy" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-simulation-time-coverage_policy" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A sample is the rate of the interval up to the next sample, and the last sample stands for one step of the record (the median spacing of its dates). A period that no sample reaches, before the first date or after the end of the last step, is not covered. &#x27;error&#x27; stops the run, &#x27;warn&#x27; warns once per record, &#x27;ignore&#x27; says nothing; under &#x27;warn&#x27; and &#x27;ignore&#x27; the period takes the nearest sample in time. The rule is the same for a series, a station and a grid: rain, ETP, recharge, runoff and the declared CSV forcings read as rates (aggregate = &#x27;mean&#x27;).</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;error&quot;</code></li><li><code>&quot;warn&quot;</code></li><li><code>&quot;ignore&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;error&quot; | &quot;warn&quot; | &quot;ignore&quot;</dd><dt>Example</dt><dd><code>&quot;error&quot;</code>, <code>&quot;warn&quot;</code></dd></dl></div></details></div><pre class="tb-src" hidden>[simulation.time]
+# start_datetime = &quot;2019-01-01&quot;
+# end_datetime = &quot;2025-12-31&quot;
+# step_value = &quot;1 month&quot;
+# step_unit = &lt;&quot;hour&quot; | &quot;day&quot; | &quot;month&quot; | &quot;year&quot;&gt;
+# coverage_policy = &quot;error&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/flow/index.html#p-flow">[flow]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="flow.first_period_steady"><summary><span class="tl-code"><span class="cm"># </span><span class="k">first_period_steady</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">For transient flow, mark the first solver stress period as steady-state.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.first_period_steady</code> <button class="hmp-copy" type="button" data-copy="flow.first_period_steady" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-first_period_steady" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Ignored for steady flow, where all solver periods are steady.</p></dd><dt>Accepted</dt><dd>true | false</dd><dt>Example</dt><dd><code>true</code>, <code>false</code></dd></dl></div></details></div><pre class="tb-src" hidden>[flow]
+# first_period_steady = true</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge">[flow.sinks_sources.recharge]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="4"><span class="hmp-adv-off">show 4 dev/expert keys</span><span class="hmp-adv-on">hide 4 dev/expert keys</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="flow.sinks_sources.recharge.units"><summary><span class="tl-code"><span class="cm"># </span><span class="k">units</span><span class="eq"> = </span><span class="v">&quot;mm/day&quot;</span></span><span class="tl-note"><span class="tl-sum">Unit of &#x27;values&#x27; and of the recharge data source.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.recharge.units</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.recharge.units" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-recharge-units" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Data-manager outputs use mm/day by convention; set it when you write &#x27;values&#x27; in another unit. The run converts the rate to m/s.</p></dd><dt>Accepted</dt><dd>string</dd><dt>Example</dt><dd><code>&quot;mm/day&quot;</code>, <code>&quot;m/day&quot;</code>, <code>&quot;m/s&quot;</code></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="flow.sinks_sources.recharge.first_clim"><summary><span class="tl-code"><span class="cm"># </span><span class="k">first_clim</span><span class="eq"> = </span><span class="v">&quot;mean&quot;</span></span><span class="tl-note"><span class="tl-sum">Recharge rate of every steady stress period: every period of a steady run, and the first period of a transient run when <span class="hmp-toml-ref">flow.first_period_steady</span> is true.</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.recharge.first_clim</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.recharge.first_clim" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-recharge-first_clim" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;mean&#x27; is the mean of the per-period rates, one weight per period; &#x27;first&#x27; is the rate of period 0; a number is that rate, in the units of values. A transient period keeps its own rate. The same rule holds for one value per period and for one grid per period, under every solver. With negative_to_evt, the steady period takes the rule on the recharge part and on the deficit part, so its net rate is the one stated here.</p></dd><dt>See</dt><dd><a class="hmp-toml-ref" href="../reference/parameters/flow/index.html#p-flow-first_period_steady">flow.first_period_steady</a></dd><dt>Accepted</dt><dd>string or number</dd><dt>Example</dt><dd><code>&quot;mean&quot;</code>, <code>&quot;first&quot;</code>, <code>2.0</code></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="flow.sinks_sources.recharge.negative_to_evt"><summary><span class="tl-code"><span class="cm"># </span><span class="k">negative_to_evt</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">When true, negative recharge values are routed to the solver EVT package and RCH receives the non-negative clipped recharge.</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.recharge.negative_to_evt</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.recharge.negative_to_evt" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-recharge-negative_to_evt" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>true | false</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="flow.sinks_sources.recharge.spatial_mode"><summary><span class="tl-code"><span class="cm"># </span><span class="k">spatial_mode</span><span class="eq"> = </span><span class="v">&quot;auto&quot;</span></span><span class="tl-note"><span class="tl-sum">How to interpret spatial data: &#x27;auto&#x27; (points-&gt;homogeneous, fields-&gt;heterogeneous), &#x27;homogeneous&#x27; (force spatial averaging), &#x27;heterogeneous&#x27; (force per-cell discretization, including point-to-grid interpolation when stations have coordinates).</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.recharge.spatial_mode</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.recharge.spatial_mode" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-recharge-spatial_mode" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;auto&quot;</code></li><li><code>&quot;homogeneous&quot;</code></li><li><code>&quot;heterogeneous&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;auto&quot; | &quot;homogeneous&quot; | &quot;heterogeneous&quot;</dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="flow.sinks_sources.recharge.interpolation_method"><summary><span class="tl-code"><span class="cm"># </span><span class="k">interpolation_method</span><span class="eq"> = </span><span class="v">&quot;nearest&quot;</span></span><span class="tl-note"><span class="tl-sum">Spatial interpolation method for gridded/point data onto the MODFLOW grid.</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.recharge.interpolation_method</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.recharge.interpolation_method" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-recharge-interpolation_method" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Options: &#x27;nearest&#x27;, &#x27;linear&#x27;, &#x27;idw&#x27;.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;nearest&quot;</code></li><li><code>&quot;linear&quot;</code></li><li><code>&quot;idw&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;nearest&quot; | &quot;linear&quot; | &quot;idw&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[flow.sinks_sources.recharge]
+# units = &quot;mm/day&quot;</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp">[flow.sinks_sources.etp]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="flow.sinks_sources.etp.first_clim"><summary><span class="tl-code"><span class="cm"># </span><span class="k">first_clim</span><span class="eq"> = </span><span class="v">&quot;mean&quot;</span></span><span class="tl-note"><span class="tl-sum">ETP rate of every steady stress period, read by MODFLOW-NWT: every period of a steady run, and the first period of a transient run when <span class="hmp-toml-ref">flow.first_period_steady</span> is true.</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.etp.first_clim</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.etp.first_clim" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-etp-first_clim" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;mean&#x27; is the mean of the per-period rates, one weight per period; &#x27;first&#x27; is the rate of period 0; a number is that rate. A transient period keeps its own rate.</p></dd><dt>See</dt><dd><a class="hmp-toml-ref" href="../reference/parameters/flow/index.html#p-flow-first_period_steady">flow.first_period_steady</a></dd><dt>Accepted</dt><dd>string or number</dd><dt>Example</dt><dd><code>&quot;mean&quot;</code>, <code>&quot;first&quot;</code>, <code>2.0</code></dd></dl></div></details></div><pre class="tb-src" hidden>[flow.sinks_sources.etp]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/modflow6.html#p-modflow6-process_specific">[modflow6.process_specific]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="modflow6.process_specific.evt_extinction_depth"><summary><span class="tl-code"><span class="cm"># </span><span class="k">evt_extinction_depth</span><span class="eq"> = </span><span class="v">1.0</span></span><span class="tl-note"><span class="tl-sum">Meters; extinction depth for the EVT sink used when recharge negatives are routed to EVT.</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">modflow6.process_specific.evt_extinction_depth</code> <button class="hmp-copy" type="button" data-copy="modflow6.process_specific.evt_extinction_depth" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-modflow6-process_specific-evt_extinction_depth" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The routed deficit tapers linearly from the cell top to this depth and stops below it, so a sustained climatic deficit can saturate near this value.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details></div><pre class="tb-src" hidden>[modflow6.process_specific]</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div><p>The step of example 04, then the first period of its soil run:</p>
+<div class="hmp-resolved"><div class="hmp-resolved-h"><code>simulation.time.step_value in project.toml</code></div><pre class="hmp-term">simulation.time.step_value
+  Forcing/stress-period time-step scalar or inline token &#x27;&lt;value&gt; &lt;unit&gt;&#x27; (for example &#x27;30
+  day&#x27;).
+  form       integer or number or string
+  default    &quot;1 month&quot;
+  current    &quot;1 month&quot;   set by project.toml:26</pre></div><div class="hmp-resolved"><div class="hmp-resolved-h"><code>flow.first_period_steady in step6_soil_reservoir.toml</code></div><pre class="hmp-term">flow.first_period_steady
+  For transient flow, mark the first solver stress period as steady-state.
+  form       true | false
+  default    true
+  current    False   set by step6_soil_reservoir.toml:65</pre></div></section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test
+appears here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">65 test files import <code>hydromodpy.physics.forcing</code>, <code>hydromodpy.physics.forcing.steady_periods</code>, <code>hydromodpy.physics.flow.time_forcing</code>, <code>hydromodpy.physics.flow.structure_binders</code>, <code>hydromodpy.core.time</code>, <code>hydromodpy.core.time.coverage</code>, <code>hydromodpy.solver.modflow_common.recharge_evt_routing</code>, <code>hydromodpy.solver.modflow6.builders.recharge</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>validation: 1</summary><ul><li title="tests/validation/analytical/transient/test_a_routed_impulse_matches_the_exponential_reservoir.py"><a href="validation.html#val-a-routed-impulse-matches-the-exponential-reservoir">A routed impulse matches the exponential reservoir.</a></li></ul></details><details class="hmp-tested-tier" open><summary>integration: 3</summary><ul><li title="tests/integration/test_modflow6_lake_piecewise_forcing.py">Modflow6 lake piecewise forcing.</li><li title="tests/integration/test_shared_recharge_equivalence.py">Shared recharge equivalence.</li><li title="tests/integration/test_the_soil_recharge_reaches_modflow6_cell_by_cell.py">The soil recharge reaches modflow6 cell by cell.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 61</summary><ul><li title="tests/unit/calibration/test_a_network_state_is_read_at_its_date.py">A network state is read at its date. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_a_trial_tells_the_solver_when_its_recharge_is_its_own.py">A trial tells the solver when its recharge is its own. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_persist_trial_series.py">Persist trial series. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_the_protocol_s_block_route_matches_the_single_metric_one.py">The protocol s block route matches the single metric one. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_the_sandbox_removes_the_recharge_its_trial_wrote.py">The sandbox removes the recharge its trial wrote. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_two_trials_scored_discharge_differs_by_curve_number.py">Two trials scored discharge differs by curve number. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_two_trials_scored_discharge_differs_by_impervious_runoff.py">Two trials scored discharge differs by impervious runoff. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_two_trials_scored_discharge_differs_by_runoff_lag.py">Two trials scored discharge differs by runoff lag. <span class="hmp-muted">calibration</span></li><li title="tests/unit/config/test_flow_barrier_config.py">Flow barrier config. <span class="hmp-muted">config</span></li><li title="tests/unit/config/test_flow_lake_config.py">Flow lake config. <span class="hmp-muted">config</span></li><li title="tests/unit/core/test_period_aggregation.py">Period aggregation. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_step_value_spec_shared_rule.py">Step value spec shared rule. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_the_soil_storages_are_states_at_the_stamp.py">The soil storages are states at the stamp. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_time_selection.py">Time selection. <span class="hmp-muted">core</span></li><li title="tests/unit/data_managers/test_climatic_recharge_bridge.py">Climatic recharge bridge. <span class="hmp-muted">data_managers</span></li><li title="tests/unit/data_managers/test_synthetic_recharge_stamps.py">Synthetic recharge stamps. <span class="hmp-muted">data_managers</span></li><li title="tests/unit/launchers/test_launcher_time_window.py">Launcher time window. <span class="hmp-muted">launchers</span></li><li title="tests/unit/launchers/test_structure_updaters.py">Structure updaters. <span class="hmp-muted">launchers</span></li><li title="tests/unit/mesh/cartesian_grid/field_discretization/test_one_coverage_rule_for_every_forcing_record.py">One coverage rule for every forcing record. <span class="hmp-muted">mesh/cartesian_grid/field_discretization</span></li><li title="tests/unit/physics/test_a_soil_run_does_not_open_on_a_one_period_steady_state.py">A soil run does not open on a one period steady state. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_cutoff_wall_helpers.py">Cutoff wall helpers. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_flow_barrier_binder.py">Flow barrier binder. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_flow_contract_helpers.py">Flow contract helpers. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_flow_time_forcing.py">Flow time forcing. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_forcing_validation.py">Forcing validation. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_lake_flux_forcing_binder.py">Lake flux forcing binder. <span class="hmp-muted">physics</span></li><li title="tests/unit/physics/test_sfr_runoff_binder.py">Sfr runoff binder. <span class="hmp-muted">physics</span></li><li title="tests/unit/results/test_a_redraw_is_not_a_recharge_move.py">A redraw is not a recharge move. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_a_run_resolves_a_date_to_its_period.py">A run resolves a date to its period. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_a_state_is_read_at_its_stamp.py">A state is read at its stamp. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_time_alignment.py">Time alignment. <span class="hmp-muted">results</span></li><li title="tests/unit/simulation/test_capacity_classes_recharge_more_than_their_mean.py">Capacity classes recharge more than their mean. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_one_capacity_class_gives_the_uniform_soil.py">One capacity class gives the uniform soil. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_raster_spreads_the_declared_ru.py">The raster spreads the declared ru. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_ru_ladder_recharge_falls_as_the_capacity_grows.py">The ru ladder recharge falls as the capacity grows. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_soil_columns_map_back_to_their_cells.py">The soil columns map back to their cells. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_soil_forcings_are_one_grid_per_quantity.py">The soil forcings are one grid per quantity. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_soil_reads_its_forcing_without_touching_it.py">The soil reads its forcing without touching it. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_soil_refuses_forcings_it_cannot_pair.py">The soil refuses forcings it cannot pair. <span class="hmp-muted">simulation</span></li><li title="tests/unit/simulation/test_the_soil_that_cannot_settle_stops_the_run.py">The soil that cannot settle stops the run. <span class="hmp-muted">simulation</span></li><li title="tests/unit/solver/modflow_nwt/test_forcing_recharge_payload.py">Forcing recharge payload. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/test_a_calibration_trial_value_reaches_the_soil_evt_package.py">A calibration trial value reaches the soil evt package. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_a_trial_that_moves_the_recharge_writes_it_inside_its_own_folder.py">A trial that moves the recharge writes it inside its own folder. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_first_clim_is_one_rule_for_every_solver.py">First clim is one rule for every solver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_flow_barrier_resolver.py">Flow barrier resolver. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_reads_the_etp_only_when_the_soil_sent_it.py">Modflow6 reads the etp only when the soil sent it. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_steady_recharge_evt.py">Modflow6 steady recharge evt. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_modflow6_ts6_time_series.py">Modflow6 ts6 time series. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_recharge_stack_is_released.py">Recharge stack is released. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_solver_time_units.py">Solver time units. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_steady_initialization_time.py">Steady initialization time. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_atelier_etp_still_draws_no_evt_under_modflow6.py">The atelier etp still draws no evt under modflow6. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_recharge_files_keep_their_name_and_bytes.py">The recharge files keep their name and bytes. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_rate_goes_to_binary_files.py">The soil evt rate goes to binary files. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_rate_is_zero_on_inactive_lake_and_constant_head_cells.py">The soil evt rate is zero on inactive lake and constant head cells. <span class="hmp-muted">solver</span></li><li title="tests/unit/solver/test_the_soil_evt_surface_follows_the_drain_elevation.py">The soil evt surface follows the drain elevation. <span class="hmp-muted">solver</span></li><li title="tests/unit/workflow/test_a_soil_run_refuses_a_one_period_steady_start_at_run_time.py">A soil run refuses a one period steady start at run time. <span class="hmp-muted">workflow</span></li><li title="tests/unit/workflow/test_a_soil_run_refuses_a_spinup_shorter_than_a_year_at_run_time.py">A soil run refuses a spinup shorter than a year at run time. <span class="hmp-muted">workflow</span></li><li title="tests/unit/workflow/test_sfr_network_binding.py">Sfr network binding. <span class="hmp-muted">workflow</span></li><li title="tests/unit/workflow/test_the_binder_sends_the_soil_recharge_etp_and_runoff.py">The binder sends the soil recharge etp and runoff. <span class="hmp-muted">workflow</span></li><li title="tests/unit/workflow/test_the_soil_budget_is_printed_once_by_the_data_step.py">The soil budget is printed once by the data step. <span class="hmp-muted">workflow</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Window and edges</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/time/window.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Station mean, spatial mode</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/forcing/forcing_bridge.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The coverage rule, for every record</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/time/coverage.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Series to periods</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/forcing/time_alignment.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/flow/time_forcing.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Grids to periods</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/spatial/mesh/cartesian_grid/_sgrid_field_xarray.py</span></code>, <code class="docutils literal notranslate"><span class="pre">sgrid_field_discretization.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Units, the binders, runoff and lake forcing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/flow/structure_binders.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/data.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Steady periods and the split of a negative recharge</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/physics/forcing/steady_periods.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The recharge and ETP packages</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow6/builders/recharge.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_nwt/nwt/payloads/recharge_etp.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/forcing/</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="time-alignment.html"><span class="doc">Time alignment of outputs and observations</span></a>: how outputs and observations are put on the periods.</p></li>
+<li><p><a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>: the daily balance that turns rain and ETP into recharge.</p></li>
+<li><p><a class="reference internal" href="exits.html"><span class="doc">How water leaves the aquifer</span></a>: how water leaves the aquifer.</p></li>
+<li><p><a class="reference internal" href="../reference/parameters/flow/sinks_sources/recharge.html"><span class="doc">[flow.sinks_sources.recharge]</span></a>: choose where the
+recharge comes from.</p></li>
+<li><p><a class="reference internal" href="../reference/parameters/flow/ic.html"><span class="doc">[flow.ic]</span></a>: the starting state.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Theory</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="soil-reservoir.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The daily soil reservoir</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-window-is-cut-into-periods">1. The window is cut into periods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-series-per-variable">2. One series per variable</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#units">3. Units</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-record-gets-one-value-per-period">4. A record gets one value per period</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steady-periods-and-first-clim">5. Steady periods and <code class="docutils literal notranslate"><span class="pre">first_clim</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#negative-recharge-goes-to-the-etp-package">6. Negative recharge goes to the ETP package</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-solver-does-with-n-and-e">7. What the solver does with N and E</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runoff-is-not-recharge">8. Runoff is not recharge</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-soil-reservoir-as-a-source-of-grids">9. The soil reservoir as a source of grids</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions-and-limits">Assumptions and limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Time alignment of outputs and observations" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/time-alignment.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A run writes one value per stress period. An observation chronicle has its own dates. Before a simulated value and an observed one can be compared, both must mean the same thing on the same interva..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/forcing_stamp.png" />
+<meta property="og:image:alt" content="Two panels over four monthly periods. Top, a daily flux and the mean of each period drawn over the period and marked at its end stamp. Bottom, a daily head and the value read at each end stamp." />
+<meta name="description" content="A run writes one value per stress period. An observation chronicle has its own dates. Before a simulated value and an observed one can be compared, both must mean the same thing on the same interva..." />
+
+    <meta property="article:modified_time" content="2026-10-13T00:13:45+02:00" />
+    <title>Time alignment of outputs and observations &#8212; HydroModPy 2.0.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-validation.css?v=bee4387a" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=dafa2091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=62c7d312"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/time-alignment';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/time-alignment.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The inverse problem of a calibration" href="calibration/inverse-problem-formulation.html" />
+    <link rel="prev" title="Where the water table reaches the surface" href="exits/simulated-network.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-10-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../understand/index.html">
+    Understand
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../get-started/index.html">
+    Get started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Time alignment of outputs and observations</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="time-alignment-of-outputs-and-observations">
+<h1>Time alignment of outputs and observations<a class="headerlink" href="#time-alignment-of-outputs-and-observations" title="Link to this heading">#</a></h1>
+<p>A run writes one value per stress period. An observation chronicle has its own
+dates. Before a simulated value and an observed one can be compared, both must
+mean the same thing on the same interval. This page gives the one convention
+every reader of a run follows: <strong>a stamp closes its period</strong>. A flux read at a
+stamp is the mean over the period before it; a state is the value at the stamp.
+How the inputs are put on the periods is on <a class="reference internal" href="forcing.html"><span class="doc">Rain and evaporation: the forcing</span></a>.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p class="sd-card-text">Symbol</p></th>
+<th class="head"><p class="sd-card-text">Meaning</p></th>
+<th class="head"><p class="sd-card-text">Unit</p></th>
+<th class="head"><p class="sd-card-text">Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta t\)</span></p></td>
+<td><p class="sd-card-text">length of a stress period, the stretch of time that gets one forcing value</p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-step_value" title="Forcing/stress-period time-step scalar or inline token '&lt;value&gt; &lt;unit&gt;' (for example '30 day')."><code class="docutils literal notranslate"><span class="pre">step_value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(t_0, t_\mathrm{end}\)</span></p></td>
+<td><p class="sd-card-text">first and last day of the run, the last day included</p></td>
+<td><p class="sd-card-text">date</p></td>
+<td><p class="sd-card-text"><a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-start_datetime" title="Simulation window lower datetime bound used by launcher-level time alignment and forcing checks."><code class="docutils literal notranslate"><span class="pre">start_datetime</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-end_datetime" title="Simulation window upper datetime bound, interpreted as inclusive."><code class="docutils literal notranslate"><span class="pre">end_datetime</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(b_k\)</span></p></td>
+<td><p class="sd-card-text">edge <span class="math notranslate nohighlight">\(k\)</span> of the stress periods; period <span class="math notranslate nohighlight">\(k\)</span> is <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span> and is stamped <span class="math notranslate nohighlight">\(b_{k+1}\)</span></p></td>
+<td><p class="sd-card-text">date</p></td>
+<td><p class="sd-card-text">derived from <a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-step_value" title="Forcing/stress-period time-step scalar or inline token '&lt;value&gt; &lt;unit&gt;' (for example '30 day')."><code class="docutils literal notranslate"><span class="pre">step_value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p class="sd-card-text"><span class="math notranslate nohighlight">\(\Delta t_o\)</span></p></td>
+<td><p class="sd-card-text">interval one observation stands for: the step of its chronicle</p></td>
+<td><p class="sd-card-text">s</p></td>
+<td><p class="sd-card-text">derived</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details><section id="a-stamp-closes-its-period">
+<span id="alignment-stamp"></span><h2>A stamp closes its period<a class="headerlink" href="#a-stamp-closes-its-period" title="Link to this heading">#</a></h2>
+<p>The periods are the intervals <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span> of <a class="reference internal" href="forcing.html#equation-eq-period-edges">(1)</a>. Every
+solver stamps a period at its end: the time axis of a run is the start of the run
+plus the elapsed solver time. January 2000 of a monthly run is stamped
+2000-02-01. A steady run over 2000 to 2002 has one period, stamped 2003-01-01.
+The stamp of period <span class="math notranslate nohighlight">\(k\)</span> is therefore <span class="math notranslate nohighlight">\(b_{k+1}\)</span>.</p>
+<p>What a stamp stands for depends on the quantity. The rule is read from the CF
+<a class="reference external" href="https://cfconventions.org/"><code class="docutils literal notranslate"><span class="pre">cell_methods</span></code></a> (<code class="docutils literal notranslate"><span class="pre">mean</span></code> or <code class="docutils literal notranslate"><span class="pre">point</span></code>) of the field in
+the field registry of the code, or, for a
+calibration variable the field registry does not hold, from a table of the
+code. A name that nothing declares is a mean.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Quantity</p></th>
+<th class="head"><p>The value stamped <span class="math notranslate nohighlight">\(b_{k+1}\)</span> stands for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code></p></td>
+<td><p>recharge, drain and seepage fluxes, discharge, runoff, lake inflow and outflow</p></td>
+<td><p>the mean of the flux over <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">point</span></code></p></td>
+<td><p>head, water table elevation and depth, seepage mask, lake level and volume, soil stores</p></td>
+<td><p>the state at the instant <span class="math notranslate nohighlight">\(b_{k+1}\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For a steady first period, the head is the equilibrium under the forcing of that
+period, stamped at its end.</p>
+<section id="a-period-cut-into-time-steps">
+<span id="alignment-steps"></span><h3>A period cut into time steps<a class="headerlink" href="#a-period-cut-into-time-steps" title="Link to this heading">#</a></h3>
+<p>A solver can cut a period into time steps:
+<a class="hmp-toml-ref reference external" href="../reference/parameters/simulation.html#p-simulation-time-substeps_per_period" title="Number of solver time steps within each stress period, the one knob that buys transient accuracy."><code class="docutils literal notranslate"><span class="pre">simulation.time.substeps_per_period</span></code></a>, adaptive time stepping on MODFLOW 6,
+or the internal steps of the Boussinesq PETSc closures. The run still stores one
+value per period, the same way on MODFLOW 6, MODFLOW-NWT and Boussinesq:</p>
+<ul class="simple">
+<li><p>a state is the value at the last step, which ends at the stamp;</p></li>
+<li><p>a flux is the mean of the fluxes of the steps, each weighted by its length:
+recharge, wells, drains, fixed heads, river, stream and lake exchanges, storage
+and the release at the surface, cell by cell and in the budget tables, and the
+listing water balance of the period.</p></li>
+</ul>
+<p>With one step a period, that mean is the flux of the step, unchanged. Each step
+closes its water balance, so the change of storage between the two stamps closes
+the balance of the period with these means.</p>
+<figure class="align-default" id="id1">
+<img alt="Two panels over four monthly periods. Top, a daily flux and the mean of each period drawn over the period and marked at its end stamp. Bottom, a daily head and the value read at each end stamp." class="plot-directive" src="../_images/forcing_stamp.png" width="941" height="615" />
+<figcaption>
+<p><span class="caption-number">Fig. 59 </span><span class="caption-text">A flux (top) and a state (bottom) on four monthly periods, read by
+<code class="docutils literal notranslate"><span class="pre">period_mean_on_index</span></code> and <code class="docutils literal notranslate"><span class="pre">period_point_on_index</span></code>. The flux of a stamp is
+the mean of the period that ends there. The state is read at the stamp, here
+on a window centred on it because the daily record is finer than the run.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">time_method_for</span></code>.</p>
+</section>
+</section>
+<section id="an-observation-on-the-periods">
+<span id="alignment-observations"></span><h2>An observation on the periods<a class="headerlink" href="#an-observation-on-the-periods" title="Link to this heading">#</a></h2>
+<p>An observation is put on the periods by the same rule, so a simulated value and
+an observed one mean the same thing. Observations are stamped at the start of
+what they average: a daily mean at its day, a monthly mean at its month start.</p>
+<p><strong>A mean quantity.</strong> Period <span class="math notranslate nohighlight">\(k\)</span> takes the mean of the observations stamped in
+<span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span>. A period with none takes the last observation stamped at or
+before <span class="math notranslate nohighlight">\(b_k\)</span> when the interval that observation stands for covers the whole
+period:</p>
+<div class="math notranslate nohighlight" id="equation-eq-observation-reach">
+<span class="eqno">(44)<a class="headerlink" href="#equation-eq-observation-reach" title="Link to this equation">#</a></span>\[
+b_{k+1} \leq t_h + \Delta t_o ,
+\]</div>
+<p>where <span class="math notranslate nohighlight">\(t_h\)</span> is the stamp of that observation and <span class="math notranslate nohighlight">\(\Delta t_o\)</span> the step of its
+chronicle. That is a monthly mean on a daily run. Otherwise the period has no
+value, and a gap in the chronicle stays a gap.</p>
+<p><strong>A state.</strong> A chronicle finer than the run is averaged on a window centred on
+the stamp, reaching halfway to the neighbouring stamps. A chronicle as coarse as
+the run, or coarser, gives the sample nearest the stamp, within the step of the
+run. Averaging a state over <span class="math notranslate nohighlight">\([b_k, b_{k+1})\)</span> would compare it with a value half a
+period earlier.</p>
+<p><strong>A steady period.</strong> One stamp does not say where the period starts. The scorer
+takes the start of the first period from the time grid of the run, so a steady
+discharge is compared with the mean of the gauge over the window of the run, not
+with its last day. A steady head is still read at its stamp.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">observed_on_periods</span></code>.</p>
+</section>
+<section id="a-series-derived-on-the-periods">
+<span id="alignment-derived"></span><h2>A series derived on the periods<a class="headerlink" href="#a-series-derived-on-the-periods" title="Link to this heading">#</a></h2>
+<p>A series the run derives from a forcing, such as the catchment discharge built
+from a drain budget plus the runoff (<a class="reference internal" href="forcing.html#forcing-runoff"><span class="std std-ref">8. Runoff is not recharge</span></a>), takes the mean of
+the samples of each period and holds no value: a period with no sample is a gap,
+never the previous value. This is the one difference with an observation of the
+same kind. On the daily record of 1, 3 and 5 mm/day for January, February and
+March with the days of February removed, the three periods read 1, a gap, and 5.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">period_mean_on_index</span></code>.</p>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>A stamp closes its period: a flux is a period mean, a state is a value at the
+stamp. A period cut into time steps stores the mean of its step fluxes and the
+state of its last step.</p></li>
+<li><p>An observation is stamped at the start of what it averages.</p></li>
+<li><p>An observation of a mean quantity stands for one step of its chronicle.</p></li>
+</ul>
+</section>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>A chronicle with gaps</strong> has a step taken from the median of its spacings: a
+period beyond that step after the last observation stays empty.</p></li>
+<li><p><strong>A state between two coarse stamps</strong> is not interpolated: it takes the
+nearest sample within the step of the run, or no value.</p></li>
+</ul>
+</section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test
+appears here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">9 test files import <code>hydromodpy.core.time.period_aggregation</code>, <code>hydromodpy.core.time.time_method</code>, <code>hydromodpy.results.derive.time_alignment</code>, <code>hydromodpy.solver.modflow_common.period_steps</code>. Their names say what they check.</p><details class="hmp-tested-tier"><summary>unit: 9</summary><ul><li title="tests/unit/calibration/test_persist_trial_series.py">Persist trial series. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_the_protocol_s_block_route_matches_the_single_metric_one.py">The protocol s block route matches the single metric one. <span class="hmp-muted">calibration</span></li><li title="tests/unit/core/test_period_aggregation.py">Period aggregation. <span class="hmp-muted">core</span></li><li title="tests/unit/core/test_the_soil_storages_are_states_at_the_stamp.py">The soil storages are states at the stamp. <span class="hmp-muted">core</span></li><li title="tests/unit/results/test_a_state_is_read_at_its_stamp.py">A state is read at its stamp. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_period_bounds.py">Period bounds. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_solver_time_index.py">Solver time index. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_time_alignment.py">Time alignment. <span class="hmp-muted">results</span></li><li title="tests/unit/solver/test_a_stamp_carries_the_period_mean_flux.py">A stamp carries the period mean flux. <span class="hmp-muted">solver</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The stamp convention, mean and point rules</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/time/period_aggregation.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The method of each quantity</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/core/time/time_method.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/results/derive/time_alignment.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The steps of a period put on its stamp, MODFLOW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/modflow_common/period_steps.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The steps of a period put on its stamp, Boussinesq</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PeriodFluxes</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/drivers/state.py</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/boussinesq/assembly/period_mean.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Runoff added to a drain budget</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/metrics/series.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="forcing.html"><span class="doc">Rain and evaporation: the forcing</span></a>: how the inputs are put on the periods.</p></li>
+<li><p><a class="reference internal" href="calibration/inverse-problem-formulation.html"><span class="doc">The inverse problem of a calibration</span></a>: the scores that compare the
+aligned series.</p></li>
+<li><p><a class="reference internal" href="../reference/parameters/simulation.html"><span class="doc">[simulation]</span></a>: the keys of the window and the periods.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="exits/simulated-network.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Where the water table reaches the surface</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="calibration/inverse-problem-formulation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The inverse problem of a calibration</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-stamp-closes-its-period">A stamp closes its period</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-period-cut-into-time-steps">A period cut into time steps</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-observation-on-the-periods">An observation on the periods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-series-derived-on-the-periods">A series derived on the periods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-10-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

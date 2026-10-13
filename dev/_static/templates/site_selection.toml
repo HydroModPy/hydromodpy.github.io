@@ -1,0 +1,610 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: site_selection
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Top-level site-selection workflow configuration.
+# ----------------------------------------------------------------------
+
+[site_selection]
+# Stable identifier for this selection campaign.
+# Type: string | REQUIRED | Examples: "small_basins"
+selection_id = ""
+
+# Output directory for all site-selection artifacts.
+# Type: path | REQUIRED | Examples: "site_selection"
+output_root = ""
+
+# Flow-routing engine that conditions the DEM and delineates candidate catchments.
+# Unset uses the engine this build defaults to.
+# A string and not an enumeration, mirroring geographic.terrain_engine: the values that resolve depend on what is installed beside HydroModPy.
+# Type: string (optional) | Optional
+# terrain_engine = ""
+
+
+[site_selection.strategy]
+# Selection principle: observation-led or direct criteria crossing.
+# Type: Literal['observation_led', 'criteria_crossing'] | one of: "observation_led", "criteria_crossing" | Default: "criteria_crossing"
+principle = "criteria_crossing"
+
+# Optional selection profile.
+# Short-term supported profiles are 'area_only' and 'gauged_downstream_station'.
+# Type: Literal (optional) | Optional
+# profile = "area_only"
+
+# Physical or spatial axes that drive a criteria_crossing selection.
+# Type: list[str] | REQUIRED
+primary_axes = []
+
+# How observations influence a criteria_crossing campaign.
+# Type: Literal['primary', 'bonus', 'score', 'stratify', 'report_only', 'ignore'] | one of: "primary", "bonus", "score", "stratify", "report_only", "ignore" | Default: "report_only"
+observation_role = "report_only"
+
+# How geology influences a criteria_crossing campaign.
+# Type: Literal['primary', 'bonus', 'score', 'stratify', 'report_only', 'ignore'] | one of: "primary", "bonus", "score", "stratify", "report_only", "ignore" | Default: "report_only"
+geology_role = "report_only"
+
+# Observation family required by an observation_led strategy.
+# Type: string (optional) | Optional
+# primary_observation_type = ""
+
+# Provider or normalized source used for primary observations.
+# Type: string (optional) | Optional
+# observation_source = ""
+
+
+# Territory where candidate basins are searched.
+
+[site_selection.territory]
+# How the search territory is given: by administrative regions, by departments, by a polygon file or by a bounding box.
+# Each mode reads its own key.
+# Type: Literal['admin_regions', 'admin_departments', 'polygon_file', 'bbox'] | one of: "admin_regions", "admin_departments", "polygon_file", "bbox" | Default: "bbox"
+mode = "bbox"
+
+# Country code used by administrative territory modes.
+# Type: string (optional) | Optional
+# country = ""
+
+# Names of the administrative regions that bound the territory.
+# With country = 'FR' the names are checked against the French regions.
+# Type: list[str] | REQUIRED | Examples: ["Bretagne"]
+regions = []
+
+# Codes of the administrative departments that bound the territory.
+# Type: list[str] | REQUIRED | Examples: ["35", "56"]
+departments = []
+
+# Vector file of a polygon whose bounding box is the territory.
+# Type: path (optional) | Optional
+# polygon_file = ""
+
+# Territory bounds as xmin, ymin, xmax, ymax.
+# Type: tuple (optional) | Optional
+# bbox = ""
+
+# Clip candidate basins or outlets to the requested territory.
+# Type: bool | Default: true
+clip_to_territory = true
+
+
+[site_selection.dem]
+# Where the selection takes its DEM when dem.path is empty and the file holds no [data.dem] section.
+# A dem.path or a [data.dem] section always wins.
+# Type: Literal['custom', 'data', 'ign_geoplateforme_dem'] | one of: "custom", "data", "ign_geoplateforme_dem" | Default: "custom"
+source = "custom"
+
+# Local DEM raster used to delineate the catchments.
+# When set, it wins over [data.dem] and over source.
+# Type: path (optional) | Optional
+# path = ""
+
+# DEM request margin around the territory in kilometres.
+# Type: float | >= 0 | Default: 0.0
+margin_km = 0.0
+
+# Area the DEM is requested over through [data.dem].
+# 'territory' requests the configured selection territory; 'outlets' requests the bounding box of imported outlets expanded by margin_km.
+# Type: Literal['territory', 'outlets'] | one of: "territory", "outlets" | Default: "territory"
+request_extent = "territory"
+
+# DEM extent used only for review-map background.
+# 'delineation' reuses the DEM used to calculate basin contours; 'territory' loads a regional DEM through [data.dem] without using it for delineation.
+# Type: Literal['none', 'delineation', 'territory'] | one of: "none", "delineation", "territory" | Default: "delineation"
+map_background_extent = "delineation"
+
+# Ignore existing cached data when supported by the provider.
+# Type: bool | Default: false
+force_refresh = false
+
+
+[site_selection.hydrology]
+# How the flow products (directions, accumulation, streams) are made.
+# 'dem_only' derives them from the DEM alone and is the only value today.
+# Type: Literal['dem_only'] | one of: "dem_only" | Default: "dem_only"
+method = "dem_only"
+
+# Flow routing algorithm used by existing spatial products.
+# Type: Literal['d8'] | one of: "d8" | Default: "d8"
+flow_algorithm = "d8"
+
+# DEM conditioning strategy forwarded to existing flow products.
+# Type: Literal['existing_default', 'fill', 'breach'] | one of: "existing_default", "fill", "breach" | Default: "existing_default"
+hydrologic_conditioning = "existing_default"
+
+# Contributing-area threshold used to extract the stream network.
+# Type: float | > 0 | Default: 1.0
+network_threshold_area_km2 = 1.0
+
+# Request Strahler diagnostics if existing spatial primitives support them.
+# Type: bool | Default: true
+compute_strahler = true
+
+
+# Compact settings for DEM-only automatic small-basin selection.
+
+# [site_selection.dem_area_light]
+# Preferred upstream basin area for DEM-only candidate outlets.
+# Type: float | > 0 | Default: 100.0
+# target_area_km2 = 100.0
+
+# Smallest upstream area, in km2, a DEM-only candidate basin may have.
+# Type: float | > 0 | Default: 75.0
+# min_area_km2 = 75.0
+
+# Largest upstream area, in km2, a DEM-only candidate basin may have.
+# Type: float | > 0 | Default: 125.0
+# max_area_km2 = 125.0
+
+# Number of basins the DEM-only selection keeps.
+# It replaces spatial_selection.max_selected_sites in that selection.
+# A count.
+# Type: int | > 0 | Default: 50
+# n_basins = 50
+
+# Most candidate outlets delineated before the final selection.
+# A lower value runs faster but can leave fewer accepted basins after spatial filtering.
+# Unset, it is 20 times n_basins.
+# A count.
+# Type: int (optional) | > 0 | Optional
+# max_candidates_before_delineation = 1
+
+
+[site_selection.input]
+# Where the candidate catchments come from: no data (a plan only), flow stations, a CSV of delineated catchments, outlets sampled on the DEM network, or DEM-only outlets around a target area.
+# Type: Literal['plan_only', 'hydrometry', 'delineated_catchments', 'generated_candidates', 'dem_area_light'] | one of: "plan_only", "hydrometry", "delineated_catchments", "generated_candidates", "dem_area_light" | Default: "plan_only"
+mode = "plan_only"
+
+# CSV file of catchments already delineated, one row per catchment.
+# Type: path (optional) | Optional
+# catchments_csv = ""
+
+# Optional region identifier written to regional-lab CSV outputs.
+# Type: string | Default: ""
+region_id = ""
+
+# Optional workspace root forwarded to data-manager based loading.
+# Type: path (optional) | Optional
+# workspace_root = ""
+
+# Optional data root forwarded to data-manager based loading.
+# Type: path (optional) | Optional
+# data_root = ""
+
+# Write site_selection_plan.json when the workflow is run in plan mode.
+# Type: bool | Default: true
+write_plan_manifest = true
+
+# When using catchments_csv, compute watershed contours from outlet coordinates and DEM flow products instead of trusting watershed_shp.
+# Type: bool | Default: false
+delineate_from_outlets = false
+
+
+[site_selection.outlets]
+# How candidate outlets are generated: sampled on the DEM stream network, or taken at the observation stations.
+# Type: Literal['network_sampling', 'station_outlets'] | one of: "network_sampling", "station_outlets" | Default: "network_sampling"
+candidate_mode = "network_sampling"
+
+# Smallest distance, in km, between two generated candidate outlets.
+# Unset, outlets may sit as close as the network allows.
+# Type: float (optional) | > 0 | Optional
+# min_distance_between_outlets_km = 1.0
+
+# Allow nested candidate basins before final selection.
+# Type: bool | Default: false
+allow_nested_basins = false
+
+# Most candidate outlets generated from the DEM stream network and delineated.
+# Unset, there is no cap.
+# A count.
+# Type: int (optional) | > 0 | Default: 200
+max_generated_candidates = 200
+
+# Most rejected candidate cells written to the candidate-generation audit file (JSON lines).
+# Unset, every rejected cell is written.
+# A count.
+# Type: int (optional) | > 0 | Default: 5000
+max_rejected_candidate_audit_records = 5000
+
+# Most DEM stream cells written to the generated network vector layer.
+# The cells with the highest accumulation are kept first.
+# A count.
+# Type: int (optional) | > 0 | Default: 50000
+max_generated_network_cells = 50000
+
+# Snap outlets to the DEM-derived stream network when applicable.
+# Type: bool | Default: true
+snap_to_generated_stream = true
+
+# Outlet snapping strategy.
+# 'dem_accumulation' snaps directly on the DEM-derived accumulation raster.
+# 'bdtopage_then_dem' first projects the station to BD Topage, then snaps locally on the DEM raster.
+# Type: Literal['dem_accumulation', 'bdtopage_then_dem'] | one of: "dem_accumulation", "bdtopage_then_dem" | Default: "dem_accumulation"
+snap_strategy = "dem_accumulation"
+
+# Maximum snapping distance in metres for outlet-based delineation.
+# Type: int | > 0 | Default: 150
+snap_dist_m = 150
+
+# Reference hydrographic network used by bdtopage_then_dem.
+# Type: Literal['bdtopage', 'custom'] | one of: "bdtopage", "custom" | Default: "bdtopage"
+reference_network_source = "bdtopage"
+
+# Local vector file of the reference stream network.
+# Read by snap_strategy = 'bdtopage_then_dem'.
+# Type: path (optional) | Optional
+# reference_network_path = ""
+
+# Maximum accepted distance from candidate outlet to the reference network.
+# Type: float | > 0 | Default: 100.0
+reference_network_max_distance_m = 100.0
+
+# Extra margin around outlets when downloading a BD Topage reference network.
+# Type: float | >= 0 | Default: 500.0
+reference_network_fetch_margin_m = 500.0
+
+
+[site_selection.spatial_selection]
+# Most catchments kept after ranking and spatial thinning.
+# Unset, every accepted catchment is kept.
+# A count.
+# Type: int (optional) | >= 1 | Optional
+# max_selected_sites = 1
+
+# Allow selected basins to be nested.
+# Type: bool | Default: false
+allow_nested_basins = false
+
+# Smallest distance, in km, between two selected outlets.
+# Unset, no spacing is enforced.
+# Type: float (optional) | > 0 | Optional
+# min_outlet_distance_km = 1.0
+
+# Largest share of a basin that may overlap an already selected basin, from 0 to 1.
+# The share is taken against the area overlap_reference names.
+# Unset, overlap is not checked.
+# Type: float (optional) | >= 0 | <= 1 | Optional
+# max_pairwise_basin_overlap_fraction = 0.0
+
+# Which basin area divides the overlap area to give the overlap share compared with max_pairwise_basin_overlap_fraction.
+# Type: Literal['smaller_basin', 'candidate', 'selected'] | one of: "smaller_basin", "candidate", "selected" | Default: "smaller_basin"
+overlap_reference = "smaller_basin"
+
+# What happens to a candidate whose overlap share exceeds max_pairwise_basin_overlap_fraction.
+# Type: Literal['hard_reject', 'warning', 'score', 'report_only'] | one of: "hard_reject", "warning", "score", "report_only" | Default: "hard_reject"
+overlap_mode = "hard_reject"
+
+# Optional coarse spatial quota applied after ranking.
+# Type: Literal['none', 'grid'] | one of: "none", "grid" | Default: "none"
+spatial_quota_mode = "none"
+
+# Side of the square cells of the quota grid, in km.
+# Type: float (optional) | > 0 | Optional
+# spatial_quota_cell_size_km = 1.0
+
+# Most selected sites one quota grid cell may hold.
+# Candidates past it are rejected in ranking order.
+# A count.
+# Type: int | >= 1 | Default: 1
+spatial_quota_max_sites_per_cell = 1
+
+
+[site_selection.criteria.area]
+# How basin area contributes to selection.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+mode = "report_only"
+
+# Named target area used for reporting or strict area profiles.
+# Type: float (optional) | > 0 | Optional
+# target_area_km2 = 1.0
+
+# Preferred area used by score-based campaigns.
+# Type: float (optional) | > 0 | Optional
+# preferred_area_km2 = 1.0
+
+# Half-width of the area score, as a share of preferred_area_km2.
+# The score is 1 at the preferred area and falls to 0 at that distance from it.
+# Required by mode = 'score'.
+# Type: float (optional) | > 0 | Optional
+# score_half_width_fraction = 1.0
+
+# Hard lower area bound when configured.
+# Type: float (optional) | > 0 | Optional
+# hard_min_area_km2 = 1.0
+
+# Hard upper area bound when configured.
+# Type: float (optional) | > 0 | Optional
+# hard_max_area_km2 = 1.0
+
+
+# Explicit area ranges used for hard rejection, warnings or stratification.
+# Prefer this over target/preferred area fields when the campaign is defined by minimum and maximum basin sizes.
+# Example entry, one [[site_selection.criteria.area.ranges]] block per entry.
+# [[site_selection.criteria.area.ranges]]
+# Stable identifier for the area range.
+# Type: string | Default: ""
+# range_id = ""
+
+# Label of the area range shown in the report and the CSV outputs.
+# Type: string | Default: ""
+# label = ""
+
+# Smallest basin area of this range, in km2.
+# Type: float | > 0 | REQUIRED | Examples: 10.0
+# min_area_km2 = 1.0
+
+# Largest basin area of this range, in km2.
+# Type: float | > 0 | REQUIRED | Examples: 50.0
+# max_area_km2 = 1.0
+
+
+[site_selection.criteria.observations]
+# What the piezometer checks do to a candidate: reject it, warn, score it, group it, or only report.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+piezometer_mode = "report_only"
+
+# Largest distance, in km, from the basin to its nearest piezometer.
+# Under mode = 'score' the score falls from 1 at the basin to 0 at this distance.
+# Type: float (optional) | > 0 | Optional
+# piezometer_max_distance_km = 1.0
+
+
+[site_selection.criteria.observations.flow_station]
+# What the flow-station checks do to a candidate: reject it, warn, score it, group it, or only report.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+mode = "report_only"
+
+# Shortest discharge record, in years, a station must hold.
+# A record given as a count of daily values is divided by 365.25.
+# Unset, record length is not checked.
+# Type: float (optional) | > 0 | Optional
+# min_record_years = 1.0
+
+# Largest distance, in km, between the station and the candidate outlet.
+# Unset, the distance is not checked.
+# Type: float (optional) | > 0 | Optional
+# max_station_to_outlet_distance_km = 1.0
+
+# Fail the check when the station is flagged outside the basin and away from its outlet.
+# Type: bool | Default: false
+require_station_inside_or_at_outlet = false
+
+
+[site_selection.criteria.observations.station_influence]
+# What a station flagged as influenced (a dam, a withdrawal) does to its candidate: reject it, warn, score it, group it, or only report.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+mode = "report_only"
+
+# Name of the metadata source written into the station-influence evidence.
+# It is a label and selects no provider.
+# Type: string | Default: "hubeau_station_metadata"
+source = "hubeau_station_metadata"
+
+# Raise an issue when the station metadata reports a general hydrologic influence.
+# Under mode = 'hard_reject' the issue rejects the candidate.
+# Type: bool | Default: true
+warn_if_general_influence = true
+
+# Raise an issue when the station metadata reports a local hydrologic influence.
+# Under mode = 'hard_reject' the issue rejects the candidate.
+# Type: bool | Default: true
+warn_if_local_influence = true
+
+# Report comment keyword matches as warnings.
+# Comment keywords are not treated as hard-reject evidence.
+# Type: bool | Default: true
+warn_if_comment_keyword = true
+
+# What a station with missing or unknown influence metadata raises.
+# Type: Literal['neutral', 'warning'] | one of: "neutral", "warning" | Default: "neutral"
+unknown_policy = "neutral"
+
+# Keywords searched in station influence comments.
+# Type: list[str] | REQUIRED
+comment_keywords = []
+
+
+# Optional vector layers used to compute piezometer evidence.
+# Example entry, one [[site_selection.criteria.observations.piezometer_layers]] block per entry.
+# [[site_selection.criteria.observations.piezometer_layers]]
+# Name of the piezometer layer, written into the evidence of each match.
+# Type: string | REQUIRED | Examples: "ades_piezometers"
+# name = ""
+
+# Vector file of the piezometer points matched against each basin.
+# Type: path | REQUIRED | Examples: "piezometers.gpkg"
+# path = ""
+
+# Attribute column that names each piezometer.
+# Unset, the row number is used.
+# Type: string (optional) | Optional
+# id_field = ""
+
+# Attribute column that labels each piezometer in the evidence.
+# Unset, the identifier is used.
+# Type: string (optional) | Optional
+# label_field = ""
+
+# Optional field containing available record length in years.
+# Type: string (optional) | Optional
+# record_years_field = ""
+
+# Optional field containing a quality/status label.
+# Type: string (optional) | Optional
+# quality_field = ""
+
+
+[site_selection.criteria.influence]
+# What a basin carrying an influence flag selected by the reject_* keys does to its candidate: reject it, warn, or only report.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+mode = "report_only"
+
+# Count a major dam upstream of the outlet as a failure of the influence check.
+# What a failure does follows mode.
+# Type: bool | Default: false
+reject_major_dam_upstream = false
+
+# Count a major water withdrawal upstream of the outlet as a failure of the influence check.
+# What a failure does follows mode.
+# Type: bool | Default: false
+reject_major_withdrawal_upstream = false
+
+# Count a major regulated reach upstream of the outlet as a failure of the influence check.
+# What a failure does follows mode.
+# Type: bool | Default: false
+reject_major_regulated_reach = false
+
+# Radius, in km, of the disk around the outlet searched for influence features when a candidate has no basin polygon.
+# Unset, such a candidate gets no evidence.
+# Type: float (optional) | > 0 | Optional
+# influence_search_radius_km = 1.0
+
+
+# Optional vector layers used to compute influence flags automatically.
+# Example entry, one [[site_selection.criteria.influence.layers]] block per entry.
+# [[site_selection.criteria.influence.layers]]
+# Name of the influence layer, written into the evidence of each match.
+# Type: string | REQUIRED | Examples: "dams"
+# name = ""
+
+# Vector file of the influence features (dams, withdrawals, regulated reaches) matched against each basin.
+# Type: path | REQUIRED | Examples: "dams.gpkg"
+# path = ""
+
+# Normalized influence flag filled when features match a basin.
+# Type: Literal['major_dam_upstream', 'major_withdrawal_upstream', 'major_regulated_reach'] | one of: "major_dam_upstream", "major_withdrawal_upstream", "major_regulated_reach" | REQUIRED | Examples: "major_dam_upstream"
+# influence_type = "major_dam_upstream"
+
+# Attribute column that names each feature.
+# Unset, the row number is used.
+# Type: string (optional) | Optional
+# id_field = ""
+
+# Attribute column that labels each feature in the evidence.
+# Unset, the identifier is used.
+# Type: string (optional) | Optional
+# label_field = ""
+
+# Optional field used to classify major features.
+# Type: string (optional) | Optional
+# severity_field = ""
+
+# Values considered major in severity_field.
+# When empty, every matched feature is considered major.
+# Type: list[str] | REQUIRED
+# major_values = []
+
+
+[site_selection.criteria.geology]
+# What the geology class of a basin does to its candidate: score it, group it, or only report.
+# Geology cannot reject or warn today.
+# Type: Literal['hard_reject', 'warning', 'score', 'stratify', 'report_only'] | one of: "hard_reject", "warning", "score", "stratify", "report_only" | Default: "report_only"
+mode = "report_only"
+
+
+# Optional polygon layers used to compute geology evidence.
+# Example entry, one [[site_selection.criteria.geology.layers]] block per entry.
+# [[site_selection.criteria.geology.layers]]
+# Name of the geology layer, written into the evidence of each match.
+# Type: string | REQUIRED | Examples: "brgm_1m"
+# name = ""
+
+# Vector polygon file containing geology units.
+# Type: path | REQUIRED | Examples: "geology.gpkg"
+# path = ""
+
+# Feature field containing the geology class.
+# Type: string | REQUIRED | Examples: "lithology"
+# class_field = ""
+
+# Attribute column that names each polygon.
+# Unset, the row number is used.
+# Type: string (optional) | Optional
+# id_field = ""
+
+# Attribute column that labels each polygon in the evidence.
+# Type: string (optional) | Optional
+# label_field = ""
+
+
+[site_selection.output]
+# Write rejected_sites.csv, the table of rejected sites.
+# Type: bool | Default: true
+write_rejected = true
+
+# Write selected_sites.csv, the table of selected sites.
+# Type: bool | Default: true
+write_selected = true
+
+# Write the outlets and basins of the selected and rejected sites as GeoJSON.
+# Type: bool | Default: true
+write_geojson = true
+
+# Write the outlets and basins of the selected and rejected sites as GeoParquet.
+# Type: bool | Default: false
+write_geoparquet = false
+
+# Write the outlets and basins of the selected and rejected sites as one GeoPackage.
+# Type: bool | Default: false
+write_geopackage = false
+
+# Write the site tables as CSV.
+# When false, write_selected and write_rejected write nothing.
+# Type: bool | Default: true
+write_csv = true
+
+# Write regional_lab_sites.csv: the selected sites in the columns the regional-lab catalog loader reads.
+# Type: bool | Default: true
+write_regional_lab_csv = true
+
+# Write the HTML review report with its maps and tables.
+# Type: bool | Default: false
+write_report_html = false
+
+# Keep intermediate GeoTIFF rasters such as flow products and per-candidate watershed masks after final outputs are written.
+# Type: bool | Default: false
+keep_intermediate_rasters = false
+
+
+# Context vector layers drawn behind selection artifacts.
+# Example entry, one [[site_selection.map_context.layers]] block per entry.
+# [[site_selection.map_context.layers]]
+# Human-readable layer name used in the map/report manifest.
+# Type: string | REQUIRED | Examples: "rivers"
+# name = ""
+
+# GeoJSON file used as static map context.
+# Type: path | REQUIRED | Examples: "rivers.geojson"
+# path = ""
+
+# Visual role controlling the default map style.
+# Type: Literal['territory', 'hydrography', 'geology', 'other'] | one of: "territory", "hydrography", "geology", "other" | Default: "other"
+# role = "other"
+
+# Optional feature-property field used for future labels.
+# Type: string (optional) | Optional
+# label_field = ""
+
