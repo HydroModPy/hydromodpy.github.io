@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Calibrate on a network and a discharge" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/get-started/calibrate-k.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="Task, Move K until the simulated stream network matches a mapped one, then move Sy until the simulated discharge matches the gauge.,, Time, A few minutes for the check, the calibration is a series ..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/matching_hydrographic_network_card.webp" />
+<meta property="og:image:alt" content="Four panels. The K trials close on a bracket around 8e-5 m/s, the Sy trials have a minimum cost near 0.043, the mean distance is under its bound, and the cells are split into valid, excess and missing." />
+<meta name="description" content="Task, Move K until the simulated stream network matches a mapped one, then move Sy until the simulated discharge matches the gauge.,, Time, A few minutes for the check, the calibration is a series ..." />
+
+    <meta property="article:modified_time" content="2026-11-13T22:12:45+01:00" />
+    <title>Calibrate on a network and a discharge &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'get-started/calibrate-k';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/get-started/calibrate-k.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Write calibration phases" href="../how-to/write-calibration-phases.html" />
+    <link rel="prev" title="Run step by step" href="../how-to/run-step-by-step.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-13"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../understand/what-it-computes.html">What HydroModPy does</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="staircase/index.html">The staircase</a><details><summary aria-label="Show or hide the pages under The staircase"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step1.html">Step 1: minimal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step2.html">Step 2: local data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step3.html">Step 3: API data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step4.html">Step 4: transient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step5.html">Step 5: export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="staircase/step6.html">Step 6: soil reservoir</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="staircase/next.html">After the staircase</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Do a task</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/use-your-own-files.html">Use your own files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/work-in-the-lab.html">Work in the lab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/run-step-by-step.html">Run step by step</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Calibrate on a network and a discharge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/write-calibration-phases.html">Write calibration phases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/long-transient-runs-in-windows.html">Long transient runs in windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="many-catchments.html">Many catchments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster.html">On a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/run-in-docker.html">Run in Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/deliver-exports.html">Deliver exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="share-a-simulation.html">Share a simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how-to/replay-a-run.html">Replay a run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="from-v1.html">Coming from version 1</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Read and judge a result</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../understand/reading-results.html">Reading the results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/conventions.html">Conventions of a run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/stream-network.html">How the model makes streams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/network-metrics.html">Scoring a simulated stream network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/how-sure.html">How sure is the model?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/what-validated-means.html">What "validated" means here</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/where-the-data-come-from.html">Where the data come from</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/can-i-check-what-was-run.html">Can I check what was run?</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../user-guide/index.html" class="nav-link">User guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Calibrate on a network and a discharge</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:User guide" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="calibrate-on-a-network-and-a-discharge">
+<h1>Calibrate on a network and a discharge<a class="headerlink" href="#calibrate-on-a-network-and-a-discharge" title="Link to this heading">#</a></h1>
+<div class="hmp-task docutils container">
+<dl class="simple myst">
+<dt>Task</dt><dd><p>Move K until the simulated stream network matches a mapped one, then move Sy until the simulated discharge matches the gauge.</p>
+</dd>
+<dt>Time</dt><dd><p>A few minutes for the check, the calibration is a series of monthly runs.</p>
+</dd>
+<dt>Needs</dt><dd><p>The example files (<a class="reference internal" href="staircase/index.html"><span class="doc">The staircase</span></a>). The network map is a file of the example, so nothing is downloaded.</p>
+</dd>
+<dt>Gives</dt><dd><p>The best K and Sy, a full run of each stage with its figures, and a trace of the search.</p>
+</dd>
+</dl>
+</div>
+<p>Example 04 calibrates in two stages. K alone is moved until the cells where the water table reaches the surface fall on the mapped network. Then Sy alone is moved, with K frozen, until the simulated discharge follows the gauge. The mapped network and the gauge are targets. They score the model and never enter it. <a class="reference internal" href="../understand/how-sure.html"><span class="doc">How sure is the model?</span></a> says what the result can and cannot tell.</p>
+<section id="what-can-be-calibrated">
+<h2>What can be calibrated<a class="headerlink" href="#what-can-be-calibrated" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">targets</span></code> lists the parameters a calibration can move, with their current value, unit and the path they write to. It loads the file and solves nothing.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>name                    current       unit  space     draw         default bounds            physical range            path
+thickness                    30          m  log       log_uniform  -                         0 .. 10000                domain.depth_model.thickness
+drainage                      0       m2/s  log       log_uniform  -                         -                         flow.bc.drainage.value
+K                         5e-05        m/s  log       log_uniform  -                         1e-14 .. 100              flow.param.K.field.value
+Ss                        1e-05        m-1  log       log_uniform  -                         1e-12 .. 0.001            flow.param.Ss.field.value
+Sy                         0.05          -  log       log_uniform  -                         0.0001 .. 0.5             flow.param.Sy.field.value
+"recharge.factor"             1          -  log       log_uniform  0.5 .. 2                  -                         flow.sinks_sources.recharge.factor
+vka                           1          -  log       log_uniform  -                         0.001 .. 100              solver.modflow6.process_specific.vka
+</pre></div>
+</div>
+<p>A parameter you move gets a <code class="docutils literal notranslate"><span class="pre">[calibration.parameters.&lt;name&gt;]</span></code> table with a pair of bounds. The search is in log space.</p>
+</section>
+<section id="the-file">
+<h2>The file<a class="headerlink" href="#the-file" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">run_calibration_by_hand.toml</span></code> writes the two stages as two phases. <code class="docutils literal notranslate"><span class="pre">run_calibration.toml</span></code> runs the same trials under the name of the published protocol.</p>
+<div class="hmp-toml-wrap"><div class="hmp-toml-cap"><code>run_calibration_by_hand.toml</code> inherits <code>project.toml</code> · <span class="mk-add">+</span> new · <span class="mk-chg">~</span> changed · <span class="hmp-muted">keys link to their card</span></div><pre class="hmp-toml"><span class="ln">1</span><span class="mk"></span><span class="c"># Nancon, the method of run_calibration.toml written out as two phases. It runs</span>
+<span class="ln">2</span><span class="mk"></span><span class="c"># the same trials; only the citation a protocol run records is lost.</span>
+<span class="ln">3</span><span class="mk"></span><span class="c"># `hmp calibrate run_calibration.toml --expand` prints what this file follows.</span>
+<span class="ln">4</span><span class="mk"></span><span class="c">#</span>
+<span class="ln">5</span><span class="mk"></span><span class="c">#   hmp calibrate run_calibration_by_hand.toml --list-phases   same lines as run_calibration.toml</span>
+<span class="ln">6</span><span class="mk"></span><span class="c">#   hmp run       run_calibration_by_hand.toml                 both phases, in order</span>
+<span class="ln">7</span><span class="mk"></span><span class="c"></span>
+<span class="ln">8</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/grammar.html#base-config" title="Inherit every table of another file">base_config</a></span> = <span class="s">&quot;project.toml&quot;</span><span class="c"></span>
+<span class="ln">9</span><span class="mk"></span><span class="c"></span>
+<span class="ln">10</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/workflow.html#p-workflow" title="Workflow configuration: `workflow.mode` (&#x27;simulation&#x27;, &#x27;calibration&#x27; or &#x27;overview&#x27;), the console verbosity and the profiler.">workflow</a>]</span><span class="c"></span>
+<span class="ln">11</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/workflow.html#p-workflow-mode" title="What `hmp run` does with the file.">mode</a></span> = <span class="s">&quot;calibration&quot;</span><span class="c"></span>
+<span class="ln">12</span><span class="mk"></span><span class="c"></span>
+<span class="ln">13</span><span class="mk mk-none"></span><span class="h">[<a href="../reference/parameters/simulation.html#p-simulation" title="Optional simulation orchestration block loaded from [simulation] and [[simulation.process]].">simulation</a>]</span><span class="c"></span>
+<span class="ln">14</span><span class="mk mk-chg">~</span><span class="k"><a href="../reference/parameters/simulation.html#p-simulation-name" title="Human-readable simulation name and the run&#x27;s identity.">name</a></span> = <span class="s">&quot;nancon_intermittence_mf6_by_hand&quot;</span><span class="c"></span>
+<span class="ln">15</span><span class="mk mk-chg">~</span><span class="k"><a href="../reference/parameters/simulation.html#p-simulation-description" title="Short free-text description of the simulation intent.">description</a></span> = <span class="s">&quot;Nancon, K from the mapped network then Sy from the gauge.&quot;</span><span class="c"></span>
+<span class="ln">16</span><span class="mk"></span><span class="c"></span>
+<span class="ln">17</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/index.html#p-calibration" title="Optional calibration settings loaded from the [calibration] section.">calibration</a>]</span><span class="c"></span>
+<span class="ln">18</span><span class="mk"></span><span class="c"></span>
+<span class="ln">19</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name" title="User declaration for one calibrated parameter.">calibration.parameters.K</a>]</span><span class="c"></span>
+<span class="ln">20</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name-bounds" title="[low, high] physical bounds, in &#x27;units&#x27; when the file writes it, else in the unit the target declares.">bounds</a></span> = <span class="v">[1e-7, 1e-3]</span><span class="c"></span>
+<span class="ln">21</span><span class="mk"></span><span class="c"></span>
+<span class="ln">22</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name" title="User declaration for one calibrated parameter.">calibration.parameters.Sy</a>]</span><span class="c"></span>
+<span class="ln">23</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name-bounds" title="[low, high] physical bounds, in &#x27;units&#x27; when the file writes it, else in the unit the target declares.">bounds</a></span> = <span class="v">[5e-3, 0.35]</span><span class="c"></span>
+<span class="ln">24</span><span class="mk"></span><span class="c"></span>
+<span class="ln">25</span><span class="mk"></span><span class="c"># An output is a simulated quantity with its observation.</span>
+<span class="ln">26</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name" title="calibration.outputs.&lt;name&gt;">calibration.outputs.seepage_network</a>]</span><span class="c"></span>
+<span class="ln">27</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-support" title="Discriminator tag.">support</a></span> = <span class="s">&quot;network&quot;</span><span class="c"></span>
+<span class="ln">28</span><span class="mk"></span><span class="c"></span>
+<span class="ln">29</span><span class="mk"></span><span class="c"># The record of the gauge of [site], on the simulated months: a point output</span>
+<span class="ln">30</span><span class="mk"></span><span class="c"># that names no station observes the gauge.</span>
+<span class="ln">31</span><span class="mk"></span><span class="c"></span>
+<span class="ln">32</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map" title="What is observed: the mapped network, its role and how it is drawn.">calibration.outputs.seepage_network.map</a>]</span><span class="c"></span>
+<span class="ln">33</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-complete" title="The complete map, every mapped reach: a vector file, read only from here, or &#x27;data.hydrography&#x27;, the network the hydrography data family loaded (a local file or an osm / bdtopage / euhydro download), clipped to the delineated catchment.">complete</a></span> = <span class="s">&quot;nancon_stream_network.gpkg&quot;</span><span class="c"></span>
+<span class="ln">34</span><span class="mk mk-add">+</span><span class="h">[<a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name" title="calibration.outputs.&lt;name&gt;">calibration.outputs.hydrograph</a>]</span><span class="c"></span>
+<span class="ln">35</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-support" title="Discriminator tag.">support</a></span> = <span class="s">&quot;point&quot;</span><span class="c"></span>
+<span class="ln">36</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-variable" title="Simulated variable to extract (e.g. &#x27;head&#x27;, &#x27;outlet_discharge&#x27;).">variable</a></span> = <span class="s">&quot;discharge&quot;</span><span class="c"></span>
+<span class="ln">37</span><span class="mk"></span><span class="c"></span>
+<span class="ln">38</span><span class="mk"></span><span class="c"># A block scores outputs with one metric. Eq. 1: the network gap in meters,</span>
+<span class="ln">39</span><span class="mk"></span><span class="c"># zero when the simulated network reaches as far as the mapped one.</span>
+<span class="ln">40</span><span class="mk mk-add">+</span><span class="h">[[<a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks" title="Weighted blocks making up a composite objective.">calibration.objective_blocks</a>]]</span><span class="c"></span>
+<span class="ln">41</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-name" title="Unique block identifier used in logs and persistence.">name</a></span> = <span class="s">&quot;network_extension&quot;</span><span class="c"></span>
+<span class="ln">42</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-metric" title="Metric that scores this block against its observations.">metric</a></span> = <span class="s">&quot;distance_gap&quot;</span><span class="c"></span>
+<span class="ln">43</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-uses_outputs" title="Outputs (by name) consumed by this block.">uses_outputs</a></span> = <span class="v">[&quot;seepage_network&quot;]</span><span class="c"></span>
+<span class="ln">44</span><span class="mk"></span><span class="c"></span>
+<span class="ln">45</span><span class="mk"></span><span class="c"># NSE on log discharge, which weights the recessions where storage shows.</span>
+<span class="ln">46</span><span class="mk mk-add">+</span><span class="h">[[<a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks" title="Weighted blocks making up a composite objective.">calibration.objective_blocks</a>]]</span><span class="c"></span>
+<span class="ln">47</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-name" title="Unique block identifier used in logs and persistence.">name</a></span> = <span class="s">&quot;hydrograph&quot;</span><span class="c"></span>
+<span class="ln">48</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-metric" title="Metric that scores this block against its observations.">metric</a></span> = <span class="s">&quot;nse_log&quot;</span><span class="c"></span>
+<span class="ln">49</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-uses_outputs" title="Outputs (by name) consumed by this block.">uses_outputs</a></span> = <span class="v">[&quot;hydrograph&quot;]</span><span class="c"></span>
+<span class="ln">50</span><span class="mk"></span><span class="c"></span>
+<span class="ln">51</span><span class="mk"></span><span class="c"># Phase one: K alone, one steady period over 2000-2002, bisection on log K.</span>
+<span class="ln">52</span><span class="mk mk-add">+</span><span class="h">[[<a href="../reference/parameters/calibration/phases.html#p-calibration-phases" title="Stages run one after the other, each calibrating its own parameters and freezing them for the next.">calibration.phases</a>]]</span><span class="c"></span>
+<span class="ln">53</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-name" title="Phase identifier, unique in the calibration and used in the session directory and in the report.">name</a></span> = <span class="s">&quot;steady_conductivity&quot;</span><span class="c"></span>
+<span class="ln">54</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-description" title="What this phase calibrates and against what, in one sentence.">description</a></span> = <span class="s">&quot;Match the simulated seepage network to the mapped one by moving K, steady state over the record.&quot;</span><span class="c"></span>
+<span class="ln">55</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-parameters" title="Names of the calibration parameters this phase may move.">parameters</a></span> = <span class="v">[&quot;K&quot;]</span><span class="c"></span>
+<span class="ln">56</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-regime" title="Flow regime this phase runs, a property of the model and not of the search.">regime</a></span> = <span class="s">&quot;steady&quot;</span><span class="c"></span>
+<span class="ln">57</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-objective_blocks" title="Objective blocks this phase evaluates.">objective_blocks</a></span> = <span class="v">[&quot;network_extension&quot;]</span><span class="c"></span>
+<span class="ln">58</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-method" title="Optimization method for this phase only.">method</a></span> = <span class="s">&quot;bisection&quot;</span><span class="c"></span>
+<span class="ln">59</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-max_trials" title="Maximum number of evaluations for this phase. (-)">max_trials</a></span> = <span class="s">&quot;auto&quot;  </span><span class="c"> # the bisection budgets its own worst case</span>
+<span class="ln">60</span><span class="mk"></span><span class="c"></span>
+<span class="ln">61</span><span class="mk"></span><span class="c"># Phase two: Sy alone, monthly transient, K from phase one. It does not start</span>
+<span class="ln">62</span><span class="mk"></span><span class="c"># if phase one did not converge.</span>
+<span class="ln">63</span><span class="mk mk-add">+</span><span class="h">[[<a href="../reference/parameters/calibration/phases.html#p-calibration-phases" title="Stages run one after the other, each calibrating its own parameters and freezing them for the next.">calibration.phases</a>]]</span><span class="c"></span>
+<span class="ln">64</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-name" title="Phase identifier, unique in the calibration and used in the session directory and in the report.">name</a></span> = <span class="s">&quot;transient_storage&quot;</span><span class="c"></span>
+<span class="ln">65</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-description" title="What this phase calibrates and against what, in one sentence.">description</a></span> = <span class="s">&quot;Read Sy from the observed hydrograph, K frozen, transient, scored over [metrics] window, 2001-01-01 to 2002-12-31.&quot;</span><span class="c"></span>
+<span class="ln">66</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-parameters" title="Names of the calibration parameters this phase may move.">parameters</a></span> = <span class="v">[&quot;Sy&quot;]</span><span class="c"></span>
+<span class="ln">67</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-regime" title="Flow regime this phase runs, a property of the model and not of the search.">regime</a></span> = <span class="s">&quot;transient&quot;</span><span class="c"></span>
+<span class="ln">68</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-objective_blocks" title="Objective blocks this phase evaluates.">objective_blocks</a></span> = <span class="v">[&quot;hydrograph&quot;]</span><span class="c"></span>
+<span class="ln">69</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-method" title="Optimization method for this phase only.">method</a></span> = <span class="s">&quot;scipy_nelder_mead&quot;</span><span class="c"></span>
+<span class="ln">70</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-max_trials" title="Maximum number of evaluations for this phase. (-)">max_trials</a></span> = <span class="n">30</span><span class="c"></span>
+<span class="ln">71</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-precision" title="How precisely the search has to pin a parameter before it stops, as a relative precision on the parameter itself: 0.01 asks for one per cent, 0.1 for ten. (-)">precision</a></span> = <span class="n">0.05</span><span class="c"></span>
+<span class="ln">72</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/calibration/phases.html#p-calibration-phases-depends_on" title="Name of the phase that must run first.">depends_on</a></span> = <span class="s">&quot;steady_conductivity&quot;</span><span class="c"></span>
+<span class="ln">73</span><span class="mk"></span><span class="c"># No window: the phase scores [metrics] window of project.toml,</span>
+<span class="ln">74</span><span class="mk"></span><span class="c"># 2001-2002, as the protocol writes it. 2000 is spin-up.</span>
+<span class="ln">75</span><span class="mk"></span><span class="c"></span>
+<span class="ln">76</span><span class="mk"></span><span class="c"># The figures and the exports of project.toml, for the best run of each</span>
+<span class="ln">77</span><span class="mk"></span><span class="c"># phase, plus the gauged discharge against the simulated one, month by month.</span>
+<span class="ln">78</span><span class="mk mk-none"></span><span class="h">[<a href="../reference/parameters/display.html#p-display" title="The figures a run draws, loaded from the [display] section.">display</a>]</span><span class="c"></span>
+<span class="ln">79</span><span class="mk mk-add">+</span><span class="k"><a href="../reference/parameters/display.html#p-display-figure" title="Figures to draw, one ``[[display.figure]]`` table each.">figure__append</a></span> = <span class="v">[</span><span class="c"></span>
+<span class="ln">80</span><span class="mk"></span>    {variable = &quot;discharge&quot;, type = &quot;xy&quot;, observed = true, reference = [&quot;one_to_one&quot;]},
+<span class="ln">81</span><span class="mk"></span>]</pre></div><p>An output is a simulated quantity paired with its observation. The tables of the network output carry the choices that matter.</p>
+<ul class="simple">
+<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map" title="What is observed: the mapped network, its role and how it is drawn."><code class="docutils literal notranslate"><span class="pre">map</span></code></a> is the mapped network. <code class="docutils literal notranslate"><span class="pre">complete</span></code> is every reach and <code class="docutils literal notranslate"><span class="pre">permanent</span></code> the reaches that never dry. Both together make a two-bound search, shared by <code class="docutils literal notranslate"><span class="pre">calibrate_on</span></code>.</p></li>
+<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model" title="How the model draws its own stream network."><code class="docutils literal notranslate"><span class="pre">model</span></code></a> says how the model draws its own network, with the weight of each cell and the flow a reach must carry to count.</p></li>
+<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict" title="When the result of this output is qualified or refused."><code class="docutils literal notranslate"><span class="pre">verdict</span></code></a> says when the result holds. A distance above the validity length logs a warning, or stops the run with <code class="docutils literal notranslate"><span class="pre">on_invalid</span> <span class="pre">=</span> <span class="pre">&quot;error&quot;</span></code>. <a class="reference internal" href="../theory/downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a> gives the criterion.</p></li>
+</ul>
+<p>A block scores outputs with one metric, and a phase moves some parameters against some blocks. Each phase can carry a <a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/phases.html#p-calibration-phases-window" title="Dates bounding the samples this phase scores on, replacing [calibration].window. start = the first date scored leaves a spin-up out of every block alike."><code class="docutils literal notranslate"><span class="pre">window</span></code></a>. The first year here is spin-up, so it is simulated and not scored. A <a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/validation_window.html#p-calibration-validation_window" title="Dates kept apart from the search, with both bounds."><code class="docutils literal notranslate"><span class="pre">validation_window</span></code></a> is scored beside the cost and never enters it, to check the result on dates the search did not see.</p>
+</section>
+<section id="check-it-then-run-it">
+<h2>Check it, then run it<a class="headerlink" href="#check-it-then-run-it" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>check<span class="w"> </span>run_calibration_by_hand.toml
+hmp<span class="w"> </span>calibrate<span class="w"> </span>run_calibration_by_hand.toml<span class="w"> </span>--list-phases
+hmp<span class="w"> </span>run<span class="w"> </span>run_calibration_by_hand.toml
+</pre></div>
+</div>
+<p>The first command lists every problem of the file at once. The second prints each phase before any solve. The third runs both phases and replays the best trial of each as a full run.</p>
+</section>
+<section id="read-the-result">
+<h2>Read the result<a class="headerlink" href="#read-the-result" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">root_search</span></code> preset, asked with <code class="docutils literal notranslate"><span class="pre">when</span> <span class="pre">=</span> <span class="pre">&quot;session&quot;</span></code>, draws the calibration card of both stages. Stage one shows the evaluations of K and the bracket the bisection closed on. Stage two shows the cost of each Sy. The lower panels give the validity of the network agreement, <span class="math notranslate nohighlight">\(D_{optim}\)</span> against its bound, and the cells that are valid, in excess or missing at the calibrated point.</p>
+<a class="only-light reference internal image-reference" href="../_images/matching_hydrographic_network_card.webp"><img alt="Four panels. The K trials close on a bracket around 8e-5 m/s, the Sy trials have a minimum cost near 0.043, the mean distance is under its bound, and the cells are split into valid, excess and missing." class="align-center only-light" src="../_images/matching_hydrographic_network_card.webp" style="width: 90%;" width="1742" height="1142" />
+</a>
+<a class="only-dark reference internal image-reference" href="../_images/matching_hydrographic_network_card-dark.webp"><img alt="Four panels. The K trials close on a bracket around 8e-5 m/s, the Sy trials have a minimum cost near 0.043, the mean distance is under its bound, and the cells are split into valid, excess and missing." class="align-center only-dark" src="../_images/matching_hydrographic_network_card-dark.webp" style="width: 90%;" width="1742" height="1142" loading="lazy" decoding="async" />
+</a>
+<p>The figure and the output of <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">targets</span></code> above are written by <code class="docutils literal notranslate"><span class="pre">tools/docs/figures/render_ex04_figures.py</span></code> from the runs of <code class="docutils literal notranslate"><span class="pre">run_calibration.toml</span></code>, which are the same trials. <a class="reference internal" href="../understand/network-metrics.html"><span class="doc">Scoring a simulated stream network</span></a> explains the network criterion. The options of each method are on <a class="reference internal" href="../reference/calibration-methods.html"><span class="doc">Calibration methods and metrics</span></a>, and the keys on <a class="reference internal" href="../reference/parameters/calibration/index.html"><span class="doc">[calibration]</span></a>.</p>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../how-to/run-step-by-step.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Run step by step</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../how-to/write-calibration-phases.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Write calibration phases</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-can-be-calibrated">What can be calibrated</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-file">The file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#check-it-then-run-it">Check it, then run it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-the-result">Read the result</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-13.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

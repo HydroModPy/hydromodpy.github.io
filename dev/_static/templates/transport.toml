@@ -1,57 +1,29 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: transport
+# Profile: user | Modules: edition, transport
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
 
 # ----------------------------------------------------------------------
-# Transport-process configuration.
+# Root-level workflow selector.
 # ----------------------------------------------------------------------
 
-[transport]
-# Ordered list of sink/source identifiers that are explicitly activated for this process.
-# An empty list means no sink/source is active.
-# Concrete process configs (e.g.
-# FlowConfig) validate the allowed values.
-# Type: list[str] | REQUIRED
-active_sinks_sources = []
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
 
-# Ordered list of boundary-condition identifiers that are explicitly activated for this process.
-# An empty list means no boundary-condition package is assembled.
-# Concrete process configs (e.g.
-# FlowConfig) validate the allowed values.
-# Type: list[str] | REQUIRED
-active_bc = []
+# ----------------------------------------------------------------------
+# The ``[transport]`` section: one table per transport solver the document names.
+# ----------------------------------------------------------------------
 
+# Configuration payload shared by concentration transport solvers.
 
-# Modpath solver configuration block.
-
-# Solver parameter block used by Modpath.
-
-[transport.modpath.parameters]
-# Where particles are released: 'domain' (every active cell), 'seepage_clip' (the seepage areas of the flow run, clipped to the watershed), or the path of a raster that marks the release cells.
-# Type: string | Default: "domain"
-zone_partic = "domain"
-
-# Direction particles are tracked in: with the flow ('forward') or against it ('backward', from where water leaves back to where it entered).
-# Type: Literal['forward', 'backward'] | one of: "forward", "backward" | Default: "forward"
-track_dir = "forward"
-
-# Keep one released particle out of this many, in release order.
-# Unset, every particle is kept.
-# A count.
-# Type: int (optional) | >= 1 | Optional
-# sel_slice = 1
-
-
-# MT3DMS solver configuration block.
-
-# Solver parameter block used by Mt3dms.
-
-[transport.mt3dms.parameters]
-# Name of the transported solute, used in the output names.
+[transport.modflow6]
+# Name of the transported solute, written in the store under concentration/<spc_name>.
 # Type: string | Default: "NO3"
 spc_name = "NO3"
 
@@ -71,37 +43,10 @@ sconc_input = 0.0
 # porosity = 1.0
 
 
-# MODFLOW 6 GWT solver configuration block.
+# Configuration payload for MODFLOW 6 PRT particle tracking.
 
-# Solver parameter block used by Modflow6Transport.
-
-[transport.modflow6gwt.parameters]
-# Name of the transported solute, used in the output names.
-# Type: string | Default: "NO3"
-spc_name = "NO3"
-
-# Concentration of the solute in the aquifer at the start of the run, in the mass per volume unit you choose.
-# The run keeps that unit.
-# Type: float | Default: 0.0
-sconc_init = 0.0
-
-# Concentration of the solute in the recharge water, in the same unit as sconc_init.
-# Type: float | Default: 0.0
-sconc_input = 0.0
-
-# Effective (total) porosity [-], the dimensionless volume of interconnected pores per bulk volume.
-# Drives MST pore volume and pore velocity.
-# When omitted, the flow model specific yield is used, which underestimates pore volume and biases transit times low.
-# Type: float (optional) | > 0.0 | <= 1.0 | Optional
-# porosity = 1.0
-
-
-# MODFLOW 6 PRT particle-tracking solver configuration block.
-
-# Solver parameter block used by Modflow6Prt.
-
-[transport.modflow6prt.parameters]
-# Cells particles are released from: 'domain' (every active cell), 'domain_nonriver' (the same without river cells), 'upstream' (the highest cells), 'upstream_nonriver', 'river', 'outlet' (the lowest cells), or 'custom' (the cells particle_cell_ids lists).
+[transport.modflow6_prt]
+# Columns particles are released from, one particle per column, in its top active layer at local_z where the recharge enters: 'domain' (every active column), 'domain_nonriver' (the same without river cells), 'upstream' (the highest cells), 'upstream_nonriver', 'river', 'outlet' (the lowest cells), or 'custom' (the cells particle_cell_ids lists).
 # Type: string | Default: "domain"
 release_zone = "domain"
 
@@ -144,28 +89,33 @@ local_z = 0.5
 # Type: int (optional) | >= 1 | Optional
 # sel_slice = 1
 
-# Times particles are released at, in days from the start of the run.
+# Times particles are released at, from the start of the run.
+# A bare number is in days; a text carries its unit, such as '6 months'.
 # Unset, they are released once at the start.
+# Type: list (optional) | Optional | Examples: [0.0], ["1 year"]
+# release_times = []
+
+# Times the particle positions are written at, from the start of the run.
+# A bare number is in days; a text carries its unit.
 # Type: list (optional) | Optional
-# release_times_days = []
+# track_times = []
 
-# Times the particle positions are written at, in days from the start of the run.
-# Type: list (optional) | Optional
-# track_times_days = []
+# Spacing of regular output times from 0 to stop_time.
+# A bare number is in days; a text carries its unit.
+# track_times wins over it.
+# It needs stop_time.
+# Type: Annotated (optional) | > 0.0 | Optional | Examples: 30.0, "1 month"
+# track_time_step = ""
 
-# Spacing, in days, of regular output times from 0 to stop_time_days.
-# track_times_days wins when it is given.
-# It needs stop_time_days.
-# Type: float (optional) | > 0.0 | Optional
-# track_time_step_days = 1.0
+# Time all particles stop at, from the start of the run.
+# A bare number is in days; a text carries its unit, such as '100 years'.
+# Type: Annotated (optional) | > 0.0 | Optional | Examples: 36500.0, "100 years"
+# stop_time = ""
 
-# Time all particles stop at, in days from the start of the run.
-# Type: float (optional) | > 0.0 | Optional
-# stop_time_days = 1.0
-
-# Longest time a particle may travel, in days from its release.
-# Type: float (optional) | > 0.0 | Optional
-# stop_travel_time_days = 1.0
+# Longest time a particle may travel, from its release.
+# A bare number is in days; a text carries its unit.
+# Type: Annotated (optional) | > 0.0 | Optional
+# stop_travel_time = ""
 
 # Keep tracking particles after the last flow time step, with the last flow field, when MODFLOW 6 allows it.
 # Type: bool | Default: true
@@ -179,4 +129,45 @@ write_track_csv = true
 # Write the binary particle track file of MODFLOW 6 as well.
 # Type: bool | Default: true
 write_track_binary = true
+
+
+# Configuration payload shared by concentration transport solvers.
+
+[transport.mt3dms]
+# Name of the transported solute, written in the store under concentration/<spc_name>.
+# Type: string | Default: "NO3"
+spc_name = "NO3"
+
+# Concentration of the solute in the aquifer at the start of the run, in the mass per volume unit you choose.
+# The run keeps that unit.
+# Type: float | Default: 0.0
+sconc_init = 0.0
+
+# Concentration of the solute in the recharge water, in the same unit as sconc_init.
+# Type: float | Default: 0.0
+sconc_input = 0.0
+
+# Effective (total) porosity [-], the dimensionless volume of interconnected pores per bulk volume.
+# Drives MST pore volume and pore velocity.
+# When omitted, the flow model specific yield is used, which underestimates pore volume and biases transit times low.
+# Type: float (optional) | > 0.0 | <= 1.0 | Optional
+# porosity = 1.0
+
+
+# Configuration payload for the Modpath transport solver.
+
+[transport.modpath]
+# Where particles are released: 'domain' (every active cell), 'seepage_clip' (the seepage areas of the flow run, clipped to the watershed), or the path of a raster that marks the release cells.
+# Type: string | Default: "domain"
+zone_partic = "domain"
+
+# Direction particles are tracked in: with the flow ('forward') or against it ('backward', from where water leaves back to where it entered).
+# Type: Literal['forward', 'backward'] | one of: "forward", "backward" | Default: "forward"
+track_dir = "forward"
+
+# Keep one released particle out of this many, in release order.
+# Unset, every particle is kept.
+# A count.
+# Type: int (optional) | >= 1 | Optional
+# sel_slice = 1
 

@@ -1,0 +1,164 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: edition, mesh
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# The mesh engine and the sizes it meshes the model with.
+# ----------------------------------------------------------------------
+
+[mesh]
+# Mesh engine: 'regular' (one quadrilateral cell per DEM pixel, or per cell_size), 'triangle' (triangles that follow the lines), 'voronoi' (polygons around generators) or 'catchment' (the catchment as one polygon cell, for a global model, read only by a solver that names it).
+# A string and not a closed choice, since an installed third-party engine is named the same way.
+# Type: string | Default: "regular" | Examples: "regular", "triangle", "voronoi"
+engine = "regular"
+
+# Cell size in metres, the side of the square of the same mean area as the cells, whatever the engine: a domain of area A gets about A / cell_size^2 cells, and a regular, a triangle and a voronoi cell of this size have about the same area.
+# It is the side of the regular grid cells and the background size of the triangle and voronoi engines.
+# Unset, the DEM pixel size, which is the pixel of geographic.catchment.dem_resolution when that key is set, else the pixel of the DEM file.
+# It is the last of the three sizes and reads none of them back: it changes the cells and not the surface that was delineated.
+# Type: float (optional) | > 0.0 | Optional
+# cell_size = 1.0
+
+# Cell size in metres along the rivers, the side of the square of the same mean area as the cells, as cell_size.
+# Unset, the DEM pixel size; never finer than the DEM pixel.
+# Type: float (optional) | > 0.0 | Optional
+# river_cell_size = 1.0
+
+# Distance in metres from a river over which the cell size grows back to cell_size.
+# Unset, twice cell_size.
+# Type: float (optional) | > 0.0 | Optional
+# river_band = 1.0
+
+
+# Local refinement on the lake shoreline band and the hydraulic structures (cutoff wall, sill, dam outlet), with sizes that have the meaning of cell_size.
+# The table switches it on.
+
+# [mesh.lake_refinement]
+# Target cell size, in metres, in the lake shoreline band: the side of the square of the same mean area as the cells, as mesh.cell_size.
+# Type: float | > 0.0 | Default: 40.0
+# cell_size = 40.0
+
+# Half-width, in metres, of the refined band around the lake shoreline.
+# When omitted, derives 2 * cell_size.
+# Must be >= cell_size so the band holds at least one target cell (a thinner band would slip between the size-field sampling nodes).
+# Type: float (optional) | > 0.0 | Optional
+# shoreline_band = 1.0
+
+# Transition distance, in meters, over which the lake sizes ramp back to global.
+# Type: float | >= 0.0 | Default: 200.0
+# buffer = 200.0
+
+# Optional target cell size, in metres, inside the whole lake footprint (marnage / bathymetry resolution), with the meaning of mesh.cell_size.
+# When omitted, the interior keeps the background size.
+# Type: float (optional) | > 0.0 | Optional
+# interior_size = 1.0
+
+# Target cell size, in metres, in the hydraulic-structure zones (cutoff wall, sill), with the meaning of mesh.cell_size.
+# Type: float | > 0.0 | Default: 30.0
+# dam_cell_size = 30.0
+
+# Base half-width, in metres, of the structure refinement corridors; also the radius of the optional dam-outlet disk.
+# Type: float | > 0.0 | Default: 150.0
+# dam_buffer = 150.0
+
+# Half-width, in metres, of the refined zone around the dam cutoff wall (HFB).
+# The zone covers the lake outlet area.
+# When omitted, derives 2 * dam_buffer.
+# Must be >= dam_cell_size so the zone holds at least one target cell.
+# Type: float (optional) | > 0.0 | Optional
+# hfb_buffer = 1.0
+
+# Refine a disk of radius dam_buffer around the dam / catchment outlet.
+# None (auto) emits the disk unless a cutoff-wall zone overlaps it: the widened HFB zone then already covers the outlet.
+# Type: bool (optional) | Optional
+# dam_outlet_disk = false
+
+
+# What the mesh does on the rivers, the geology contacts, the lake shores, the flow barriers and the catchment boundary.
+
+[mesh.families]
+# How the mesh follows the river network traced from the DEM.
+# Type: Literal['cell', 'none'] | one of: "cell", "none" | Default: "cell"
+rivers = "cell"
+
+# How the mesh follows the contacts between the zones of the vector geology map that a flow parameter reads.
+# Type: Literal['face', 'none'] | one of: "face", "none" | Default: "face"
+geology = "face"
+
+# How the mesh follows the shore of each lake of the flow model.
+# Type: Literal['face', 'none'] | one of: "face", "none" | Default: "face"
+lakes = "face"
+
+# How the mesh follows the flow barriers: the cutoff wall of each lake that declares one, and the lines of [flow.sinks_sources.flow_barriers].
+# Type: Literal['face', 'none'] | one of: "face", "none" | Default: "face"
+barriers = "face"
+
+# How the mesh follows the boundary of the catchment inside the domain.
+# Type: Literal['face', 'none'] | one of: "face", "none" | Default: "none"
+watershed_boundary = "none"
+
+
+# Triangulation the triangle and voronoi engines start from: a file to read, the gmsh algorithm.
+
+# [mesh.triangle]
+# Existing gmsh .msh file (format 2.2) to read instead of generating a triangulation, relative to the project root (the folder of project.toml).
+# The line families are derived on the mesh read.
+# Type: Annotated (optional) | Optional | Examples: "mesh/catchment.msh"
+# path = ""
+
+
+# Zones of local refinement, one [[mesh.refinement_zone]] table each, with its own cell size, which has the meaning of cell_size: a vector layer, or the pixels where a field passes a threshold (the height above the stream traced from the DEM, or the water-table depth or the seepage of an earlier run).
+# The triangle and voronoi engines grade their cells on them; the regular engine does not grade its cells and ignores them, which the mesh QA notes.
+# Example entry, one [[mesh.refinement_zone]] block per entry.
+# [[mesh.refinement_zone]]
+# Vector layer (gpkg / shp / GeoJSON) of polygons (zones) and/or points or lines (corridors).
+# A relative path is read from the project root, and workspace:<name> reads data/refinement_zone/<name> of the workspace.
+# Give path or where, not both.
+# Type: Annotated (optional) | Optional | Examples: "inputs/refinement_zone.gpkg", "workspace:refinement_zone.gpkg"
+# path = ""
+
+# The field whose threshold draws the zone, on the pixels of the DEM, instead of a vector layer.
+# The zone is the set of pixels where the field is below the value of below, or above the value of above.
+# Give path or where, not both.
+# Type: Annotated (optional) | Optional | Examples: "height_above_stream", "watertable_depth", "seepage"
+# where = ""
+
+# The zone holds the pixels where the field of where is below this value: metres for height_above_stream and watertable_depth, mm/d for seepage.
+# Type: float (optional) | > 0.0 | Optional | Examples: 2.0
+# below = 1.0
+
+# The zone holds the pixels where the field of where is above this value: metres for watertable_depth, mm/d for seepage.
+# Not read for height_above_stream.
+# Type: float (optional) | >= 0.0 | Optional | Examples: 0.5
+# above = 0.0
+
+# The earlier run of this project whose field draws the zone, for watertable_depth and seepage: its name, with or without its _vN (the latest version without), or its full sim_id.
+# The run must be sealed and hold the field.
+# The mesh then depends on that run: its sim_id enters the mesh request and the product key.
+# Type: Annotated (optional) | Optional | Examples: "nancon_coarse"
+# run = ""
+
+# Target cell size, in metres, inside the zone: the side of the square of the same mean area as the cells, as mesh.cell_size.
+# Type: float | > 0.0 | REQUIRED | Examples: 20.0
+# cell_size = 1.0
+
+# Distance in metres over which the size grows back to the background size outside the zone, and corridor half-width for the point and line features of a layer.
+# When omitted, derives 2 * cell_size.
+# Must be >= cell_size so a corridor holds at least one target cell.
+# Type: float (optional) | > 0.0 | Optional
+# buffer = 1.0
+

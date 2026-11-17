@@ -1,13 +1,23 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: display
+# Profile: user | Modules: edition, display
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
 
 # ----------------------------------------------------------------------
-# Display behaviour resolved from the ``[display]`` TOML section.
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# Display behavior resolved from the ``[display]`` TOML section.
 # ----------------------------------------------------------------------
 
 [display]
@@ -16,55 +26,266 @@
 # Type: bool | Default: true
 enabled = true
 
-# Named theme applied before rendering any figure.
-# Type: Literal['default', 'print', 'dark'] | one of: "default", "print", "dark" | Default: "default"
-preset = "default"
+# Named theme applied before rendering any figure: default, print or dark.
+# Type: string | Default: "default"
+theme = "default"
 
-# Open an interactive window via ``matplotlib.pyplot.show``.
-# Type: bool | Default: false
-show = false
-
-# Write rendered figures to disk under ``output_dir``.
-# Type: bool | Default: true
-save = true
-
-# Name of the figures directory inside the run directory (<project>/runs/<run>/<output_dir>/).
-# Declared as a name, not a path, so it stays anchored to the run it describes.
-# Type: string | Default: "figures"
-output_dir = "figures"
-
-# Force ONE colormap onto every spatial figure.
-# Writing it at all is the decision, not the value: each figure otherwise picks a scale suited to what it shows, reversed for a depth, diverging for a difference, discrete for an indicator, and this replaces all of them.
-# Writing the default spelled out is therefore NOT a no-op, unlike everywhere else.
-# Leave it out unless one scale for everything is what you want.
-# Type: string | Default: "viridis"
-cmap = "viridis"
-
-# Names of registered figures to auto-render at the end of `hmp run` (and consumed by `hmp viz gallery`).
-# Every name must exist in the figure registry; list them with `hmp viz list`.
-# A figure whose requirements the run does not meet is skipped with an explicit reason.
-# Empty list disables auto-rendering.
-# Disable per-run via `hmp run --no-display` or for an entire Python Project via `Project(..., no_display=True)`.
-# Type: list[str] | REQUIRED
-figures = []
+# Your own presets, one ``[display.presets.NAME]`` table each, written like a figure.
+# A figure then names one with ``preset = NAME``.
+# A name of a shipped preset is refused.
+# Type: dict[str, FigureRequest] | Default: {}
 
 # Behaviour when a figure that IS applicable fails while rendering.
 # 'warn' logs and continues (default, keeps a long run alive); 'raise' propagates, which is what example and CI configs want so a broken figure cannot pass unnoticed.
 # Type: Literal['warn', 'raise'] | one of: "warn", "raise" | Default: "warn"
 on_error = "warn"
 
-# The instant every figure that draws one instant shows: a date ("2002-10-15"), "first" or "last".
-# Each such figure draws the stress period that holds the date, so the same date names the same month on a monthly, a daily or a one-period steady run.
-# A `time` in `[display.overrides.<figure>]` wins over it.
-# Unset, each figure picks its own instant: the last period, or for the stream-network maps the state their calibration criterion read.
-# A date outside a run skips the figure with the reason.
-# Type: UnionType[str, int, NoneType] | Optional
+
+# Example entry, one [display.presets.<id>] table per entry.
+# [display.presets.<id>]
+# Frame of the panel.
+# Unset, the natural frame of the variable.
+# Type: string (optional) | Optional
+# type = ""
+# Variable name or list.
+# 'budget' is the budget terms the run kept.
+# In a table panel, 'table.column' names.
+# Type: Annotated (optional) | Optional
+# variable = ""
+# A date (YYYY-MM-DD), 'first', 'last', a period index, or a list of them.
+# A date picks the period (start, end] that holds it.
+# On a series, two values keep the periods whose start lies between them.
+# Type: UnionType[str, int, list, NoneType] | Optional
+# time = ""
+# Layer index from 0 at the top, or 'sum' over the layers.
+# Type: UnionType[int, str, NoneType] | Optional
+# layer = 0
+# A station of the run (lake:1, a reach, a gauge), or zone:catchment, zone:domain.
+# Type: UnionType[str, list, NoneType] | Optional
+# station = ""
+# Context layers drawn over a map or a section, in place of the default ones.
+# A map keeps its relief and its scale bar.
+# Type: Annotated (optional) | Optional
+# overlays = ""
+# Window drawn (xmin, ymin, xmax, ymax).
+# On a map, in m in the mesh CRS.
+# On a section, distances along the line then elevations, in m.
+# Type: tuple (optional) | Optional
+# bbox = ""
+# Trace of a section, points (x, y) in m in the mesh CRS.
+# Type: list (optional) | Optional
+# line = []
+# Colour limits of a map or a section (low, high), in the unit drawn.
+# Unset, the range of the values.
+# Type: tuple (optional) | Optional
+# limits = ""
+# Draw isolines.
+# Unset, the quantity decides.
+# Type: bool (optional) | Optional
+# contours = false
+# Draw the observed record when it exists.
+# Type: bool | Default: false
+# observed = false
+# Write the scores of the run on the panel.
+# Type: bool | Default: false
+# scores = false
+# Value scale.
+# Unset, the variable decides.
+# Type: Literal (optional) | Optional
+# scale = "linear"
+# Stack the variables one over the other, in the order given.
+# Type: bool | Default: false
+# stack = false
+# Category key of a groups panel.
+# Type: string (optional) | Optional
+# by = ""
+# Reference lines: 'one_to_one', 'zero', or {value, label}.
+# Type: list (optional) | Optional
+# reference = []
+# One colour norm for every small multiple.
+# Type: bool | Default: false
+# share = false
+# Reduce over time before drawing.
+# Unset, the time asked for is drawn.
+# Type: Literal (optional) | Optional
+# reduce = "mean"
+# Draw the change between two instants.
+# Type: tuple (optional) | Optional
+# change = ""
+# Draw the difference to 'observed' or to another run by name.
+# Type: string (optional) | Optional
+# against = ""
+# Cumulate along the ordered axis of the frame.
+# Type: bool | Default: false
+# cumulative = false
+# Name of a shipped preset or of one of your own presets.
+# Type: string (optional) | Optional
+# preset = ""
+# The panels, in order.
+# Type: list (optional) | Optional
+# panels = []
+# File name of the figure, no suffix.
+# Type: string (optional) | Optional
+# name = ""
+# Title written above the whole figure.
+# Unset, none is written.
+# Type: string (optional) | Optional
+# title = ""
+# Printed width: 'single', 'medium' or 'double' column.
+# Unset, single for one panel, double for more panels or a facet.
+# Type: string (optional) | Optional
+# width = ""
+# Repeat the one panel over this key.
+# Type: Literal (optional) | Optional
+# facet = "time"
+# When the figure is drawn: 'end', 'session' or 'after:<step>'.
+# Type: string | Default: "end"
+# when = "end"
+# Drawing engines to use for the figure, one file per engine.
+# Type: list[str] | Default: ["static"]
+# engine = []
+# File formats written for the figure, such as png or svg.
+# Type: list[str] | Default: ["png"]
+# formats = []
+
+
+# Figures to draw, one ``[[display.figure]]`` table each.
+# A figure names a variable or a preset, or lists panels, with the fields of a panel.
+# ``when`` says when it is drawn (``end`` by default).
+# Two figures that would write the same file are refused: give each one its own ``name``.
+# Example entry, one [[display.figure]] block per entry.
+# [[display.figure]]
+# Frame of the panel.
+# Unset, the natural frame of the variable.
+# Type: string (optional) | Optional
+# type = ""
+
+# Variable name or list.
+# 'budget' is the budget terms the run kept.
+# In a table panel, 'table.column' names.
+# Type: Annotated (optional) | Optional
+# variable = ""
+
+# A date (YYYY-MM-DD), 'first', 'last', a period index, or a list of them.
+# A date picks the period (start, end] that holds it.
+# On a series, two values keep the periods whose start lies between them.
+# Type: UnionType[str, int, list, NoneType] | Optional
 # time = ""
 
-# Per-figure options, keyed by figure name (e.g.
-# ``{'piezometric_map': {'cmap': 'cividis', 'vmin': 0}}``).
-# A key the figure does not take is refused at load, with the list of the keys it takes.
-# A figure that draws one instant takes `time`.
-# Type: dict[str, dict] | REQUIRED
-# overrides: entries go under [display.overrides.<id>]
+# Layer index from 0 at the top, or 'sum' over the layers.
+# Type: UnionType[int, str, NoneType] | Optional
+# layer = 0
+
+# A station of the run (lake:1, a reach, a gauge), or zone:catchment, zone:domain.
+# Type: UnionType[str, list, NoneType] | Optional
+# station = ""
+
+# Context layers drawn over a map or a section, in place of the default ones.
+# A map keeps its relief and its scale bar.
+# Type: Annotated (optional) | Optional
+# overlays = ""
+
+# Window drawn (xmin, ymin, xmax, ymax).
+# On a map, in m in the mesh CRS.
+# On a section, distances along the line then elevations, in m.
+# Type: tuple (optional) | Optional
+# bbox = ""
+
+# Trace of a section, points (x, y) in m in the mesh CRS.
+# Type: list (optional) | Optional
+# line = []
+
+# Colour limits of a map or a section (low, high), in the unit drawn.
+# Unset, the range of the values.
+# Type: tuple (optional) | Optional
+# limits = ""
+
+# Draw isolines.
+# Unset, the quantity decides.
+# Type: bool (optional) | Optional
+# contours = false
+
+# Draw the observed record when it exists.
+# Type: bool | Default: false
+# observed = false
+
+# Write the scores of the run on the panel.
+# Type: bool | Default: false
+# scores = false
+
+# Value scale.
+# Unset, the variable decides.
+# Type: Literal (optional) | Optional
+# scale = "linear"
+
+# Stack the variables one over the other, in the order given.
+# Type: bool | Default: false
+# stack = false
+
+# Category key of a groups panel.
+# Type: string (optional) | Optional
+# by = ""
+
+# Reference lines: 'one_to_one', 'zero', or {value, label}.
+# Type: list (optional) | Optional
+# reference = []
+
+# One colour norm for every small multiple.
+# Type: bool | Default: false
+# share = false
+
+# Reduce over time before drawing.
+# Unset, the time asked for is drawn.
+# Type: Literal (optional) | Optional
+# reduce = "mean"
+
+# Draw the change between two instants.
+# Type: tuple (optional) | Optional
+# change = ""
+
+# Draw the difference to 'observed' or to another run by name.
+# Type: string (optional) | Optional
+# against = ""
+
+# Cumulate along the ordered axis of the frame.
+# Type: bool | Default: false
+# cumulative = false
+
+# Name of a shipped preset or of one of your own presets.
+# Type: string (optional) | Optional
+# preset = ""
+
+# The panels, in order.
+# Type: list (optional) | Optional
+# panels = []
+
+# File name of the figure, no suffix.
+# Type: string (optional) | Optional
+# name = ""
+
+# Title written above the whole figure.
+# Unset, none is written.
+# Type: string (optional) | Optional
+# title = ""
+
+# Printed width: 'single', 'medium' or 'double' column.
+# Unset, single for one panel, double for more panels or a facet.
+# Type: string (optional) | Optional
+# width = ""
+
+# Repeat the one panel over this key.
+# Type: Literal (optional) | Optional
+# facet = "time"
+
+# When the figure is drawn: 'end', 'session' or 'after:<step>'.
+# Type: string | Default: "end"
+# when = "end"
+
+# Drawing engines to use for the figure, one file per engine.
+# Type: list[str] | Default: ["static"]
+# engine = []
+
+# File formats written for the figure, such as png or svg.
+# Type: list[str] | Default: ["png"]
+# formats = []
 

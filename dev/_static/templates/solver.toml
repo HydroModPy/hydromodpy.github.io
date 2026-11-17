@@ -1,23 +1,38 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: solver
+# Profile: user | Modules: edition, solver
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
 
 # ----------------------------------------------------------------------
-# Configuration block defining the active groundwater solver engine.
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# The flow solver of a run, its settings, and the switches every backend may read.
 # ----------------------------------------------------------------------
 
 [solver]
+# Flow solver of the run, by its registered name: MODFLOW 6, MODFLOW-NWT, Boussinesq or a plugin.
+# A name this installation does not serve is refused with the names it serves.
+# Type: string | Default: "modflow6" | Examples: "boussinesq", "linear_reservoir", "modflow6"
+backend = "modflow6"
+
 # Dimensionless.
 # Remove the drain from every cell sitting in a closed depression of the model top, by setting its DRN conductance to zero.
 # A closed depression has no outlet, so water reaching it ponds instead of seeping into a stream, and a drain there invents a discharge point.
 # The depressions are measured on the solver mesh, by a priority flood seeded on every cell water can leave the domain through; both MODFLOW backends read the same mask.
 # This does NOT move the topography: no elevation is raised, no DEM is rewritten, and every other package sees the surface it would have seen.
 # Refused when the mask cannot be built.
-# The depressions are counted on the four shared faces MODFLOW connects, not on the eight neighbours a raster fill uses: measured on the Nancon, 4.56 per cent of the mesh against 2.12 per cent, a factor of two that is the neighbourhood and nothing else.
+# The depressions are counted on the four shared faces MODFLOW connects, not on the eight neighbours a raster fill uses: the share of the mesh flagged is about twice as large on four faces as on eight neighbours, a factor that is the neighbourhood and nothing else.
 # NOT SANCTIONED BY ANY SOURCE: no manual, no USGS document and no guideline removes a discharge boundary where a pit is detected, and measured here it degrades both scores.
 # The remedy the USGS does document for the same question is solver.drain_band_depth_m, which gives every cell a discharge band instead of taking the drain away.
 # Default false, which drains every cell as before.
@@ -41,10 +56,87 @@ sink_fill = false
 drain_band_depth_m = 0.0
 
 
-# Active flow backend selector (discriminated union).
+# How the Boussinesq solver runs its nonlinear solve.
 
-[solver.backend]
-# Flow solver of the run: MODFLOW 6, MODFLOW-NWT, Boussinesq or a plugin.
-# Type: Literal['modflow6'] | one of: "modflow6" | Default: "modflow6"
-backend = "modflow6"
+[solver.boussinesq]
+# Engine the Boussinesq solver uses for its nonlinear solve.
+# 'local' and 'scipy' build a dense matrix and run on at most 400 cells; 'scipy_sparse' and 'petsc' (it needs petsc4py) have no such limit.
+# 'auto' runs 'local' up to 400 cells and 'scipy_sparse' above, and logs the choice.
+# The MODFLOW solvers do not read it.
+# Type: Literal['auto', 'local', 'scipy', 'scipy_sparse', 'petsc'] | one of: "auto", "local", "scipy", "scipy_sparse", "petsc" | Default: "auto" | Examples: "auto", "scipy_sparse"
+backend = "auto"
+
+# Depth scale, in metres, of the regularized partition, the surface closure the Boussinesq solver uses by default on every engine but petsc.
+# A cell whose water table lies d metres below the land surface releases at the surface the share exp(-d / depth) of the water it receives, its lateral inflow plus its recharge and wells: all of it with the water table at the surface, 37 % at one depth scale, 2e-9 at 1 m with the default 0.05 m.
+# It stands for the microtopography over which seepage starts, and smooths the onset of seepage for the Newton solve.
+# A smaller value comes closer to the exact threshold of the complementarity closure and makes the solve stiffer.
+# The other closures and the MODFLOW solvers do not read it.
+# Type: float | > 0.0 | Default: 0.05 | Examples: 0.05, 0.02
+partition_release_depth_m = 0.05
+
+
+# What ``[solver.linear_reservoir]`` holds.
+
+[solver.linear_reservoir]
+# Time constant of the reservoir, in days: how much of the water the state holds falls back in one time constant.
+# A bare number reads in days; "30 days" also reads.
+# Refused when omitted.
+# Type: float | > 0.0 | REQUIRED
+time_constant = 1.0
+
+
+# Expert-level MODFLOW 6 configuration organized by concern.
+
+# How the top of the solver grid is sampled from the DEM; the planar grid is [mesh] and the layering is [domain.layers].
+
+# How the top of the solver grid is sampled from the DEM.
+
+[solver.modflow6.sgrid.top_sampling]
+# Top-sampling strategy.
+# 'centroid' samples the DEM at each cell generator, or resamples it to a structured grid (fast, the default).
+# On a mesh that publishes a lateral offset for a river cell (the river runs through the cell but beside its centre, as where a contact line crosses it or two thalwegs share it), that cell takes the lowest DEM pixel it covers.
+# 'zonal' reduces every DEM pixel inside a cell with per-class stats.
+# Type: Literal['centroid', 'zonal'] | one of: "centroid", "zonal" | Default: "centroid"
+mode = "centroid"
+
+# Zonal statistic over non-channel (hillslope) pixels inside a cell.
+# Type: Literal['mean', 'median', 'min', 'max', 'p10', 'p25'] | one of: "mean", "median", "min", "max", "p10", "p25" | Default: "median"
+hillslope_stat = "median"
+
+# Zonal statistic over channel pixels inside a cell (thalweg-preserving; 'min' keeps the incised low).
+# Type: Literal['min', 'p10', 'p25', 'median', 'mean'] | one of: "min", "p10", "p25", "median", "mean" | Default: "min"
+channel_stat = "min"
+
+# Where channel pixels come from when mode='zonal'.
+# 'streams_raster' uses the delineated river-network raster reprojected onto the DEM grid; 'none' disables the channel class (every pixel is hillslope).
+# Type: Literal['none', 'streams_raster'] | one of: "none", "streams_raster" | Default: "streams_raster"
+channel_source = "streams_raster"
+
+
+# Expert-level MODFLOW configuration organized by concern.
+
+# How the top of the solver grid is sampled from the DEM; the planar grid is [mesh] and the layering is [domain.layers].
+
+# How the top of the solver grid is sampled from the DEM.
+
+[solver.modflow_nwt.sgrid.top_sampling]
+# Top-sampling strategy.
+# 'centroid' samples the DEM at each cell generator, or resamples it to a structured grid (fast, the default).
+# On a mesh that publishes a lateral offset for a river cell (the river runs through the cell but beside its centre, as where a contact line crosses it or two thalwegs share it), that cell takes the lowest DEM pixel it covers.
+# 'zonal' reduces every DEM pixel inside a cell with per-class stats.
+# Type: Literal['centroid', 'zonal'] | one of: "centroid", "zonal" | Default: "centroid"
+mode = "centroid"
+
+# Zonal statistic over non-channel (hillslope) pixels inside a cell.
+# Type: Literal['mean', 'median', 'min', 'max', 'p10', 'p25'] | one of: "mean", "median", "min", "max", "p10", "p25" | Default: "median"
+hillslope_stat = "median"
+
+# Zonal statistic over channel pixels inside a cell (thalweg-preserving; 'min' keeps the incised low).
+# Type: Literal['min', 'p10', 'p25', 'median', 'mean'] | one of: "min", "p10", "p25", "median", "mean" | Default: "min"
+channel_stat = "min"
+
+# Where channel pixels come from when mode='zonal'.
+# 'streams_raster' uses the delineated river-network raster reprojected onto the DEM grid; 'none' disables the channel class (every pixel is hillslope).
+# Type: Literal['none', 'streams_raster'] | one of: "none", "streams_raster" | Default: "streams_raster"
+channel_source = "streams_raster"
 

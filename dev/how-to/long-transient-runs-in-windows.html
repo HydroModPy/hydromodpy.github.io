@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Long transient runs in windows" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/how-to/long-transient-runs-in-windows.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A transient run over many years in daily periods can take hours. When I cut it into windows, each window is a run of its own, sealed when it ends. A stop, a crash or a power cut costs me the window..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="A transient run over many years in daily periods can take hours. When I cut it into windows, each window is a run of its own, sealed when it ends. A stop, a crash or a power cut costs me the window..." />
+
+    <meta property="article:modified_time" content="2026-11-11T22:51:48+01:00" />
+    <title>Long transient runs in windows &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/long-transient-runs-in-windows';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/how-to/long-transient-runs-in-windows.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Many catchments" href="../get-started/many-catchments.html" />
+    <link rel="prev" title="Write calibration phases" href="write-calibration-phases.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-11"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../understand/what-it-computes.html">What HydroModPy does</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Quick start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/concepts.html">Concepts</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../get-started/staircase/index.html">The staircase</a><details><summary aria-label="Show or hide the pages under The staircase"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step1.html">Step 1: minimal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step2.html">Step 2: local data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step3.html">Step 3: API data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step4.html">Step 4: transient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step5.html">Step 5: export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/staircase/step6.html">Step 6: soil reservoir</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/staircase/next.html">After the staircase</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Do a task</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="use-your-own-files.html">Use your own files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="work-in-the-lab.html">Work in the lab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run-step-by-step.html">Run step by step</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/calibrate-k.html">Calibrate on a network and a discharge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="write-calibration-phases.html">Write calibration phases</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Long transient runs in windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/many-catchments.html">Many catchments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/cluster.html">On a cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run-in-docker.html">Run in Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deliver-exports.html">Deliver exports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/share-a-simulation.html">Share a simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="replay-a-run.html">Replay a run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/from-v1.html">Coming from version 1</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Read and judge a result</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../understand/reading-results.html">Reading the results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/conventions.html">Conventions of a run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/stream-network.html">How the model makes streams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/network-metrics.html">Scoring a simulated stream network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/how-sure.html">How sure is the model?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/what-validated-means.html">What "validated" means here</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/where-the-data-come-from.html">Where the data come from</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../understand/can-i-check-what-was-run.html">Can I check what was run?</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../user-guide/index.html" class="nav-link">User guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Long transient runs in windows</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:User guide" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="long-transient-runs-in-windows">
+<h1>Long transient runs in windows<a class="headerlink" href="#long-transient-runs-in-windows" title="Link to this heading">#</a></h1>
+<p>A transient run over many years in daily periods can take hours. When I cut it into
+windows, each window is a run of its own, sealed when it ends. A stop, a crash or a
+power cut costs me the window in progress and nothing before it. This page says how I cut
+a run, how I play it, how I stop it and how I start it again.</p>
+<section id="cut-the-run">
+<h2>Cut the run<a class="headerlink" href="#cut-the-run" title="Link to this heading">#</a></h2>
+<p>I add a length to <code class="docutils literal notranslate"><span class="pre">[simulation.time]</span></code>. The length is a calendar length written with its unit.
+The steady first period takes the recharge of the first period, for the reason given below.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[flow]</span>
+<span class="n">flow_regime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient"</span>
+
+<span class="k">[simulation.time]</span>
+<span class="n">start_datetime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2010-01-01"</span>
+<span class="n">end_datetime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2019-12-31"</span>
+<span class="n">step_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1 day"</span>
+<span class="n">window_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1 year"</span>
+
+<span class="k">[flow.sinks_sources.recharge]</span>
+<span class="n">first_clim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"first"</span>
+</pre></div>
+</div>
+<p>The windows start at <code class="docutils literal notranslate"><span class="pre">start_datetime</span></code> and follow one another. The last one ends with the
+simulation and may be shorter. If I want hydrological years, I start the simulation on the
+first of October.</p>
+<p>Every edge between two windows must fall on the end of a stress period. With daily periods
+any length in days, months or years does. With periods of seven days, <code class="docutils literal notranslate"><span class="pre">&quot;1</span> <span class="pre">month&quot;</span></code> is refused,
+and the message names the edge and the two period ends around it. I change the length or the
+step.</p>
+<p>A run in windows needs a transient flow and a backend that can start from a saved state, which
+is MODFLOW 6 today. It cannot carry a transport process and it is not a calibration trial. A
+steady first period that takes the mean recharge or ETP (<code class="docutils literal notranslate"><span class="pre">first_clim</span> <span class="pre">=</span> <span class="pre">&quot;mean&quot;</span></code>, the default)
+would average window 1 only, so it is refused too. I set <code class="docutils literal notranslate"><span class="pre">first_clim</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code> or a number,
+or I turn <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/index.html#p-flow-first_period_steady" title="For transient flow, mark the first solver stress period as steady-state. (-)"><code class="docutils literal notranslate"><span class="pre">flow.first_period_steady</span></code></a> off and start from <code class="docutils literal notranslate"><span class="pre">[flow.ic]</span> <span class="pre">kind</span> <span class="pre">=</span> <span class="pre">&quot;steady_state&quot;</span></code>, which
+the chain computes over the whole simulation. The file is refused with the reason when it is
+read.</p>
+</section>
+<section id="play-the-windows">
+<h2>Play the windows<a class="headerlink" href="#play-the-windows" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">project.toml</span></code> plays the windows one after the other. Each one is a sealed run named
+after the run with <code class="docutils literal notranslate"><span class="pre">_w1</span></code>, <code class="docutils literal notranslate"><span class="pre">_w2</span></code> and so on. From ten windows the numbers have two digits, so the
+names sort in order (<code class="docutils literal notranslate"><span class="pre">island_w01</span></code>, <code class="docutils literal notranslate"><span class="pre">island_w02</span></code>). Window 1 starts as the run in one piece would
+start, from its starting heads. Window <code class="docutils literal notranslate"><span class="pre">k</span></code> starts from the <code class="docutils literal notranslate"><span class="pre">final_state/</span></code> of window <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">-</span> <span class="pre">1</span></code>,
+and the run records that folder and its digest as an input.</p>
+<p>I can play one window with <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">=</span> <span class="pre">2</span></code> in <code class="docutils literal notranslate"><span class="pre">[simulation.time]</span></code>. It needs window 1 sealed
+first. Without it the run is refused and says to play window 1 first, or to set <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">=</span> <span class="pre">&quot;all&quot;</span></code>.</p>
+<p>The heads are meant to equal the run in one piece to the last bit. The page on
+<a class="reference internal" href="../theory/groundwater-flow.html#gwf-windows"><span class="std std-ref">the groundwater flow problem</span></a> gives the measure, and the one case where the
+difference is not zero, SFR with storage.</p>
+</section>
+<section id="start-again-after-a-stop">
+<h2>Start again after a stop<a class="headerlink" href="#start-again-after-a-stop" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">project.toml</span></code> again gives back the windows that are sealed with the same request, and
+says so for each one. It resumes the window that stopped and plays the ones after it. A window
+resumes at the step it stopped in. A stop in the solve plays the solve again from its first
+time step.</p>
+<p>To stop a run on purpose I use <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">stop</span></code>, from any terminal.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>stop<span class="w"> </span>island_w3
+</pre></div>
+</div>
+<p>The command writes a flag in the run folder and returns at once. The run reads it between two
+steps, and MODFLOW 6 through libmf6 also between two time steps. The run ends <code class="docutils literal notranslate"><span class="pre">aborted</span></code>, and the
+chain stops with it. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">stop</span></code> works on a calibration session the same way.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">project.toml</span> <span class="pre">--resume</span> <span class="pre">island_w3</span></code> asks for the resume of that window and refuses when
+something changed since the stop, an input or a key of the file. The refusal says so. A plain
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">project.toml</span></code> starts the window over in that case. Without the file,
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--resume</span> <span class="pre">island_w3</span></code> reads the configuration the window froze in its folder, resumes it
+and plays the windows after it.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">config.toml</span></code> of a sealed window is the request of that window alone. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">replay</span> <span class="pre">island_w2</span></code> replays window 2 from the final state of the run its <code class="docutils literal notranslate"><span class="pre">inputs.json</span></code> names, so
+window 1 must still be in the project.</p>
+</section>
+<section id="read-the-time-of-each-window">
+<h2>Read the time of each window<a class="headerlink" href="#read-the-time-of-each-window" title="Link to this heading">#</a></h2>
+<p>Each run writes <code class="docutils literal notranslate"><span class="pre">profile.json</span></code>, the time and the memory of each step, solve, figure and export.
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">show</span> <span class="pre">island_w2</span></code> prints the total, the start-up, the solve of each run of the plan,
+the three longest steps and what was reused. A run from version 2.0 has no profile, and the
+command says so and prints the solve time its seal holds.</p>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="write-calibration-phases.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Write calibration phases</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../get-started/many-catchments.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Many catchments</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cut-the-run">Cut the run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#play-the-windows">Play the windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-again-after-a-stop">Start again after a stop</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-the-time-of-each-window">Read the time of each window</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-11.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

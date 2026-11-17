@@ -1,75 +1,26 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: flow
+# Profile: user | Modules: edition, flow
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
 
 # ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
 # Flow-process configuration.
 # ----------------------------------------------------------------------
 
 [flow]
-# Engine the Boussinesq solver uses for its nonlinear solve.
-# 'local' and 'scipy' build a dense matrix and run on at most 400 cells; 'scipy_sparse' and 'petsc' (it needs petsc4py) have no such limit.
-# 'auto' runs 'local' up to 400 cells and 'scipy_sparse' above, and logs the choice.
-# The MODFLOW solvers do not read it.
-# Type: Literal['auto', 'local', 'scipy', 'scipy_sparse', 'petsc'] | one of: "auto", "local", "scipy", "scipy_sparse", "petsc" | Default: "auto" | Examples: "auto", "scipy_sparse"
-runtime_backend = "auto"
-
-# Depth scale, in metres, of the regularized partition, the surface closure the Boussinesq solver uses by default on every engine but petsc.
-# A cell whose water table lies d metres below the land surface releases at the surface the share exp(-d / depth) of the water it receives, its lateral inflow plus its recharge and wells: all of it with the water table at the surface, 37 % at one depth scale, 2e-9 at 1 m with the default 0.05 m.
-# It stands for the microtopography over which seepage starts, and smooths the onset of seepage for the Newton solve.
-# A smaller value comes closer to the exact threshold of the complementarity closure and makes the solve stiffer.
-# The other closures and the MODFLOW solvers do not read it.
-# Type: float | > 0.0 | Default: 0.05 | Examples: 0.05, 0.02
-partition_release_depth_m = 0.05
-
-# Ordered list of the flow parameter ids the run builds, for example ['K', 'Ss', 'Sy'].
-# Each id is described by its [flow.param.<id>] table.
-# Type: list[str] | REQUIRED | Examples: ["K", "Sy", "Ss"]
-param_list = []
-
-# Mapping of flow-parameter identifiers to native FieldParamConfig payloads.
-# Type: dict[str, FlowParam] | REQUIRED
-
-# Mapping of flow boundary-condition payloads parsed from ``[flow.bc]``.
-#
-# **Supported TOML sections**.
-#
-# - ``[flow.bc.<id>]``, one block per boundary, keyed by what it is.
-# Canonical ids: ``drainage``, ``ocean``, ``stream``, ``north_side``, ``south_side``, ``east_side``, ``west_side``.
-# - a boundary the registry describes entirely needs NO block: listing it in ``flow.active_bc`` is enough.
-#
-# **Common keys**.
-#
-# - ``kind``: optional, the registry supplies it; write it only to depart from the default, and only within a family (``cauchy`` and ``robin`` may be swapped, a prescribed head may not).
-# - ``value``: optional on a drainage, where leaving it out derives the conductance from K; required for a prescribed head.
-# - ``application_domain``: optional, the registry supplies it, and a value contradicting it is refused.
-#
-# **Allowed application_domain values:** ``top``, ``north side``, ``south side``, ``east side``, ``west side``.
-#
-# **Default units:** ``m`` for dirichlet, ``m2/s`` for cauchy/robin.
-#
-# **Cauchy vs Robin:** both map to the same MODFLOW ``DRN`` package; the distinction only matters for the Boussinesq solver, which uses two different surface-interaction closures (``cauchy`` for the linear formulation ``q = C(h - h_ref)``, ``robin`` for the regularized partition / complementarity variants selected by ``flow.surface_interaction_model``).
-# Type: dict[str, Annotated] | REQUIRED
-
-# Explicitly activated sink/source names for this flow run: 'recharge', 'wells', 'etp'.
-# 'etp' means three things.
-# Under MODFLOW-NWT the loaded ETP drives the EVT package.
-# Under MODFLOW 6 it acts only in soil mode ([flow.sinks_sources.recharge.soil]), where it sends the ETP the soil left unmet to the EVT package; outside soil mode MODFLOW 6 ignores it and says so.
-# Boussinesq rejects it at solver-contract validation.
-# An empty list means no sink/source package is assembled by the solver.
-# Type: list[Annotated] | REQUIRED | Examples: ["recharge"], ["recharge", "wells"], ["etp"]
-active_sinks_sources = []
-
-# Boundaries this run builds, by their canonical names: 'ocean', 'stream', 'north_side', 'south_side', 'east_side', 'west_side', 'drainage', 'lake', 'reservoir'.
-# 'lake' and 'reservoir' build a MODFLOW 6 LAK package, so only the modflow6 solver takes them.
-# An empty list builds no boundary.
-# Type: list[Annotated] | REQUIRED | Examples: ["ocean"], ["west_side", "east_side", "drainage"]
-active_bc = []
-
 # Whether the flow is solved as one equilibrium state or through time over the stress periods of [simulation.time].
 # Type: Literal['steady', 'transient'] | one of: "steady", "transient" | Default: "transient" | Examples: "steady", "transient"
 flow_regime = "transient"
@@ -79,19 +30,42 @@ flow_regime = "transient"
 # Type: bool | Default: true | Examples: true, false
 first_period_steady = true
 
-# Optional hotstart: path to a prior simulation Zarr store whose last time step seeds the initial heads (and the lake stage), overriding [flow.ic].
-# The prior run must share this run's mesh, so enable [mesh_catchment] cache = true; otherwise the cell count differs and restart is refused.
-# None keeps [flow.ic].
-# Read only by a solver that declares it can: elsewhere the run is refused rather than started from [flow.ic] without a word.
-# This is one of the four ways to say where a transient starts, next to [flow.ic] type='steady_state' (equilibrium under the mean recharge, or under a rate you state with source='prescribed'), type='custom'/'top'/'bottom' (a level you write), and `hmp spinup` (repeat a representative window until the state stops moving, then point this key at its result).
-# Type: string (optional) | Optional
-# restart_from = ""
+# Ordered list of the flow parameter ids the run builds, for example ['K', 'Ss', 'Sy'].
+# Each id is described by its [flow.param.<id>] table.
+# Type: list[str] | Default: [] | Examples: ["K", "Sy", "Ss"]
+param_list = []
+
+# Mapping of flow-parameter identifiers to native FieldParamConfig payloads.
+# Type: dict[str, FlowParam] | Default: {}
+
+# Mapping of flow boundary-condition payloads parsed from ``[flow.bc]``.
+#
+# **Supported TOML sections**.
+#
+# - ``[flow.bc.<id>]``, one block per boundary, keyed by what it is.
+# Canonical ids: ``drainage``, ``ocean``, ``stream``, ``north_side``, ``south_side``, ``east_side``, ``west_side``.
+# - declaring a block is what activates the boundary, and ``enabled = false`` switches it off.
+# An empty block is enough for a boundary the registry describes entirely, such as a drainage.
+#
+# **Common keys**.
+#
+# - ``kind``: optional, the registry supplies it: ``dirichlet`` for an imposed head, ``drain`` for the linear drain ``q = C (h - h_ref)``.
+# - ``value``: optional on a drainage, where leaving it out derives the conductance from K; a head boundary with no value and no forcing builds no constant head.
+# - ``application_domain``: optional, the registry supplies it, and a value contradicting it is refused.
+#
+# **Allowed application_domain values:** ``top``, ``north side``, ``south side``, ``east side``, ``west side``.
+#
+# **Default units:** ``m`` for dirichlet, ``m2/s`` for drain.
+#
+# **The drain under each solver:** the MODFLOW solvers build a ``DRN`` package.
+# The Boussinesq solver takes its surface closure from the surface-interaction settings under [solver].
+# Type: dict[Literal, Annotated] | Default: {}
 
 
 # Example entry, one [flow.param.<id>] table per entry.
 # [flow.param.<id>]
 # Discriminated parameter section `[field]`.
-# Type: UnionType[FieldHomogeneousSection, FieldHeterogeneousSection] | REQUIRED
+# Type: UnionType[FieldHomogeneousSection, FieldHeterogeneousSection, FieldRasterSection] | REQUIRED
 # field = ""
 # Optional depth profile section `[field_vertical_profile]`.
 # Type: FieldVerticalProfileSection (optional) | Optional
@@ -99,13 +73,19 @@ first_period_steady = true
 
 
 # Example entry, one [flow.bc.<id>] table per entry.
-# Shown with kind = "dirichlet". Other variants: kind = "cauchy", kind = "robin".
+# Shown with kind = "dirichlet". Other variants: kind = "drain".
 # [flow.bc.<id>]
-# Canonical name of the boundary, the same one flow.active_bc lists: 'drainage', 'ocean', 'stream', 'north_side', 'south_side', 'east_side' or 'west_side'.
+# Whether the run builds this boundary.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
+# Canonical name of the boundary, the key of its [flow.bc.<id>] table: 'drainage', 'ocean', 'stream', 'north_side', 'south_side', 'east_side' or 'west_side'.
 # It fixes where the boundary applies.
 # Type: string | REQUIRED | Examples: "drainage"
 # id = ""
 # Boundary-condition value, scalar or one value per stress period.
+# On a head boundary it is the head in metres; left out with no forcing, the table only activates the boundary and no constant head is built.
 # On a drainage boundary it is a conductance in m2/s, and it may be left out: the run then derives it from the conductivity, C = K * cell_area / solver.drain_bed_thickness_m, which keeps the drain proportional to K and makes K/R the quantity a network calibration searches.
 # A zero or negative number selects that same derivation, so it does NOT mean a closed boundary; write a positive conductance to impose one.
 # Type: UnionType[float, list, NoneType] | Optional
@@ -114,7 +94,7 @@ first_period_steady = true
 # Unset, a text naming its kind and where it applies is written.
 # Type: string | Default: ""
 # description = ""
-# Type of the boundary: an imposed head ('dirichlet') or a drain ('cauchy', 'robin').
+# Type of the boundary: an imposed head ('dirichlet') or a linear drain ('drain').
 # Unset, the boundary's id decides.
 # Type: Literal['dirichlet'] | one of: "dirichlet" | Default: "dirichlet"
 # kind = "dirichlet"
@@ -129,12 +109,29 @@ first_period_steady = true
 # support_label = ""
 
 
+# Optional hotstart: a prior run whose last time step seeds the initial heads (and the lake stage), overriding [flow.ic].
+# Name it by its run name, its sim_id, the path of its Zarr store, or the table {sim_id, path} the frozen config.toml of a run writes (the sim_id is looked up first, the path second).
+# The prior run must share this run's mesh: a regular grid is rebuilt identically and a generated triangle or voronoi mesh is read back from the product store of the project; otherwise the cell count differs and restart is refused.
+# None keeps [flow.ic].
+# Read only by a solver that declares it can: elsewhere the run is refused rather than started from [flow.ic] without a word.
+# This is one of the four ways to say where a transient starts, next to [flow.ic] kind='steady_state' (equilibrium under the mean recharge, or under a rate you state with source='prescribed'), kind='custom'/'top'/'bottom' (a level you write), and `hmp spinup` (repeat a representative window until the state stops moving, then point this key at its result).
+
+# [flow.restart_from]
+# Id of the sealed run whose last heads seed this one.
+# Type: string (optional) | Optional
+# sim_id = ""
+
+# Field store or run directory, relative to the project root or absolute.
+# Type: string (optional) | Optional
+# path = ""
+
+
 # Validated flow initial-condition structure parsed from [flow.ic].
 # Stored as FlowInitialConditions(h=FlowInitialCondition).
 
 [flow.ic]
-# Number the starting state reads, in metres: the head for type 'custom', the depth below the top for type 'top_offset'.
-# The other types refuse it.
+# Number the starting state reads, in metres: the head for kind 'custom', the depth below the top for kind 'top_offset'.
+# The other kinds refuse it.
 # Type: object (optional) | Optional
 # value = ""
 
@@ -145,35 +142,45 @@ description = ""
 
 # Initialize head at the top surface (full aquifer).
 # Type: Literal['top'] | one of: "top" | Default: "top"
-type = "top"
+kind = "top"
 
 
 # Typed sinks/sources payload (for example pumping wells).
 
 [flow.sinks_sources]
 # Mapping of well ids to typed well payloads.
-# Type: dict[str, FlowWellConfig] | REQUIRED
+# A well declared here is active, unless it says enabled = false.
+# Type: dict[str, FlowWellConfig] | Default: {}
 
 # Mapping of lake ids to typed lake / reservoir payloads.
-# Type: dict[str, FlowLakeConfig] | REQUIRED
+# A lake declared here is active, unless it says enabled = false.
+# It needs MODFLOW 6.
+# Type: dict[str, FlowLakeConfig] | Default: {}
 
 # Mapping of stream-network ids to typed SFR payloads.
-# Type: dict[str, FlowReachNetworkConfig] | REQUIRED
+# A network declared here is active, unless it says enabled = false.
+# It needs MODFLOW 6.
+# Type: dict[str, FlowReachNetworkConfig] | Default: {}
 
-# Mapping of flow-barrier ids to typed HFB payloads (general addon, modflow6 backend only; declaring one activates it).
+# Mapping of flow-barrier ids to typed HFB payloads (a backend that honors flow_barriers only).
 # A lake's dam cutoff wall is declared on the lake instead.
-# Type: dict[str, FlowBarrierConfig] | REQUIRED
+# Type: dict[str, FlowBarrierConfig] | Default: {}
 
 
 # Example entry, one [flow.sinks_sources.wells.<id>] table per entry.
 # [flow.sinks_sources.wells.<id>]
+# Whether this well pumps or injects.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
 # Well location payload.
 # Discriminated by 'kind': 'cell', 'absolute_xy', or 'relative_xy'.
 # Type: UnionType[FlowWellLocationCell, FlowWellLocationAbsoluteXY, FlowWellLocationRelativeXY] | REQUIRED
 # location = ""
-# Well rate [L^3/T].
-# Scalar for constant rate, or one value per stress period.
-# Negative = pumping, positive = injection.
+# Well rate, in the unit that units names (m3/s by default).
+# One number for a constant rate, or one per stress period.
+# It follows the sign of MODFLOW: negative when the well pumps, positive when it injects.
 # Type: UnionType[float, list, NoneType] | Optional
 # flux = 0.0
 # Rate schedule that replaces flux: 'constant', 'csv', 'piecewise' or 'seasonal'.
@@ -192,8 +199,14 @@ type = "top"
 
 # Example entry, one [flow.sinks_sources.lakes.<id>] table per entry.
 # [flow.sinks_sources.lakes.<id>]
+# Whether this lake is built.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
 # Lake-bed leakance [1/T] = K_bed / thickness_bed.
-# Resistance of the lake-aquifer interface; the under-dam leakage calibration parameter.
+# Resistance of the lake-aquifer interface over the whole lake bed, the handle of the lake-aquifer exchange.
+# The flow through or under the dam is set by the cutoff_wall and the aquifer, not by this value.
 # 0 means a perfectly sealed lakebed (no leakage).
 # Type: float | >= 0.0 | REQUIRED | Examples: 1e-06
 # bedleak = 0.0
@@ -202,9 +215,10 @@ type = "top"
 # Type: string | Default: "1/s"
 # bedleak_unit = "1/s"
 # Lake stage at the start of the run: the elevation of the water surface, in metres.
+# When the first period is steady, the steady solve sets the stage and this value is only its first guess, unless steady_stage_hold holds it.
 # Type: Any | REQUIRED | Examples: 45.0
-# stageinit = ""
-# Hold the lake stage at stageinit during the steady warm-up period(s) (LAK status CONSTANT) and re-activate it on the first transient period.
+# initial_stage = ""
+# Hold the lake stage at initial_stage during the steady warm-up period(s) (LAK status CONSTANT) and re-activate it on the first transient period.
 # Use for a managed reservoir whose observed initial level is far from the natural steady equilibrium: the aquifer equilibrates around the observed stage instead of overriding it.
 # Type: bool | Default: false
 # steady_stage_hold = false
@@ -224,11 +238,12 @@ type = "top"
 # Type: BathymetryReconstructionConfig (optional) | Optional
 # bed_reconstruction = ""
 # Surverse / spillway / controlled-release outlets for this lake.
-# Type: list[Annotated] | REQUIRED
+# Type: list[Annotated] | Default: []
 # outlets = []
-# Optional dam cutoff wall / grout curtain on the dam axis, modeled as a MODFLOW 6 HFB (the lake-derived use of FlowBarrierConfig).
+# Optional dam cutoff wall / grout curtain on the dam axis, modeled as a MODFLOW 6 HFB laid on the lake shore.
 # The barrier forces the under-dam seepage to dive below the wall instead of leaking through the top layers.
-# Type: FlowBarrierConfig (optional) | Optional
+# The flow across its faces is published per layer as the cutoff_wall_flow series.
+# Type: CutoffWallConfig (optional) | Optional
 # cutoff_wall = ""
 # Rainfall on the lake over time, as a rate per unit of lake surface (m/s in SI).
 # It wins over the rainfall taken from [data.precipitation].
@@ -253,6 +268,11 @@ type = "top"
 
 # Example entry, one [flow.sinks_sources.sfr.<id>] table per entry.
 # [flow.sinks_sources.sfr.<id>]
+# Whether this stream network is built.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
 # Prune reaches shorter than this [L] (0 keeps all reaches).
 # Type: Any | Default: "0 m"
 # min_reach_length = "0 m"
@@ -284,16 +304,17 @@ type = "top"
 # Type: Annotated (optional) | Optional
 # bed_incision = ""
 # How the reach width rwid [L] is set (constant / by_order / power_law).
-# Type: UnionType[FlowReachWidthConstant, FlowReachWidthByOrder, FlowReachWidthPowerLaw] | REQUIRED
+# Type: UnionType[FlowReachWidthConstant, FlowReachWidthByOrder, FlowReachWidthPowerLaw] | Default: kind='constant' value=Quantity(1, "meter")
 # width = ""
 # If False every reach uses cellid 'none' (routing only, no streambed leakage).
 # Type: bool | Default: true
 # connected_to_aquifer = true
 # Route the hillslope drainage (DRN) discharge into the stream network: every remaining DRN cell of the basin hands its outflow, through an MVR record (FACTOR 1.0), to the first reach or lake cell met on its descent D, a filled copy of the model top.
 # A cell whose descent leaves the model first keeps a plain DRN.
-# This is the surface re-infiltration / runon convergence of drained water towards the river; without it only the reach cells' streambed captures baseflow and the rest of the catchment discharge is lost.
-# Type: bool | Default: false
-# route_drainage = false
+# This is the surface re-infiltration / runon convergence of drained water towards the river; without it only the reach cells' streambed captures baseflow and the rest of the catchment discharge is lost (a few per cent of the water of a catchment).
+# On by default; set False only to study the network alone.
+# Type: bool | Default: true
+# route_drainage = true
 # Enable the channel-storage term (transient first period / SIMPLE only).
 # Type: bool | Default: false
 # storage = false
@@ -311,7 +332,7 @@ type = "top"
 # evaporation = ""
 # SFR-to-SFR diversions (controlled splits).
 # Empty = none.
-# Type: list[FlowReachDiversionConfig] | REQUIRED
+# Type: list[FlowReachDiversionConfig] | Default: []
 # diversions = []
 # Number of the lake the last reach feeds through a mover (SFR -> LAK), counted from 1 in the order the lakes are declared.
 # Unset, the network outflow leaves the model.
@@ -329,6 +350,11 @@ type = "top"
 
 # Example entry, one [flow.sinks_sources.flow_barriers.<id>] table per entry.
 # [flow.sinks_sources.flow_barriers.<id>]
+# Whether this barrier is built.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
 # Auto-place the dam cutoff wall (lakes only): the trace is derived at bind time as the chord across the reservoir at its downstream neck (the footprint point nearest the catchment outlet), perpendicular to the outlet-flow direction.
 # Mutually exclusive with line / line_path; the mesh dam refinement then follows this auto axis too.
 # Type: bool | Default: false
@@ -366,6 +392,8 @@ type = "top"
 # HFB hydraulic characteristic [1/T] = K_barrier / thickness_barrier.
 # A near-zero value (e.g.
 # 1e-9 1/s) is a quasi-impermeable wall.
+# Zero is accepted only without XT3D: MODFLOW 6 ignores a zero hydchr under XT3D, so the build refuses it with XT3D active (XT3D turns itself on for triangle and strongly non-orthogonal meshes).
+# Each face of the barrier receives hydchr times trace length over the summed face length, so a zigzag chain of faces keeps the declared conductance.
 # Mutually exclusive with k + thickness.
 # Type: float (optional) | >= 0.0 | Optional
 # hydchr = 0.0
@@ -373,7 +401,8 @@ type = "top"
 # Converted to 1/s for MF6.
 # Type: string | Default: "1/s"
 # hydchr_unit = "1/s"
-# Barrier hydraulic conductivity [L/T]; used with thickness when hydchr is unset.
+# Barrier hydraulic conductivity [L/T].
+# Give it with thickness in place of hydchr.
 # Type: float (optional) | > 0.0 | Optional
 # k = 1.0
 # Unit of k (L/T): m/s, m/day, m/h, m/min.
@@ -381,7 +410,7 @@ type = "top"
 # Type: string | Default: "m/s"
 # k_unit = "m/s"
 # Thickness of the barrier, in the unit thickness_unit names (metres by default).
-# With k it gives hydchr = k / thickness when hydchr is unset.
+# With k it gives hydchr = k / thickness, in place of hydchr.
 # Type: float (optional) | > 0.0 | Optional
 # thickness = 1.0
 # Unit of thickness (L): m, cm, mm, km.
@@ -390,15 +419,29 @@ type = "top"
 # thickness_unit = "m"
 
 
-# Diffuse recharge configuration.
-# None = zero recharge for all periods.
+# Diffuse recharge.
+# The table is what activates it, so an empty table takes its rate from [data.recharge] or the soil section.
+# Absent, the recharge is zero in every period.
 
 # [flow.sinks_sources.recharge]
-# Recharge rate: one number, one number per stress period, a table {period: value}, or the series loaded from [data.recharge], in the unit that 'units' names (mm/day by default).
+# Whether the model receives this recharge.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
+
+# Recharge rate: one number, one number per stress period, or a table {period: value} that states every period, in the unit that 'units' names (mm/day by default).
+# It is positive when water enters the aquifer; a negative rate leaves it, through the EVT package when negative_to_evt holds.
 # A calibration reads its bounds in that unit too.
-# The 'matching_hydrographic_network' protocol calibrates conductivity against the ratio K/R in its steady stage and requires this value held frozen there.
+# Do not write it beside [data.recharge] or the soil section, which replace it.
 # Type: Any | Default: 0.0
 # values = 0.0
+
+# Number that multiplies the recharge in force, from 'values' or from [data.recharge], a deficit and a numeric first_clim included.
+# 1 changes nothing.
+# Do not write it beside the soil section, whose recharge is an output.
+# Type: float | > 0.0 | Default: 1.0
+# factor = 1.0
 
 # Unit of 'values' and of the recharge data source.
 # Data-manager outputs use mm/day by convention; set it when you write 'values' in another unit.
@@ -416,8 +459,8 @@ type = "top"
 # A bare number is in mm; "120 mm" and "12 cm" also read.
 # Between 0 and 1000 mm.
 # Required, since it belongs to the site.
-# In doubt, start from 150 mm and compare the recharge the soil alone prints for 50 to 250 mm with the gauged discharge (hmp run <file> --until load_data).
-# With [data.soil_capacity], it is the mean capacity of the SAFRAN cells, and the raster spreads it over classes inside each cell.
+# Start from a soil map, then compare the recharge the soil alone prints for 50 to 250 mm with the gauged discharge (hmp run <file> --until load_data).
+# With [data.soil_capacity], it is the mean capacity over the catchment, and the raster spreads it over classes inside each cell.
 # Calibrate it with [calibration.parameters.ru].
 # Type: float | >= 0.0 | <= 1000.0 | REQUIRED | Examples: "150 mm"
 # ru = 0.0
@@ -425,13 +468,14 @@ type = "top"
 # Share of ru above which the soil evaporates at the full rate kc x ETP.
 # Below alpha x ru, ETR falls linearly with the stored water.
 # It is 1 - p of FAO-56 and LP of HBV.
+# The default 0.45 is a choice: it means p = 0.55, the value of FAO-56 table 22 for cereals and maize (pasture 0.60).
 # Above 0, at most 1.
-# Kept fixed by default: the discharge alone hardly constrains it.
-# Type: float | > 0.0 | <= 1.0 | Default: 0.6
-# alpha = 0.6
+# Kept fixed by default: on the discharge alone it trades off with ru, since both move the annual volume.
+# Type: float | > 0.0 | <= 1.0 | Default: 0.45
+# alpha = 0.45
 
 # Crop coefficient applied to the loaded ETP: the soil evaporates at most kc x ETP a day.
-# 1.0 takes the ETP as loaded, a reference grass.
+# 1.0 takes the ETP as loaded, which assumes the surface of that ETP looks like the site: check what the product refers to.
 # Between 0 and 2.
 # Kept fixed by default: kc and ru move the same annual volume.
 # Type: float | >= 0.0 | <= 2.0 | Default: 1.0
@@ -461,20 +505,21 @@ type = "top"
 # SCS curve number (AMC II), dimensionless, of a HELP-style surface runoff (Schroeder et al.
 # 1994): the unsealed share of the rain above a daily retention loses some to a fast runoff, more as the soil is wetter.
 # None turns the term off, bit for bit as before.
-# Between 30 and 98; the calibrated value tends to exceed the tabulated one, since SAFRAN rain is smoothed over 8 km cells.
-# Calibrate it with [calibration.parameters.curve_number].
+# Between 30 and 98.
+# It reads the soil and never the water table, so it renders saturation runoff badly: leave it off where the drains already give that runoff.
+# To calibrate it, state a range under [calibration.parameters.curve_number]: it belongs to the soil group and the land use of the site.
 # Type: float (optional) | >= 30.0 | <= 98.0 | Optional
 # curve_number = 30.0
 
 # Time constant of the linear reservoir that routes the curve-number runoff to the outlet, in days.
-# Read only when curve_number is set.
+# No effect while curve_number is None.
 # 0 sends it the same day; "2 days" also reads.
 # Between 0 and 10 days: a longer delay would smooth away the fast surface peak the term exists for.
 # Type: float | >= 0.0 | <= 10.0 | Default: 1.0
 # runoff_time = 1.0
 
 # Pure delay applied to the routed curve-number runoff, after runoff_time, before it reaches the gauged discharge: the travel time to the outlet plus any lag between the forcing's daily step and the gauge's.
-# Read only when curve_number is set.
+# No effect while curve_number is None.
 # 0 adds no delay, bit for bit as before; "0.75 days" also reads, interpolated linearly between the neighbouring whole-day shifts.
 # Between 0 and 5 days: a longer shift belongs to runoff_time's reservoir, not to a fixed travel time.
 # Calibrate it with [calibration.parameters.runoff_lag].
@@ -482,27 +527,36 @@ type = "top"
 # runoff_lag = 0.0
 
 # State of the soil on the first day.
-# "first_year" repeats the first 365 days of the run until the storage at the end of that year moves by less than 0.1 mm, 20 times at most; the run must last one year at least.
+# "first_year" repeats the first 365 days of the run until the storage at the end of that year moves by less than 0.1 mm, 20 times at most; the run must last 364 days (52 weeks) at least, and a 364-day run repeats those 364 days.
 # "none" starts from a full soil, the state of a soil in a wet winter.
+# Beside a cyclic spin-up of the aquifer (flow.ic.kind = "spinup_cyclic"), the two starts are computed over two windows: the soil settles on the first year, the heads on the whole run.
+# That pair is allowed without a warning, because it is sometimes what the study wants.
 # Type: Literal['first_year', 'none'] | one of: "first_year", "none" | Default: "first_year"
 # spinup = "first_year"
 
 
-# Diffuse evapotranspiration configuration.
-# None = no EVT package built.
+# Diffuse evapotranspiration.
+# The table is what activates it, so an empty table takes its rate from [data.etp].
+# Absent, no EVT package draws it.
 
 # [flow.sinks_sources.etp]
+# Whether the model takes this evapotranspiration.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+# enabled = true
+
 # Evapotranspiration rate, in the unit that units names (mm/day by default): one number, one number per stress period, a table {period: value}, or the series loaded from [data.etp].
 # Values must not be negative: the EVT package takes them as outflow rates.
 # Type: Any | Default: 0.0
 # values = 0.0
 
 # Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth.
-# 1 m by default.
+# 2 m by default, a choice: this depth often reaches the deepest roots, and 150 mm of soil capacity means about 1 to 2 m of them.
 # Read by MODFLOW-NWT, and by MODFLOW 6 in soil mode for the ETP the soil left unmet.
 # Calibrate it with [calibration.parameters.extinction_depth]; the range belongs to the site, so a file has to state it.
-# Type: float | > 0.0 | Default: 1.0
-# extinction_depth = 1.0
+# Type: float | > 0.0 | Default: 2.0
+# extinction_depth = 2.0
 
 
 # ----------------------------------------------------------------------
@@ -519,7 +573,7 @@ type = "top"
 # Type: Annotated (optional) | Optional
 id = "K"
 
-# How the parameter varies in space: one value everywhere ('homogeneous') or one value per zone ('heterogeneous').
+# How the parameter varies in space: one value everywhere ('homogeneous'), one value per zone ('heterogeneous'), or one value per pixel of a map ('raster').
 # Type: Literal['homogeneous'] | one of: "homogeneous" | Default: "homogeneous"
 kind = "homogeneous"
 
@@ -542,7 +596,7 @@ unit = "m/s"
 # Type: Annotated (optional) | Optional
 id = "Sy"
 
-# How the parameter varies in space: one value everywhere ('homogeneous') or one value per zone ('heterogeneous').
+# How the parameter varies in space: one value everywhere ('homogeneous'), one value per zone ('heterogeneous'), or one value per pixel of a map ('raster').
 # Type: Literal['homogeneous'] | one of: "homogeneous" | Default: "homogeneous"
 kind = "homogeneous"
 
@@ -565,7 +619,7 @@ unit = "-"
 # Type: Annotated (optional) | Optional
 id = "Ss"
 
-# How the parameter varies in space: one value everywhere ('homogeneous') or one value per zone ('heterogeneous').
+# How the parameter varies in space: one value everywhere ('homogeneous'), one value per zone ('heterogeneous'), or one value per pixel of a map ('raster').
 # Type: Literal['homogeneous'] | one of: "homogeneous" | Default: "homogeneous"
 kind = "homogeneous"
 
@@ -583,10 +637,10 @@ unit = "1/m"
 # Flow boundary conditions. A boundary is keyed by WHAT IT IS,
 # [flow.bc.<id>], with the canonical ids and their kind, domain
 # and units held by the flow boundary-condition registry.
-# A boundary the registry describes entirely needs no block at
-# all: listing it in [flow].active_bc is enough. Write a block
+# Declaring a block is what activates the boundary. A boundary the
+# registry describes entirely takes an empty block. Write keys
 # only to depart from that default, for instance to impose a
-# conductance, or kind = 'robin' instead of the drainage default.
+# conductance. enabled = false keeps the block and switches it off.
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -594,12 +648,19 @@ unit = "1/m"
 # ----------------------------------------------------------------------
 
 [flow.bc.drainage]
-# Canonical name of the boundary, the same one flow.active_bc lists: 'drainage', 'ocean', 'stream', 'north_side', 'south_side', 'east_side' or 'west_side'.
+# Whether the run builds this boundary.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+enabled = true
+
+# Canonical name of the boundary, the key of its [flow.bc.<id>] table: 'drainage', 'ocean', 'stream', 'north_side', 'south_side', 'east_side' or 'west_side'.
 # It fixes where the boundary applies.
 # Type: string | REQUIRED | Examples: "drainage"
 id = ""
 
 # Boundary-condition value, scalar or one value per stress period.
+# On a head boundary it is the head in metres; left out with no forcing, the table only activates the boundary and no constant head is built.
 # On a drainage boundary it is a conductance in m2/s, and it may be left out: the run then derives it from the conductivity, C = K * cell_area / solver.drain_bed_thickness_m, which keeps the drain proportional to K and makes K/R the quantity a network calibration searches.
 # A zero or negative number selects that same derivation, so it does NOT mean a closed boundary; write a positive conductance to impose one.
 # Type: UnionType[float, list, NoneType] | Optional
@@ -610,9 +671,9 @@ id = ""
 # Type: string | Default: ""
 description = ""
 
-# Type of the boundary: an imposed head ('dirichlet') or a drain ('cauchy', 'robin').
+# Type of the boundary: an imposed head ('dirichlet') or a linear drain ('drain').
 # Unset, the boundary's id decides.
-# Type: Literal['dirichlet', 'cauchy', 'robin'] | one of: "dirichlet", "cauchy", "robin" | Default: "dirichlet"
+# Type: Literal['dirichlet', 'drain'] | one of: "dirichlet", "drain" | Default: "dirichlet"
 kind = "dirichlet"
 
 # Boundary-application domain.
@@ -628,9 +689,9 @@ kind = "dirichlet"
 
 
 # ----------------------------------------------------------------------
-# Flow diffuse recharge - emitted when 'recharge' is listed in
-# [flow].active_sinks_sources. Values are taken from the data
-# layer ([data.recharge]) unless overridden here.
+# Flow diffuse recharge - declaring the table activates it. A series
+# loaded from [data.recharge]
+# or computed by the soil section replaces values.
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -638,11 +699,24 @@ kind = "dirichlet"
 # ----------------------------------------------------------------------
 
 [flow.sinks_sources.recharge]
-# Recharge rate: one number, one number per stress period, a table {period: value}, or the series loaded from [data.recharge], in the unit that 'units' names (mm/day by default).
+# Whether the model receives this recharge.
+# Declaring it is what activates it.
+# false keeps the table and builds nothing from it.
+# Type: bool | Default: true
+enabled = true
+
+# Recharge rate: one number, one number per stress period, or a table {period: value} that states every period, in the unit that 'units' names (mm/day by default).
+# It is positive when water enters the aquifer; a negative rate leaves it, through the EVT package when negative_to_evt holds.
 # A calibration reads its bounds in that unit too.
-# The 'matching_hydrographic_network' protocol calibrates conductivity against the ratio K/R in its steady stage and requires this value held frozen there.
+# Do not write it beside [data.recharge] or the soil section, which replace it.
 # Type: Any | Default: 0.0
 values = 0.0
+
+# Number that multiplies the recharge in force, from 'values' or from [data.recharge], a deficit and a numeric first_clim included.
+# 1 changes nothing.
+# Do not write it beside the soil section, whose recharge is an output.
+# Type: float | > 0.0 | Default: 1.0
+factor = 1.0
 
 # Unit of 'values' and of the recharge data source.
 # Data-manager outputs use mm/day by convention; set it when you write 'values' in another unit.
@@ -660,8 +734,8 @@ units = "mm/day"
 # A bare number is in mm; "120 mm" and "12 cm" also read.
 # Between 0 and 1000 mm.
 # Required, since it belongs to the site.
-# In doubt, start from 150 mm and compare the recharge the soil alone prints for 50 to 250 mm with the gauged discharge (hmp run <file> --until load_data).
-# With [data.soil_capacity], it is the mean capacity of the SAFRAN cells, and the raster spreads it over classes inside each cell.
+# Start from a soil map, then compare the recharge the soil alone prints for 50 to 250 mm with the gauged discharge (hmp run <file> --until load_data).
+# With [data.soil_capacity], it is the mean capacity over the catchment, and the raster spreads it over classes inside each cell.
 # Calibrate it with [calibration.parameters.ru].
 # Type: float | >= 0.0 | <= 1000.0 | REQUIRED | Examples: "150 mm"
 # ru = 0.0
@@ -669,13 +743,14 @@ units = "mm/day"
 # Share of ru above which the soil evaporates at the full rate kc x ETP.
 # Below alpha x ru, ETR falls linearly with the stored water.
 # It is 1 - p of FAO-56 and LP of HBV.
+# The default 0.45 is a choice: it means p = 0.55, the value of FAO-56 table 22 for cereals and maize (pasture 0.60).
 # Above 0, at most 1.
-# Kept fixed by default: the discharge alone hardly constrains it.
-# Type: float | > 0.0 | <= 1.0 | Default: 0.6
-# alpha = 0.6
+# Kept fixed by default: on the discharge alone it trades off with ru, since both move the annual volume.
+# Type: float | > 0.0 | <= 1.0 | Default: 0.45
+# alpha = 0.45
 
 # Crop coefficient applied to the loaded ETP: the soil evaporates at most kc x ETP a day.
-# 1.0 takes the ETP as loaded, a reference grass.
+# 1.0 takes the ETP as loaded, which assumes the surface of that ETP looks like the site: check what the product refers to.
 # Between 0 and 2.
 # Kept fixed by default: kc and ru move the same annual volume.
 # Type: float | >= 0.0 | <= 2.0 | Default: 1.0
@@ -705,20 +780,21 @@ units = "mm/day"
 # SCS curve number (AMC II), dimensionless, of a HELP-style surface runoff (Schroeder et al.
 # 1994): the unsealed share of the rain above a daily retention loses some to a fast runoff, more as the soil is wetter.
 # None turns the term off, bit for bit as before.
-# Between 30 and 98; the calibrated value tends to exceed the tabulated one, since SAFRAN rain is smoothed over 8 km cells.
-# Calibrate it with [calibration.parameters.curve_number].
+# Between 30 and 98.
+# It reads the soil and never the water table, so it renders saturation runoff badly: leave it off where the drains already give that runoff.
+# To calibrate it, state a range under [calibration.parameters.curve_number]: it belongs to the soil group and the land use of the site.
 # Type: float (optional) | >= 30.0 | <= 98.0 | Optional
 # curve_number = 30.0
 
 # Time constant of the linear reservoir that routes the curve-number runoff to the outlet, in days.
-# Read only when curve_number is set.
+# No effect while curve_number is None.
 # 0 sends it the same day; "2 days" also reads.
 # Between 0 and 10 days: a longer delay would smooth away the fast surface peak the term exists for.
 # Type: float | >= 0.0 | <= 10.0 | Default: 1.0
 # runoff_time = 1.0
 
 # Pure delay applied to the routed curve-number runoff, after runoff_time, before it reaches the gauged discharge: the travel time to the outlet plus any lag between the forcing's daily step and the gauge's.
-# Read only when curve_number is set.
+# No effect while curve_number is None.
 # 0 adds no delay, bit for bit as before; "0.75 days" also reads, interpolated linearly between the neighbouring whole-day shifts.
 # Between 0 and 5 days: a longer shift belongs to runoff_time's reservoir, not to a fixed travel time.
 # Calibrate it with [calibration.parameters.runoff_lag].
@@ -726,8 +802,10 @@ units = "mm/day"
 # runoff_lag = 0.0
 
 # State of the soil on the first day.
-# "first_year" repeats the first 365 days of the run until the storage at the end of that year moves by less than 0.1 mm, 20 times at most; the run must last one year at least.
+# "first_year" repeats the first 365 days of the run until the storage at the end of that year moves by less than 0.1 mm, 20 times at most; the run must last 364 days (52 weeks) at least, and a 364-day run repeats those 364 days.
 # "none" starts from a full soil, the state of a soil in a wet winter.
+# Beside a cyclic spin-up of the aquifer (flow.ic.kind = "spinup_cyclic"), the two starts are computed over two windows: the soil settles on the first year, the heads on the whole run.
+# That pair is allowed without a warning, because it is sometimes what the study wants.
 # Type: Literal['first_year', 'none'] | one of: "first_year", "none" | Default: "first_year"
 # spinup = "first_year"
 

@@ -1,25 +1,35 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: export
+# Profile: user | Modules: edition, export
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
 
 # ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
 # One export: what to write, when, in which format, where.
 # ----------------------------------------------------------------------
 
 # The exports written at the end of a run, one [[export]] block per request, in the order of the file.
-# Each block says what (variables), when (time or period) and where (folder or file); the format follows the data.
+# Each block says what (variable), when (time or period) and where (folder or file); the format follows the data.
 
 # Example entry, one [[export]] block per entry.
 # [[export]]
 # What to export: a name, a list of names, or "all" for everything the run holds.
-# One namespace covers the mesh fields (head, watertable_depth, seepage_mask...), the series (discharge, discharge_obs...), the vector layers (watershed, hydrographic_network_reference...), the raster layers (watershed_dem...) and the table budget; 'hmp export <run> --list' prints what a run holds.
+# One namespace covers the mesh fields (head, watertable_depth, seepage_mask..., and mesh_cell_area, which "all" leaves out because mesh_cells holds it), the series (discharge, discharge_obs...), the vector layers (watershed, hydrographic_network_reference...), the three layers of the cell mesh (mesh_cells, mesh_seeds, mesh_family_faces), the raster layers (watershed_dem...) and the table budget; 'hmp export <run> --list' prints what a run holds.
 # A name no run can hold is refused before the solve.
 # Type: UnionType[str, list] | REQUIRED | Examples: "head", ["head", "discharge"], "all"
-# variables = ""
+# variable = ""
 
 # The instants to write: a date "YYYY-MM-DD", "first", "last", or a list of them.
 # A date takes the stress period that holds it.
@@ -35,21 +45,21 @@
 # Type: tuple (optional) | Optional
 # period = ""
 
-# The file format.
+# The file format, a name the export registry serves.
 # Left out, each data takes its natural format, or the one the extension of 'file' names.
-# 'package' writes the portable .hmp archive of the run; 'stac', 'rocrate' and 'prov' write its metadata.
-# Those four describe the whole run and take variables = "all" only.
-# Type: ExportFormat (optional) | Optional
+# A view format describes the whole run and takes variable = "all" only.
+# The portable archive of a run is written by 'hmp publish --container tar'.
+# Type: string (optional) | Optional
 # format = ""
 
-# The folder the files are written to, with automatic names.
-# A relative folder is read from the project's share/ directory.
-# Defaults to share/<run>/.
+# A folder under the exports/ directory of the run, where the files are written with automatic names.
+# Relative to runs/<run>/exports/; an absolute folder or one that climbs out with '..' is refused.
+# Left out, the files go to runs/<run>/exports/.
 # Type: path (optional) | Optional
 # folder = ""
 
 # One exact file to write; its extension gives the format.
-# A relative file is read from 'folder'.
+# Relative to 'folder' under runs/<run>/exports/; an absolute file or one that climbs out with '..' is refused.
 # Only for a request that writes one file: several files need 'folder' and automatic names.
 # Type: path (optional) | Optional
 # file = ""
@@ -63,8 +73,18 @@
 # crs = ""
 
 # Pixel size of a GeoTIFF of a field, in units of the output CRS.
-# Derived from the mesh when left out.
+# Left out, it is the side of the smallest cell of the mesh, and a mesh that would give more than 1e8 pixels is refused until a resolution is set.
 # Refused on a request that writes no raster.
 # Type: float (optional) | > 0 | Optional
 # resolution = 1.0
+
+# Model layer of a 3D field, counted from 0 at the top.
+# Left out, every layer a format can hold: a NetCDF variable or a VTU cell array has one entry per layer.
+# QGIS reads a NetCDF that names one layer.
+# Type: int (optional) | >= 0 | Optional
+# layer = 0
+
+# Where to send the files of this block once the run is sealed: a local or UNC folder ending with /, a file, or an ftp://, ftps:// or sftp:// address, whose identity comes from credentials.toml.
+# Type: list (optional) | Optional
+# deliver_to = []
 

@@ -1,10 +1,20 @@
 # ======================================================================
 # HydroModPy Configuration
-# Profile: user | Modules: calibration
+# Profile: user | Modules: edition, calibration
 # Auto-generated from Pydantic models.
 # Edit values below. Comments describe each parameter.
 # ======================================================================
 
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
 
 # ----------------------------------------------------------------------
 # Top-level ``[calibration]`` section.
@@ -15,8 +25,9 @@
 # Unset, it follows from what the calibration scores: 'bisection' when it moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise.
 # Write it to depart from that choice, and whenever method_options are given.
 # A phase of [[calibration.phases]] names its own.
-# Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'lhs' (stratified Latin hypercube, sized by method_options.n_samples), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'.
-# An unknown name is refused when the optimizer is built, with the list installed here.Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.
+# Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'lhs' (stratified Latin hypercube, sized by method_options.n_samples), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead' and 'gp_mapping'.
+# An unknown name is refused when the file is read, with the list installed here.
+# Optuna is installed by default; install the calibration extra for cma_es and Optuna's cmaes sampler.
 # Type: Annotated (optional) | Optional
 # method = ""
 
@@ -27,68 +38,66 @@
 # Type: string (optional) | Optional
 # evaluator = ""
 
-# What produces the simulated observables when the evaluator is the one that scores a model with the criteria of this file ('scored_forward_model').
-# The model answers the outputs declared under [calibration.outputs] and the objective blocks weigh them, so changing a metric or a weight is a change to this document and never a patch to the model.
-# A string and not an enumeration: what resolves depends on what is installed beside HydroModPy, through the 'hydromodpy.calibration.forward_model' entry-point group.
-# Unset runs 'linear_reservoir', the closed-form reservoir this build ships, which is how a set of criteria is rehearsed before a model is installed.
-# Read by no other evaluator.
-# Type: string (optional) | Optional
-# forward_model = ""
-
 # Maximum number of evaluations of the search.
+# It is the only bound on how long a search runs: no method option counts evaluations of its own.
 # 'auto' lets an engine that counts its evaluations before the first solve size its own budget.
-# Only the bisection does: with d the declared interval in decades, t = log10(1 + rel_tol), S the sweep points (2 when sweep_points is 0), s = d / (S - 1) and E = bracket_expand, a root inside the bounds costs S + ceil(log2(s / t)) and one found after e expansions S + 2e + ceil(log2(1 / t)); 'auto' budgets the largest, 23 on [1e-7, 1e-3] m/s with seven points and one per cent (15 inside the bounds).
+# Three do.
+# The grid and the Latin hypercube count their design, one evaluation per point, and refuse a smaller number before the first solve, since a sweep cut short is not its design.
+# The bisection counts with d the declared interval in decades, t = log10(1 + rel_tol), S the sweep points (counted as 2 for sweep_points 0), s = d / (S - 1) and E = bracket_expand, a root inside the bounds costs S + ceil(log2(s / t)) and one found after e expansions S + 2e + ceil(log2(1 / t)); 'auto' budgets the largest, 23 on [1e-7, 1e-3] m/s with seven points and one per cent (15 inside the bounds).
 # A number below the nominal count is refused before the first solve, one below the worst case is announced, and a budget that still runs out gets exactly the halvings left, once.
-# Any other engine gets 100 from 'auto' and no extension: a search that spends its budget before its own stopping rule is reported as not converged, and a re-run with a larger max_iter replays the trials already solved from the cache.
+# Any other engine gets 100 from 'auto' and no extension: a search that spends its budget before its own stopping rule is reported as not converged, and a re-run with a larger max_trials replays the trials already solved from the cache.
 # Type: Union[Annotated, Literal] | Default: "auto"
-max_iter = "auto"
+max_trials = "auto"
 
 # How precisely the search has to pin a parameter before it stops, as a relative precision on the parameter itself: 0.01 asks for one per cent, 0.1 for ten.
-# On a log-transformed parameter that is a ratio, which is how a conductivity is known in the first place, and it holds wherever the value sits; on any other transform there is no scale on the value to be relative to before the search has one, so it reads as a fraction of the declared interval.
+# On a parameter searched in log space that is a ratio, which is how a conductivity is known in the first place, and it holds wherever the value sits; on any other search space there is no scale on the value to be relative to before the search has one, so it reads as a fraction of the declared interval.
 # Each engine's own stopping option is written from it, so the same number survives a change of engine, and the engine's own option stays available for reproducing a published call verbatim.
 # Unset, the engine's default applies.
 # An engine that stops on its budget rather than on a precision refuses this rather than ignore it.
 # Type: Annotated (optional) | Optional
-# tolerance = ""
+# precision = ""
 
 # Number of suggestions drawn per ask, at least ``parallel``.
 # Type: int | >= 1 | Default: 1
 batch_size = 1
 
 # Trials solved side by side, each in its own folder, for every phase that sets none of its own.
-# A grid or a random search evaluates its points together; a root search cuts its bracket into parallel + 1 parts; a simplex evaluates the candidates of one step together and keeps the sequential answer.
-# Each trial holds its own model in memory; 1 solves them one after the other.
+# A grid or a random search evaluates its points together; a root search cuts its bracket into parallel + 1 parts; a simplex evaluates the candidates of one step together and keeps the sequential answer, so a width above 4 buys it nothing, and CMA-ES and differential evolution stop at their population.
+# A width above 1 gives each worker process its own copy of the model (about 0.5 GiB, 3 s to start); 1 solves the trials one after the other in this process.
 # Type: int | >= 1 | Default: 1
 parallel = 1
 
-# Percent water-balance discrepancy past which a trial is rejected instead of scored.
-# The solver reports the figure on every run; unset, it is recorded and nothing acts on it, so a run at twelve per cent is ranked beside one that closed even though part of the water it routed came from nowhere.
-# There is no default because there is no universal value: a steady solve on a coarse mesh closes to a fraction of a per cent, a transient one with a lake and a routed network legitimately sits higher.
-# Type: float (optional) | >= 0.0 | Optional
-# reject_water_budget_above = 0.0
-
-# Read a phase's frozen values back from a session that already completed it in the resumed chain, instead of solving the phase again.
-# What it reuses: the physical values of the best trial that session's own record shows for that phase's parameters.
-# What it risks: a session whose model, mesh or input files differed produced those values for a different problem, so a reuse is only taken when the session's recorded params_hash can be reproduced under this run's own cache context; a mismatch solves the phase again instead of trusting it.
-# Off by default: re-solving is always correct, reusing without that proof is not.
-# Type: bool | Default: false
-reuse_completed_phases = false
+# Percent water-balance discrepancy of the whole model past which a trial is rejected instead of scored.
+# The figure is the one the solver prints for the volume budget of the entire model, not the budget of a single package such as the lake package, which divides by small flows and reads higher.
+# A rejected trial is marked failed, so it is neither ranked nor promoted: part of the water it routed came from nowhere and its cost is not comparable to a run that closed.
+# Default 1.0 (one per cent).
+# Raise it for a transient model whose lake or routed network legitimately sits higher.
+# A TOML file has no null: to switch the gate off write a value no run reaches, such as 1000, or pass None from Python.
+# The worst time step of the run decides, not the last.
+# Type: float (optional) | >= 0.0 | Default: 1.0
+reject_water_budget_above = 1.0
 
 # Seed of the random draws of the search (starting points, samples).
 # The same seed with the same file gives the same trials.
 # Type: int (optional) | Optional
 # seed = 0
 
-# How much to persist per iteration:.
-# - 'none': 1 DuckDB row per iteration, no Zarr.
-# - 'best_n': same + promote top N to full simulations after the loop.
-# - 'all': every iteration becomes a full simulation (Zarr included).
-# Type: Literal['none', 'best_n', 'all'] | one of: "none", "best_n", "all" | Default: "none"
-save_runs = "none"
+# Which trials become runs once the search ends.
+# Every trial leaves one line in sessions/<case>/trials.jsonl whatever the mode.
+# 'best_n' promotes the best trial of the last phase to runs/<case>/, the calibrated run, and keeps the save_best_n - 1 next ones under sessions/<case>/trials/<n>/.
+# 'all' keeps every completed trial there.
+# 'none' promotes nothing.
+# Type: Literal['none', 'best_n', 'all'] | one of: "none", "best_n", "all" | Default: "best_n"
+save_runs = "best_n"
 
-# Number of top iterations to promote when save_runs='best_n'.
-# Type: int | >= 0 | Default: 10
-save_best_n = 10
+# Number of trials the 'best_n' mode of save_runs keeps as runs: 1 is the calibrated run alone, under runs/<case>/.
+# Type: int | >= 0 | Default: 1
+save_best_n = 1
+
+# Also promote the best trial of each phase before the last one, under sessions/<case>/phases/<phase>/best/.
+# The calibrated run of the case is the best trial of the last phase whatever this says.
+# Type: bool | Default: false
+promote_phases = false
 
 # Metric scoring the single simulated series, when no objective block is declared.
 # Same vocabulary as a block's 'metric'; typed here so a bad value is reported against the key that was written.
@@ -99,69 +108,62 @@ objective = "nse"
 # Type: string | Default: "head"
 variable = "head"
 
-# Observed station whose cost the optimizer minimises.
-# Every loaded gauge is already scored at its own mesh cell, on the discharge routed to that cell, and every cost is reported; naming one says which of them drives the search.
-# Required when several stations are loaded, optional with one.
-# Type: string (optional) | Optional
-# observed_station_id = ""
-
 # Options of the method, named as that method names them: points_per_dim for 'grid', sampler for 'optuna', sweep_points for 'bisection'.
 # They belong to one method, so a calibration that gives them writes method beside them.
 # A key the method does not take is refused when the file loads.
-# Type: dict[str, Any] | REQUIRED
+# Type: dict[str, Any] | Default: {}
 # method_options: entries go under [calibration.method_options.<id>]
 
-# Per-parameter declarations (bounds, transform, prior, path).
-# Type: dict[str, CalibParameterDecl] | REQUIRED
+# Per-parameter declarations (bounds, search_space, sampling, path).
+# Type: dict[str, CalibParameterDecl] | Default: {}
 
 # Named observables extracted from each candidate run.
-# Type: dict[str, Annotated] | REQUIRED
+# Type: dict[str, Annotated] | Default: {}
 
 # How much of each trial's cost the session keeps: 'none' skips component metrics; 'summary' keeps block totals; 'full' also stores per-block raw and normalized costs.
 # Type: Literal['none', 'summary', 'full'] | one of: "none", "summary", "full" | Default: "summary"
 persist_iteration_detail = "summary"
 
-# Write the simulated and observed series of every point/series output a completed trial scored (discharge at a gauge, head at a well...), as a small Parquet table per trial under the session folder.
-# Off by default: a 300-400 point search otherwise writes nothing beyond trials.jsonl.
+# Write the simulated and observed series of every point/series output a completed trial scored (discharge at a gauge, head at a well...), as a small Parquet table per trial under the session folder, about 2 kB per trial on the island case.
 # Network and spatial outputs carry no series and are never written here.
-# Type: bool | Default: false
-persist_trial_series = false
-
-# Replay the best candidate with full outputs after the loop.
-# Type: bool | Default: false
-rerun_best_with_outputs = false
+# Type: bool | Default: true
+persist_trial_series = true
 
 
 # Example entry, one [calibration.parameters.<id>] table per entry.
 # [calibration.parameters.<id>]
-# [low, high] physical bounds, in the unit the target declares.
+# [low, high] physical bounds, in 'units' when the file writes it, else in the unit the target declares.
 # Falls back to what the field annotates when the file omits it, which most fields deliberately leave unset because a range belongs to the site.
 # Type: list (optional) | Optional
 # bounds = []
-# Transform applied before sampling.
+# Space the search walks the parameter in.
 # 'log' for strictly-positive quantities spanning orders of magnitude.
 # Unset, the target's own field decides: a hydraulic conductivity declares 'log' where it is defined, so a file states this only to depart from it.
 # Type: Literal['identity', 'log', 'logit'] | one of: "identity", "log", "logit" | Default: "identity"
-# transform = "identity"
+# search_space = "identity"
 # Distribution, between the bounds, that starting points, random draws and Bayesian samplers take values from.
 # Type: Literal['uniform', 'log_uniform', 'normal'] | one of: "uniform", "log_uniform", "normal" | Default: "uniform"
-# prior = "uniform"
+# sampling = "uniform"
 # Dotted TOML path of the value to move, such as 'flow.param.K.field.value'.
 # Optional, and the way out rather than the way in: when omitted, the section name is resolved against the project catalogue ('hmp config targets' lists it).
 # Write one to reach a value the catalogue does not carry, or to settle a name two targets answer to.
-# A path written here wins without a lookup, and a parameter that writes one inherits nothing from the field it points at.
+# A path written here wins without a lookup.
+# When the catalogue carries it, the parameter inherits the field's space and draw like a named one; when it does not, nothing is inherited and the sample is written as it is drawn.
 # Type: string (optional) | Optional
 # path = ""
 # Readable alias for 'path'.
-# When both are set, 'target' wins.
+# Setting both is refused.
 # Type: string (optional) | Optional
 # target = ""
 # 'replace' writes the sampled value as-is; 'scale' multiplies the base TOML value at the target path by the sample.
 # Type: Literal['replace', 'scale'] | one of: "replace", "scale" | Default: "replace"
 # mode = "replace"
 # Unit the bounds are written in, such as 'm/s'.
-# The bounds are checked against the physical range of the target in this unit.
-# Unset, the unit the target declares applies.
+# For a parameter the catalogue resolves, bounds in another unit of the same quantity are converted when the file loads into the unit the target is read in, and the search draws, writes and reports its samples in that unit ('hmp config targets' lists it).
+# A unit of another quantity is refused.
+# Unset, the unit of the target applies.
+# With mode = 'scale' the bounds are factors without a unit, and writing one is refused.
+# For a path outside the catalogue it is the unit the bounds are checked against the physical range in.
 # Type: string (optional) | Optional | Examples: "m/s"
 # units = ""
 
@@ -174,7 +176,7 @@ rerun_best_with_outputs = false
 # The data family follows 'variable': discharge from hydrometry, head from piezometry, stage from lake_levels.
 # Mutually exclusive with 'observed_values'.
 # The station is located by its own record and not by coordinates written beside it, so this output and the single-metric route read the same cell and their costs are comparable; a station the project cannot locate is refused by name rather than scored on another quantity.
-# Type: string (optional) | Optional
+# Type: Annotated (optional) | Optional
 # observes = ""
 # Simulated variable to extract (e.g.
 # 'head', 'outlet_discharge').
@@ -185,23 +187,24 @@ rerun_best_with_outputs = false
 # Type: Literal['point'] | one of: "point" | Default: "point"
 # support = "point"
 # GeoJSON point geometry.
-# Coordinates are in metres.
+# Coordinates are in meters.
 # Type: dict (optional) | Optional
 # geometry = {}
 # X coordinate.
-# Accepts a bare number (metres) or a pint string like '100 m'.
+# Accepts a bare number (meters) or a pint string like '100 m'.
 # Beside 'observes' it is not read, and loading warns so, unless snap_radius is set and the station's record carries no coordinate.
 # Type: Annotated (optional) | Optional
 # x = ""
 # Y coordinate.
-# Accepts a bare number (metres) or a pint string like '100 m'.
+# Accepts a bare number (meters) or a pint string like '100 m'.
 # Beside 'observes' it is not read, as for 'x'.
 # Type: Annotated (optional) | Optional
 # y = ""
-# 'all' keeps every time step; 'last' / 'first' selects one; a list of ISO timestamps selects specific steps.
-# Type: Union[Literal, list] | Default: "all"
+# 'all' keeps every time step; 'last' / 'first' selects one.
+# Type: Literal['all', 'last', 'first'] | one of: "all", "last", "first" | Default: "all"
 # time = "all"
-# How the values kept by time are reduced before they are scored.
+# How the values kept by time are reduced before they are scored against 'observed_values'.
+# Refused beside 'observes': its record is paired with the series step by step.
 # Type: Literal['mean', 'sum', 'last', 'none'] | one of: "mean", "sum", "last", "none" | Default: "none"
 # reducer = "none"
 # Hard-coded observed values, positional and dateless.
@@ -232,7 +235,9 @@ rerun_best_with_outputs = false
 # name = "matching_hydrographic_network"
 
 # Recipe version this file was written against.
-# Unset runs the version this installation carries; pinned, a mismatch is refused rather than approximated, so a result that informed a decision stays replayable.
+# Unset runs the version this installation carries.
+# Pinned, the file runs what that version writes for every key of the network output it leaves empty, so a result that informed a decision stays replayable.
+# A version the installation no longer carries is refused rather than approximated.
 # Type: string (optional) | Optional
 # version = ""
 
@@ -241,8 +246,8 @@ rerun_best_with_outputs = false
 # conductivity = "K"
 
 # Name of the calibration parameter stage two moves.
-# Null runs the network stage alone, which is a method in its own right: it identifies the conductivity without any discharge record.
-# Type: string (optional) | Default: "Sy"
+# false runs the network stage alone, which is a method in its own right: it identifies the conductivity without any discharge record.
+# Type: Union[str, Literal] | Default: "Sy"
 # storage = "Sy"
 
 # Name of the network output stage one is scored on.
@@ -259,6 +264,7 @@ rerun_best_with_outputs = false
 
 # Engine of stage one.
 # The signed criterion crosses zero once over several decades, which is what a root search wants; any registered engine is accepted.
+# An unknown name is refused when the file is read, with the names this installation serves.
 # Type: string | Default: "bisection"
 # steady_method = "bisection"
 
@@ -266,17 +272,17 @@ rerun_best_with_outputs = false
 # 'auto' lets an engine that counts its evaluations size it: the bisection budgets its worst case, S + 2E + ceil(log2(1 / t)) for a root found after its E bracket expansions, 23 on [1e-7, 1e-3] m/s with seven sweep points and one per cent; any other engine gets 100.
 # A number below the bisection's nominal count, S + ceil(log2(s / t)) for a root inside the bounds (15 there), is refused before the first solve.
 # Type: Union[Annotated, Literal] | Default: "auto"
-# steady_max_iter = "auto"
+# steady_max_trials = "auto"
 
 # How precisely stage one has to pin the conductivity before it stops, as a relative precision on the conductivity: 0.01 is the paper's one per cent.
 # Unset takes the engine's default, which for the bisection is that same one per cent.
 # Type: Annotated (optional) | Optional
-# steady_tolerance = ""
+# steady_precision = ""
 
 # Options of the stage-one method, named as that method names them: for the bisection, sweep_points, bracket_expand, rel_tol and signed_component.
 # Which ones exist depends on steady_method; a key the method does not know is refused when the file loads.
-# Used to reproduce a published call; a precision is said once, in steady_tolerance.
-# Type: dict[str, Any] | REQUIRED
+# Used to reproduce a published call; a precision is said once, in steady_precision.
+# Type: dict[str, Any] | Default: {}
 # steady_method_options: entries go under [calibration.protocol.steady_method_options.<id>]
 
 # Dates the steady stage averages, as {start, end}, both ISO 8601 and both required.
@@ -287,51 +293,41 @@ rerun_best_with_outputs = false
 
 # Criterion of stage two.
 # The default weights recessions as heavily as peaks, which is where storage shows.
-# Type: string | Default: "nse_log"
+# Type: Literal['rmse', 'nse', 'kge', 'mae', 'nse_log', 'nse_delta', 'nse_seasonal', 'reservoir', 'distance_gap', 'distance_mean'] | one of: "rmse", "nse", "kge", "mae", "nse_log", "nse_delta", "nse_seasonal", "reservoir", "distance_gap", "distance_mean" | Default: "nse_log"
 # transient_metric = "nse_log"
 
 # Search method of stage two, named as calibration.method names one, such as 'scipy_nelder_mead'.
+# An unknown name is refused when the file is read, with the names this installation serves.
 # Type: string | Default: "scipy_nelder_mead"
 # transient_method = "scipy_nelder_mead"
 
 # Evaluation budget of stage two.
-# The simplex cannot count what it needs, so it gets no extension: a stage two that spends this before its tolerance is reported as not converged, and a re-run with a larger budget replays the trials already solved from the cache.
+# The simplex cannot count what it needs, so it gets no extension: a stage two that spends this before it reaches its precision is reported as not converged, and a re-run with a larger budget replays the trials already solved from the cache.
 # Type: int | >= 1 | Default: 120
-# transient_max_iter = 120
+# transient_max_trials = 120
 
 # How precisely stage two has to pin the storage before it stops, as a relative precision on the storage coefficient.
 # Type: Annotated (optional) | Optional
-# transient_tolerance = ""
+# transient_precision = ""
 
 # Options of the stage-two method, named as that method names them, and refused when the file loads if it does not know them.
 # Which ones exist depends on transient_method.
-# Type: dict[str, Any] | REQUIRED
+# Type: dict[str, Any] | Default: {}
 # transient_method_options: entries go under [calibration.protocol.transient_method_options.<id>]
 
 # Observed variable stage two is scored on.
 # Type: string | Default: "discharge"
 # discharge_variable = "discharge"
 
-# Gauge whose cost drives stage two.
-# Required when several stations are loaded.
-# Type: string (optional) | Optional
-# observed_station_id = ""
 
-# Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional, for every block it scores, a network one included.
+# Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional.
 # A date that does not parse is refused when the file is read.
-# Unset, and with no scoring_window on [calibration], stage two scores from one year after [simulation.time].start_datetime: the first year is spin-up.
+# Unset, stage two scores the window of [metrics] when the file writes one, and otherwise from one year after [simulation.time].start_datetime: the first year is spin-up.
+# A window on [calibration] replaces both.
 # A run of one year or less is scored whole.
 # Write start = the run's own start to score the spin-up year too.
-# Type: Annotated (optional) | Optional
-# scoring_window = ""
 
-
-# Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored.
-# A series keeps its stamps inside the window; a network output read in one state is dated at the stamp of that state, which has to lie inside it.
-# A phase's own window replaces this one.
-# Mutually exclusive with warmup_periods.
-
-# [calibration.scoring_window]
+# [calibration.protocol.window]
 # First date scored, ISO 8601.
 # Unset means from the first sample.
 # Type: string (optional) | Optional
@@ -343,32 +339,46 @@ rerun_best_with_outputs = false
 # end = ""
 
 
-# How several scored targets become one cost: what made them comparable, how nested gauges are read, and what one unscorable member does.
+# Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored.
+# A series keeps its stamps inside the window; a network output read in one state is dated at the stamp of that state, which has to lie inside it.
+# A phase's own window replaces this one.
+
+# [calibration.window]
+# First date scored, ISO 8601.
+# Unset means from the first sample.
+# Type: string (optional) | Optional
+# start = ""
+
+# Last date scored, ISO 8601.
+# Unset means up to the last sample.
+# Type: string (optional) | Optional
+# end = ""
+
+
+# Dates kept apart from the search, with both bounds.
+# Every trial is scored on them beside its cost, by the blocks that compare a dated record, and the cost never reads them.
+# [metrics] window minus these dates is the default of window.
+# Declared once for the session, and a steady phase is not scored on it.
+
+# [calibration.validation_window]
+# First date scored, ISO 8601.
+# Unset means from the first sample.
+# Type: string (optional) | Optional
+# start = ""
+
+# Last date scored, ISO 8601.
+# Unset means up to the last sample.
+# Type: string (optional) | Optional
+# end = ""
+
+
+# How several scored targets become one cost: the fewest paired samples a member may be scored on.
 
 [calibration.aggregate]
-# How the members are made comparable before the weights apply.
-# 'manual' takes the declared 'weight' of each block as the whole story, which is honest as long as the costs are already commensurable.
-# 'error' divides each residual by what its instrument resolves, so the members become pure numbers first; it needs a residual criterion and an observation carrying an error model, and is refused without both.
-# Type: Literal['manual', 'error'] | one of: "manual", "error" | Default: "manual"
-weighting = "manual"
-
-# How two gauges on imbricated catchments are read.
-# 'total' scores each against its own full drained area, which is what a gauge measures; the residuals are then statistically dependent, and no standard correction exists for that.
-# 'incremental' scores the downstream one on what its own reach adds, downstream minus upstream, which is the only mechanisable way to make the two independent.
-# Neither is inferred: the overlap is measured and reported whichever is chosen.
-# Type: Literal['total', 'incremental'] | one of: "total", "incremental" | Default: "total"
-nested_gauges = "total"
-
 # Fewest paired samples a member may be scored on.
 # An alignment that collapses to three days still returns a number, and a weight of 65 per cent resting on three days is not what the file says it is.
 # Type: int | >= 1 | Default: 1
 min_samples = 1
-
-# What one unscorable member does to the total.
-# 'veto' makes the whole trial fail, which is the default because a partial cost is not comparable to a full one.
-# 'drop' scores the survivors and records which member was left out, which has to be asked for explicitly.
-# Type: Literal['veto', 'drop'] | one of: "veto", "drop" | Default: "veto"
-on_member_failure = "veto"
 
 
 # How wide the search reports its own answer to be.
@@ -377,7 +387,7 @@ on_member_failure = "veto"
 
 [calibration.uncertainty]
 # How the interval around each calibrated value is obtained.
-# 'cost_profile' reads the range of sampled values whose cost stayed within 'tolerance' of the best, off the trace the search already produced, and costs no extra model run.
+# 'cost_profile' reads the range of sampled values whose cost stayed within 'cost_margin' of the best, off the trace the search already produced, and costs no extra model run.
 # 'multistart' runs the whole search 'restarts' times from 'restarts' different starting points and reports the spread of the optima it reaches, which is the only one of the two that can see a second basin; it costs that many times the runs.
 # The calibrated value never moves either way: with 'multistart' it is the best of the restarts.
 # Type: Literal['cost_profile', 'multistart', 'linearized'] | one of: "cost_profile", "multistart", "linearized" | Default: "cost_profile"
@@ -398,45 +408,16 @@ method = "cost_profile"
 # Type: Annotated (optional) | Optional
 # perturbation = ""
 
-# Width of the interval.
-# A fraction of the best cost when mode='relative' (0.05 = five per cent), and a number in the unit of the cost when mode='absolute'.
-# Unset, it follows what the search scores: one mesh cell, in metres, for a search scored only by network distances (distance_gap, distance_mean), because a stream cannot move by less than a cell; 0.05 otherwise, five per cent of the best cost.
+# Width of the interval, written with its unit.
+# '5%' is a share of the best cost, the usual choice for an efficiency score.
+# A criterion solved at zero, such as the stream-network gap, has no fraction of itself to take: write a length, '25 m', which is only read by a search scored only by network distances (distance_gap, distance_mean).
+# A bare number is refused.
+# Unset, it follows what the search scores: one mesh cell, in metres, for a search scored only by network distances, because a stream cannot move by less than a cell; 5%, five per cent of the best cost, otherwise.
 # The cell is the median distance between the centres of neighbouring cells, measured by the network criterion on the mesh it scores.
 # A phase may write its own, which wins.
-# Type: Annotated (optional) | Optional
-# tolerance = ""
-
-# How 'tolerance' is read.
-# 'relative' is a fraction of the best cost and is the usual choice for an efficiency score.
-# A criterion solved at zero, such as the stream-network gap, has no fraction of itself to take: state the width in the unit of the cost with 'absolute', for example 25 metres.
-# Unset, 'absolute' for a search scored only by network distances and 'relative' otherwise.
-# hmp calibrate --check refuses 'relative' on a search scored only by network distances.
-# Type: Literal (optional) | Optional
-# mode = "relative"
-
-
-# Single switch governing every persistence sink (catalog, Zarr, Parquet, lockfile) for calibration outputs.
-
-[calibration.persistence]
-# Persist DuckDB rows (simulations, parameters, metrics, calibration_iterations).
-# When False, catalog writes are skipped.
-# Type: bool | Default: true
-save_catalog = true
-
-# Persist per-simulation field arrays (head, concentration, derived) into the Zarr store.
-# Type: bool | Default: true
-save_zarr = true
-
-# Precision of the time-varying field arrays of fields.zarr: heads, per-cell budget terms, derived fields, concentrations.
-# 'compact' stores float32 with the mantissa rounded to nearest at 16 bits: each value moves by at most 2**-17 of itself (7.6e-6 relative, so at most 1 mm on a 130 m head and 7.6e-9 m3/s on a 1e-3 m3/s cell flux), and a daily run takes about a third of the disk.
-# 'exact' keeps every value as computed, float64.
-# Mesh geometry, topography, layer thickness, indices, coordinates and timestamps are never rounded.
-# Type: Literal['compact', 'exact'] | one of: "compact", "exact" | Default: "compact"
-field_precision = "compact"
-
-# Persist per-simulation tabular outputs (timeseries, budgets, mass_balance) as Parquet files.
-# Type: bool | Default: true
-save_parquet = true
+# hmp check refuses a share on a search scored only by network distances.
+# Type: string (optional) | Optional
+# cost_margin = ""
 
 
 # Stages run one after the other, each calibrating its own parameters and freezing them for the next.
@@ -453,27 +434,28 @@ save_parquet = true
 # description = ""
 
 # Optimization method for this phase only.
-# Unset, it follows from what the phase scores: 'bisection' when the phase moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise.
-# hmp calibrate --list-phases prints the method and why.
-# Write it to depart from that choice, and whenever method_options are given.
-# Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'lhs' (stratified Latin hypercube, sized by method_options.n_samples), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead', 'gp_mapping', 'da_mh_gp'.
-# An unknown name is refused when the optimizer is built, with the list installed here.
+# Unset, the phase runs the method [calibration] writes; failing that it follows from what the phase scores: 'bisection' when the phase moves one parameter in log space and every one of its blocks is signed (distance_gap), since the answer is then a zero to find; 'scipy_nelder_mead' otherwise, a cost to minimise.
+# hmp calibrate --list-phases prints the method and where it comes from.
+# Write it to depart from that choice, and whenever method_options are given and [calibration] writes no method.
+# Built-ins: 'grid' (regular sweep, sized by method_options.points_per_dim), 'lhs' (stratified Latin hypercube, sized by method_options.n_samples), 'random_search', 'bisection' (root of a signed criterion on one parameter, the stream-network stage), 'optuna' (TPE), 'cma_es', 'scipy_de', 'scipy_nelder_mead' and 'gp_mapping'.
+# An unknown name is refused when the file is read, with the list installed here.
 # Type: Annotated (optional) | Optional
 # method = ""
 
 # Maximum number of evaluations for this phase.
-# 'auto' lets an engine that counts its evaluations size it: the bisection budgets its worst case, and refuses before the first solve a number below its nominal count (see [calibration].max_iter).
+# Unset, the phase takes the max_trials of [calibration].
+# 'auto' lets an engine that counts its evaluations size it: the bisection budgets its worst case, the grid and the Latin hypercube their design, and each refuses before the first solve a number below its nominal count (see [calibration].max_trials).
 # Any other engine gets 100 from 'auto', and no extension when it spends them before its stopping rule.
-# Type: Union[Annotated, Literal] | Default: "auto"
-# max_iter = "auto"
+# Type: Union[Annotated, Literal, NoneType] | Optional
+# max_trials = ""
 
 # How precisely the search has to pin a parameter before it stops, as a relative precision on the parameter itself: 0.01 asks for one per cent, 0.1 for ten.
-# On a log-transformed parameter that is a ratio, which is how a conductivity is known in the first place, and it holds wherever the value sits; on any other transform there is no scale on the value to be relative to before the search has one, so it reads as a fraction of the declared interval.
+# On a parameter searched in log space that is a ratio, which is how a conductivity is known in the first place, and it holds wherever the value sits; on any other search space there is no scale on the value to be relative to before the search has one, so it reads as a fraction of the declared interval.
 # Each engine's own stopping option is written from it, so the same number survives a change of engine, and the engine's own option stays available for reproducing a published call verbatim.
-# Unset, the engine's default applies.
-# An engine that stops on its budget rather than on a precision refuses this rather than ignore it.
+# Unset, the phase takes the precision of [calibration] when its engine stops on one and the phase writes no stopping option of its own, else the engine's default applies.
+# Written here, an engine that stops on its budget rather than on a precision refuses it rather than ignore it.
 # Type: Annotated (optional) | Optional
-# tolerance = ""
+# precision = ""
 
 # Suggestions drawn per ask, at least ``parallel``.
 # Unset, the phase takes the ``batch_size`` of ``[calibration]``.
@@ -490,16 +472,23 @@ save_parquet = true
 # Type: list[str] | REQUIRED
 # parameters = []
 
+# [low, high] physical bounds this phase searches a parameter between, as {parameter = [low, high]}, in the unit the parameter declares.
+# Only parameters the phase moves, and every interval has to lie inside the bounds of [calibration.parameters.<name>] (or the range the field annotates when the section writes none): a phase narrows a search, it never widens it.
+# A parameter left out keeps the bounds of the section.
+# hmp calibrate --list-phases prints them.
+# Type: dict (optional) | Optional
+# bounds = {}
+
 # Names of the calibration outputs this phase scores on.
 # Empty means every declared output.
-# Type: list[str] | REQUIRED
+# Type: list[str] | Default: []
 # outputs = []
 
 # Objective blocks this phase evaluates.
 # Empty means every declared block.
 # A list names them and keeps their declared weight.
 # A table gives each named block the phase's own share instead, {block = share}, normalised to sum to one like a block's weight already is; every key must be a declared block, and every share must be positive.
-# Type: UnionType[list, dict] | REQUIRED
+# Type: UnionType[list, dict] | Default: []
 # objective_blocks = []
 
 # Name of the simulated variable, or of a [calibration.outputs] entry, that objective scores when this phase uses no objective block.
@@ -512,18 +501,12 @@ save_parquet = true
 # Type: Literal (optional) | Optional
 # objective = "rmse"
 
-# Observed station whose cost the optimizer minimises.
-# Every loaded gauge is already scored at its own mesh cell, on the discharge routed to that cell, and every cost is reported; naming one says which of them drives the search.
-# Required when several stations are loaded, optional with one.
-# Overrides the calibration-level value for this phase.
-# Type: string (optional) | Optional
-# observed_station_id = ""
-
 # Options of this phase's method, named as that method names them: sweep_points for 'bisection', points_per_dim for 'grid', sampler for 'optuna'.
-# They belong to one method, so a phase that gives them writes method beside them.
+# They belong to one method, so a phase that gives them writes method beside them, or runs the method [calibration] writes.
+# Unset, the phase takes the method_options of [calibration] when it runs the method that section writes, and none otherwise; an empty table states that it takes none.
 # A key the method does not take is refused when the file loads.
-# hmp calibrate --check names the phase.
-# Type: dict[str, Any] | REQUIRED
+# hmp check names the phase.
+# Type: dict (optional) | Optional
 # method_options = {}
 
 # Flow regime this phase runs, a property of the model and not of the search.
@@ -540,24 +523,27 @@ save_parquet = true
 
 # Configuration values this phase runs with, as dotted paths into the project configuration.
 # A phase that gives regime may not write here a path regime writes: that would say the same thing twice.
-# Type: dict[str, Any] | REQUIRED
+# Type: dict[str, Any] | Default: {}
 # overrides = {}
 
-# Dates bounding the samples this phase scores on, replacing [calibration].scoring_window.
+# Dates bounding the samples this phase scores on, replacing [calibration].window.
 # start = the first date scored leaves a spin-up out of every block alike.
 # A network output read in one state is dated at the stamp of that state, which has to lie inside the window.
-# Type: CalibScoringWindow (optional) | Optional
-# scoring_window = ""
+# Type: CalibWindow (optional) | Optional
+# window = ""
 
 # Name of the phase that must run first.
 # The values it passes on enter this one fixed, except those this phase lists and moves again.
+# When that phase freezes its values and its search stops on its budget before a rule of its own, this phase is refused rather than run on the values of the file.
 # Type: string (optional) | Optional
 # depends_on = ""
 
 # Pass the values this phase found to the phases after it.
 # A later phase holds them fixed, unless it lists the parameter: it then moves it again, starting from the passed value when its method accepts a start point.
 # When two phases pass on the same parameter, the later one wins.
-# Success means the phase converged, not that its validity indicator is good.
+# Success means the search met its own rule or solved every point of its plan, not that its validity indicator is good.
+# A search with no rule of its own (random_search, cma_es) that spends its budget also passes on its best trial, and the phase says it froze the best of a budget-only search.
+# One with a rule that its budget stops first passes nothing on.
 # Type: bool | Default: true
 # freeze_on_success = true
 
@@ -577,7 +563,7 @@ save_parquet = true
 # name = ""
 
 # Metric that scores this block against its observations.
-# Type: Literal['rmse', 'nse', 'kge', 'mae', 'nse_log', 'nse_delta', 'nse_seasonal', 'reservoir', 'distance_gap', 'distance_mean'] | one of: "rmse", "nse", "kge", "mae", "nse_log", "nse_delta", "nse_seasonal", "reservoir", "distance_gap", "distance_mean" | Default: "rmse"
+# Type: Literal['rmse', 'nse', 'kge', 'mae', 'nse_log', 'nse_delta', 'nse_seasonal', 'reservoir', 'distance_gap', 'distance_mean'] | one of: "rmse", "nse", "kge", "mae", "nse_log", "nse_delta", "nse_seasonal", "reservoir", "distance_gap", "distance_mean" | REQUIRED
 # metric = "rmse"
 
 # Weight of this block in the sum of the block costs.
@@ -586,18 +572,20 @@ save_parquet = true
 # weight = 1.0
 
 # Outputs (by name) consumed by this block.
+# An error metric (rmse, mae) or a network distance may read several, pooled into one cost.
+# A metric that rises with the fit (nse, kge and the other efficiencies) reads exactly one: write one block per output, each with its weight, so the costs average per station.
 # Type: list[str] | REQUIRED
 # uses_outputs = []
 
 # When True, divide the block cost by a reference scale, so it adds to other blocks as a pure number and a share means a share.
-# On a residual metric (rmse, mae) the scale is the standard deviation of the observations, their mean absolute value when that is zero.
+# On a residual metric (rmse, mae) the scale is the standard deviation of the observations, their mean absolute value if that is zero.
 # On a network distance (distance_gap, distance_mean) it is the output's validity_length, 2 h_obs under 'auto': a gap of one validity length costs 1, as much as an NSE of 0 on nse_log.
 # Refused on an efficiency score, already a pure number.
 # Type: bool | Default: false
 # normalize_cost = false
 
-# Per-block cost transform applied before weighting.
-# Note that transform='log' takes the logarithm of the cost, which is not the same thing as metric='nse_log', an NSE computed on log-transformed series.
+# Transform applied to the cost of this block before weighting.
+# Note that cost_transform='log' takes the logarithm of the cost, which is not the same thing as metric='nse_log', an NSE computed on log-transformed series.
 # Type: Literal['identity', 'log', 'inverse'] | one of: "identity", "log", "inverse" | Default: "identity"
-# transform = "identity"
+# cost_transform = "identity"
 

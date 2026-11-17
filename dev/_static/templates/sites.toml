@@ -1,0 +1,147 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: edition, sites
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# The catchments of a project and the recipes run on each of them.
+# ----------------------------------------------------------------------
+
+[sites]
+# Site table, one row per catchment: CSV, Parquet or GeoPackage, relative to the project root.
+# Its columns are free and reach the config through [sites.bind].
+# Unset, the plan reads data/sites/catalog.csv of the workspace, whose columns are fixed and need no bind.
+# Type: path (optional) | Optional | Examples: "sites.csv"
+# table = ""
+
+# Recipe table, one row per recipe: a CSV with a mandatory 'recipe' column; its other columns are bound by [sites.bind] like the site table.
+# A column present in both tables is refused.
+# Type: path (optional) | Optional | Examples: "recipes.csv"
+# recipes_table = ""
+
+# Boolean column of the site table; unset, every row is a site of the plan.
+# Type: string (optional) | Optional | Examples: "enabled"
+# enabled = ""
+
+# Site names the plan keeps; empty, every site.
+# Type: list[str] | Default: []
+include = []
+
+# Site names the plan leaves out.
+# Type: list[str] | Default: []
+exclude = []
+
+# Folder of per-site overlays, relative to the project root: <folder>/<site>.toml is applied to every case of that site when it exists.
+# Type: path (optional) | Optional | Examples: "site_overrides/"
+# overrides = ""
+
+# Recipes run on every site, by name: a TOML file, or an inline table { file = "...", set = { "<dotted.key>" = value } }.
+# The case of a site and a recipe is named <site>-<recipe>.
+# A name is letters, digits and underscores.
+# Unset, the file that declares [sites] is the only recipe.
+# Type: dict[str, pathlib._local.Path | hydromodpy.config.sites.RecipeSpec] | Default: {} | Examples: {base = "project.toml", calibration = "calibration.toml"}
+
+# Config keys filled from table columns: a quoted dotted path, the grammar of hmp run --set without index, mapped to a column, or to a list of columns for a list key.
+# The cell is read by the type of the target field; an empty cell leaves the key unbound.
+# Type: dict[str, str | list[str]] | Default: {} | Examples: {"geographic.catchment.x_outlet" = "x_outlet"}
+# bind: entries go under [sites.bind.<id>]
+
+
+# Example entry, one [sites.recipes.<id>] table per entry.
+# [sites.recipes.<id>]
+# TOML file the recipe starts from, relative to the project root.
+# The resolved file is the case before the keys of 'set' are applied.
+# Type: path | REQUIRED | Examples: "project.toml"
+# file = ""
+# Keys this recipe writes on top of its file, as quoted dotted paths ("flow.param.K.field.value" = 2e-5), the grammar of hmp run --set, without index.
+# They are the recipe's own keys: they win over the site table and the site overlays.
+# Type: dict[str, Any] | Default: {} | Examples: {"flow.param.K.field.value" = 2e-05}
+# set = {}
+
+
+# How the cases run side by side.
+
+[sites.run]
+# Total budget of solves that run side by side.
+# A case whose [calibration] parallel is 5 takes 5 of it.
+# The default is 8 because the throughput levelled off from 8 runs side by side on 22 cores, each run holding up to 1.2 GiB.
+# Above 16 the launcher refuses without --force (16 runs held 14 GiB), and above 8 for a campaign that holds a calibration.
+# Type: int | >= 1 | Default: 8 | Examples: 8
+parallel = 8
+
+# What a failed case does to the launch.
+# Type: Literal['warn', 'raise'] | one of: "warn", "raise" | Default: "warn"
+on_error = "warn"
+
+
+# What summary/ tabulates and draws.
+
+[sites.summary]
+# Metrics of each case put in the summary tables, scored by the metric rule.
+# Type: list[str] | Default: ["nse"] | Examples: ["nse", "kge"]
+metrics = ["nse"]
+
+# Metric that ranks the cases of a site to pick its best one, by the direction of the metric.
+# The nse is always a column of the tables; any other one must be in metrics.
+# The order of metrics does not choose it.
+# Type: string | Default: "nse" | Examples: "kge"
+rank_by = "nse"
+
+# Parameters of each case put in the summary tables, calibrated or set.
+# Type: list[str] | Default: [] | Examples: ["K", "Sy"]
+parameters = []
+
+# Cohort figures drawn under summary/figures/<figure>_<variable>.png: map, distribution.
+# Type: list[str] | Default: [] | Examples: ["map", "distribution"]
+figures = []
+
+# Metric or parameter, or a list of them, the cohort figures map and distribute.
+# Type: list[str] | Default: [] | Examples: ["K", "nse"]
+variable = []
+
+# Which case of a site the by-site table keeps as its best.
+# Type: Literal['calibrated', 'any'] | one of: "calibrated", "any" | Default: "calibrated"
+best = "calibrated"
+
+# Extra columns read from the manifest.json of each run, as dotted paths without index (checks.budget_pct, metrics.nse).
+# Type: list[str] | Default: [] | Examples: ["checks.budget_pct", "checks.converged"]
+columns = []
+
+
+# Exports of the project, one [[sites.export]] block each, under summary/exports/.
+# Example entry, one [[sites.export]] block per entry.
+# [[sites.export]]
+# Summary table to export.
+# Write table or runs, not both.
+# Type: Literal (optional) | Optional
+# table = "by_site"
+
+# Runs whose variables are exported: the best case of each site.
+# Type: Literal (optional) | Optional
+# runs = "best"
+
+# Variable, or a list of them, exported from each run, with runs = 'best'.
+# Type: list[str] | Default: [] | Examples: ["discharge"]
+# variable = []
+
+# File format of the export, csv unless another is named.
+# Type: string | Default: "csv" | Examples: "csv"
+# format = "csv"
+
+# For a table, the file name under summary/exports/ (unset: <table>.<format>); for runs = 'best', the folder of the series (unset: best).
+# Type: string (optional) | Optional
+# file = ""
+
