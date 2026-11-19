@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="The register is the file hydromodpy/schema/changes.toml. One row says one change that a reader of an older run or an older file has to know about. The code reads the same rows that this page lists...." />
 
-    <meta property="article:modified_time" content="2026-11-16T22:06:52+01:00" />
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
     <title>Register of changes &#8212; HydroModPy 2.0.0</title>
   
   
@@ -82,7 +82,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-16"/>
+    <meta name="docbuild:last-update" content="2026-11-19"/>
   </head>
   <body data-default-mode="auto">
   
@@ -789,6 +789,12 @@ that names every such key of the file, as <a class="reference internal" href="..
 <td><p>fields&#64;network_agreement, fields&#64;downslope_distance</p></td>
 <td><p>The fields network_agreement and downslope_distance of a run compared the simulated network with the complete map, whatever map the calibration scored. They now read the map in the cost of the sealed output, the permanent one under map.calibrate_on = “permanent”. On a run that sealed several network outputs they read the output and the window of the phase that promoted it, where they read the first output. On a 64.6 km2 catchment calibrated on the permanent map, the cells mapped only go from 966 to 128, the count of the best trial. No sealed number moves, the two fields are rebuilt when read.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">staged_trials_solved_at_the_k_of_the_file</span></code></p></td>
+<td><p>2.0.0</p></td>
+<td><p>&gt;=2.0.0a5,&lt;=2.0.0rc1</p></td>
+<td><p>heads&#64;modflow6, fluxes&#64;modflow6, heads&#64;modflow_nwt, fluxes&#64;modflow_nwt, heads&#64;boussinesq, fluxes&#64;boussinesq, heads&#64;linear_reservoir, fluxes&#64;linear_reservoir, metrics</p></td>
+<td><p>In a staged calibration, a phase that samples property profiles only built its model once, before the values an earlier phase froze were written, and each trial rebuilt only the profiles it sampled. So the trials of the later phase, and a run promoted from a kept solve, solved at the value of the file while config.resolved.toml showed the frozen one. Each trial now rebuilds the frozen profiles too, and a frozen value that is no profile builds the model per trial. On example 04 with K frozen at 1.006e-4 m/s, the Sy stage solved at the 5e-5 m/s of project.toml and found Sy 0.0266 with NSE 0.962; at the frozen K it finds Sy 0.0253 with NSE 0.958. The phase scored on heads and the one scored on crossings gave the same Sy trials to the last digit, they now differ.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1358,6 +1364,18 @@ a refusal, the label of a run, the identity of a run or the layout of its folder
 <td><p>none</p></td>
 <td><p>hmp export –regen figures skips a figure that figures/index.json records from a figure of a pre-release, with the command that draws it now, and draws the other entries. It used to redraw it from its old options.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">geotiff_resolution_in_the_output_crs</span></code></p></td>
+<td><p>2.0.0</p></td>
+<td><p>layout</p></td>
+<td><p>none</p></td>
+<td><p>A GeoTIFF of a field exported into another CRS reads resolution in the units of that CRS, as the reference says. The mesh is rasterized at its own pixel, the side of its smallest cell, then reprojected onto pixels of resolution. resolution was applied in the units of the model CRS before the reprojection, so resolution = 0.0005 with crs = “EPSG:4326” asked for 23 100 000 by 20 850 000 pixels on a 120 km2 model and the export failed. An export in the model CRS does not change. No value of a run changes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">figures_after_a_failed_export</span></code></p></td>
+<td><p>2.0.0</p></td>
+<td><p>layout</p></td>
+<td><p>none</p></td>
+<td><p>An export that fails after the seal no longer stops the figures: they are drawn, then the run exits with the export error. A figure with engine = [“static”, “interactive”] writes its PNG and its HTML page during a run, where it wrote the PNG alone. A series of one period, on a steady run or in a window of one month, is skipped with its reason, where it drew an empty panel. hmp show &lt;run&gt; –figure &lt;name&gt; –time &lt;date&gt; draws that date and records it in figures/index.json, where it drew the default instant. No value of a run changes.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1434,186 +1452,192 @@ line. A key that left is refused at once, with what to write instead.</p>
 <td><p>-</p></td>
 </tr>
 <tr class="row-even"><td><p>config</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data.dem.sources[*].dataset</span> <span class="pre">(left)</span></code></p></td>
+<td><p>2.0.0</p></td>
+<td><p>2.0.0</p></td>
+<td><p>The IGN DEM is two sources now. In a row of data.dem.sources, in place of source = “ign_geoplateforme_dem” and dataset, write source = “bdalti” for the 25 m BD ALTI, or source = “rgealti” with resolution_m = 5 or 1 for the RGE ALTI. `hmp doctor –fix-config` rewrites it.</p></td>
+</tr>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt.parameters</span> <span class="pre">-&gt;</span> <span class="pre">transport.modflow6</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.modflow6prt.parameters</span> <span class="pre">-&gt;</span> <span class="pre">transport.modflow6_prt</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.mt3dms.parameters</span> <span class="pre">-&gt;</span> <span class="pre">transport.mt3dms</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.modpath.parameters</span> <span class="pre">-&gt;</span> <span class="pre">transport.modpath</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>fields</p></td>
+<tr class="row-odd"><td><p>fields</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">concentration</span> <span class="pre">-&gt;</span> <span class="pre">concentration.{*}</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulation.process[*].type</span> <span class="pre">-&gt;</span> <span class="pre">simulation.process[*].kind</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">solver.backend.name</span> <span class="pre">-&gt;</span> <span class="pre">solver.backend</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.modflow6gwt</span> <span class="pre">-&gt;</span> <span class="pre">transport.modflow6</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transport.modflow6prt</span> <span class="pre">-&gt;</span> <span class="pre">transport.modflow6_prt</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">calibration.forward_model</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>A forward model is a solver backend since 2.0.0: name it by solver.backend, register it in the hydromodpy.solver entry-point group, and calibrate it with the pipeline evaluator. evaluator = “scored_forward_model” leaves with it.</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">geographic.reuse_existing_outputs</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>The terrain cache is the product store under .hmp/products/ since 2.0.0, and a rerun reads it without a switch. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">geographic.reg_fold</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>The regional flow folder is the terrain product since 2.0.0. To reuse a conditioned DEM between projects, declare state = “conditioned” on its [data.dem.sources] entry. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-even"><td><p>manifest</p></td>
+<tr class="row-odd"><td><p>manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">identity.config_hash</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>identity.config_hash carried the solution key of the run. Identity.solution_key and Identity.request_id carry it since 2.0.0. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-odd"><td><p>manifest</p></td>
+<tr class="row-even"><td><p>manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">config.hash</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>The hash of the configuration is Identity.solution_key since 2.0.0, which also carries the code, the solver binaries and the key package versions. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-even"><td><p>manifest</p></td>
+<tr class="row-odd"><td><p>manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifacts[*].role:</span> <span class="pre">&quot;other&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;inputs&quot;</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>identity</p></td>
+<tr class="row-even"><td><p>identity</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">config_hash</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>Identity.solution_key and Identity.request_id carry the solution key of the run since 2.0.0. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-even"><td><p>job.manifest</p></td>
+<tr class="row-odd"><td><p>job.manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">job_id</span> <span class="pre">-&gt;</span> <span class="pre">request_id</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>job.manifest</p></td>
+<tr class="row-even"><td><p>job.manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifacts[*].mediaType</span> <span class="pre">-&gt;</span> <span class="pre">artifacts[*].media_type</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>job.manifest</p></td>
+<tr class="row-odd"><td><p>job.manifest</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">schema</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>-</p></td>
 <td><p>A job seal carries manifest_version = 4 and profile = “job” since 2.0.0, and each artifact names its role. A sealed run drops it.</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.lakes.{*}.stageinit</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>stageinit was renamed initial_stage. Write initial_stage = “&lt;stage&gt; m” under [flow.sinks_sources.lakes.&lt;name&gt;], the stage of the lake at the start of the run.</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.figures</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Write one [[display.figure]] table per figure, with variable = “&lt;name&gt;” or preset = “&lt;name&gt;”. The page “Figure requests” lists what replaces each former figure name, and hmp config figures lists the variables and presets.</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.overrides</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Write the options in the [[display.figure]] table of that figure, as panel fields (time, layer, scale, overlays, station).</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.preset</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Write theme = “&lt;name&gt;” (default, print or dark).</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.cmap</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Each variable takes the colour ramp of its quantity. Delete the line.</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.backend</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Figures are drawn on their own canvas, without pyplot. Delete the line. engine = [“interactive”] in a [[display.figure]] asks for the interactive engine.</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.show</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>No window opens at the end of a run. Delete the line, and draw a figure in Python with run.figure(…) to see it.</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.save</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Every [[display.figure]] is written under runs/&lt;run&gt;/figures/. Delete the line. formats chooses the files, enabled = false draws nothing.</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">display.time</span> <span class="pre">(left)</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.0.0</p></td>
 <td><p>Write time in each [[display.figure]] that draws one instant, for example time = “2002-10-15”.</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">export[*].variables</span> <span class="pre">-&gt;</span> <span class="pre">export[*].variable</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-odd"><td><p>config</p></td>
+<tr class="row-even"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sites.export[*].variables</span> <span class="pre">-&gt;</span> <span class="pre">sites.export[*].variable</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
 <td><p>-</p></td>
 </tr>
-<tr class="row-even"><td><p>config</p></td>
+<tr class="row-odd"><td><p>config</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sites.summary.variables</span> <span class="pre">-&gt;</span> <span class="pre">sites.summary.variable</span></code></p></td>
 <td><p>2.0.0</p></td>
 <td><p>2.2.0</p></td>
@@ -1716,7 +1740,7 @@ line. A key that left is refused at once, with what to write instead.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-16.
+  Last updated on 2026-11-19.
 </p></div>
       
     </div>

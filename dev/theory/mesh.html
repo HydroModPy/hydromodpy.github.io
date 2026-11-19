@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="The cell size around a river, in plan and against the distance to the river." />
 <meta name="description" content="The solver does not see the DEM. It sees cells, each with one top, one bottom and one center. This page explains how the code builds these cells from the DEM and how it checks them. The chain in on..." />
 
-    <meta property="article:modified_time" content="2026-11-17T02:35:40+01:00" />
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
     <title>The mesh &#8212; HydroModPy 2.0.0</title>
   
   
@@ -86,7 +86,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-17"/>
+    <meta name="docbuild:last-update" content="2026-11-19"/>
   </head>
   <body data-default-mode="auto">
   
@@ -883,15 +883,15 @@ step needs the catchment, it reads the cells against this outline: the polygon f
 discharge support, the catchment area fraction, the outlet search of the build and the polygon
 mask of the network criterion. Without a smoothed outline these steps read the delineated
 polygon.</p>
-<p>On example 04 (DEM of 75 m, catchment of 64.6 km²), the outline goes from 423 to 160 vertices.
-The area moves by -0.08 % and no point moves by more than 0.81 pixel. With the catchment as the
-domain and a <code class="docutils literal notranslate"><span class="pre">cell_size</span></code> of 100 m, the Voronoi cells with an isoperimetric quotient under 0.6
-(4π times the area over the squared perimeter) go from 118 to 5 out of about 7300. On the
-<code class="docutils literal notranslate"><span class="pre">triangle</span></code> engine the gain shows with the buffer as the domain. The mesh goes from 27 918 to
-24 002 cells, and the triangles with a corner under 20 degrees from 144 to 0. With the catchment
-or a box as the domain, the count barely changes, and a few triangles stay along the outline
-(4 under 20 degrees out of 21 000 on example 04). A cell that touches the outline can change
-side on a band of 0.8 pixel at most.</p>
+<p>On example 04 (DEM of 75 m, catchment of 64.6 km²), the outline goes from 421 to 160 vertices.
+The area moves by -0.05 % and no point moves by more than 0.81 pixel. With the catchment as the
+domain, a <code class="docutils literal notranslate"><span class="pre">cell_size</span></code> of 100 m and no river in the mesh, the Voronoi cells with an isoperimetric
+quotient under 0.6 (4π times the area over the squared perimeter) go from 114 to 6 out of about
+6500. On the <code class="docutils literal notranslate"><span class="pre">triangle</span></code> engine the gain shows with the buffer as the domain. The mesh goes from
+8815 to 8027 cells, and the triangles with a corner under 20 degrees from 61 to 0. With the
+catchment as the domain the count falls from 7263 to 6673 cells, with a box it does not move, and
+neither has a corner under 20 degrees. A cell that touches the outline can change side on a band
+of 0.8 pixel at most.</p>
 </section>
 <section id="the-size-field">
 <h3>The size field<a class="headerlink" href="#the-size-field" title="Link to this heading">#</a></h3>
@@ -1181,7 +1181,7 @@ calibration read the same cell (<a class="reference internal" href="solvers.html
 <span id="three-sizes-read-in-order"></span><h2>Three sizes, read in order<a class="headerlink" href="#mesh-budget" title="Link to this heading">#</a></h2>
 <p>Three keys speak of a size, and each one reads the one before it.</p>
 <ol class="arabic simple">
-<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/data/dem.html#p-data-dem-sources-resolution_m" title="DEM pixel size in metres, the size a provider serves. (m)"><code class="docutils literal notranslate"><span class="pre">resolution_m</span></code></a> asks a provider for a pixel. With a DEM
+<li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/data/dem.html#p-data-dem-sources-resolution_m" title="DEM pixel size in metres, 1 or 5, 5 when unset, the size the WMS-Raster serves. (m)"><code class="docutils literal notranslate"><span class="pre">resolution_m</span></code></a> asks a provider for a pixel. With a DEM
 file, the file has its own pixel and this key does not apply.</p></li>
 <li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/geographic.html#p-geographic-catchment-dem_resolution" title="Cell size the DEM is aggregated to before anything is delineated, a length ('75 m', a bare number in metres). (m)"><code class="docutils literal notranslate"><span class="pre">dem_resolution</span></code></a> aggregates that pixel before anything
 is delineated. It cannot be finer than the pixel of the DEM: the run refuses it. The routing
@@ -1216,8 +1216,8 @@ holds every engine to 10 % of the expected count on a uniform size. With lines t
 <code class="docutils literal notranslate"><span class="pre">triangle</span></code> engine stays above the integral (<a class="reference internal" href="#mesh-triangle"><span class="std std-ref">3. The triangle engine</span></a>). On the Flume, with cells of
 25 m along the rivers in a background of 150 m, the count over the integral is 1.00 for <code class="docutils literal notranslate"><span class="pre">voronoi</span></code>
 and 1.35 for <code class="docutils literal notranslate"><span class="pre">triangle</span></code>.</p>
-<p>Example 04 declares no <code class="docutils literal notranslate"><span class="pre">[mesh]</span></code> section. The header of <code class="docutils literal notranslate"><span class="pre">step1_minimal.toml</span></code> counts 21406 cells
-of 75 m, about <span class="math notranslate nohighlight">\(120\ \mathrm{km^2}\)</span>, and does not say if the inactive cells are in. The same
+<p>Example 04 declares no <code class="docutils literal notranslate"><span class="pre">[mesh]</span></code> section. Its box holds 172 by 157 cells of 75 m, 27004 cells and
+about <span class="math notranslate nohighlight">\(152\ \mathrm{km^2}\)</span>, inactive cells included. The same
 count means a <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh.html#p-mesh-cell_size" title="Cell size in metres, the side of the square of the same mean area as the cells, whatever the engine: a domain of area A gets about A / cell_size^2 cells, and a regular, a triangle and a voronoi cell of this size have about the same area. (m)"><code class="docutils literal notranslate"><span class="pre">mesh.cell_size</span></code></a> of 75 m for each engine, with Voronoi generators about 81 m
 apart and triangles of about 114 m. A real mesh refines near the interfaces, so the count of a
 run is the <span class="math notranslate nohighlight">\(\mathrm{ncpl}\)</span> of its DISV file. Also, <span class="math notranslate nohighlight">\(N_S\)</span> counts the whole raster box, while a
@@ -1316,11 +1316,10 @@ the polygon within -0.03 % (standard deviation 0.13 %) for a radius of 3 km, and
 neighboring cells, and give -0.67 % and -2.0 %.</p>
 <p>On example 04 the polygon is the staircase of the DEM, so it cuts no cell of the grid and every
 share is 0 or 1. The totals still differ a little from the budget line, because the basin of D
-and the polygon disagree on whole cells. The basin holds 34 cells outside the polygon (0.19 km²),
-and the polygon holds 8 cells outside the basin (0.045 km²). The recharge over the catchment is
-0.23 % below the line of the budget, and the seepage 1.2 % below, mostly through river cells near
-the outlet that the polygon leaves out. A cut cell needs a triangle or a Voronoi mesh, or a grid
-coarser than the DEM.</p>
+and the polygon disagree on whole cells. The basin holds 13 cells outside the polygon (0.073 km²),
+and the polygon holds 12 cells outside the basin (0.068 km²). The recharge over the catchment is
+0.01 % below the line of the budget, and the seepage is equal to it within 0.01 %. A cut cell
+needs a triangle or a Voronoi mesh, or a grid coarser than the DEM.</p>
 <p>A synthetic domain has no catchment polygon and no outlet. It stores no share, its basin of D
 is the largest basin of the domain, and <code class="docutils literal notranslate"><span class="pre">budget_over</span></code> without a polygon and <code class="docutils literal notranslate"><span class="pre">catchment_mean</span></code> refuse it.</p>
 </section>
@@ -1625,7 +1624,7 @@ on the next build.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-17.
+  Last updated on 2026-11-19.
 </p></div>
       
     </div>

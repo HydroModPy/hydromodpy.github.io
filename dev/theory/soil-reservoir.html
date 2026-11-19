@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Mean annual recharge and evapotranspiration against the soil capacity, from 0 to 300 mm. Recharge falls from about 670 to 275 mm per year, evapotranspiration rises from about 235 to 630; the rain is 904 mm per year." />
 <meta name="description" content="The soil reservoir turns the daily rain and ETP of a grid into the recharge of a MODFLOW 6 run. It is a water balance with one store per column. The store fills with the rain, loses water to the pl..." />
 
-    <meta property="article:modified_time" content="2026-11-10T20:26:03+01:00" />
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
     <title>The daily soil reservoir &#8212; HydroModPy 2.0.0</title>
   
   
@@ -86,7 +86,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-10"/>
+    <meta name="docbuild:last-update" content="2026-11-19"/>
   </head>
   <body data-default-mode="auto">
   
@@ -557,8 +557,8 @@ run. It is a water balance with one store per column. The store fills with the r
 water to the plants, and sends down what exceeds its capacity. This page gives the equations
 of <code class="docutils literal notranslate"><span class="pre">hydromodpy/model/soil/kernel.py</span></code>, what they assume and what they
 leave out. Only MODFLOW 6 accepts the reservoir, so a file that declares
-<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.soil</span></code></a> with another solver is refused. To set up a run, see
-<a class="reference internal" href="../get-started/staircase/step6.html"><span class="doc">step 6 of the staircase</span></a>.</p>
+<a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.soil</span></code></a> with another solver is refused. The reference page of
+that section lists every key a run sets.</p>
 <section id="the-water-path">
 <h2>The water path<a class="headerlink" href="#the-water-path" title="Link to this heading">#</a></h2>
 <figure class="hmp-theory-figure" style="margin:1.2rem 0">
@@ -945,9 +945,9 @@ O_t = I_t - (R_t - R_{t-1}),\]</div>
 and <span class="math notranslate nohighlight">\(\tau = 0\)</span> gives <span class="math notranslate nohighlight">\(O_t = I_t\)</span>. The limit of 30 days leaves the slow response to MODFLOW 6. One
 constant applies to the whole catchment, whatever the depth of the water table.</p>
 <p>On example 04, 2016 to 2020, with K = 3.16e-5 m/s and Sy = 0.04, a delay of 5 days raises the NSE
-of the daily discharge from 0.57 to 0.79 and moves the July to September bias from +0.006 to
-+0.015 m3/s. A delay of 30 days, run at the monthly step, brings that bias from 0.000 to
-+0.058 m3/s, so the summer floor comes back.</p>
+of the daily discharge from 0.58 to 0.79 and moves the July to September bias from -0.002 to
++0.007 m3/s. A delay of 30 days, run at the monthly step, brings that bias from -0.007 to
++0.050 m3/s, so the summer floor comes back.</p>
 </section>
 <section id="routing-and-delay-of-the-runoff">
 <h3>Routing and delay of the runoff<a class="headerlink" href="#routing-and-delay-of-the-runoff" title="Link to this heading">#</a></h3>
@@ -1122,8 +1122,8 @@ grid.</p>
 table. This needs a [flow.sinks_sources.etp] table. The rate falls linearly to zero at
 <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp-extinction_depth" title="Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth. (m)"><code class="docutils literal notranslate"><span class="pre">extinction_depth</span></code></a> below the drain elevation of the
 cell. The default of 2 m is our choice, and this depth matters for the low flows. On example 04,
-from 1 m to 2 m, the July to September bias of the discharge goes from +0.017 to 0.000 m3/s and the
-lowest monthly flow of 2019 from 0.174 to 0.151 m3/s, for 0.153 gauged.</p>
+from 1 m to 2 m, the July to September bias of the discharge goes from +0.009 to -0.007 m3/s and the
+lowest monthly flow of 2019 from 0.167 to 0.147 m3/s, for 0.153 gauged.</p>
 <p>The runoff goes where a loaded runoff would go, to the stream networks, the lakes and the discharge
 that a calibration compares with the gauge. A file that also loads a runoff through
 <a class="hmp-toml-ref reference external" href="../reference/parameters/data/index.html#p-data-types" title="Ordered list of data variables explicitly requested in [data]."><code class="docutils literal notranslate"><span class="pre">data.types</span></code></a> is refused, because the same water would count twice.</p>
@@ -1142,18 +1142,20 @@ ru = &quot;150 mm&quot;
 # runoff_time = 1.0
 # runoff_lag = 0.0
 # spinup = &quot;first_year&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/flow/sinks_sources/etp.html#p-flow-sinks_sources-etp">[flow.sinks_sources.etp]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="flow.sinks_sources.etp.extinction_depth"><summary><span class="tl-code"><span class="cm"># </span><span class="k">extinction_depth</span><span class="eq"> = </span><span class="v">2.0</span></span><span class="tl-note"><span class="tl-sum">Depth (m) below the EVT surface where the water table stops evaporating; the rate falls linearly between the surface and this depth.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-cal">calibrable</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.sinks_sources.etp.extinction_depth</code> <button class="hmp-copy" type="button" data-copy="flow.sinks_sources.etp.extinction_depth" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-sinks_sources-etp-extinction_depth" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>2 m by default, a choice: this depth often reaches the deepest roots, and 150 mm of soil capacity means about 1 to 2 m of them. Read by MODFLOW-NWT, and by MODFLOW 6 in soil mode for the ETP the soil left unmet. Calibrate it with [<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name">calibration.parameters.extinction_depth</a>]; the range belongs to the site, so a file has to state it.</p></dd><dt>Accepted</dt><dd>number or &quot;&lt;n&gt; m&quot; <span class="hmp-muted">(a bare number is read in the canonical unit)</span></dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd><dt>Calibration</dt><dd>yes, search space identity, sampling uniform, bounds belong to the site: write them in <a class="hmp-toml-ref" href="../reference/parameters/calibration/parameters.html#p-calibration-parameters-name-bounds"><code>calibration.parameters.&lt;name&gt;.bounds</code></a></dd></dl></div></details></div><pre class="tb-src" hidden>[flow.sinks_sources.etp]
-# extinction_depth = 2.0</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div><p>A soil section with every key and a curve number. Its keys link to their card.</p>
-<div class="hmp-toml-wrap"><pre class="hmp-toml"><span class="ln">1</span><span class="mk mk-none"></span><span class="h">[<a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only.">flow.sinks_sources.recharge.soil</a>]</span><span class="c"></span>
-<span class="ln">2</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-ru" title="Available water capacity of the soil, in mm of water: what the roots can draw between field capacity and wilting point. (mm)">ru</a></span> = <span class="s">&quot;150 mm&quot;</span><span class="c"></span>
-<span class="ln">3</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-alpha" title="Share of ru above which the soil evaporates at the full rate kc x ETP. (-)">alpha</a></span> = <span class="n">0.45</span><span class="c"></span>
-<span class="ln">4</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-kc" title="Crop coefficient applied to the loaded ETP: the soil evaporates at most kc x ETP a day. (-)">kc</a></span> = <span class="n">1.0</span><span class="c"></span>
-<span class="ln">5</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-impervious_fraction" title="Share of the area that is sealed (roofs, roads). (-)">impervious_fraction</a></span> = <span class="n">0.0</span><span class="c"></span>
-<span class="ln">6</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-bypass_fraction" title="Share of the rain on the unsealed area that skips the soil through macropores and joins the recharge the same day, even when the soil is dry. (-)">bypass_fraction</a></span> = <span class="n">0.0</span><span class="c"></span>
-<span class="ln">7</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-transit_time" title="Mean time the water leaving the soil takes to cross the unsaturated zone down to the water table, in days. (day)">transit_time</a></span> = <span class="s">&quot;3 days&quot;</span><span class="c"></span>
-<span class="ln">8</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-curve_number" title="SCS curve number (AMC II), dimensionless, of a HELP-style surface runoff (Schroeder et al. 1994): the unsealed share of the rain above a daily retention loses some to a fast runoff, more as the soil is wetter. (-)">curve_number</a></span> = <span class="n">78</span><span class="c"></span>
-<span class="ln">9</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-runoff_time" title="Time constant of the linear reservoir that routes the curve-number runoff to the outlet, in days. (day)">runoff_time</a></span> = <span class="s">&quot;1 day&quot;</span><span class="c"></span>
-<span class="ln">10</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-runoff_lag" title="Pure delay applied to the routed curve-number runoff, after runoff_time, before it reaches the gauged discharge: the travel time to the outlet plus any lag between the forcing&#x27;s daily step and the gauge&#x27;s. (day)">runoff_lag</a></span> = <span class="s">&quot;0.5 days&quot;</span><span class="c"></span>
-<span class="ln">11</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-spinup" title="State of the soil on the first day.">spinup</a></span> = <span class="s">&quot;first_year&quot;</span><span class="c"></span></pre></div></section>
+# extinction_depth = 2.0</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div><p>A soil section with every key and a curve number. Its keys link to their card. A run that
+declares it also reads the rain and the ETP in <code class="docutils literal notranslate"><span class="pre">[data]</span></code>, and no recharge.</p>
+<div class="hmp-toml-wrap"><pre class="hmp-toml"><span class="ln">1</span><span class="mk"></span><span class="c"># not checked: the section alone, without the rain and the ETP it reads</span>
+<span class="ln">2</span><span class="mk mk-none"></span><span class="h">[<a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only.">flow.sinks_sources.recharge.soil</a>]</span><span class="c"></span>
+<span class="ln">3</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-ru" title="Available water capacity of the soil, in mm of water: what the roots can draw between field capacity and wilting point. (mm)">ru</a></span> = <span class="s">&quot;150 mm&quot;</span><span class="c"></span>
+<span class="ln">4</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-alpha" title="Share of ru above which the soil evaporates at the full rate kc x ETP. (-)">alpha</a></span> = <span class="n">0.45</span><span class="c"></span>
+<span class="ln">5</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-kc" title="Crop coefficient applied to the loaded ETP: the soil evaporates at most kc x ETP a day. (-)">kc</a></span> = <span class="n">1.0</span><span class="c"></span>
+<span class="ln">6</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-impervious_fraction" title="Share of the area that is sealed (roofs, roads). (-)">impervious_fraction</a></span> = <span class="n">0.0</span><span class="c"></span>
+<span class="ln">7</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-bypass_fraction" title="Share of the rain on the unsealed area that skips the soil through macropores and joins the recharge the same day, even when the soil is dry. (-)">bypass_fraction</a></span> = <span class="n">0.0</span><span class="c"></span>
+<span class="ln">8</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-transit_time" title="Mean time the water leaving the soil takes to cross the unsaturated zone down to the water table, in days. (day)">transit_time</a></span> = <span class="s">&quot;3 days&quot;</span><span class="c"></span>
+<span class="ln">9</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-curve_number" title="SCS curve number (AMC II), dimensionless, of a HELP-style surface runoff (Schroeder et al. 1994): the unsealed share of the rain above a daily retention loses some to a fast runoff, more as the soil is wetter. (-)">curve_number</a></span> = <span class="n">78</span><span class="c"></span>
+<span class="ln">10</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-runoff_time" title="Time constant of the linear reservoir that routes the curve-number runoff to the outlet, in days. (day)">runoff_time</a></span> = <span class="s">&quot;1 day&quot;</span><span class="c"></span>
+<span class="ln">11</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-runoff_lag" title="Pure delay applied to the routed curve-number runoff, after runoff_time, before it reaches the gauged discharge: the travel time to the outlet plus any lag between the forcing&#x27;s daily step and the gauge&#x27;s. (day)">runoff_lag</a></span> = <span class="s">&quot;0.5 days&quot;</span><span class="c"></span>
+<span class="ln">12</span><span class="mk mk-none"></span><span class="k"><a href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil-spinup" title="State of the soil on the first day.">spinup</a></span> = <span class="s">&quot;first_year&quot;</span><span class="c"></span></pre></div></section>
 <section id="checked-by">
 <h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
 <p>The tests that import the code of this page. The box is generated, so a new test appears here on
@@ -1187,7 +1189,6 @@ the next build.</p>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../get-started/staircase/step6.html"><span class="doc">Step 6: the soil reservoir</span></a>: a run with the soil reservoir.</p></li>
 <li><p><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/sinks_sources/recharge.html#p-flow-sinks_sources-recharge-soil" title="Soil reservoir that computes the recharge from the daily precipitation and ETP loaded under [data.precipitation] and [data.etp], MODFLOW 6 only."><code class="docutils literal notranslate"><span class="pre">flow.sinks_sources.recharge.soil</span></code></a>: the section as a reference page.</p></li>
 <li><p><a class="reference internal" href="index.html"><span class="doc">Theory</span></a>: the other theory pages.</p></li>
 </ul>
@@ -1305,7 +1306,7 @@ the next build.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-10.
+  Last updated on 2026-11-19.
 </p></div>
       
     </div>
