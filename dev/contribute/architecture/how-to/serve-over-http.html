@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="The repository keeps a thin HTTP layer beside the wheel, hydromodpy_server/. It calls the verbs of the facade and nothing else, so a frontend that is not written in Python can check a document, pla..." />
 
-    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <meta property="article:modified_time" content="2026-11-19T23:04:21+01:00" />
     <title>Serve over HTTP &#8212; HydroModPy 2.0.0</title>
   
   
@@ -608,7 +608,8 @@ and checks a full document once, so the first <code class="docutils literal notr
 <p>The server has no authentication. Put it behind a proxy that authenticates each user and lets an
 organisation reach only its own path <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/</span></code>. Inside one organisation, a call reads and
 writes only under its project: the server passes the project as the one allowed root of the
-call, and it refuses a path argument that is absolute or climbs with <code class="docutils literal notranslate"><span class="pre">..</span></code>.</p>
+call, and it refuses a path argument that is absolute or climbs with <code class="docutils literal notranslate"><span class="pre">..</span></code>. A TOML file whose
+<code class="docutils literal notranslate"><span class="pre">base_config</span></code> chain leaves the project is refused before the file outside is read.</p>
 </section>
 <section id="routes">
 <h2>Routes<a class="headerlink" href="#routes" title="Link to this heading">#</a></h2>
@@ -621,6 +622,7 @@ call, and it refuses a path argument that is absolute or climbs with <code class
 200. <code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">calibrate</span></code>, <code class="docutils literal notranslate"><span class="pre">spinup</span></code> and <code class="docutils literal notranslate"><span class="pre">replay</span></code> answer 202 with a job.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/jobs/&lt;job&gt;</span></code> gives the state of a job of this project.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/inputs/&lt;name&gt;</span></code> uploads a file under <code class="docutils literal notranslate"><span class="pre">inputs/</span></code> and answers 201.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/files/&lt;path&gt;</span></code> sends a file of the project as its bytes.</p></li>
 </ul>
 <p>The body of a verb is a JSON object of its keyword arguments, 16 MiB at most. The server fills
 <code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">workspace</span></code>, <code class="docutils literal notranslate"><span class="pre">environment</span></code> and <code class="docutils literal notranslate"><span class="pre">headless</span></code> itself and refuses them in the body.
@@ -654,6 +656,20 @@ restart.</p>
 <code class="docutils literal notranslate"><span class="pre">&lt;sha256[:8]&gt;_&lt;name&gt;</span></code>, with the name in lower case and its odd characters turned into <code class="docutils literal notranslate"><span class="pre">_</span></code>.
 The same bytes give the same answer. Other bytes under a taken name are refused with 409. A
 <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;file&quot;</span></code> block of a document then names <code class="docutils literal notranslate"><span class="pre">inputs/5c859d8b_rain.csv</span></code>.</p>
+</section>
+<section id="get-the-results">
+<h2>Get the results<a class="headerlink" href="#get-the-results" title="Link to this heading">#</a></h2>
+<p>An answer names each file it wrote by its path in the project, such as
+<code class="docutils literal notranslate"><span class="pre">runs/&lt;run&gt;/exports/head.tif</span></code>. A <code class="docutils literal notranslate"><span class="pre">GET</span></code> of <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/files/</span></code> followed by that path
+sends the bytes, with a type guessed from the name. This is how an export, a figure from <code class="docutils literal notranslate"><span class="pre">show</span></code>
+with <code class="docutils literal notranslate"><span class="pre">save</span></code>, a report or a tar from <code class="docutils literal notranslate"><span class="pre">publish</span></code> reaches the client. A folder is refused with 400,
+so publish it with <code class="docutils literal notranslate"><span class="pre">format</span> <span class="pre">=</span> <span class="pre">&quot;tar&quot;</span></code> first. A path or a link that leaves the project is refused
+too.</p>
+<p>A run can also push its exports on its own. An <code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> block that names <code class="docutils literal notranslate"><span class="pre">deliver_to</span></code>
+sends each file it wrote once the run is sealed, to a folder of the project or to an <code class="docutils literal notranslate"><span class="pre">ftp://</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ftps://</span></code> or <code class="docutils literal notranslate"><span class="pre">sftp://</span></code> address. The host must be one of <code class="docutils literal notranslate"><span class="pre">--allow-host</span></code> and its identity
+comes from <code class="docutils literal notranslate"><span class="pre">&lt;org&gt;.toml</span></code> in <code class="docutils literal notranslate"><span class="pre">--credentials-dir</span></code>. Each attempt is a line of
+<code class="docutils literal notranslate"><span class="pre">published.jsonl</span></code>, and <code class="docutils literal notranslate"><span class="pre">export</span></code> with <code class="docutils literal notranslate"><span class="pre">deliver</span></code> resends what is not delivered yet.</p>
 </section>
 <section id="in-docker">
 <h2>In Docker<a class="headerlink" href="#in-docker" title="Link to this heading">#</a></h2>
@@ -726,6 +742,7 @@ host name and the digest of the image, so each run seals the image it ran in:</p
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routes">Routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#check-and-run">Check and run</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-a-file">Upload a file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-results">Get the results</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-docker">In Docker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
 </ul>
