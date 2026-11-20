@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Serve over HTTP" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/serve-over-http.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The repository keeps a thin HTTP layer beside the wheel, hydromodpy_server/. It calls the verbs of the facade and nothing else, so a frontend that is not written in Python can check a document, pla..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="The repository keeps a thin HTTP layer beside the wheel, hydromodpy_server/. It calls the verbs of the facade and nothing else, so a frontend that is not written in Python can check a document, pla..." />
+
+    <meta property="article:modified_time" content="2026-11-20T16:42:59+01:00" />
+    <title>Serve over HTTP &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/how-to/serve-over-http';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/serve-over-http.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Add a test" href="add-a-test.html" />
+    <link rel="prev" title="Build a frontend" href="build-a-frontend.html" />
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-20"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Recipes</a><details open="open"><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Recipes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Serve over HTTP</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="serve-over-http">
+<h1>Serve over HTTP<a class="headerlink" href="#serve-over-http" title="Link to this heading">#</a></h1>
+<p>The repository keeps a thin HTTP layer beside the wheel, <code class="docutils literal notranslate"><span class="pre">hydromodpy_server/</span></code>. It calls the
+verbs of the facade and nothing else, so a frontend that is not written in Python can check a
+document, play a run and read its results. It uses the Python standard library only. The wheel
+does not ship it: it runs from a source checkout or from the Docker image of the repository.</p>
+<section id="start-the-server">
+<h2>Start the server<a class="headerlink" href="#start-the-server" title="Link to this heading">#</a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>hydromodpy_server<span class="w"> </span>--root<span class="w"> </span>/srv/hmp<span class="w"> </span>--credentials-dir<span class="w"> </span>/etc/hmp/credentials
+<span class="go">serving on http://127.0.0.1:8765</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--root</span></code> is the folder of the spaces. Each organisation has one space <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/&lt;org&gt;</span></code>, and
+each study one project <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/&lt;org&gt;/projects/&lt;project&gt;</span></code>. The server creates neither, so an
+operator makes them first, for example with <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">workspace</span> <span class="pre">init</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">project</span> <span class="pre">new</span></code>.
+<code class="docutils literal notranslate"><span class="pre">--credentials-dir</span></code> holds one <code class="docutils literal notranslate"><span class="pre">&lt;org&gt;.toml</span></code> per organisation and must lie outside the root.
+<code class="docutils literal notranslate"><span class="pre">--allow-host</span></code> (repeated) names the hosts a call may fetch from, and
+<code class="docutils literal notranslate"><span class="pre">--max-download-bytes</span></code> bounds a download and an upload. <code class="docutils literal notranslate"><span class="pre">--host</span></code>, <code class="docutils literal notranslate"><span class="pre">--port</span></code> and <code class="docutils literal notranslate"><span class="pre">--warm</span></code>
+are described by <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p>
+<p>The server refuses to start, with exit code 2, when the root does not exist, when the
+credentials folder lies under the root, or when it runs inside the image without
+<code class="docutils literal notranslate"><span class="pre">HMP_IMAGE_DIGEST</span></code>. At start it removes what an earlier upload left in <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/.inbox/</span></code>
+and checks a full document once, so the first <code class="docutils literal notranslate"><span class="pre">check</span></code> of a client is fast.</p>
+</section>
+<section id="put-a-proxy-in-front">
+<h2>Put a proxy in front<a class="headerlink" href="#put-a-proxy-in-front" title="Link to this heading">#</a></h2>
+<p>The server has no authentication. Put it behind a proxy that authenticates each user and lets an
+organisation reach only its own path <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/</span></code>. Inside one organisation, a call reads and
+writes only under its project: the server passes the project as the one allowed root of the
+call, and it refuses a path argument that is absolute or climbs with <code class="docutils literal notranslate"><span class="pre">..</span></code>. A TOML file whose
+<code class="docutils literal notranslate"><span class="pre">base_config</span></code> chain leaves the project is refused before the file outside is read. Every path
+the document names, such as a <code class="docutils literal notranslate"><span class="pre">mask_path</span></code> or a <code class="docutils literal notranslate"><span class="pre">values_table_path</span></code>, and the run that
+<a class="hmp-toml-ref reference external" href="../../../reference/parameters/flow/restart_from.html#p-flow-restart_from" title="Optional hotstart: a prior run whose last time step seeds the initial heads (and the lake stage), overriding [flow.ic]."><code class="docutils literal notranslate"><span class="pre">flow.restart_from</span></code></a> names, is checked against that root before any step reads it, so a file of
+another project is refused with the same sentence whether it exists or not.</p>
+</section>
+<section id="routes">
+<h2>Routes<a class="headerlink" href="#routes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/health</span></code> gives the version and, inside the image, its tag and digest.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/schema/request</span></code> gives the JSON Schema of a run request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;org&gt;/&lt;verb&gt;</span></code> serves <code class="docutils literal notranslate"><span class="pre">example</span></code> and <code class="docutils literal notranslate"><span class="pre">doctor</span></code>, the two verbs of a space.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/&lt;verb&gt;</span></code> serves any other verb of the facade. <code class="docutils literal notranslate"><span class="pre">check</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">trash</span></code>, <code class="docutils literal notranslate"><span class="pre">compare</span></code>, <code class="docutils literal notranslate"><span class="pre">show</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code> and <code class="docutils literal notranslate"><span class="pre">publish</span></code> answer
+200. <code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">calibrate</span></code>, <code class="docutils literal notranslate"><span class="pre">spinup</span></code> and <code class="docutils literal notranslate"><span class="pre">replay</span></code> answer 202 with a job.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/jobs/&lt;job&gt;</span></code> gives the state of a job of this project.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/inputs/&lt;name&gt;</span></code> uploads a file under <code class="docutils literal notranslate"><span class="pre">inputs/</span></code> and answers 201.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/files/&lt;path&gt;</span></code> sends a file of the project as its bytes.</p></li>
+</ul>
+<p>The body of a verb is a JSON object of its keyword arguments, 16 MiB at most. The server fills
+<code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">workspace</span></code>, <code class="docutils literal notranslate"><span class="pre">environment</span></code> and <code class="docutils literal notranslate"><span class="pre">headless</span></code> itself and refuses them in the body.
+<code class="docutils literal notranslate"><span class="pre">open</span></code> is not served, because it returns a live object: read a project with <code class="docutils literal notranslate"><span class="pre">status</span></code> and
+<code class="docutils literal notranslate"><span class="pre">show</span></code>. <code class="docutils literal notranslate"><span class="pre">show</span></code> of a field is refused (use <code class="docutils literal notranslate"><span class="pre">export</span></code>), and <code class="docutils literal notranslate"><span class="pre">show</span></code> of a figure needs
+<code class="docutils literal notranslate"><span class="pre">save</span></code>. When the server runs with <code class="docutils literal notranslate"><span class="pre">--allow-host</span></code>, <code class="docutils literal notranslate"><span class="pre">example</span></code> with <code class="docutils literal notranslate"><span class="pre">add</span></code> is refused,
+because its download would not read the allowed hosts.</p>
+<p>A refusal is a JSON object with <code class="docutils literal notranslate"><span class="pre">code</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> and, when the library gives them,
+<code class="docutils literal notranslate"><span class="pre">diagnostics</span></code>. The status says the family. It is 400 for a body or argument the server does
+not take, 404 for an unknown route, organisation, project or job, 409 for an upload under a
+name that holds other bytes, 413 for a body too long, 422 for a refusal of the library and 500
+for any other fault.</p>
+</section>
+<section id="check-and-run">
+<h2>Check and run<a class="headerlink" href="#check-and-run" title="Link to this heading">#</a></h2>
+<p>A client posts <code class="docutils literal notranslate"><span class="pre">{&quot;source&quot;:</span> <span class="pre">{...}}</span></code> to <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/check</span></code> and a run request to
+<code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/run</span></code>. The run answers <code class="docutils literal notranslate"><span class="pre">{&quot;job&quot;:</span> <span class="pre">&quot;4f0c...&quot;,</span> <span class="pre">&quot;pid&quot;:</span> <span class="pre">41207}</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">.../jobs/4f0c...</span></code> gives <code class="docutils literal notranslate"><span class="pre">{&quot;state&quot;:</span> <span class="pre">&quot;done&quot;,</span> <span class="pre">&quot;result&quot;:</span> <span class="pre">{...}}</span></code>.</p>
+<p>A run, a calibration, a spin-up and a replay each play in their own process, started by
+<code class="docutils literal notranslate"><span class="pre">spawn</span></code>. The process takes the run folder and names it, and its <code class="docutils literal notranslate"><span class="pre">RunOutcome</span></code> comes back
+through the job. A job is <code class="docutils literal notranslate"><span class="pre">running</span></code>, then <code class="docutils literal notranslate"><span class="pre">done</span></code> with its <code class="docutils literal notranslate"><span class="pre">result</span></code>, <code class="docutils literal notranslate"><span class="pre">refused</span></code> or
+<code class="docutils literal notranslate"><span class="pre">failed</span></code> with its <code class="docutils literal notranslate"><span class="pre">refusal</span></code>, or <code class="docutils literal notranslate"><span class="pre">died</span></code> with its exit code. The server keeps its jobs for its
+own life only. The run folder is the truth, so <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">show</span></code> still read a run after a
+restart.</p>
+</section>
+<section id="upload-a-file">
+<h2>Upload a file<a class="headerlink" href="#upload-a-file" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">PUT</span></code> of the bytes to <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/inputs/rain.csv</span></code> answers
+<code class="docutils literal notranslate"><span class="pre">{&quot;path&quot;:</span> <span class="pre">&quot;inputs/5c859d8b_rain.csv&quot;,</span> <span class="pre">&quot;sha256&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;bytes&quot;:</span> <span class="pre">25}</span></code>.</p>
+<p>The file is written through <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/.inbox/</span></code> and renamed under <code class="docutils literal notranslate"><span class="pre">inputs/</span></code> as
+<code class="docutils literal notranslate"><span class="pre">&lt;sha256[:8]&gt;_&lt;name&gt;</span></code>, with the name in lower case and its odd characters turned into <code class="docutils literal notranslate"><span class="pre">_</span></code>.
+The same bytes give the same answer. Other bytes under a taken name are refused with 409. A
+<code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;file&quot;</span></code> block of a document then names <code class="docutils literal notranslate"><span class="pre">inputs/5c859d8b_rain.csv</span></code>.</p>
+</section>
+<section id="get-the-results">
+<h2>Get the results<a class="headerlink" href="#get-the-results" title="Link to this heading">#</a></h2>
+<p>An answer names each file it wrote by its path in the project, such as
+<code class="docutils literal notranslate"><span class="pre">runs/&lt;run&gt;/exports/head.tif</span></code>. A <code class="docutils literal notranslate"><span class="pre">GET</span></code> of <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/files/</span></code> followed by that path
+sends the bytes, with a type guessed from the name. This is how an export, a figure from <code class="docutils literal notranslate"><span class="pre">show</span></code>
+with <code class="docutils literal notranslate"><span class="pre">save</span></code>, a report or a tar from <code class="docutils literal notranslate"><span class="pre">publish</span></code> reaches the client. A folder is refused with 400,
+so publish it with <code class="docutils literal notranslate"><span class="pre">format</span> <span class="pre">=</span> <span class="pre">&quot;tar&quot;</span></code> first. A path or a link that leaves the project is refused
+too.</p>
+<p>A run can also push its exports on its own. An <code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> block that names <code class="docutils literal notranslate"><span class="pre">deliver_to</span></code>
+sends each file it wrote once the run is sealed, to a folder of the project or to an <code class="docutils literal notranslate"><span class="pre">ftp://</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ftps://</span></code> or <code class="docutils literal notranslate"><span class="pre">sftp://</span></code> address. The host must be one of <code class="docutils literal notranslate"><span class="pre">--allow-host</span></code> and its identity
+comes from <code class="docutils literal notranslate"><span class="pre">&lt;org&gt;.toml</span></code> in <code class="docutils literal notranslate"><span class="pre">--credentials-dir</span></code>. Each attempt is a line of
+<code class="docutils literal notranslate"><span class="pre">published.jsonl</span></code>, and <code class="docutils literal notranslate"><span class="pre">export</span></code> with <code class="docutils literal notranslate"><span class="pre">deliver</span></code> resends what is not delivered yet.</p>
+</section>
+<section id="in-docker">
+<h2>In Docker<a class="headerlink" href="#in-docker" title="Link to this heading">#</a></h2>
+<p>The image carries the server under <code class="docutils literal notranslate"><span class="pre">/opt/hmp</span></code>. Start it with another entry point, a fixed
+host name and the digest of the image, so each run seals the image it ran in:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--hostname<span class="w"> </span>hmp-server<span class="w"> </span>-p<span class="w"> </span><span class="m">8765</span>:8765<span class="w"> </span>-v<span class="w"> </span>/srv/hmp:/project<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-e<span class="w"> </span><span class="nv">HMP_IMAGE_DIGEST</span><span class="o">=</span>sha256:&lt;digest&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--entrypoint<span class="w"> </span>python<span class="w"> </span>&lt;image&gt;<span class="w"> </span>-m<span class="w"> </span>hydromodpy_server<span class="w"> </span>--root<span class="w"> </span>/project<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="build-a-frontend.html"><span class="doc">Build a frontend</span></a> for the schema, the check and the run request a frontend builds.</p></li>
+<li><p><a class="reference internal" href="../../../get-started/install.html"><span class="doc">Install</span></a> for the Docker image.</p></li>
+</ul>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="build-a-frontend.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Build a frontend</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="add-a-test.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Add a test</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-the-server">Start the server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#put-a-proxy-in-front">Put a proxy in front</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routes">Routes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#check-and-run">Check and run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-a-file">Upload a file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-results">Get the results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-docker">In Docker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-20.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

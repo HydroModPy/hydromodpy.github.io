@@ -1,0 +1,167 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: edition, simulation
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# Minimal orchestration block declared under ``[simulation]``.
+# ----------------------------------------------------------------------
+
+[simulation]
+# Human-readable simulation name and the run's identity.
+# When empty, derived from the TOML filename at load time (run_steady_nwt.toml -> steady_nwt); a programmatic run without a name gets a deterministic memorable slug.
+# It never carries a _vN suffix: the version is given by the disk when the run is reserved.
+# Type: string | Default: "" | Examples: "cheze_baseline"
+name = ""
+
+# Free-text tags attached at registration; editable later via 'hmp catalog tag'.
+# Type: list[str] | Default: []
+tags = []
+
+# What a run does when its name is already taken in this project.
+# ``version`` (default) writes the run under the next free ``stem_vN`` and keeps every run addressable; ``fail`` stops before the run starts.
+# A name is never reused, so a run is never replaced: delete the old one with hmp catalog delete.
+# Type: Literal['fail', 'version'] | one of: "fail", "version" | Default: "version"
+if_exists = "version"
+
+# Short free-text description of the simulation intent.
+# Type: string | Default: ""
+description = ""
+
+# Scientific objective used for catalog and ML stratification.
+# Type: string (optional) | Optional
+# scientific_objective = ""
+
+# Contact email for the simulation metadata.
+# Type: string (optional) | Optional
+# contact_email = ""
+
+# DOI or reference identifier for the simulation metadata.
+# Type: string (optional) | Optional
+# doi = ""
+
+# Master RNG seed for the simulation.
+# When set, every stochastic consumer (mesh point sampling, synthetic forcing, ...) derives its own deterministic sub-seed via ``hydromodpy.core.state.rng.RngManager``.
+# Persisted in ``runs_environment.rng_seed`` so the run can be re-executed from the catalog snapshot.
+# Type: int (optional) | >= 0 | Optional
+# rng_seed = 0
+
+
+# Optional canonical simulation window used to align solver temporal settings and validate forcing coverage.
+# Required for launcher flow processes and for runtime features that explicitly consume simulation-window dates.
+
+# [simulation.time]
+# Simulation window lower datetime bound used by launcher-level time alignment and forcing checks.
+# Type: datetime (optional) | Optional | Examples: "2019-01-01"
+# start_datetime = ""
+
+# Simulation window upper datetime bound, interpreted as inclusive.
+# Must be greater than or equal to start_datetime.
+# Type: datetime (optional) | Optional | Examples: "2025-12-31"
+# end_datetime = ""
+
+# Forcing/stress-period time-step scalar or inline token '<value> <unit>' (for example '30 day').
+# This controls the temporal aggregation step for forcing series (for example recharge/runoff) and the resulting stress periods.
+# Not read by a steady run (flow.flow_regime = 'steady'), which is one stress period over the whole window, its forcings averaged over it.
+# Type: UnionType[int, float, str] | Default: "1 month" | Examples: "1 month", "10 day"
+# step_value = "1 month"
+
+# Unit of a bare-number step_value: the length of the stress periods and of the forcing steps.
+# Type: Literal (optional) | Optional
+# step_unit = "hour"
+
+# What happens to a stress period that a forcing record does not cover.
+# A sample is the rate of the interval up to the next sample, and the last sample stands for one step of the record (the median spacing of its dates).
+# A period that no sample reaches, before the first date or after the end of the last step, is not covered.
+# 'error' stops the run, 'warn' warns once per record, 'ignore' says nothing; under 'warn' and 'ignore' the period takes the nearest sample in time.
+# The rule is the same for a series, a station and a grid: rain, ETP, recharge, runoff and the declared CSV forcings read as rates (aggregate = 'mean').
+# Type: Literal['error', 'warn', 'ignore'] | one of: "error", "warn", "ignore" | Default: "error" | Examples: "error", "warn"
+# coverage_policy = "error"
+
+# Calendar length of the windows a long transient run is cut into, written '<n> <unit>' with unit hour, day, month or year.
+# The windows start at start_datetime and follow one another; the last one ends with the simulation and may be shorter.
+# Every window edge must fall on a stress period end.
+# Each window is a sealed run of its own, named after the run with _w1, _w2 and so on, that starts from the final state of the window before it.
+# The forcings and the soil reservoir are computed over the whole simulation, so the chain gives the heads of the run in one piece.
+# Absent, the run is one window.
+# Type: string (optional) | Optional | Examples: "1 year", "6 months"
+# window_length = ""
+
+# Which windows of window_length this launch plays.
+# 'all' plays them one after the other and skips those already sealed with the same request.
+# A number k, from 1, plays window k alone, which needs window k - 1 sealed first.
+# Type: Union[int, Literal] | Default: "all" | Examples: "all", 2
+# window = "all"
+
+
+# Results storage loaded from [simulation.results]: what the run writes to the catalog, whether the raw solver files are kept, and how much of the per-cell budget the run keeps.
+
+[simulation.results]
+# Keep the raw solver files (.hds, .cbc, .lst) of a sealed run under runs/<run>/solver/, outside the manifest inventory.
+# Off, they are deleted once their results are stored.
+# Type: bool | Default: false
+keep_solver_files = false
+
+# Keep the flow between each pair of connected cells, at every saved time, in fields.zarr.
+# The flow solver of the run must write it: MODFLOW 6 and MODFLOW-NWT do.
+# It is the heaviest group a run can keep: about 350 MB in float32 for six daily years on about 21 000 cells, beside 312 MB for the whole per-cell budget.
+# A kept calibration trial never keeps it.
+# Type: bool | Default: false
+keep_face_flows = false
+
+
+# Simulation-run persistence switch passed to the result catalog (DuckDB rows, Zarr fields, Parquet tables).
+
+[simulation.results.persistence]
+# Persist DuckDB rows (simulations, parameters, metrics, calibration_iterations).
+# When False, catalog writes are skipped.
+# Type: bool | Default: true
+save_catalog = true
+
+# Persist per-simulation field arrays (head, concentration, derived) into the Zarr store.
+# Type: bool | Default: true
+save_zarr = true
+
+# Precision of the time-varying field arrays of fields.zarr: heads, per-cell budget terms, derived fields, concentrations.
+# 'compact' stores float32 with the mantissa rounded to nearest at 16 bits: each value moves by at most 2**-17 of itself (7.6e-6 relative, so at most 1 mm on a 130 m head and 7.6e-9 m3/s on a 1e-3 m3/s cell flux), and a daily run takes about a third of the disk.
+# 'exact' keeps every value as computed, float64.
+# Mesh geometry, topography, layer thickness, indices, coordinates and timestamps are never rounded.
+# Type: Literal['compact', 'exact'] | one of: "compact", "exact" | Default: "compact"
+field_precision = "compact"
+
+# Persist per-simulation tabular outputs (timeseries, budgets, mass_balance) as Parquet files.
+# Type: bool | Default: true
+save_parquet = true
+
+
+# Ordered list of requested processes loaded from [[simulation.process]].
+# At most one process per kind is supported.
+# Example entry, one [[simulation.process]] block per entry.
+# [[simulation.process]]
+# User-facing identifier for the process.
+# This id is required and must be unique within the simulation.
+# Type: string | REQUIRED | Examples: "flow_main"
+# id = ""
+
+# Discriminator selecting the 'flow' process family.
+# Type: Literal['flow'] | one of: "flow" | Default: "flow"
+# kind = "flow"
+
+# Ordered list of active flow solver names.
+# At least one solver is required for flow processes.
+# Type: list[str] | REQUIRED
+# solvers = []
+

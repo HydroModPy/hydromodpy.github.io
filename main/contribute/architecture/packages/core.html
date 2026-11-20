@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Package: core" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/packages/core.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The kernel leaf of HydroModPy. Every other package may read core, and core reads no sibling package, not even under TYPE_CHECKING. It holds what several layers need and none should own: the base of..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="The kernel leaf of HydroModPy. Every other package may read core, and core reads no sibling package, not even under TYPE_CHECKING. It holds what several layers need and none should own: the base of..." />
+
+    <meta property="article:modified_time" content="2026-11-20T16:42:59+01:00" />
+    <title>Package: core &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/packages/core';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/packages/core.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Package: config" href="config.html" />
+    <link rel="prev" title="Packages and registries" href="../generated/packages.html" />
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-20"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/index.html">Recipes</a><details><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Architecture</a><details open="open"><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Packages</a><details open="open"><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Architecture</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Packages</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Package: core</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="package-core">
+<h1>Package: core<a class="headerlink" href="#package-core" title="Link to this heading">#</a></h1>
+<p>The kernel leaf of HydroModPy. Every other package may read <code class="docutils literal notranslate"><span class="pre">core</span></code>, and <code class="docutils literal notranslate"><span class="pre">core</span></code> reads no sibling package, not even under <code class="docutils literal notranslate"><span class="pre">TYPE_CHECKING</span></code>. It holds what several layers need and none should own: the base of every config model, units, the paths of a project and a workspace, run state, the I/O primitives, the typed exceptions and a few kernels that two layers must compute the same way, such as the sign of a budget flux and the digest of a block of values.</p>
+<p>A sub-package answers one question, and <code class="docutils literal notranslate"><span class="pre">scoring/</span></code> is the port of the goodness-of-fit metrics, with a README of its own. The modules at the root hold the words every layer shares, for example the step names of <code class="docutils literal notranslate"><span class="pre">pipeline_steps.py</span></code>, the hierarchy of <code class="docutils literal notranslate"><span class="pre">exceptions.py</span></code> and the version string.</p>
+<p>Each exception carries one of sixteen <code class="docutils literal notranslate"><span class="pre">Category</span></code> values, set once on the class that owns it and inherited below. <code class="docutils literal notranslate"><span class="pre">cli</span></code> maps a category to its exit code, so a new exception needs no line in the command line. <code class="docutils literal notranslate"><span class="pre">logging.py</span></code> keeps the handlers that a run adds in one <code class="docutils literal notranslate"><span class="pre">SinkRouter</span></code>, so no handler is added to the process logger while a run writes its log.</p>
+<p>Importing <code class="docutils literal notranslate"><span class="pre">hydromodpy.core</span></code> loads neither the configuration nor the data stack. A helper used by one layer stays in that layer, and it moves here when a second layer needs it and the layer matrix forbids the edge.</p>
+<p>The page of the package in the developer docs lists the modules with the first line of their docstring and tells how the folders fit together.</p>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading">#</a></h2>
+<p><strong>budget/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">flux.py</span></code></td>
+<td><p>Per-cell budget fluxes: their sign, the drain and release terms, the seepage mask.</p></td>
+<td><p>456</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">terms.py</span></code></td>
+<td><p>Per-cell budget terms: which ones a field reads, and what a store kept.</p></td>
+<td><p>220</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>top level</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">code_fingerprint.py</span></code></td>
+<td><p>The fingerprint of the code that computes: one digest per layer of the package.</p></td>
+<td><p>362</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">diagnostic.py</span></code></td>
+<td><p>One finding of a check on a configuration document, in the one shape every producer gives.</p></td>
+<td><p>94</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">exceptions.py</span></code></td>
+<td><p>Typed exception hierarchy for HydroModPy.</p></td>
+<td><p>960</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">licensing.py</span></code></td>
+<td><p>The SPDX token this repository writes when nobody declared a licence.</p></td>
+<td><p>21</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">logging.py</span></code></td>
+<td><p>Console and file logging policy for HydroModPy.</p></td>
+<td><p>521</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">old_members.py</span></code></td>
+<td><p>Members of the public objects that left before the first stable version.</p></td>
+<td><p>29</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">pipeline_steps.py</span></code></td>
+<td><p>The names of the steps of a simulation, the words every layer shares.</p></td>
+<td><p>33</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">plugin_registry.py</span></code></td>
+<td><p>One registry engine, shared by every <code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">-&gt;</span> <span class="pre">class</span></code> plugin surface.</p></td>
+<td><p>495</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">scope.py</span></code></td>
+<td><p>The words the stored tables share.</p></td>
+<td><p>83</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">summary.py</span></code></td>
+<td><p>Short text summaries, for the objects a user reads at the Python prompt.</p></td>
+<td><p>44</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">version.py</span></code></td>
+<td><p>Canonical source of the HydroModPy version string.</p></td>
+<td><p>55</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>config_kit/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">base.py</span></code></td>
+<td><p>Root Pydantic base class shared by every HydroModPy config model.</p></td>
+<td><p>364</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">calibrable.py</span></code></td>
+<td><p>The annotation that marks a configuration field calibrable.</p></td>
+<td><p>102</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dump.py</span></code></td>
+<td><p>Write a config model as a commented TOML document.</p></td>
+<td><p>225</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">field_metadata.py</span></code></td>
+<td><p>Typed convention for <code class="docutils literal notranslate"><span class="pre">Field(json_schema_extra=...)</span></code> metadata.</p></td>
+<td><p>108</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">introspect.py</span></code></td>
+<td><p>Introspection helpers for HydroModPy Pydantic config fields.</p></td>
+<td><p>381</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">persistence.py</span></code></td>
+<td><p>Single-switch persistence configuration (Principe 8).</p></td>
+<td><p>82</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">profile.py</span></code></td>
+<td><p>Hierarchical visibility profiles for Pydantic config fields.</p></td>
+<td><p>34</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">registry.py</span></code></td>
+<td><p>Single source of truth for HydroModPy root TOML sections.</p></td>
+<td><p>96</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">root.py</span></code></td>
+<td><p>Root configuration wrapper and migration callables.</p></td>
+<td><p>36</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">said.py</span></code></td>
+<td><p>Where the warnings of a validator go while a check collects them.</p></td>
+<td><p>59</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">stored.py</span></code></td>
+<td><p>How a stored document is read, and the words a stored field is written with.</p></td>
+<td><p>96</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">types.py</span></code></td>
+<td><p>Shared constrained config types and reusable Literal aliases.</p></td>
+<td><p>170</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">visible_when.py</span></code></td>
+<td><p>Profile visibility tags and helpers.</p></td>
+<td><p>39</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">written.py</span></code></td>
+<td><p>What a configuration was given, as opposed to the defaults it took.</p></td>
+<td><p>279</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>config_kit/field_param/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">config.py</span></code></td>
+<td><p>Field-parameter TOML payloads: their Pydantic schema, their resolution and its check.</p></td>
+<td><p>387</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">sections.py</span></code></td>
+<td><p>Pydantic schemas for field-parameter TOML sections.</p></td>
+<td><p>502</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">units.py</span></code></td>
+<td><p>Unit aliases and normalization for field-parameter configuration.</p></td>
+<td><p>51</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>console/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ndjson.py</span></code></td>
+<td><p>NDJSON progress sink, independent of the rich console renderer.</p></td>
+<td><p>170</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">progress.py</span></code></td>
+<td><p>Live console progress for long-running operations.</p></td>
+<td><p>587</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>contracts/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">observables.py</span></code></td>
+<td><p>Named observables a solver adapter can produce from one run.</p></td>
+<td><p>185</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">overview.py</span></code></td>
+<td><p>Runtime state threaded through the data-overview pipeline phases.</p></td>
+<td><p>37</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">solver_model.py</span></code></td>
+<td><p>What every solver model shares, and it is not much.</p></td>
+<td><p>38</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>fields/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">grid_reference.py</span></code></td>
+<td><p>Plain geometric description of a solver grid (kernel-level POPO).</p></td>
+<td><p>86</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nodata.py</span></code></td>
+<td><p>Shared nodata sentinels.</p></td>
+<td><p>38</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">precision.py</span></code></td>
+<td><p>Storage precision of time-varying field arrays.</p></td>
+<td><p>106</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">vertical_column.py</span></code></td>
+<td><p>The vertical column of a layered model, read from its <code class="docutils literal notranslate"><span class="pre">idomain</span></code>.</p></td>
+<td><p>92</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>io/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">atomic_replace.py</span></code></td>
+<td><p>Replace one file by another in a single rename, readers included.</p></td>
+<td><p>148</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">canonical_json.py</span></code></td>
+<td><p>Deterministic JSON serialization.</p></td>
+<td><p>53</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">crs.py</span></code></td>
+<td><p>CRS helpers built on <code class="docutils literal notranslate"><span class="pre">pyproj</span></code> and <code class="docutils literal notranslate"><span class="pre">rasterio</span></code>.</p></td>
+<td><p>311</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">db_retry.py</span></code></td>
+<td><p>Single open point for every DuckDB file HydroModPy owns.</p></td>
+<td><p>321</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">document_version.py</span></code></td>
+<td><p>The version rule of every stored document.</p></td>
+<td><p>231</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">fetch.py</span></code></td>
+<td><p>Unified HTTP download client, URL safety guard and pinned download.</p></td>
+<td><p>808</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">file_digest.py</span></code></td>
+<td><p>The one SHA-256 digest of a file on disk.</p></td>
+<td><p>28</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">filesystem.py</span></code></td>
+<td><p>Filesystem utilities: folders, sizes, and the paths Windows bounds.</p></td>
+<td><p>269</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">geoparquet.py</span></code></td>
+<td><p>OGC GeoParquet 1.1 atomic writer.</p></td>
+<td><p>90</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">lock_file.py</span></code></td>
+<td><p>A file lock taken with <code class="docutils literal notranslate"><span class="pre">O_CREAT</span> <span class="pre">|</span> <span class="pre">O_EXCL</span></code>, held by one process on one host.</p></td>
+<td><p>316</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">parquet.py</span></code></td>
+<td><p>Canonical plain-Parquet write options shared across layers.</p></td>
+<td><p>77</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">proj_bootstrap.py</span></code></td>
+<td><p>PROJ database bootstrap (opt-in).</p></td>
+<td><p>281</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">raster_io.py</span></code></td>
+<td><p>Raster I/O: loading, masking, reprojecting, and exporting GeoTIFF/NetCDF.</p></td>
+<td><p>320</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">value_digest.py</span></code></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">values/1</span></code> rule: one digest for a block of values, whatever their dtype.</p></td>
+<td><p>170</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">vector_io.py</span></code></td>
+<td><p>Vector I/O helpers (shapefile / GeoPackage / GeoParquet).</p></td>
+<td><p>26</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>payload/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">index.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">INSTALL.toml</span></code>: the install index of a package.</p></td>
+<td><p>346</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">install.py</span></code></td>
+<td><p>Place the files and station rows of an install index under a workspace.</p></td>
+<td><p>244</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">resolve.py</span></code></td>
+<td><p>Resolve the data a project’s TOML files reference, the way a run resolves them.</p></td>
+<td><p>257</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>runtime/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">bounds.py</span></code></td>
+<td><p>The bounds of one call: the hosts it may reach, the roots it may use.</p></td>
+<td><p>180</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">env.py</span></code></td>
+<td><p>Every <code class="docutils literal notranslate"><span class="pre">HMP_*</span></code> environment variable HydroModPy reads, in one table.</p></td>
+<td><p>404</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">image.py</span></code></td>
+<td><p>The container image a process runs in: its tag and its digest.</p></td>
+<td><p>50</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">interrupts.py</span></code></td>
+<td><p>Make a termination signal or a stop request unwind the stack instead of cutting it.</p></td>
+<td><p>116</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">stopwatch.py</span></code></td>
+<td><p>The one stopwatch of a run: how long a step, a solve, a figure or an export took.</p></td>
+<td><p>119</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>scoring/</strong>: This folder answers how well a simulated series matches an observed one, and when two costs are a tie. Every layer must compute these the same way, so they live in <code class="docutils literal notranslate"><span class="pre">core</span></code>, and <code class="docutils literal notranslate"><span class="pre">display</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">results</span></code> and <code class="docutils literal notranslate"><span class="pre">catchment</span></code> read them. The metric names form a closed table, <code class="docutils literal notranslate"><span class="pre">METRIC_SPECS</span></code> of <code class="docutils literal notranslate"><span class="pre">metric_table.py</span></code>, where a new metric is a row added in the code and never a plugin.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">cost_margin.py</span></code></td>
+<td><p>The margin a cost may sit from the best before a trial stops counting as tied with it.</p></td>
+<td><p>67</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">metric_table.py</span></code></td>
+<td><p>The table of the sixteen metrics a score or a trial may be named after.</p></td>
+<td><p>216</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">metrics.py</span></code></td>
+<td><p>Hydrological efficiency and error metrics.</p></td>
+<td><p>366</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">stream_defaults.py</span></code></td>
+<td><p>The numeric defaults of the stream-network criterion, in one Pydantic model.</p></td>
+<td><p>282</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>site/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">config.py</span></code></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">[site]</span></code> section: which catchment a project models.</p></td>
+<td><p>177</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">row.py</span></code></td>
+<td><p>One row of a site table: the columns of <code class="docutils literal notranslate"><span class="pre">data/sites/catalog.csv</span></code>.</p></td>
+<td><p>149</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>state/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">host.py</span></code></td>
+<td><p>The name of this host, and the proof that a process of it is gone.</p></td>
+<td><p>37</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">layout.py</span></code></td>
+<td><p>The layout of a project: the names of its folders and the paths built from them.</p></td>
+<td><p>266</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">names.py</span></code></td>
+<td><p>The rule of a project name and of a run name, written once.</p></td>
+<td><p>146</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">portable.py</span></code></td>
+<td><p>Portable paths: platform cache and state folders, workspace-relative strings, root URIs.</p></td>
+<td><p>166</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">result_dirs.py</span></code></td>
+<td><p>A result directory relative to its project, and the project that holds it.</p></td>
+<td><p>246</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rng.py</span></code></td>
+<td><p>Centralized RNG seed manager.</p></td>
+<td><p>59</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">run_state.py</span></code></td>
+<td><p>Mutable runtime state threaded through workflow steps.</p></td>
+<td><p>337</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">scratch.py</span></code></td>
+<td><p>The scratch folder of a live run: where it works, and the sweep of the dead ones.</p></td>
+<td><p>247</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>time/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">coverage.py</span></code></td>
+<td><p>Which samples of a forcing record a stress period takes, and when it is covered.</p></td>
+<td><p>183</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">instant.py</span></code></td>
+<td><p>The one check of an instant a user writes: a date, <code class="docutils literal notranslate"><span class="pre">first</span></code>, <code class="docutils literal notranslate"><span class="pre">last</span></code> or a period index.</p></td>
+<td><p>60</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">period_aggregation.py</span></code></td>
+<td><p>Put a finely sampled series onto the stress periods a coarse index stands for.</p></td>
+<td><p>518</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">selection.py</span></code></td>
+<td><p>Turn a date a user writes into the stress period a run stored.</p></td>
+<td><p>413</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">steady_initialization.py</span></code></td>
+<td><p>Temporal helpers for same-solver steady-state initializations.</p></td>
+<td><p>68</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">time_method.py</span></code></td>
+<td><p>How a simulated series relates to the time of its stamps.</p></td>
+<td><p>100</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">window.py</span></code></td>
+<td><p>Canonical simulation-time utilities for launcher workflows.</p></td>
+<td><p>881</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>toml_io/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">error_locator.py</span></code></td>
+<td><p>Map Pydantic <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> paths back to TOML source lines.</p></td>
+<td><p>304</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">generator.py</span></code></td>
+<td><p>Auto-generate commented TOML templates from Pydantic models.</p></td>
+<td><p>337</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">loader.py</span></code></td>
+<td><p>TOML loading with <code class="docutils literal notranslate"><span class="pre">base_config</span></code> inheritance, and the base of relative paths.</p></td>
+<td><p>398</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">merge.py</span></code></td>
+<td><p>TOML payload merge helpers.</p></td>
+<td><p>486</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">model_types.py</span></code></td>
+<td><p>Which Pydantic model a field holds, and which member of a union.</p></td>
+<td><p>231</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">overrides.py</span></code></td>
+<td><p>Overrides of a document given on a command line or in the environment.</p></td>
+<td><p>84</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">paths.py</span></code></td>
+<td><p>Config-declared file paths, and the one parser of dotted key paths.</p></td>
+<td><p>465</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">render.py</span></code></td>
+<td><p>Value formatting, field defaults and comment lines of the TOML template.</p></td>
+<td><p>402</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">section.py</span></code></td>
+<td><p>Walk a Pydantic model and write its <code class="docutils literal notranslate"><span class="pre">[section]</span></code> of the TOML template.</p></td>
+<td><p>465</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">writer.py</span></code></td>
+<td><p>Render a plain mapping as TOML text with tomli-w.</p></td>
+<td><p>29</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>tracking/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">input_file.py</span></code></td>
+<td><p>Marker and result types for input-file tracking.</p></td>
+<td><p>50</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">walker.py</span></code></td>
+<td><p>Walk a Pydantic config tree and collect <code class="docutils literal notranslate"><span class="pre">InputFile</span></code>-annotated paths.</p></td>
+<td><p>190</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>units/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">kinds.py</span></code></td>
+<td><p>Quantity kinds: what a stored variable measures and how a figure shows it.</p></td>
+<td><p>103</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">parse.py</span></code></td>
+<td><p>Pint-based helpers to parse TOML-style unit payloads.</p></td>
+<td><p>198</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">physical_bounds.py</span></code></td>
+<td><p>Central registry of physical bounds for HydroModPy parameters.</p></td>
+<td><p>329</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">quantities.py</span></code></td>
+<td><p>Unit tables and conversions to SI for the quantities read from user input.</p></td>
+<td><p>310</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">registry.py</span></code></td>
+<td><p>Pint unit registry for HydroModPy.</p></td>
+<td><p>65</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">scalar.py</span></code></td>
+<td><p>Helpers to parse scalar values with optional inline units.</p></td>
+<td><p>78</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">time.py</span></code></td>
+<td><p>Time-unit helpers centered on SI (seconds), with the MODFLOW and pandas spellings.</p></td>
+<td><p>132</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">types.py</span></code></td>
+<td><p>Pydantic-pint annotated types for hydrogeological quantities.</p></td>
+<td><p>354</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>workspace/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">config.py</span></code></td>
+<td><p>Workspace configuration with project-local result catalogs.</p></td>
+<td><p>253</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">exceptions.py</span></code></td>
+<td><p>Workspace-resolution errors.</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">path_registry.py</span></code></td>
+<td><p>Canonical workspace path registry shared by runtime components.</p></td>
+<td><p>83</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">resolve.py</span></code></td>
+<td><p>Workspace-root lookup, for runtime code and for the commands.</p></td>
+<td><p>85</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">workspace.py</span></code></td>
+<td><p>* Copyright (C) 2023-2025 Alexandre Gauvain, Ronan Abherve, Jean-Raynald de Dreuzy</p></td>
+<td><p>65</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">workspace_toml.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">workspace.toml</span></code> template generator and Pydantic validator.</p></td>
+<td><p>295</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="inside-the-package">
+<h2>Inside the package<a class="headerlink" href="#inside-the-package" title="Link to this heading">#</a></h2>
+<p>The layer rules are checked by <code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/</span></code>, and the unit tests of a folder are
+in <code class="docutils literal notranslate"><span class="pre">tests/unit/core/</span></code>. <code class="docutils literal notranslate"><span class="pre">core</span></code> receives what it needs as an argument and never imports a
+higher layer.</p>
+<p>Configuration. Every config class of every layer inherits <code class="docutils literal notranslate"><span class="pre">HydroModelBase</span></code> of
+<code class="docutils literal notranslate"><span class="pre">config_kit/base.py</span></code>, which sets <code class="docutils literal notranslate"><span class="pre">extra=&quot;forbid&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">validate_assignment=True</span></code>, so
+the strictness is written once. <code class="docutils literal notranslate"><span class="pre">profile.py</span></code> and <code class="docutils literal notranslate"><span class="pre">visible_when.py</span></code> decide which field
+shows in which profile, and a field visibility rule goes there and in <code class="docutils literal notranslate"><span class="pre">introspect.py</span></code>.
+A shared constrained type goes to <code class="docutils literal notranslate"><span class="pre">types.py</span></code>.  <code class="docutils literal notranslate"><span class="pre">calibrable.py</span></code> lives here so that <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">calibration</span></code> need not import each other.
+<code class="docutils literal notranslate"><span class="pre">root.py</span></code> holds <code class="docutils literal notranslate"><span class="pre">RootConfig</span></code>, the root model class with its two migrations. Every
+helper that reads sections or migrates a file receives it as its <code class="docutils literal notranslate"><span class="pre">root</span></code> argument, which
+is how <code class="docutils literal notranslate"><span class="pre">core</span></code> reaches the root config without importing <code class="docutils literal notranslate"><span class="pre">config</span></code>. A section that must
+be listed at the root is added to the root model, never to this folder. <code class="docutils literal notranslate"><span class="pre">field_param/</span></code>
+is the schema of a field-parameter payload. It lives here because <code class="docutils literal notranslate"><span class="pre">model/properties</span></code>
+builds the field from it and <code class="docutils literal notranslate"><span class="pre">model/flow_config.py</span></code> embeds it in <code class="docutils literal notranslate"><span class="pre">[flow.param.&lt;id&gt;]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">toml_io</span></code> is the path of a file into a document. The loader follows <code class="docutils literal notranslate"><span class="pre">base_config</span></code>,
+migrates through the <code class="docutils literal notranslate"><span class="pre">RootConfig</span></code> it receives, and <code class="docutils literal notranslate"><span class="pre">error_locator.py</span></code> points a
+Pydantic error at a line of the file.  A new merge rule goes to <code class="docutils literal notranslate"><span class="pre">merge.py</span></code> or <code class="docutils literal notranslate"><span class="pre">overrides.py</span></code>, and a path key to <code class="docutils literal notranslate"><span class="pre">paths.py</span></code>.</p>
+<p>Units and fields. A bare number is read in SI and a string such as <code class="docutils literal notranslate"><span class="pre">&quot;0.36</span> <span class="pre">m/h&quot;</span></code> is
+converted, with Pint loaded only when needed. A new alias of a config type goes to
+<code class="docutils literal notranslate"><span class="pre">units/types.py</span></code> with its canonical unit, a new physical bound to <code class="docutils literal notranslate"><span class="pre">physical_bounds.py</span></code>
+and a new axis label to <code class="docutils literal notranslate"><span class="pre">labels.py</span></code>, so no figure writes one. In <code class="docutils literal notranslate"><span class="pre">fields</span></code>, a new
+nodata convention goes to <code class="docutils literal notranslate"><span class="pre">nodata.py</span></code> once, and a new way to store a field goes to
+<code class="docutils literal notranslate"><span class="pre">precision.py</span></code> with its error bound. <code class="docutils literal notranslate"><span class="pre">budget</span></code> fixes one sign for every solver, the one
+MODFLOW gives it: positive when water enters the aquifer, negative when it leaves. A drain
+or release key goes to the tuples of <code class="docutils literal notranslate"><span class="pre">flux.py</span></code>, and a derived field that needs a new term
+to the table behind <code class="docutils literal notranslate"><span class="pre">budget_terms_for</span></code> in <code class="docutils literal notranslate"><span class="pre">terms.py</span></code>.</p>
+<p>Paths, names and the host. <code class="docutils literal notranslate"><span class="pre">state/layout.py</span></code> holds the names under <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code>, <code class="docutils literal notranslate"><span class="pre">runs/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sessions/</span></code>, <code class="docutils literal notranslate"><span class="pre">jobs/</span></code> and <code class="docutils literal notranslate"><span class="pre">trash/</span></code>, so a new folder name inside a project goes there
+with its <code class="docutils literal notranslate"><span class="pre">*_dir_for</span></code> helper. <code class="docutils literal notranslate"><span class="pre">workspace/path_registry.py</span></code> holds the canonical paths
+that runtime components share under a workspace, and the metadata of a workspace is
+<code class="docutils literal notranslate"><span class="pre">workspace_toml.py</span></code>. The workspace is resolved in four steps, from the <code class="docutils literal notranslate"><span class="pre">[workspace]</span></code>
+keys, then <code class="docutils literal notranslate"><span class="pre">HMP_WORKSPACE</span></code>, then the scaffold <code class="docutils literal notranslate"><span class="pre">&lt;workspace&gt;/projects/&lt;name&gt;/</span></code>, then the
+project folder itself.   A random consumer asks <code class="docutils literal notranslate"><span class="pre">RngManager</span></code> of
+<code class="docutils literal notranslate"><span class="pre">state/rng.py</span></code> for its seed, and nothing seeds globally. A host name or the proof that a
+process died comes from <code class="docutils literal notranslate"><span class="pre">state/host.py</span></code>, never from <code class="docutils literal notranslate"><span class="pre">socket.gethostname()</span></code> or a pid
+test in the caller.</p>
+<p>Files. A new file format is one module of <code class="docutils literal notranslate"><span class="pre">io</span></code> that writes through <code class="docutils literal notranslate"><span class="pre">atomic_replace.py</span></code>.
+A new stored document takes a <code class="docutils literal notranslate"><span class="pre">schema</span></code> id and a check through <code class="docutils literal notranslate"><span class="pre">document_version.py</span></code>.
+A hard link and a rename onto a reserved folder go through <code class="docutils literal notranslate"><span class="pre">filesystem.py</span></code>, and a DuckDB open through <code class="docutils literal notranslate"><span class="pre">db_retry.py</span></code>, never <code class="docutils literal notranslate"><span class="pre">duckdb.connect</span></code>. A package
+that installs files into a workspace, whether an example, a published run or an exported
+project, writes the same <code class="docutils literal notranslate"><span class="pre">INSTALL.toml</span></code> that <code class="docutils literal notranslate"><span class="pre">payload/index.py</span></code> reads and writes. The
+installer plans every placement before it writes one, so a new placement rule goes to
+<code class="docutils literal notranslate"><span class="pre">payload/install.py</span></code>.</p>
+<p>The running process. A bound on what one call may reach or take is a member of <code class="docutils literal notranslate"><span class="pre">Bounds</span></code>
+in <code class="docutils literal notranslate"><span class="pre">runtime/bounds.py</span></code>, and the check that applies it stays with the owner of the
+download or the delivery. A new <code class="docutils literal notranslate"><span class="pre">HMP_*</span></code> variable is one entry of <code class="docutils literal notranslate"><span class="pre">runtime/env.py</span></code>, a
+new signal rule or a new reader of the stop flag goes to <code class="docutils literal notranslate"><span class="pre">interrupts.py</span></code>, and a new kind
+of timed block goes to <code class="docutils literal notranslate"><span class="pre">MEASURE_KINDS</span></code>. For progress, a new kind of line
+goes to <code class="docutils literal notranslate"><span class="pre">console/progress.py</span></code> with its event in <code class="docutils literal notranslate"><span class="pre">ndjson.py</span></code>, and a new consumer of
+the events reads the NDJSON instead of adding a second display. A new protocol between two
+layers is one module of <code class="docutils literal notranslate"><span class="pre">contracts</span></code> with the concrete class in the layer that owns it,
+and real code never goes there.</p>
+<p>Sites and time. A new column of the site table goes to <code class="docutils literal notranslate"><span class="pre">site/row.py</span></code>, and a new site key
+to <code class="docutils literal notranslate"><span class="pre">site/config.py</span></code>, after a check that <code class="docutils literal notranslate"><span class="pre">site_fingerprint</span></code> still ignores what must
+not change the identity of a site. <code class="docutils literal notranslate"><span class="pre">time/selection.py</span></code> is the one resolver from a date to a
+period that figures and exports share, and <code class="docutils literal notranslate"><span class="pre">time/window.py</span></code> cuts a long run into windows.</p>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../generated/packages.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Packages and registries</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="config.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Package: config</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules">Modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inside-the-package">Inside the package</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-20.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

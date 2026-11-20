@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Downslope distance between two networks" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/downslope-distance.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A mapped stream network and a simulated one rarely coincide. This page defines how far apart they are, measured along the paths the water takes, and the criterion built on that distance, the method..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/downslope_toy_grid.png" />
+<meta property="og:image:alt" content="Two copies of an 8 by 8 grid with receiver arrows. Squares mark the mapped network along the valley, dots the simulated network, which stops halfway up and adds two hillside cells. Numbers give the distance of each cell to the other network." />
+<meta name="description" content="A mapped stream network and a simulated one rarely coincide. This page defines how far apart they are, measured along the paths the water takes, and the criterion built on that distance, the method..." />
+
+    <meta property="article:modified_time" content="2026-11-20T16:42:59+01:00" />
+    <title>Downslope distance between two networks &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-validation.css?v=66ea1472" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/downslope-distance';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/downslope-distance.html" />
+    <link rel="icon" href="../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Notation" href="notation.html" />
+    <link rel="prev" title="The inverse problem of a calibration" href="calibration/inverse-problem-formulation.html" />
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-20"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/field-to-cell-parameter-transfer.html">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="science-map.html">Science map</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Downslope distance between two networks</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="downslope-distance-between-two-networks">
+<h1>Downslope distance between two networks<a class="headerlink" href="#downslope-distance-between-two-networks" title="Link to this heading">#</a></h1>
+<p>A mapped stream network and a simulated one rarely coincide. This page defines
+how far apart they are, measured along the paths the water takes, and the
+criterion built on that distance, the method of <span class="bibtex-citation" id="id1">Abhervé <em>et al.</em> [<a class="reference internal" href="bibliography.html#id14" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">2023</a>]</span>. It
+answers one question. Given a model that makes a network of streams and a map
+that draws another, how long is the walk downslope from one to the other, in
+each direction, and at which value of the calibrated ratio do the two walks
+balance?</p>
+<p>How a model makes streams in plain words is on
+<a class="reference internal" href="../understand/stream-network.html"><span class="doc">How the model makes streams</span></a>. The keys of a calibration on a network are
+in <a class="reference internal" href="../reference/parameters/calibration/outputs.html"><span class="doc">[calibration.outputs]</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Scope.</strong> The page covers the distances, the criterion, what it identifies, and
+how the mapped network is drawn on the mesh. The simulated network itself, from
+the release flux to the flowing cells, is on <a class="reference internal" href="exits/simulated-network.html"><span class="doc">Where the water table reaches the surface</span></a>. The
+search that moves a parameter until the criterion reaches zero is described only
+where it shapes the criterion.</p>
+</div>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">Every cell <span class="math notranslate nohighlight">\(n\)</span> has a center <span class="math notranslate nohighlight">\(x_n\)</span> and an area <span class="math notranslate nohighlight">\(a_n\)</span>. A distance is a length in
+meters along cell-to-cell links, center to center. Sets of cells are written with
+capital letters.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Unit</p></th>
+<th class="head"><p>Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(B\)</span></p></td>
+<td><p>saturated thickness, <span class="math notranslate nohighlight">\(B(h) = \min\bigl(\max(h - z_\mathrm{bot}, 0), H\bigr)\)</span></p></td>
+<td><p>m</p></td>
+<td><p>state, not a field</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\bar B\)</span></p></td>
+<td><p>saturated thickness averaged by area over the catchment (<code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(K\)</span></p></td>
+<td><p>horizontal hydraulic conductivity, the same along <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span></p></td>
+<td><p>m/s</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/param.html#p-flow-param-k-field-value" title="Hydraulic conductivity of the `K` table, in m/s. (m/s)"><code class="docutils literal notranslate"><span class="pre">flow.param.K.field.value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(T\)</span></p></td>
+<td><p>transmissivity, <span class="math notranslate nohighlight">\(T = K\,B\)</span></p></td>
+<td><p>m²/s</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\bar N\)</span></p></td>
+<td><p>recharge averaged over the catchment and a period of time (<code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code> on the stream-network page)</p></td>
+<td><p>m/s</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(n, m\)</span></p></td>
+<td><p>cell indices; <span class="math notranslate nohighlight">\(\mathcal{N}(n)\)</span> is the set of cells that share a face with <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>the grid, <a class="reference internal" href="mesh.html"><span class="doc">The mesh</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(a_n\)</span></p></td>
+<td><p>plan area of cell <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p>m²</p></td>
+<td><p>the grid</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\epsilon\)</span></p></td>
+<td><p>rise per step of the priority flood inside a filled depression</p></td>
+<td><p>m</p></td>
+<td><p>1 mm, a constant of the code</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(r(n)\)</span></p></td>
+<td><p>receiver of cell <span class="math notranslate nohighlight">\(n\)</span>, the one cell it drains to; <span class="math notranslate nohighlight">\(-1\)</span> when it has none</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\mathcal{N}_D(n)\)</span></p></td>
+<td><p>neighbours a cell may drain to: the cells sharing a node on a quad mesh, a face on any other</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model-neighbours" title="The graph the descent walks."><code class="docutils literal notranslate"><span class="pre">neighbours</span></code></a> for the criterion</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(C_n\)</span></p></td>
+<td><p>drain conductance of cell <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p>m²/s</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/flow/bc.html#p-flow-bc-name-value" title="Boundary-condition value, scalar or one value per stress period."><code class="docutils literal notranslate"><span class="pre">flow.bc.&lt;name&gt;.value</span></code></a> of <code class="docutils literal notranslate"><span class="pre">drainage</span></code>, or derived from <span class="math notranslate nohighlight">\(K\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(b_d\)</span></p></td>
+<td><p>thickness of the drain bed in the derived conductance</p></td>
+<td><p>m</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-drain_bed_thickness_m" title="Metres. (m)"><code class="docutils literal notranslate"><span class="pre">solver.drain_bed_thickness_m</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(z^d_n\)</span></p></td>
+<td><p>drain elevation of cell <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(q^\mathrm{rel}_n\)</span></p></td>
+<td><p>water the aquifer releases to the surface in cell <span class="math notranslate nohighlight">\(n\)</span> (<code class="docutils literal notranslate"><span class="pre">release_flux</span></code>)</p></td>
+<td><p>m³/s</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\tau_\mathrm{s}\)</span></p></td>
+<td><p>share of the mean basin recharge, over its own area, a cell must release to count as a source</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model-seepage_threshold" title="A cell releasing less than this fraction of the mean basin recharge, taken over its own area, is not a seepage face. (-)"><code class="docutils literal notranslate"><span class="pre">seepage_threshold</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\Sigma\)</span></p></td>
+<td><p>the sources: cells that release more than their threshold</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\mathcal{S}\)</span></p></td>
+<td><p>the simulated network: the downstream closure of <span class="math notranslate nohighlight">\(\Sigma\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(D\)</span></p></td>
+<td><p>the descent of the model top</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>built with every MODFLOW grid</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(D_{so}\)</span></p></td>
+<td><p>mean downslope distance from the simulated network to the mapped one (<code class="docutils literal notranslate"><span class="pre">D_so</span></code>). Large: the model has too much stream.</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(D_{os}\)</span></p></td>
+<td><p>mean downslope distance from the mapped network to the simulated one (<code class="docutils literal notranslate"><span class="pre">D_os</span></code>). Large: the model has too little stream.</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(J_{signed}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(D_{so} - D_{os}\)</span>, the residual a root search drives to zero (<code class="docutils literal notranslate"><span class="pre">J_signed</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(J\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(\lvert D_{so} - D_{os}\rvert\)</span>, the cost of the <code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> metric (<code class="docutils literal notranslate"><span class="pre">J</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-metric" title="Metric that scores this block against its observations."><code class="docutils literal notranslate"><span class="pre">calibration.objective_blocks.metric</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(D_{optim}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\((D_{so} + D_{os}) / 2\)</span>, a diagnostic (<code class="docutils literal notranslate"><span class="pre">D_optim</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(h_{obs}\)</span></p></td>
+<td><p>cell size where the mapped network lies, the median distance between neighbouring cell centres over the mapped cells (<code class="docutils literal notranslate"><span class="pre">h_obs</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(r_{optim}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(D_{optim} / h_{obs}\)</span>, the validity indicator (<code class="docutils literal notranslate"><span class="pre">r_optim</span></code>)</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(V\)</span></p></td>
+<td><p>the length <span class="math notranslate nohighlight">\(D_{optim}\)</span> must stay under for the result to be valid (<code class="docutils literal notranslate"><span class="pre">validity_length_m</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-validity_length" title="Validity bound of Eq. 4, a length: the calibration is valid when D_optim &lt;= this. (m)"><code class="docutils literal notranslate"><span class="pre">validity_length</span></code></a>, <a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-position_accuracy" title="Positional accuracy of the map. (m)"><code class="docutils literal notranslate"><span class="pre">position_accuracy</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(L_{cap}\)</span></p></td>
+<td><p>longest descent to the outlet inside the catchment; the value a cell whose descent never meets its target takes (<code class="docutils literal notranslate"><span class="pre">L_cap</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\alpha_o\)</span></p></td>
+<td><p>share of the mapped network in its own downslope closure, inside the catchment (<code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code>). A low value means the map and the model top disagree.</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>warning level: <a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-alpha_warning_threshold" title="Below this value of 'alpha_obs_closure_catchment' the run warns that its distances carry a top-versus-map disagreement on top of the hydrogeology. alpha is the share of the downstream closure of the mapped network the network itself covers, measured on the MODEL TOP and on the catchment."><code class="docutils literal notranslate"><span class="pre">alpha_warning_threshold</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(K/\bar N\)</span></p></td>
+<td><p>conductivity over mean recharge (<code class="docutils literal notranslate"><span class="pre">k_over_r</span></code>)</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(T/\bar N\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(K\,\bar B / \bar N\)</span>, transmissivity over recharge (<code class="docutils literal notranslate"><span class="pre">t_over_r_m</span></code>)</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\mathcal{O}\)</span></p></td>
+<td><p>the mapped network, drawn on the cells</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-drawn_by" title="How the map is drawn on the mesh cells."><code class="docutils literal notranslate"><span class="pre">drawn_by</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(d_T(n)\)</span></p></td>
+<td><p>downslope distance from cell <span class="math notranslate nohighlight">\(n\)</span> to the set <span class="math notranslate nohighlight">\(T\)</span></p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\ell(n)\)</span></p></td>
+<td><p>distance from the centre of <span class="math notranslate nohighlight">\(n\)</span> to the centre of its receiver</p></td>
+<td><p>m</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(A_d(n)\)</span></p></td>
+<td><p>area drained through cell <span class="math notranslate nohighlight">\(n\)</span>, the cell included</p></td>
+<td><p>m²</p></td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(o\)</span></p></td>
+<td><p>outlet cell that closes the catchment</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived from the pour point</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\Omega_o\)</span></p></td>
+<td><p>the catchment scored: the cells whose descent reaches <span class="math notranslate nohighlight">\(o\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\mathcal{E}\)</span></p></td>
+<td><p>water bodies: lake cells and other cells whose surface water is an input</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\mu(n)\)</span></p></td>
+<td><p>weight of a cell in a mean: 1, or its area</p></td>
+<td><p>1 or m²</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model-weighting" title="Average one cell one vote (the paper) or weighted by cell area."><code class="docutils literal notranslate"><span class="pre">weighting</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(f_{so}, f_{os}\)</span></p></td>
+<td><p>share of a support whose descent never meets its target (<code class="docutils literal notranslate"><span class="pre">frac_unreachable_so</span></code>, <code class="docutils literal notranslate"><span class="pre">frac_unreachable_os</span></code>)</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>reported per trial, bounds nothing</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\sigma_o\)</span></p></td>
+<td><p>positional accuracy of the mapped network</p></td>
+<td><p>m</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-position_accuracy" title="Positional accuracy of the map. (m)"><code class="docutils literal notranslate"><span class="pre">position_accuracy</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(r_s\)</span></p></td>
+<td><p>largest distance between a stream head and the cell it lands on</p></td>
+<td><p>m</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-heads-radius" title="The largest distance, a length (a bare number is in metres), between a mapped stream head and the centre of the cell it lands on. (m)"><code class="docutils literal notranslate"><span class="pre">heads.radius</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(A_{d,\min}\)</span></p></td>
+<td><p>drained area a cell needs before a head may land on it</p></td>
+<td><p>km²</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-heads-min_drained_area" title="The drained area a cell needs before a head may land on it, so a head next to its valley lands in the valley and not on the ridge cell beside it. (km2)"><code class="docutils literal notranslate"><span class="pre">heads.min_drained_area</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details><section id="downslope-graph">
+<span id="the-graph-the-distances-follow"></span><h2>The graph the distances follow<a class="headerlink" href="#downslope-graph" title="Link to this heading">#</a></h2>
+<p>A distance follows a flow path, and a flow path exists only where the
+depressions are resolved. The code floods the model top on the mesh with the
+priority flood of <a class="reference internal" href="exits/routing-on-the-mesh.html"><span class="doc">Routing on the mesh: the descent D</span></a>, <a class="reference internal" href="exits/routing-on-the-mesh.html#equation-eq-flood">(35)</a>, seeded on
+the border of the active domain, and reads the receivers <span class="math notranslate nohighlight">\(r(n)\)</span> of
+<a class="reference internal" href="exits/routing-on-the-mesh.html#equation-eq-receiver">(37)</a> on the flooded copy. The edge length <span class="math notranslate nohighlight">\(\ell(n)\)</span> is the distance
+from the center of <span class="math notranslate nohighlight">\(n\)</span> to the center of <span class="math notranslate nohighlight">\(r(n)\)</span>.</p>
+<p>The flood is seeded on the whole border, where water leaves the model, not on
+the outlet alone: sealing one outlet would fill a valley of the buffer up to a
+col of the divide. The criterion does not read the descent <span class="math notranslate nohighlight">\(D\)</span> the build stores
+(<a class="reference internal" href="exits/routing-on-the-mesh.html#routing-criterion-graph"><span class="std std-ref">The graph of the stream criterion</span></a>). The map is never burned into the surface: an
+observation never enters the routing surface or the model top.</p>
+</section>
+<section id="downslope-distance-to-set">
+<span id="the-downslope-distance-to-a-set"></span><span id="1-the-downslope-distance-to-a-set"></span><h2>1. The downslope distance to a set<a class="headerlink" href="#downslope-distance-to-set" title="Link to this heading">#</a></h2>
+<p>For a target set <span class="math notranslate nohighlight">\(T\)</span>, the distance from a cell to <span class="math notranslate nohighlight">\(T\)</span> is the length of its
+descent down to the first cell of <span class="math notranslate nohighlight">\(T\)</span>:</p>
+<div class="math notranslate nohighlight" id="equation-eq-downslope-distance">
+<span class="eqno">(48)<a class="headerlink" href="#equation-eq-downslope-distance" title="Link to this equation">#</a></span>\[\begin{split}d_T(n) =
+\begin{cases}
+0 &amp; n \in T, \\
+\ell(n) + d_T\bigl(r(n)\bigr) &amp; n \notin T,\ r(n) \text{ exists}, \\
++\infty &amp; n \notin T,\ r(n) \text{ does not exist.}
+\end{cases}\end{split}\]</div>
+<p>With one receiver per cell, exactly one descending path leaves a cell, so there
+is no shortest path to search for. The distance is not a Euclidean nearest
+distance: a source fifty meters from a stream but across a divide is far away
+downslope. And it is not symmetric: <span class="math notranslate nohighlight">\(d_{\mathcal{O}}\)</span> on the simulated cells and
+<span class="math notranslate nohighlight">\(d_{\mathcal{S}}\)</span> on the mapped cells differ, which is what lets one cost weigh an
+excess of simulated stream against a missing one. An empty target gives
+<span class="math notranslate nohighlight">\(+\infty\)</span> everywhere and does not raise: an empty simulated network is the
+legitimate end of a search interval.</p>
+<figure class="align-default" id="id4">
+<img alt="Two copies of an 8 by 8 grid with receiver arrows. Squares mark the mapped network along the valley, dots the simulated network, which stops halfway up and adds two hillside cells. Numbers give the distance of each cell to the other network." class="plot-directive" src="../_images/downslope_toy_grid.png" width="936" height="553" />
+<figcaption>
+<p><span class="caption-number">Fig. 65 </span><span class="caption-text">Two networks on an 8 by 8 grid of 10 m cells, with the receivers of the
+flooded top. Left: from each simulated cell down to the map, the two hillside
+cells walk 42 m. Right: from each mapped cell down to the simulated network,
+the three upper cells walk 10, 20 and 30 m. The two means differ, and so do
+the cells that carry them. Every number is a call of
+<code class="docutils literal notranslate"><span class="pre">downslope_distance_to_mask</span></code>.</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">downslope_distance_to_mask</span></code>.</p>
+</section>
+<section id="downslope-catchment">
+<span id="the-outlet-the-catchment-and-the-saturation-length"></span><span id="2-the-outlet-the-catchment-and-the-saturation-length"></span><h2>2. The outlet, the catchment and the saturation length<a class="headerlink" href="#downslope-catchment" title="Link to this heading">#</a></h2>
+<p>The outlet <span class="math notranslate nohighlight">\(o\)</span> closes the catchment, usually at the gauging station. With
+<span class="math notranslate nohighlight">\(A_d(n) = a_n + \sum_{m : r(m) = n} A_d(m)\)</span> the area drained through <span class="math notranslate nohighlight">\(n\)</span>, the
+outlet is the most drained cell within two neighbor rings of the cell nearest
+to the pour point the catchment was delineated from (two cells is the
+<code class="docutils literal notranslate"><span class="pre">SnapPourPoints</span></code> distance of the paper, read on the mesh). Without a pour point,
+the most drained cell of the delineated polygon closes the catchment, and without
+the polygon the largest basin of the mesh does, with a warning.</p>
+<p>The catchment scored, and the longest descent in it, are read on the same graph:</p>
+<div class="math notranslate nohighlight" id="equation-eq-catchment">
+<span class="eqno">(49)<a class="headerlink" href="#equation-eq-catchment" title="Link to this equation">#</a></span>\[\Omega_o = \{\, n : d_{\{o\}}(n) &lt; \infty \,\}, \qquad
+L_{cap} = \max_{n \in \Omega_o} d_{\{o\}}(n) .\]</div>
+<p>The delineated polygon builds the domain and places the outlet; it is not the
+support. Their symmetric difference over the area of the polygon, the outline the
+mesh followed when it followed one, is published as <code class="docutils literal notranslate"><span class="pre">catchment_mismatch</span></code>. The same
+gap to the basin of D the build kept, the cells the budget zone sums, is published
+as <code class="docutils literal notranslate"><span class="pre">basin_mismatch</span></code>. A wrong outlet closes the basin of D on the same wrong branch,
+so only the first one shows it. Above
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-max_catchment_mismatch" title="Largest gap allowed between the scored catchment and the delineated one, as a share of the delineated area: 'catchment_mismatch', the area of their symmetric difference over the area of the outline the mesh followed. (-)"><code class="docutils literal notranslate"><span class="pre">max_catchment_mismatch</span></code></a>,
+5 per cent by default, the search is refused before its first solve. On the Nançon
+the gap is 0.2 per cent on the default grid of 27 004 cells, 4.2, 3.0, 2.1 and 4.2 per
+cent on grids of 45, 60, 80 and 120 cells a side, and 0.2 per cent on a Voronoi mesh of
+100 m that follows the smoothed outline. It passes 5 per cent on the grid of 30 cells a
+side (9.4), on a Voronoi mesh of 400 m (6.6) and on a Voronoi mesh of 200 m (11.2),
+where the outlet closes on another branch. <span class="math notranslate nohighlight">\(L_{cap}\)</span> is
+static: it is the value an unreachable cell takes in the means
+(<a class="reference internal" href="#downslope-means"><span class="std std-ref">5. The two mean distances</span></a>).</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">resolve_outlet</span></code>.</p>
+</section>
+<section id="downslope-networks">
+<span id="the-two-networks-on-the-cells"></span><span id="3-the-two-networks-on-the-cells"></span><h2>3. The two networks on the cells<a class="headerlink" href="#downslope-networks" title="Link to this heading">#</a></h2>
+<p><strong>The simulated network</strong> <span class="math notranslate nohighlight">\(\mathcal{S}\)</span> is the downstream closure of the
+sources <span class="math notranslate nohighlight">\(\Sigma\)</span>, the cells whose release flux exceeds a share of their own
+recharge, <a class="reference internal" href="exits/simulated-network.html#equation-eq-sources">(44)</a>. The release flux is the union of
+<a class="reference internal" href="exits/simulated-network.html#equation-eq-release-flux">(43)</a>, the same union for the criterion and for the stored
+field. A steady phase reads one state of the run.</p>
+<p><strong>The mapped network</strong> <span class="math notranslate nohighlight">\(\mathcal{O}\)</span> is a set of lines, drawn on the cells by
+one of three rules chosen by
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-drawn_by" title="How the map is drawn on the mesh cells."><code class="docutils literal notranslate"><span class="pre">drawn_by</span></code></a>.
+It is first cut to the delineated catchment
+(<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-clip_to_catchment" title="Cut the map to the delineated catchment before drawing it, with the shape the hydrography data family clips what it loads to, so a file and 'data.hydrography' draw the same map from the same data."><code class="docutils literal notranslate"><span class="pre">clip_to_catchment</span></code></a>),
+with the shape <a class="hmp-toml-ref reference external" href="../reference/parameters/data/hydrography.html#p-data-hydrography" title="Hydrography configuration (stream network vector data)."><code class="docutils literal notranslate"><span class="pre">data.hydrography</span></code></a> clips what it loads to, so a file and that
+section draw the same map, and so does a figure redrawn from the run.</p>
+<p><em>Heads</em> (the default) keeps only where the map says a stream starts, and lets the
+receiver graph draw the rest: the path a ditch gave a mapped line is something a
+model on a DEM cannot reproduce, and drawn cell by cell it would count as error.</p>
+<ol class="arabic simple">
+<li><p>The lines are merged between junctions and free ends. A free end on the outline
+the map was cut along was made by the cut: the stream goes on beyond it, so it is
+no head. It is counted as <code class="docutils literal notranslate"><span class="pre">n_cut_ends</span></code>.</p></li>
+<li><p>A free end is a head when the largest drained area within the radius <span class="math notranslate nohighlight">\(r_s\)</span> of
+it does not exceed the same quantity at the other end of its reach. The
+drained area decides, never the direction the line was drawn in.</p></li>
+<li><p>A head lands on the nearest active cell within <span class="math notranslate nohighlight">\(r_s\)</span> that drains at least
+<span class="math notranslate nohighlight">\(A_{d,\min}\)</span>, or is lost.</p></li>
+<li><p>From each landing cell, the trace follows the receivers until the descent ends
+or meets a traced cell.</p></li>
+<li><p>The foot of each dam of a lake with a declared spillway is a forced head: the
+stream under a reservoir has no free end. Only the MODFLOW 6 build stores the
+dam feet.</p></li>
+</ol>
+<p>The traced map is connected to the outlet by construction.</p>
+<figure class="align-default" id="id6">
+<img alt="A toy valley with three mapped lines running beside the talweg. Two upstream free ends are kept as heads with their snap radius; the downstream free end is rejected. The drawn map follows the talweg from the two landing cells to the outlet." class="plot-directive" src="../_images/downslope_heads.png" width="609" height="675" loading="lazy" decoding="async" />
+<figcaption>
+<p><span class="caption-number">Fig. 67 </span><span class="caption-text">The heads rule on a toy valley of 25 m cells, from one call of
+<code class="docutils literal notranslate"><span class="pre">trace_from_heads</span></code>. The two upstream free ends drain less than the
+confluence and are kept; the downstream end drains more and is not a head.
+The drawn map follows the descent of the model, not the line.</span><a class="headerlink" href="#id6" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p><em>Crossing</em> keeps a cell when a mapped line crosses the segment joining the
+centers of two cells that share an edge: on a structured grid, the cell medians,
+which is what the WhiteboxTools tool <code class="docutils literal notranslate"><span class="pre">VectorLinesToRaster</span></code> of the paper tests.
+The map is one cell wide, like the simulated network. A reach that crosses no
+segment marks the cell holding its midpoint instead, and the count is published
+per trial as <code class="docutils literal notranslate"><span class="pre">n_observed_features_fallback</span></code>. This is the rule for a map that is
+not a tree: canals, braids, polders, karst.</p>
+<p><em>Touch</em> keeps every cell a line touches, corners included. Each diagonal step of
+the map then gains the two cells that share the corner, so a model that
+reproduces the map exactly is pulled towards a smaller K. It is kept to replay a
+session recorded before 2026-09.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">trace_from_heads</span></code>.</p>
+</section>
+<section id="downslope-supports">
+<span id="the-supports-and-the-targets"></span><span id="4-the-supports-and-the-targets"></span><h2>4. The supports and the targets<a class="headerlink" href="#downslope-supports" title="Link to this heading">#</a></h2>
+<p>The means are taken over the catchment, without the water bodies <span class="math notranslate nohighlight">\(\mathcal{E}\)</span>:</p>
+<div class="math notranslate nohighlight" id="equation-eq-supports">
+<span class="eqno">(50)<a class="headerlink" href="#equation-eq-supports" title="Link to this equation">#</a></span>\[\Omega_o^\ast = \Omega_o \setminus \mathcal{E}, \qquad
+\mathcal{S}^\ast = \mathcal{S} \cap \Omega_o^\ast, \qquad
+\mathcal{O}^\ast = \mathcal{O} \cap \Omega_o^\ast .\]</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathcal{S}\)</span> is closed downslope, <span class="math notranslate nohighlight">\(\mathcal{O}\)</span> is taken as drawn: closing the
+map would build observation out of the DEM.</p></li>
+<li><p>The target of <span class="math notranslate nohighlight">\(D_{so}\)</span> is <span class="math notranslate nohighlight">\(T_{so} = \mathcal{O} \cup \mathcal{E} \cup \{o\}\)</span>.
+The outlet is added because mapped lines may stop short of it.</p></li>
+<li><p>The target of <span class="math notranslate nohighlight">\(D_{os}\)</span> is <span class="math notranslate nohighlight">\(T_{os} = \mathcal{S}\)</span>.</p></li>
+<li><p>Water bodies stay in the graph and leave both supports: a lake cell in a
+support would add one zero per cell and move the root with the size of the
+lake.</p></li>
+</ul>
+<p>The supports split the cells into three classes, published per trial:
+<code class="docutils literal notranslate"><span class="pre">n_valid</span></code> (<span class="math notranslate nohighlight">\(\mathcal{S}^\ast \cap \mathcal{O}\)</span>, simulated where the map has a
+stream), <code class="docutils literal notranslate"><span class="pre">n_excess</span></code> (<span class="math notranslate nohighlight">\(\mathcal{S}^\ast \setminus \mathcal{O}\)</span>, simulated where it
+has none) and <code class="docutils literal notranslate"><span class="pre">n_missing</span></code> (<span class="math notranslate nohighlight">\(\mathcal{O}^\ast \setminus \mathcal{S}\)</span>, mapped where
+the model makes none).</p>
+<p>The graph is not cut to <span class="math notranslate nohighlight">\(\Omega_o\)</span>, the supports are: on a buffered domain many
+cells drain out of the basin and never meet the map.</p>
+</section>
+<section id="downslope-means">
+<span id="the-two-mean-distances"></span><span id="5-the-two-mean-distances"></span><h2>5. The two mean distances<a class="headerlink" href="#downslope-means" title="Link to this heading">#</a></h2>
+<p>Write <span class="math notranslate nohighlight">\(\hat d_T(n)\)</span> for the distance in which an unreachable cell takes the
+value <span class="math notranslate nohighlight">\(L_{cap}\)</span>. An unreachable cell is never dropped and never counted as
+infinite: <span class="math notranslate nohighlight">\(+\infty\)</span> would make the mean infinite, and dropping it would move the
+support with the parameter. With <span class="math notranslate nohighlight">\(\mu(n)\)</span> the weight of a cell,</p>
+<div class="math notranslate nohighlight" id="equation-eq-means">
+<span class="eqno">(51)<a class="headerlink" href="#equation-eq-means" title="Link to this equation">#</a></span>\[D_{so} = \frac{\sum_{n \in \mathcal{S}^\ast} \mu(n)\, \hat d_{T_{so}}(n)}{\sum_{n \in \mathcal{S}^\ast} \mu(n)},
+\qquad
+D_{os} = \frac{\sum_{n \in \mathcal{O}^\ast} \mu(n)\, \hat d_{T_{os}}(n)}{\sum_{n \in \mathcal{O}^\ast} \mu(n)} .\]</div>
+<p>With <span class="math notranslate nohighlight">\(\mu = 1\)</span>, each cell has one vote, as in the paper; with <span class="math notranslate nohighlight">\(\mu = a_n\)</span> the
+mean is weighted by area, which matters on a mesh refined along the streams.
+Both pairs are reported at every trial, and
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model-weighting" title="Average one cell one vote (the paper) or weighted by cell area."><code class="docutils literal notranslate"><span class="pre">weighting</span></code></a> selects the one the
+criterion reads.</p>
+<p><span class="math notranslate nohighlight">\(D_{so}\)</span> large means a simulated network spilling far from the mapped one, an
+excess. <span class="math notranslate nohighlight">\(D_{os}\)</span> large means a simulated network that never grew to the mapped
+one, a deficit. At a balanced point most distances are zero, so the means are
+carried by a few cells: they are tail statistics.</p>
+<p>The unreachable shares <span class="math notranslate nohighlight">\(f_{so}\)</span> and <span class="math notranslate nohighlight">\(f_{os}\)</span> are reported on both sides, and neither
+refuses a trial. <span class="math notranslate nohighlight">\(f_{so}\)</span> is zero by construction: the target of <span class="math notranslate nohighlight">\(D_{so}\)</span>
+holds the outlet, and every cell of the catchment reaches the outlet. The target of <span class="math notranslate nohighlight">\(f_{os}\)</span>
+is the simulated network the calibration moves: at a high conductivity it retracts
+into the talwegs, and mapped cells legitimately have nothing left to descend into.
+<code class="docutils literal notranslate"><span class="pre">frac_outlet_terminated</span></code> is the share of the simulated support whose descent meets
+the target only at the sealed outlet. It says how much of <span class="math notranslate nohighlight">\(D_{so}\)</span> rests on that one
+cell, and a network in excess legitimately gives a large share, so it bounds nothing.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">mean_downslope_distance</span></code>.</p>
+</section>
+<section id="downslope-criterion">
+<span id="the-criterion"></span><span id="6-the-criterion"></span><h2>6. The criterion<a class="headerlink" href="#downslope-criterion" title="Link to this heading">#</a></h2>
+<p>The criterion is equations 1 to 4 of <span class="bibtex-citation" id="id2">Abhervé <em>et al.</em> [<a class="reference internal" href="bibliography.html#id14" title="R. Abhervé, C. Roques, A. Gauvain, L. Longuevergne, S. Louaisil, L. Aquilina, and J.-R. de Dreuzy. Calibration of groundwater seepage against the spatial distribution of the stream network to assess catchment-scale hydraulic properties. Hydrology and Earth System Sciences, 27(17):3221–3239, 2023. doi:10.5194/hess-27-3221-2023.">2023</a>]</span>:</p>
+<div class="math notranslate nohighlight" id="equation-eq-criterion">
+<span class="eqno">(52)<a class="headerlink" href="#equation-eq-criterion" title="Link to this equation">#</a></span>\[\begin{split}\begin{aligned}
+J_{signed} &amp;= D_{so} - D_{os}, &amp;
+J &amp;= \lvert J_{signed} \rvert, \\
+D_{optim} &amp;= \tfrac{1}{2}\,(D_{so} + D_{os}), &amp;
+r_{optim} &amp;= D_{optim} / h_{obs} .
+\end{aligned}\end{split}\]</div>
+<p>When the simulated network is empty, <span class="math notranslate nohighlight">\(D_{so}\)</span> has no support, and the residual
+is set to <span class="math notranslate nohighlight">\(J_{signed} = -L_{cap}\)</span>: the negative value a root search needs at the
+end of its interval where nothing seeps.</p>
+<p><strong>The cost is <span class="math notranslate nohighlight">\(J\)</span>, and its zero is a crossing.</strong> The two curves <span class="math notranslate nohighlight">\(D_{so}\)</span> and
+<span class="math notranslate nohighlight">\(D_{os}\)</span>, drawn against the calibrated parameter, cross, and the crossing is the
+answer. <span class="math notranslate nohighlight">\(D_{optim}\)</span> is large at both ends of a sweep, so it has an interior
+minimum, and minimizing it is a tempting substitute. It is a different estimator:
+nothing places its minimum at the crossing.</p>
+<figure class="align-default" id="id8">
+<img alt="Two curves against the calibrated ratio on a log axis. The distance from the simulated to the mapped network falls as the ratio grows, the distance from the mapped to the simulated network rises, and they cross where J is zero. The dotted mean of the two has its minimum further right." class="plot-directive" src="../_images/downslope_crossing.png" width="945" height="525" loading="lazy" decoding="async" />
+<figcaption>
+<p><span class="caption-number">Fig. 69 </span><span class="caption-text"><span class="math notranslate nohighlight">\(D_{so}\)</span> and <span class="math notranslate nohighlight">\(D_{os}\)</span> against <span class="math notranslate nohighlight">\(K/\bar N\)</span> on a toy
+catchment of 60 by 60 cells of 20 m. No solver runs: a cell is a source when
+the recharge it drains exceeds what a 30 m saturated thickness carries down
+its slope, <span class="math notranslate nohighlight">\(\bar N A_d &gt; K B s\,w\)</span>, and the map holds the cells
+draining more than 0.03 km². Every distance is a call of the code. The curves
+are steps, because the masks are discrete. The minimum of <span class="math notranslate nohighlight">\(D_{optim}\)</span>
+(dotted) is not at the crossing.</span><a class="headerlink" href="#id8" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The two estimators are needed and are not interchangeable. Inside one model
+structure, <span class="math notranslate nohighlight">\(J\)</span> finds the parameter, and <span class="math notranslate nohighlight">\(D_{optim}\)</span> cannot separate two points
+that both balance. Between structures already balanced at <span class="math notranslate nohighlight">\(J = 0\)</span>, only
+<span class="math notranslate nohighlight">\(D_{optim}\)</span> separates them. The code names them apart in
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks-metric" title="Metric that scores this block against its observations."><code class="docutils literal notranslate"><span class="pre">metric</span></code></a>: <code class="docutils literal notranslate"><span class="pre">distance_gap</span></code> is the cost
+<span class="math notranslate nohighlight">\(J\)</span> and carries the signed residual; <code class="docutils literal notranslate"><span class="pre">distance_mean</span></code> is <span class="math notranslate nohighlight">\(D_{optim}\)</span>, a
+diagnostic. With two maps, each bound is this same pair evaluated once, and the
+cost is the sum of the weighted gaps. A run with a permanent map beside the full
+one, in one state, scores the state against the permanent map; the full map is
+scored at the same state as a validation and never enters the cost.</p>
+<p>In the code: <code class="docutils literal notranslate"><span class="pre">seepage_distance_cost</span></code>.</p>
+</section>
+<section id="downslope-validity">
+<span id="when-a-result-is-valid"></span><span id="7-when-a-result-is-valid"></span><h2>7. When a result is valid<a class="headerlink" href="#downslope-validity" title="Link to this heading">#</a></h2>
+<p><strong>The length scale.</strong> <span class="math notranslate nohighlight">\(h_{obs}\)</span> is the median distance between the centers of
+cells that share an edge, over the mapped cells of <span class="math notranslate nohighlight">\(\Omega_o\)</span>: the cell size on a
+regular grid, the size of the fine cells on a mesh refined along the streams. It
+is static, since the map does not move with <span class="math notranslate nohighlight">\(K\)</span>.</p>
+<p><strong>The bound.</strong> The paper reads <span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span>: two cells, one of which
+budgets for the error of the map. The code writes it as a length:</p>
+<div class="math notranslate nohighlight" id="equation-eq-validity">
+<span class="eqno">(53)<a class="headerlink" href="#equation-eq-validity" title="Link to this equation">#</a></span>\[D_{optim} \leq V, \qquad V = 2\,\max(h_{obs},\ \sigma_o) .\]</div>
+<p>With no declared accuracy, <span class="math notranslate nohighlight">\(V = 2 h_{obs}\)</span>, the bound of the paper. A declared
+accuracy <span class="math notranslate nohighlight">\(\sigma_o\)</span> above <span class="math notranslate nohighlight">\(h_{obs}\)</span> widens <span class="math notranslate nohighlight">\(V\)</span> and leaves <span class="math notranslate nohighlight">\(r_{optim}\)</span> comparable
+with the paper. A declared
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-validity_length" title="Validity bound of Eq. 4, a length: the calibration is valid when D_optim &lt;= this. (m)"><code class="docutils literal notranslate"><span class="pre">validity_length</span></code></a> replaces the
+computation. The bound is read on the trial the search returns, and qualifies the
+value without replacing it: a violation logs a warning, or is refused after the
+session is saved when
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-on_invalid" title="What a violation of Eq. 4 does: D_optim above 'validity_length'."><code class="docutils literal notranslate"><span class="pre">on_invalid</span></code></a> is
+<code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code>. Each trial publishes <code class="docutils literal notranslate"><span class="pre">r_optim</span></code> and <code class="docutils literal notranslate"><span class="pre">r_optim_valid</span></code>.</p>
+<p><strong>The map against the surface.</strong> Wherever the mapped lines do not sit in the
+talwegs of the model top, the distances measure a disagreement between two
+datasets rather than hydrogeology. The code publishes the share of the
+downstream closure of the map that the map itself holds, inside the catchment:</p>
+<div class="math notranslate nohighlight" id="equation-eq-alpha">
+<span class="eqno">(54)<a class="headerlink" href="#equation-eq-alpha" title="Link to this equation">#</a></span>\[\alpha_o = \frac{\lvert \mathcal{O} \cap \Omega_o \rvert}{\lvert \mathrm{closure}(\mathcal{O}) \cap \Omega_o \rvert},\]</div>
+<p>as <code class="docutils literal notranslate"><span class="pre">alpha_obs_closure_catchment</span></code>. A value below
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict-alpha_warning_threshold" title="Below this value of 'alpha_obs_closure_catchment' the run warns that its distances carry a top-versus-map disagreement on top of the hydrogeology. alpha is the share of the downstream closure of the mapped network the network itself covers, measured on the MODEL TOP and on the catchment."><code class="docutils literal notranslate"><span class="pre">alpha_warning_threshold</span></code></a>
+logs a warning, once per process.</p>
+</section>
+<section id="downslope-identifies">
+<span id="what-the-criterion-identifies"></span><h2>What the criterion identifies<a class="headerlink" href="#downslope-identifies" title="Link to this heading">#</a></h2>
+<p>Take a steady water-table aquifer with drains at the surface whose conductance
+is derived from <span class="math notranslate nohighlight">\(K\)</span>, <a class="reference internal" href="exits/drains-and-et.html#equation-eq-drain-conductance">(38)</a>. Per unit area, the balance of a
+cell is</p>
+<div class="math notranslate nohighlight" id="equation-eq-k-over-n">
+<span class="eqno">(55)<a class="headerlink" href="#equation-eq-k-over-n" title="Link to this equation">#</a></span>\[\nabla \cdot \bigl( K\, B\, \nabla h \bigr) + N = \frac{K}{b_d}\,\bigl(h - z^d\bigr)_+ ,\]</div>
+<p>with <span class="math notranslate nohighlight">\(B\)</span> the saturated thickness (<a class="reference internal" href="groundwater-flow.html#equation-eq-saturated-thickness">(18)</a>) and <span class="math notranslate nohighlight">\(z^d\)</span> the
+drain elevation, the cell top by default. Dividing by <span class="math notranslate nohighlight">\(K\)</span> gives</p>
+<div class="math notranslate nohighlight">
+\[\nabla \cdot \bigl( B\, \nabla h \bigr) + \frac{N}{K} = \frac{1}{b_d}\,\bigl(h - z^d\bigr)_+ ,\]</div>
+<p>which depends on <span class="math notranslate nohighlight">\(N/K\)</span> and on the geometry alone. When <span class="math notranslate nohighlight">\(K\)</span> is scaled by one
+factor everywhere and <span class="math notranslate nohighlight">\(N\)</span> keeps its shape, the head field, and so the seepage
+mask, the release flux and the criterion, depend only on <span class="math notranslate nohighlight">\(K/\bar N\)</span>. What the
+criterion calibrates is that ratio, not <span class="math notranslate nohighlight">\(K\)</span>. A <span class="math notranslate nohighlight">\(K\)</span> read from it inherits the
+recharge series entirely: report <span class="math notranslate nohighlight">\(K/\bar N\)</span> and name the recharge beside it.</p>
+<p>When the search moves the homogeneous conductivity alone, the report publishes
+the ratio with what it rests on: <code class="docutils literal notranslate"><span class="pre">k_over_r</span></code> (<span class="math notranslate nohighlight">\(K/\bar N\)</span>), <code class="docutils literal notranslate"><span class="pre">k_optim_m_s</span></code>,
+<code class="docutils literal notranslate"><span class="pre">R_mean_m_s</span></code> (<span class="math notranslate nohighlight">\(\bar N\)</span>), <code class="docutils literal notranslate"><span class="pre">d_sat_m</span></code> (the saturated thickness averaged over the
+catchment, <span class="math notranslate nohighlight">\(\bar B\)</span>), and <code class="docutils literal notranslate"><span class="pre">t_over_r_m</span></code> (<span class="math notranslate nohighlight">\(T/\bar N = K \bar B / \bar N\)</span>, a length).
+For any other search they are not published.</p>
+<p>This is why a search that moves <span class="math notranslate nohighlight">\(K\)</span> is refused when a conductance does not
+follow <span class="math notranslate nohighlight">\(K\)</span> (see the limits).</p>
+</section>
+<section id="downslope-search">
+<span id="how-a-search-reaches-the-zero"></span><h2>How a search reaches the zero<a class="headerlink" href="#downslope-search" title="Link to this heading">#</a></h2>
+<p>The masks are discrete, so <span class="math notranslate nohighlight">\(J_{signed}\)</span> steps over zero instead of reaching it.
+On a real catchment <span class="math notranslate nohighlight">\(|J|\)</span> never drops below three meters while the root is
+bracketed to a factor 1.0015. The zero is a plateau whose width sets how
+precisely the parameter is known. A bisection therefore stops on the width of its
+bracket, on a logarithmic transform, never on the size of the residual. A search
+that stops on <span class="math notranslate nohighlight">\(|J| &lt; \epsilon\)</span> may never stop at all.</p>
+<p>Monotonicity is not proven, since the direction of variation was established on
+three points. A coarse sweep runs first, checks it instead of assuming it and
+sees every crossing. Its solves are the same ones that draw the diagnostic
+curves. A bracket with no sign change is reported, never closed: returning the
+better end would be a minimized mean distance in disguise, which is the drift
+this criterion exists to correct. The search raises and prints both residuals.
+The options are on <a class="reference internal" href="../reference/calibration-methods.html"><span class="doc">Calibration methods and metrics</span></a>.</p>
+<section id="two-roots">
+<h3>Two roots<a class="headerlink" href="#two-roots" title="Link to this heading">#</a></h3>
+<p>A network output scored on two bounds (<span class="math notranslate nohighlight">\(n_{bounds} = 2\)</span>, a transient extent
+table and a minimal map) publishes one residual per bound, <code class="docutils literal notranslate"><span class="pre">J_signed_minimal</span></code> and
+<code class="docutils literal notranslate"><span class="pre">J_signed_maximal</span></code>, and no <code class="docutils literal notranslate"><span class="pre">J_signed</span></code>. The search sweeps once, keeps one bracket
+per bound on the same trials, and halves each until its width reaches the
+tolerance. The value it returns is the weighted geometric mean of the two roots</p>
+<div class="math notranslate nohighlight">
+\[\log K = w_\mathrm{min} \log K^*_\mathrm{min} + w_\mathrm{max} \log K^*_\mathrm{max},\]</div>
+<p>with the weights the output publishes. This value is solved once more, so every
+number published beside it comes from a real solve. The two roots and their
+spread <span class="math notranslate nohighlight">\(\Delta = \log_{10}(K^*_\mathrm{max} / K^*_\mathrm{min})\)</span> are published
+in <code class="docutils literal notranslate"><span class="pre">roots_record</span></code>. A bound weighted zero is not searched, because its root would
+move nothing and a missing sign change on it would refuse a search that does not
+depend on it.</p>
+</section>
+<section id="points-asked-together">
+<h3>Points asked together<a class="headerlink" href="#points-asked-together" title="Link to this heading">#</a></h3>
+<p>An engine that asks for <span class="math notranslate nohighlight">\(n\)</span> points at once gets <span class="math notranslate nohighlight">\(n\)</span>. The sweep is fixed in
+advance, so it is handed out <span class="math notranslate nohighlight">\(n\)</span> points at a time. A bracket is cut by <span class="math notranslate nohighlight">\(n\)</span> points
+into <span class="math notranslate nohighlight">\(n + 1\)</span> equal parts in the log variable, all solved together, and the part
+whose ends change sign is kept. A round that needs fewer points to reach the
+tolerance places only those. With two roots the <span class="math notranslate nohighlight">\(n\)</span> points of a round are shared
+between the two brackets, one each first, then one at a time to the bracket that
+would stay widest, and a bracket both bounds share is cut once. One point per ask
+is the binary search, trial for trial.</p>
+<p>When one round leaves several parts that change sign, the residual is not
+monotone there. The part kept is the one binary bisection keeps. Its halvings are
+followed through the points evaluated, as far as each midpoint is one of them,
+which is all the way when <span class="math notranslate nohighlight">\(n + 1\)</span> is a power of two. Past the last midpoint
+evaluated, the lowest crossing left is kept, the rule the sweep applies to
+crossings of one width.</p>
+</section>
+<section id="the-budget-before-the-first-solve">
+<h3>The budget before the first solve<a class="headerlink" href="#the-budget-before-the-first-solve" title="Link to this heading">#</a></h3>
+<p>The budget is known before the first solve, from <code class="docutils literal notranslate"><span class="pre">root_search_budget</span></code>. Let <span class="math notranslate nohighlight">\(d\)</span> be
+the declared interval in decades, <span class="math notranslate nohighlight">\(t = \log_{10}(1 + \mathrm{rel\_tol})\)</span>, <span class="math notranslate nohighlight">\(S\)</span> the
+sweep points (two when <code class="docutils literal notranslate"><span class="pre">sweep_points</span></code> is zero), <span class="math notranslate nohighlight">\(s = d / (S - 1)\)</span> the sweep step,
+<span class="math notranslate nohighlight">\(h(w) = \lceil \log_2 (w / t) \rceil\)</span> the halvings of a bracket <span class="math notranslate nohighlight">\(w\)</span> decades wide
+and <span class="math notranslate nohighlight">\(E\)</span> the <code class="docutils literal notranslate"><span class="pre">bracket_expand</span></code>. Then</p>
+<ul class="simple">
+<li><p>one root inside the declared bounds costs <span class="math notranslate nohighlight">\(N_\mathrm{nominal} = S + h(s)\)</span>,</p></li>
+<li><p>one root found after <span class="math notranslate nohighlight">\(e\)</span> expansions costs <span class="math notranslate nohighlight">\(S + 2e + h(1)\)</span>, since each expansion
+solves two new ends and leaves a bracket one decade wide,</p></li>
+<li><p>two roots inside the bounds cost <span class="math notranslate nohighlight">\(S + 2 h(s) + 1\)</span>, the last one being the solve
+at the combined value,</p></li>
+<li><p>two roots of which one needed <span class="math notranslate nohighlight">\(e\)</span> expansions cost
+<span class="math notranslate nohighlight">\(S + 2e + h(1) + \max(h(s), h(1)) + 1\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(N_\mathrm{worst}\)</span> is the largest of these, reached at <span class="math notranslate nohighlight">\(e = E\)</span> whenever the
+sweep step is at most a decade.</p></li>
+</ul>
+<p>On the Nançon, <span class="math notranslate nohighlight">\([10^{-7}, 10^{-3}]\)</span> m/s, seven sweep points and one per cent, one
+root costs 15 evaluations inside the bounds and 17, 19, 21 and 23 after one to
+four expansions. Two roots cost 24 inside the bounds and 26 to 32 after
+expansions. <code class="docutils literal notranslate"><span class="pre">max_trials</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> budgets the worst case, and a declared budget
+below the nominal case is refused before the first solve. When a budget still
+runs out, the search publishes the halvings its brackets still need
+(<code class="docutils literal notranslate"><span class="pre">evaluations_remaining</span></code>), and the engine grants exactly those, once.</p>
+<p>With <span class="math notranslate nohighlight">\(n\)</span> points per ask, <span class="math notranslate nohighlight">\(h(w)\)</span> becomes the number of evaluations that close the
+bracket <span class="math notranslate nohighlight">\(n\)</span> cuts at a time, and the two brackets of a two-root search are closed
+together. With <span class="math notranslate nohighlight">\(n = 1\)</span> the counts above hold. There are more evaluations and far
+fewer rounds. On the Nançon with four points, one root costs 20 evaluations in 6
+rounds instead of 15 in 15, and two roots cost 26 in 8 instead of 24 in 24.</p>
+</section>
+<section id="the-interval-around-the-root">
+<h3>The interval around the root<a class="headerlink" href="#the-interval-around-the-root" title="Link to this heading">#</a></h3>
+<p>The interval reported beside the root is read on the cost curve. The trials give
+one cost per point of the search variable, the first solved cost when a point was
+asked twice, and none on a point that did not solve. From the root the cost is
+followed on each side to its first crossing of the margin, by a straight line
+between two points, so no solve is added. A point with no cost stops the walk,
+since a line drawn to it would claim a crossing no solve showed.</p>
+</section>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Water leaves a cell by one receiver (single flow direction).</p></li>
+<li><p>The model top, flooded on the mesh graph, is the surface water follows.</p></li>
+<li><p>Distances are lengths along links between cell centers, not straight lines.</p></li>
+<li><p>The mapped network is independent of the DEM. It is never burned into the
+surface.</p></li>
+<li><p>The release flux is the whole of what leaves the aquifer for the surface.</p></li>
+<li><p>For the reading of <span class="math notranslate nohighlight">\(K/\bar N\)</span>: the state is steady, the drain conductance
+follows <span class="math notranslate nohighlight">\(K\)</span>, and <span class="math notranslate nohighlight">\(K\)</span> is scaled by one factor while <span class="math notranslate nohighlight">\(N\)</span> keeps its shape.</p></li>
+<li><p>The threshold <span class="math notranslate nohighlight">\(\tau_\mathrm{s}\)</span> and the mean recharge <span class="math notranslate nohighlight">\(\bar N\)</span> are frozen over a
+search.</p></li>
+</ul>
+</section>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<p>What the code refuses:</p>
+<ul class="simple">
+<li><p>a search whose scored catchment differs from the delineated outline by more than
+its bound, before the first solve: an outlet on another branch, or a mesh too
+coarse for the catchment;</p></li>
+<li><p>a mapped network that lands on no active cell, or on no cell of the catchment.
+The message names the CRS as the first suspect;</p></li>
+<li><p>a heads rule that draws no stream: no free end on an active cell, every free
+end draining more than the other end of its reach, or every head lost;</p></li>
+<li><p>a release record in the budget that no declared package reads, which would
+report its water as dry land;</p></li>
+<li><p>a search that moves a conductivity while a drain has a fixed conductance, or
+while SFR or LAK is active: those conductances do not follow <span class="math notranslate nohighlight">\(K\)</span>, so
+<a class="reference internal" href="#equation-eq-k-over-n">(55)</a> does not hold. A search driving another parameter gets a
+warning instead;</p></li>
+<li><p>a bisection on more than one parameter, or on a parameter without a
+logarithmic transform.</p></li>
+</ul>
+<p>What the code does not represent:</p>
+<ul class="simple">
+<li><p><strong>Monotonicity.</strong> The criterion does not prove that <span class="math notranslate nohighlight">\(J_{signed}\)</span> varies one way
+with the parameter. It checks it on a sweep.</p></li>
+<li><p><strong><span class="math notranslate nohighlight">\(r_{optim}\)</span> is not a quality indicator.</strong> It measures agreement with the map,
+and it moves with the grid: refining a mesh lowers <span class="math notranslate nohighlight">\(h_{obs}\)</span> and raises
+<span class="math notranslate nohighlight">\(r_{optim}\)</span> at constant agreement. Two verdicts are comparable when their
+validity lengths are.</p></li>
+<li><p><strong>Tail statistics.</strong> Reading <span class="math notranslate nohighlight">\(r_{optim} \leq 2\)</span> as “the typical gap is under
+two cells” is wrong when the median distance is zero.</p></li>
+<li><p><strong>The surface is not repaired.</strong> <a class="hmp-toml-ref reference external" href="../reference/parameters/geographic.html#p-geographic-dem_correc_type" title="How the DEM is conditioned before the catchment is delineated."><code class="docutils literal notranslate"><span class="pre">dem_correc_type</span></code></a>
+conditions the DEM before the catchment is delineated (<code class="docutils literal notranslate"><span class="pre">fill</span></code>, the tool of the
+paper, or <code class="docutils literal notranslate"><span class="pre">breach</span></code> <span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id32" title="John B. Lindsay. Efficient hybrid breaching-filling sink removal methods for flow path enforcement in digital elevation models. Hydrological Processes, 30(6):846–857, 2016. doi:10.1002/hyp.10648.">Lindsay, 2016</a>]</span>, or <code class="docutils literal notranslate"><span class="pre">capped_breach</span></code>). A DEM
+declared <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">&quot;conditioned&quot;</span></code> on its source is treated as <code class="docutils literal notranslate"><span class="pre">provided</span></code>: HydroModPy
+skips the conditioning and still computes the D8 directions and the accumulation.
+The criterion always floods the model top on the mesh; a breached raster reaches it
+only through the domain and the outlet.</p></li>
+<li><p><strong>The recharge of the steady stage.</strong> The protocol averages it over the window the
+run loads, three years in example 04, where the paper reads a normal of sixty
+years, 1960 to 2019. It is a declared departure, and <span class="math notranslate nohighlight">\(K\)</span> is only readable with
+the <span class="math notranslate nohighlight">\(\bar N\)</span> and the window printed beside it. Write a long
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/protocol.html#p-calibration-protocol-steady_window" title="Dates the steady stage averages, as {start, end}, both ISO 8601 and both required."><code class="docutils literal notranslate"><span class="pre">steady_window</span></code></a> when the forcing covers one.
+A window across 31 July 2015 reads a break of the SIM2 product: the summer drainage
+over example 04 no longer falls under 0.3 mm/day after it (<a class="reference internal" href="soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>).</p></li>
+<li><p><strong>The visible flow.</strong> In one state the simulated network is the closure of the
+sources, whatever it carries. A visible flow exists in a transient run only, in
+the two-bound mode and in the persistence figures, which apply
+<a class="hmp-toml-ref reference external" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model-extent-visible_flow" title="Routed discharge a cell of the downstream closure has to carry to flow: a discharge with its unit ('1 L/s') or a share of the outlet discharge at the same timestep ('1%')."><code class="docutils literal notranslate"><span class="pre">calibration.outputs.&lt;name&gt;.model.extent.visible_flow</span></code></a> (<a class="reference internal" href="../understand/stream-network.html"><span class="doc">How the model makes streams</span></a>),
+so such a figure and a one-state score do not read the same network.</p></li>
+<li><p><strong>The two-bound mode is outside the protocol.</strong> The protocol scores its network
+output at its steady stage, and an extent table is refused on a steady search. Its
+transient stage scores the hydrograph alone. A two-bound search is written by hand.</p></li>
+<li><p><strong>Domain of validity.</strong> The method was built for unconfined aquifers in a
+temperate humid climate, with gentle gradients and a strong groundwater-stream
+connection. Outside that, the criterion still computes, and it means less.</p></li>
+</ul>
+</section>
+<section id="measured">
+<h2>Measured<a class="headerlink" href="#measured" title="Link to this heading">#</a></h2>
+<p><strong>A twin with six heads.</strong> A comb basin of 5600 cells of 20 m makes a network one
+cell wide at <span class="math notranslate nohighlight">\(K/\bar N = 600\)</span>, and that network, written as a map of six lines, is
+the truth. The protocol finds <span class="math notranslate nohighlight">\(K\)</span> again to 0.45 per cent on MODFLOW-NWT, MODFLOW 6
+and a Voronoi mesh, with <span class="math notranslate nohighlight">\(J = 0\)</span>, inside a band of 3 per cent that the width of the
+zero plateau and the stop of the search set. A map drawn at another <span class="math notranslate nohighlight">\(K\)</span> gives that
+<span class="math notranslate nohighlight">\(K\)</span>. A wrong map moves the answer, and the last two rows below are what a balanced
+<span class="math notranslate nohighlight">\(J\)</span> does not show:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>The map</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(K\)</span> off by</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(D_{optim}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(r_{optim}\)</span> valid</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The truth</p></td>
+<td><p>0.45 %</p></td>
+<td><p>0 m</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>One head missing</p></td>
+<td><p>6.5 %</p></td>
+<td><p>2.2 m</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>All valley heads three cells low</p></td>
+<td><p>8.6 %</p></td>
+<td><p>0.3 m</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>All valley heads five cells south, three valleys shorter and two longer</p></td>
+<td><p>2.4 %</p></td>
+<td><p>6.0 m</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>200 m off, five of six heads lost</p></td>
+<td><p>a factor of 9.6</p></td>
+<td><p>0 m</p></td>
+<td><p>yes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The bound of two cells passes every row, so it does not check a map. Read
+<span class="math notranslate nohighlight">\(D_{optim}\)</span> against zero on a twin, and <code class="docutils literal notranslate"><span class="pre">n_heads_lost</span></code> on any run: a lost head logs a
+warning, because the reach under it leaves the map and <span class="math notranslate nohighlight">\(K\)</span> reads higher. A map that
+wanders a cell off its talwegs below its heads gives the same <span class="math notranslate nohighlight">\(K\)</span> to the last bit
+under the heads rule, and <span class="math notranslate nohighlight">\(K\)</span> 11.6 per cent low under the crossing rule.</p>
+<p><strong>On the Nançon.</strong> The default grid of 27 004 cells, protocol 1.3, recharge over
+2000 to 2002, with the 29 heads the cut map holds, none lost (31 under D4), is below.
+One root over four decades of <span class="math notranslate nohighlight">\(K\)</span> in each case.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(K\)</span> (m/s)</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Sy</span></code></p></th>
+<th class="head"><p>NSE</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(J\)</span> (m)</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(D_{optim}\)</span> (m)</p></th>
+<th class="head"><p>Mapped cells</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(K\)</span> where <span class="math notranslate nohighlight">\(\lvert J \rvert\)</span> is under one cell</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Heads, D8</p></td>
+<td><p>1.01e-4</p></td>
+<td><p>0.0253</p></td>
+<td><p>0.9580</p></td>
+<td><p>-1.46</p></td>
+<td><p>105.0</p></td>
+<td><p>471</p></td>
+<td><p>7.82e-5 to 1.09e-4</p></td>
+</tr>
+<tr class="row-odd"><td><p>Crossing, D8</p></td>
+<td><p>1.06e-4</p></td>
+<td><p>0.0253</p></td>
+<td><p>0.9576</p></td>
+<td><p>2.63</p></td>
+<td><p>112.2</p></td>
+<td><p>496</p></td>
+<td><p>7.65e-5 to 1.26e-4</p></td>
+</tr>
+<tr class="row-even"><td><p>Heads, D4</p></td>
+<td><p>8.82e-5</p></td>
+<td><p>0.0253</p></td>
+<td><p>0.9588</p></td>
+<td><p>2.89</p></td>
+<td><p>98.0</p></td>
+<td><p>659</p></td>
+<td><p>8.11e-5 to 1.13e-4</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The two rules agree on <span class="math notranslate nohighlight">\(K\)</span>. The 5.5 per cent between them is about the size of the tie
+under heads, where trials from 1.01e-4 to 1.06e-4 m/s read the same <span class="math notranslate nohighlight">\(J\)</span>. Heads misses 99
+cells and adds 167 where crossing misses 195 and adds 232, and its root is no sharper:
+<span class="math notranslate nohighlight">\(\lvert J \rvert\)</span> stays under a tenth of a cell over about 6 per cent of <span class="math notranslate nohighlight">\(K\)</span> under both rules.</p>
+<p>D4 moves <span class="math notranslate nohighlight">\(K\)</span> by 12.4 per cent, far more than the tie. Its root sits just above a step of the
+curve, where <span class="math notranslate nohighlight">\(J\)</span> falls by 62 m over 0.2 per cent of <span class="math notranslate nohighlight">\(K\)</span>, and <span class="math notranslate nohighlight">\(D_{optim}\)</span> is not
+comparable, because the walk differs. It draws 40 per cent more cells, and its catchment
+leaves the outline by 1.1 per cent against 0.2. On a twin whose valleys run along the
+grid diagonal it leaves the outline by 17 per cent, which the bound refuses, and with
+the bound lifted it lands 4.5 per cent off against 2.4 per cent for D8. On valleys
+along the grid axes the two are equal.</p>
+<p>The hydrograph does not decide. NSE moves by 1.2e-3 over these three values of <span class="math notranslate nohighlight">\(K\)</span>,
+and <code class="docutils literal notranslate"><span class="pre">Sy</span></code> stays within the 5 per cent the search stops on.</p>
+<p><strong>The visible flow.</strong> In the two-bound mode, <span class="math notranslate nohighlight">\(K\)</span> depends on the flow a reach must carry to count as a stream. On the Nançon with the BD Topage maps, the mean of the two roots is 1.73e-5, 1.29e-5 and 7.80e-6 m/s at 0.5, 1 and 2 L/s, a factor of 2.2. Most of it comes from the root on the complete map, 4.97e-6, 2.95e-6 and 1.32e-6 m/s, because <span class="math notranslate nohighlight">\(\lvert J \rvert\)</span> stays under one cell over half a decade of <span class="math notranslate nohighlight">\(K\)</span> or more there. The root on the permanent map moves less, 6.01e-5, 5.61e-5 and 4.61e-5 m/s, but its <span class="math notranslate nohighlight">\(D_{optim}\)</span> is over 260 m, past the bound of 150 m. The two roots lie 1.1 to 1.5 decades apart, so their mean meets neither map. Quote each root with its visible flow.</p>
+<p><strong>K and Sy on two maps.</strong> A twin whose two maps come from a run at a known <span class="math notranslate nohighlight">\(K\)</span> and <code class="docutils literal notranslate"><span class="pre">Sy</span></code> finds <span class="math notranslate nohighlight">\(K\)</span> to a few per cent. It does not find <code class="docutils literal notranslate"><span class="pre">Sy</span></code>. Over a factor of 16 in <code class="docutils literal notranslate"><span class="pre">Sy</span></code>, <span class="math notranslate nohighlight">\(\lvert J \rvert\)</span> stays under one cell on both maps at the true <span class="math notranslate nohighlight">\(K\)</span>, and two of three search methods return a <code class="docutils literal notranslate"><span class="pre">Sy</span></code> near 80 per cent high. Where the two maps are nearly the same, <span class="math notranslate nohighlight">\(K\)</span> lands 32 per cent high and <code class="docutils literal notranslate"><span class="pre">Sy</span></code> 70 per cent low at a cost of zero. On the Nançon only the permanent root follows <code class="docutils literal notranslate"><span class="pre">Sy</span></code>, with a slope of 0.61 in log-log. The two roots meet at <span class="math notranslate nohighlight">\(K\)</span> = 9.1e-6 m/s and <code class="docutils literal notranslate"><span class="pre">Sy</span></code> = 0.0040, which is below the usual range. There NSE falls from 0.96 to 0.77 and the NSE on log discharge from 0.98 to 0.43. So the route is allowed, and it is not recommended. A minimiser on one parameter is refused, because the same trials give 1e-7 m/s, the search bound, where the root search gives 1.29e-5.</p>
+<p><strong>The step of D4.</strong> The 12.4 per cent of D4 comes from one cell. It lies on a hillslope at 170 m, and it dries between <span class="math notranslate nohighlight">\(K\)</span> = 8.697e-5 and 8.715e-5 m/s. With it go 37 cells of stream under D4 and 27 under D8, all absent from the map. Under D4 this takes <span class="math notranslate nohighlight">\(J_{signed}\)</span> from +65 to +3.0 m, within 3 m of zero, and the root falls just above it. D8 loses the same cell at the same <span class="math notranslate nohighlight">\(K\)</span>, and <span class="math notranslate nohighlight">\(J_{signed}\)</span> stays positive, from 83 to 34 m. A solver closure a hundred times tighter gives the same <span class="math notranslate nohighlight">\(J\)</span>, so the step belongs to the model and not to the solver. Under D4, <span class="math notranslate nohighlight">\(K\)</span> is set by that one cell, and its narrow band is apparent precision.</p>
+<p><strong>Comparing structures.</strong> Two structures compare only at an equal balance, so a plain bisection closes the root of <span class="math notranslate nohighlight">\(J\)</span> at each one and gives its <span class="math notranslate nohighlight">\(D_{optim}\)</span>. On the Nançon, thicknesses of 10 to 90 m give <span class="math notranslate nohighlight">\(D_{optim}\)</span> of 142, 168, 107, 112 and 123 m, each in 24 solves at a width of 8, except 10 m, whose root lies above the search bound of <span class="math notranslate nohighlight">\(K\)</span> and costs 27. Between 17.3 and 90 m, <span class="math notranslate nohighlight">\(K \cdot \bar B\)</span> stays within 13 per cent, as the ratio <span class="math notranslate nohighlight">\(T/\bar N\)</span> predicts. One step of <span class="math notranslate nohighlight">\(J\)</span> moves <span class="math notranslate nohighlight">\(D_{optim}\)</span> by 30 m at 17.3 m, so a smaller gap between two structures says nothing. Scoring <span class="math notranslate nohighlight">\(D_{optim}\)</span> without the balance finds 105 m at <span class="math notranslate nohighlight">\(J\)</span> = +24 m, with a network 21 per cent longer than the map.</p>
+<p><strong>Triangles.</strong> The twin has no triangle column. With XT3D and Newton, MODFLOW 6 keeps cycling by 2 to 5 cm on one border triangle, whatever the under-relaxation. Without Newton it closes, and the side triangles then seep beside the talweg. The network is wider than one cell, so no map of lines can equal it. The Voronoi column, whose cells follow the talwegs, passes.</p>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/objective_blocks.html#p-calibration-objective_blocks">[[calibration.objective_blocks]]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req" data-path="calibration.objective_blocks.metric"><summary><span class="tl-code"><span class="k">metric</span><span class="eq"> = </span><span class="ph">‹&quot;rmse&quot; | &quot;nse&quot; | &quot;kge&quot; | &quot;mae&quot; | &quot;nse_log&quot; | &quot;nse_delta&quot; | &quot;nse_seasonal&quot; | &quot;reservoir&quot; | &quot;distance_gap&quot; | &quot;distance_mean&quot;›</span></span><span class="tl-note"><span class="tl-sum">Metric that scores this block against its observations.</span> <span class="tc tc-req">required</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.objective_blocks.metric</code> <button class="hmp-copy" type="button" data-copy="calibration.objective_blocks.metric" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-objective_blocks-metric" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;rmse&quot;</code> : Root-mean-square error, in the observed unit; penalizes large misfits most.</li><li><code>&quot;nse&quot;</code> : Nash-Sutcliffe efficiency against the observed mean; the standard choice for a level or discharge series.</li><li><code>&quot;kge&quot;</code> : Kling-Gupta efficiency, 2009 form (bias as the ratio of sums, variability as the ratio of standard deviations); separates correlation, variability and bias when NSE alone is ambiguous.</li><li><code>&quot;mae&quot;</code> : Mean absolute error, in the observed unit; less sensitive to outliers than RMSE.</li><li><code>&quot;nse_log&quot;</code> : NSE on log-transformed series; weights low flows as heavily as peaks, good for recessions.</li><li><code>&quot;nse_delta&quot;</code> : NSE on the increments of the series rather than its level; a level is an integral and can hide flux errors that compensate, which only its increments show.</li><li><code>&quot;nse_seasonal&quot;</code> : NSE against the seasonal cycle rather than the overall mean; asks whether the model beats climatology.</li><li><code>&quot;reservoir&quot;</code> : Half nse_seasonal plus half nse_delta, built for an impounded level: a plain NSE there is beaten by the seasonal cycle, and the increments are what carry the flux errors.</li><li><code>&quot;distance_gap&quot;</code> : Balances the simulated stream network against the mapped one; zero marks the crossing.</li><li><code>&quot;distance_mean&quot;</code> : Mean spatial offset between simulated and mapped streams; a diagnostic, not a substitute for distance_gap.</li></ul></dd><dt>Accepted</dt><dd>&quot;rmse&quot; | &quot;nse&quot; | &quot;kge&quot; | &quot;mae&quot; | &quot;nse_log&quot; | &quot;nse_delta&quot; | &quot;nse_seasonal&quot; | &quot;reservoir&quot; | &quot;distance_gap&quot; | &quot;distance_mean&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[[calibration.objective_blocks]]
+metric = &lt;&quot;rmse&quot; | &quot;nse&quot; | &quot;kge&quot; | &quot;mae&quot; | &quot;nse_log&quot; | &quot;nse_delta&quot; | &quot;nse_seasonal&quot; | &quot;reservoir&quot; | &quot;distance_gap&quot; | &quot;distance_mean&quot;&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name">[calibration.outputs.&lt;name&gt;]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req-ex" data-path="calibration.outputs.&lt;name&gt;.variable"><summary><span class="tl-code"><span class="k">variable</span><span class="eq"> = </span><span class="v">&quot;head&quot;</span></span><span class="tl-note"><span class="tl-sum">Simulated variable to extract (e.g. &#x27;head&#x27;, &#x27;outlet_discharge&#x27;).</span> <span class="tc tc-req">required</span> <span class="tc tc-exp">experimental</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.variable</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.variable" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-variable" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>string</dd><dt>Example</dt><dd><code>&quot;head&quot;</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;]
+variable = &quot;head&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map">[calibration.outputs.&lt;name&gt;.map]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.complete"><summary><span class="tl-code"><span class="cm"># </span><span class="k">complete</span><span class="eq"> = </span><span class="ph">‹&quot;data.hydrography&quot; or path›</span></span><span class="tl-note"><span class="tl-sum">The complete map, every mapped reach: a vector file, read only from here, or &#x27;data.hydrography&#x27;, the network the hydrography data family loaded (a local file or an osm / bdtopage / euhydro download), clipped to the delineated catchment.</span> <span class="tc tc-when">varies by site</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.complete</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.complete" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-complete" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;data.hydrography&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;data.hydrography&quot; or path</dd><dt>Varies by site</dt><dd>yes: in a project of many sites, bind it to a column with <a class="hmp-toml-ref" href="../reference/parameters/sites.html#p-sites-bind"><code>sites.bind</code></a> or set it in a per-site overlay; a literal value is refused</dd><dt>Was</dt><dd><code>calibration.outputs.stream_geometry_path</code>, <code>calibration.outputs.observed_network</code></dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.permanent"><summary><span class="tl-code"><span class="cm"># </span><span class="k">permanent</span><span class="eq"> = </span><span class="ph">‹&quot;data.hydrography&quot; or path›</span></span><span class="tl-note"><span class="tl-sum">The permanent map, the reaches that flow all year, which the complete map contains: a vector file, read as it is and never filtered by attribute, or &#x27;data.hydrography&#x27;, the permanent reaches the hydrography data family wrote beside its network.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.permanent</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.permanent" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-permanent" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A source that does not say which reaches flow all year gives none. The complete map scored is the union of the two, and the share of this map outside the complete one is published.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;data.hydrography&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;data.hydrography&quot; or path</dd><dt>Was</dt><dd><code>calibration.outputs.minimal_stream_geometry_path</code>, <code>calibration.outputs.minimal_observed_network</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.drawn_by"><summary><span class="tl-code"><span class="cm"># </span><span class="k">drawn_by</span><span class="eq"> = </span><span class="v">&quot;heads&quot;</span></span><span class="tl-note"><span class="tl-sum">How the map is drawn on the mesh cells.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.drawn_by</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.drawn_by" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-drawn_by" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;crossing&#x27; keeps the cell holding each point where a line crosses the segment joining two edge-sharing cell centres. On a structured grid it reproduces WhiteboxTools VectorLinesToRaster, the paper&#x27;s tool, and draws the map one cell wide like the simulated network, so a model that matches the map scores J = 0. &#x27;touch&#x27; keeps every cell the line touches, corners included, and replays a session made before 2026-09; it thickens every diagonal step of the map and departs from the paper. &#x27;heads&#x27; keeps only the free ends of the map whose largest drained area within &#x27;heads.radius&#x27; does not exceed that of the other end of their reach, lands each on a nearby cell and draws the rest down the criterion&#x27;s own descent: the field ditches and rectified reaches below a head stop counting as model error, and the drawn map reaches the outlet. Keep &#x27;crossing&#x27; for a map that is not a tree: canals, braids, polders, karst.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;heads&quot;</code></li><li><code>&quot;crossing&quot;</code></li><li><code>&quot;touch&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;heads&quot; | &quot;crossing&quot; | &quot;touch&quot;</dd><dt>Was</dt><dd><code>calibration.outputs.observed_rasterization</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.clip_to_catchment"><summary><span class="tl-code"><span class="cm"># </span><span class="k">clip_to_catchment</span><span class="eq"> = </span><span class="v">true</span></span><span class="tl-note"><span class="tl-sum">Cut the map to the delineated catchment before drawing it, with the shape the hydrography data family clips what it loads to, so a file and &#x27;data.hydrography&#x27; draw the same map from the same data.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.clip_to_catchment</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.clip_to_catchment" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-clip_to_catchment" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Under &#x27;heads&#x27; an end the cut made is no stream head. false reads a file whole and takes every free end as a candidate head.</p></dd><dt>Accepted</dt><dd>true | false</dd><dt>Was</dt><dd><code>calibration.outputs.clip_map_to_catchment</code></dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.position_accuracy"><summary><span class="tl-code"><span class="cm"># </span><span class="k">position_accuracy</span><span class="eq"> = </span><span class="ph">‹number or &quot;&lt;n&gt; m&quot;›</span></span><span class="tl-note"><span class="tl-sum">Positional accuracy of the map.</span> <span class="tc tc-unit">m</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.position_accuracy</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.position_accuracy" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-position_accuracy" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>It enters the automatic validity length only, so it is refused beside a &#x27;verdict.validity_length&#x27; written as a length: the cell size h there is max(h_obs, this), because a map is not placed better when the mesh is refined. r_optim stays D_optim / h_obs, the paper&#x27;s Eq. 3. Unset is the literal reading of the paper.</p></dd><dt>Accepted</dt><dd>number or &quot;&lt;n&gt; m&quot; <span class="hmp-muted">(a bare number is read in the canonical unit)</span></dd><dt>Unit</dt><dd>m</dd><dt>Was</dt><dd><code>calibration.outputs.observed_position_accuracy</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;.map]
+# complete = &lt;&quot;data.hydrography&quot; or path&gt;
+# permanent = &lt;&quot;data.hydrography&quot; or path&gt;
+# drawn_by = &quot;heads&quot;
+# clip_to_catchment = true
+# position_accuracy = &lt;number or &quot;&lt;n&gt; m&quot;&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-model">[calibration.outputs.&lt;name&gt;.model]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.model.seepage_threshold"><summary><span class="tl-code"><span class="cm"># </span><span class="k">seepage_threshold</span><span class="eq"> = </span><span class="v">0.0001</span></span><span class="tl-note"><span class="tl-sum">A cell releasing less than this fraction of the mean basin recharge, taken over its own area, is not a seepage face.</span> <span class="tc tc-unit">-</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.model.seepage_threshold</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.model.seepage_threshold" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-model-seepage_threshold" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Zero reproduces the purely geometric criterion of the paper. Frozen over the whole search: a threshold moving with the trial would cost the criterion its monotonicity.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>-</dd><dt>Was</dt><dd><code>calibration.outputs.tau_specific_ratio</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.model.weighting"><summary><span class="tl-code"><span class="cm"># </span><span class="k">weighting</span><span class="eq"> = </span><span class="v">&quot;cell&quot;</span></span><span class="tl-note"><span class="tl-sum">Average one cell one vote (the paper) or weighted by cell area.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.model.weighting</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.model.weighting" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-model-weighting" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Both values are always reported; use &#x27;area&#x27; on a mesh refined along the streams, where cell density is highest exactly where distances are smallest.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;cell&quot;</code> : Every cell counts once in the average, as in the paper.</li><li><code>&quot;area&quot;</code> : Every cell counts in proportion to its area.</li></ul></dd><dt>Accepted</dt><dd>&quot;cell&quot; | &quot;area&quot;</dd><dt>Was</dt><dd><code>calibration.outputs.weighting</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.model.neighbours"><summary><span class="tl-code"><span class="cm"># </span><span class="k">neighbours</span><span class="eq"> = </span><span class="v">&quot;D8&quot;</span></span><span class="tl-note"><span class="tl-sum">The graph the descent walks.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.model.neighbours</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.model.neighbours" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-model-neighbours" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;D8&#x27; descends over shared nodes, the eight neighbours of a quad mesh, and is the paper: its distances are traced by WhiteboxTools on a D8 pointer, and the delineation that produced the catchment uses one too. &#x27;D4&#x27; descends over shared edges only and departs from the paper. It is not a second-decimal choice: on a synthetic valley whose talweg runs along the grid diagonal, the most accumulated cell collects 100 per cent of the domain over shared nodes and 6.6 per cent over shared edges. On a mesh whose faces are not all quadrilaterals no cell has a diagonal and the descent walks shared edges either way; on a Voronoi mesh the two graphs are the same one.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;D8&quot;</code></li><li><code>&quot;D4&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;D8&quot; | &quot;D4&quot;</dd><dt>Was</dt><dd><code>calibration.outputs.diagonal_neighbors</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;.model]
+# seepage_threshold = 0.0001
+# weighting = &quot;cell&quot;
+# neighbours = &quot;D8&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-map-heads">[calibration.outputs.&lt;name&gt;.map.heads]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.heads.radius"><summary><span class="tl-code"><span class="cm"># </span><span class="k">radius</span><span class="eq"> = </span><span class="v">100.0</span></span><span class="tl-note"><span class="tl-sum">The largest distance, a length (a bare number is in metres), between a mapped stream head and the centre of the cell it lands on.</span> <span class="tc tc-unit">m</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.heads.radius</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.heads.radius" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-heads-radius" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A head with no landing cell that close is lost, draws nothing and is counted in n_heads_lost.</p></dd><dt>Accepted</dt><dd>number or &quot;&lt;n&gt; m&quot; <span class="hmp-muted">(a bare number is read in the canonical unit)</span></dd><dt>Unit</dt><dd>m</dd><dt>Was</dt><dd><code>calibration.outputs.heads_snap_radius</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.map.heads.min_drained_area"><summary><span class="tl-code"><span class="cm"># </span><span class="k">min_drained_area</span><span class="eq"> = </span><span class="v">0.02</span></span><span class="tl-note"><span class="tl-sum">The drained area a cell needs before a head may land on it, so a head next to its valley lands in the valley and not on the ridge cell beside it.</span> <span class="tc tc-unit">km2</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.map.heads.min_drained_area</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.map.heads.min_drained_area" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-map-heads-min_drained_area" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>km2</dd><dt>Was</dt><dd><code>calibration.outputs.heads_min_drained_area_km2</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;.map.heads]
+# radius = 100.0
+# min_drained_area = 0.02</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/outputs.html#p-calibration-outputs-name-verdict">[calibration.outputs.&lt;name&gt;.verdict]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.verdict.validity_length"><summary><span class="tl-code"><span class="cm"># </span><span class="k">validity_length</span><span class="eq"> = </span><span class="v">&quot;auto&quot;</span></span><span class="tl-note"><span class="tl-sum">Validity bound of Eq. 4, a length: the calibration is valid when D_optim &lt;= this.</span> <span class="tc tc-unit">m</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.verdict.validity_length</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.verdict.validity_length" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-verdict-validity_length" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;auto&#x27; is 2 h, the paper&#x27;s two cells, where h is h_obs, the cell size on the mapped network, raised to &#x27;map.position_accuracy&#x27; if that is declared. A length such as &#x27;150 m&#x27; is used as it is. The bound qualifies the result and never penalises the cost.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;auto&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;auto&quot; or number or &quot;&lt;n&gt; m&quot; <span class="hmp-muted">(a bare number is read in the canonical unit)</span></dd><dt>Unit</dt><dd>m</dd><dt>Was</dt><dd><code>calibration.outputs.validity_length</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.verdict.on_invalid"><summary><span class="tl-code"><span class="cm"># </span><span class="k">on_invalid</span><span class="eq"> = </span><span class="v">&quot;warn&quot;</span></span><span class="tl-note"><span class="tl-sum">What a violation of Eq. 4 does: D_optim above &#x27;validity_length&#x27;.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.verdict.on_invalid</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.verdict.on_invalid" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-verdict-on_invalid" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>The bound is read once, on the trial the search returns, as the paper reads it at the optimum, and on each bound in the cost of the two-bound mode; every trial still records &#x27;r_optim&#x27;, &#x27;r_optim_valid&#x27; and &#x27;validity_length_m&#x27;. &#x27;warn&#x27; logs it and returns the value, because a calibration is asked for a number. &#x27;error&#x27; raises after the session is saved, so a staged calibration freezes nothing and runs no phase that depends on this one.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;warn&quot;</code></li><li><code>&quot;error&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;warn&quot; | &quot;error&quot;</dd><dt>Was</dt><dd><code>calibration.outputs.on_roptim_violation</code></dd></dl></div></details><details class="tl tl-default tl-cmt" data-path="calibration.outputs.&lt;name&gt;.verdict.max_catchment_mismatch"><summary><span class="tl-code"><span class="cm"># </span><span class="k">max_catchment_mismatch</span><span class="eq"> = </span><span class="v">0.05</span></span><span class="tl-note"><span class="tl-sum">Largest gap allowed between the scored catchment and the delineated one, as a share of the delineated area: &#x27;catchment_mismatch&#x27;, the area of their symmetric difference over the area of the outline the mesh followed.</span> <span class="tc tc-range">&gt;= 0</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.verdict.max_catchment_mismatch</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.verdict.max_catchment_mismatch" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-verdict-max_catchment_mismatch" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>It depends on the geometry alone, so it is read once, before the first solve, and a gap above it refuses the search. A large gap means an outlet on another branch, or a mesh too coarse for the catchment. false never refuses, and the gap is still published on every trial. A synthetic domain has no delineated catchment and is never refused.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>false</code> <span class="hmp-muted">no explanation</span></li></ul></dd><dt>Accepted</dt><dd>number or false</dd><dt>Valid range</dt><dd>&gt;= 0 <span class="hmp-muted">(refused outside)</span></dd></dl></div></details><details class="tl tl-default tl-adv tl-cmt" data-path="calibration.outputs.&lt;name&gt;.verdict.alpha_warning_threshold"><summary><span class="tl-code"><span class="cm"># </span><span class="k">alpha_warning_threshold</span><span class="eq"> = </span><span class="v">0.9</span></span><span class="tl-note"><span class="tl-sum">Below this value of &#x27;alpha_obs_closure_catchment&#x27; the run warns that its distances carry a top-versus-map disagreement on top of the hydrogeology. alpha is the share of the downstream closure of the mapped network the network itself covers, measured on the MODEL TOP and on the catchment.</span> <span class="tc tc-range">]0, 1]</span> <span class="tc tc-prof">expert</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.outputs.&lt;name&gt;.verdict.alpha_warning_threshold</code> <button class="hmp-copy" type="button" data-copy="calibration.outputs.&lt;name&gt;.verdict.alpha_warning_threshold" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-outputs-name-verdict-alpha_warning_threshold" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>It changes nothing that is computed: the criterion is scored the same way above and below it.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>]0, 1] <span class="hmp-muted">(refused outside)</span></dd><dt>Was</dt><dd><code>calibration.outputs.alpha_warning_threshold</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration.outputs.&lt;name&gt;.verdict]
+# validity_length = &quot;auto&quot;
+# on_invalid = &quot;warn&quot;
+# max_catchment_mismatch = 0.05</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/calibration/index.html#p-calibration">[calibration]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="calibration.method_options"><summary><span class="tl-code"><span class="cm"># </span><span class="k">method_options</span><span class="eq"> = </span><span class="v">{}</span></span><span class="tl-note"><span class="tl-sum">Options of the method, named as that method names them: points_per_dim for &#x27;grid&#x27;, sampler for &#x27;optuna&#x27;, sweep_points for &#x27;bisection&#x27;.</span> <span class="tc tc-exp">experimental</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">calibration.method_options</code> <button class="hmp-copy" type="button" data-copy="calibration.method_options" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-calibration-method_options" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>They belong to one method, so a calibration that gives them writes method beside them. A key the method does not take is refused when the file loads.</p></dd><dt>Accepted</dt><dd>table { key = any value }</dd><dt>Was</dt><dd><code>calibration.optimizer_kwargs</code></dd></dl></div></details></div><pre class="tb-src" hidden>[calibration]
+# method_options = {}</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/geographic.html#p-geographic">[geographic]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="geographic.dem_correc_type"><summary><span class="tl-code"><span class="cm"># </span><span class="k">dem_correc_type</span><span class="eq"> = </span><span class="v">&quot;fill&quot;</span></span><span class="tl-note"><span class="tl-sum">How the DEM is conditioned before the catchment is delineated.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">geographic.dem_correc_type</code> <button class="hmp-copy" type="button" data-copy="geographic.dem_correc_type" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-geographic-dem_correc_type" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>&#x27;fill&#x27; (default) only raises cells: each closed depression is raised to its spill level, then a small gradient on the flats lets every cell drain. &#x27;breach&#x27; mostly lowers cells: it carves a path through the barrier that closes a depression, after raising single-cell pits to their lowest neighbour, with no limit on length or depth and no fill afterwards (least-cost breaching, Lindsay 2016); it changes far fewer cells than &#x27;fill&#x27; and can dig deep. &#x27;capped_breach&#x27; lowers and raises: it breaches only within the limits of [<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/geographic.html#p-geographic-capped_breach">geographic.capped_breach</a>] (a maximum cumulative lowering and a maximum length, in metres), then fills every depression the limits refused (the hybrid of Lindsay 2016). The depth limit is a sum over the cells of a path, so it does not give the same landscape at every grid resolution. &#x27;fill&#x27; is the default because it is the tool of the paper behind the network criterion (FillDepressions, Abherve et al. 2023), and the criterion itself fills the model top on the mesh by a priority flood: one conditioning rule from the DEM to the score. A DEM declared state = &quot;conditioned&quot; on its [[<a class="hmp-toml-ref hmp-auto" href="../reference/parameters/data/dem.html#p-data-dem-sources">data.dem.sources</a>]] entry is already conditioned, so this key is ignored and the run records &#x27;provided&#x27;.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;breach&quot;</code></li><li><code>&quot;fill&quot;</code></li><li><code>&quot;capped_breach&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;breach&quot; | &quot;fill&quot; | &quot;capped_breach&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[geographic]
+# dem_correc_type = &quot;fill&quot;</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../reference/parameters/solver.html#p-solver">[solver]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="solver.drain_bed_thickness_m"><summary><span class="tl-code"><span class="cm"># </span><span class="k">drain_bed_thickness_m</span><span class="eq"> = </span><span class="v">1.0</span></span><span class="tl-note"><span class="tl-sum">Metres.</span> <span class="tc tc-unit">m</span> <span class="tc tc-range">&gt; 0</span> <span class="tc tc-prof">expert</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">solver.drain_bed_thickness_m</code> <button class="hmp-copy" type="button" data-copy="solver.drain_bed_thickness_m" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-solver-drain_bed_thickness_m" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Thickness of the drain BED in the fallback conductance C = K * cell_area / bed_thickness, used when no drainage conductance is declared. A drain bed is the clogging layer at the bottom of a watercourse, decimetres to a metre; it is NOT the aquifer, and the layer thickness this used to borrow (tens of metres) has no physical relation to it. The value matters because it sets how much head the drain itself imposes to pass the recharge: dh = R * bed_thickness / K, independent of the cell size. For R = 439 mm/yr, 30 m gives 4.17 m of head at K = 1e-7 m/s and makes the drain the limiting resistance over two decades of a [1e-7, 1e-3] search; 1 m gives 13.9 cm and 0.1 m gives 1.4 cm. In this method the drain is a seepage face, so it must never limit: K and the recharge decide where water surfaces, not the boundary condition. Proportionality to K is preserved either way, so the K/R invariance the network criterion rests on is untouched. The value 1.0 is a convention with no measured source: no measurement and no document gives it, and it is kept as it is so that no earlier result moves. It stays in [solver], whatever the layer of the other drain keys. Write your own value when you have a measure.</p></dd><dt>Accepted</dt><dd>number</dd><dt>Valid range</dt><dd>&gt; 0 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m</dd><dt>Example</dt><dd><code>1.0</code>, <code>0.5</code>, <code>0.1</code></dd></dl></div></details></div><pre class="tb-src" hidden>[solver]</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div><p>The keys of a calibration on a network are in
+<a class="reference internal" href="../reference/parameters/calibration/outputs.html"><span class="doc">[calibration.outputs]</span></a>.</p>
+</section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<p>The tests that import the code of this page. The box is generated: a new test
+appears here on the next build.</p>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">23 test files import <code>hydromodpy.catchment.drainage.distance</code>, <code>hydromodpy.catchment.drainage.filling</code>, <code>hydromodpy.catchment.stream_network.geometry</code>, <code>hydromodpy.catchment.stream_network.heads</code>, <code>hydromodpy.catchment.stream_network.network</code>, <code>hydromodpy.catchment.stream_network.cost</code>, <code>hydromodpy.calibration.criteria.hydrographic_network_distance</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>validation: 2</summary><ul><li title="tests/validation/calibration/test_twin_matching_stream_heads_modflow6.py"><a href="validation.html#val-twin-matching-stream-heads-modflow6">Twin matching stream heads modflow6.</a></li><li title="tests/validation/calibration/test_twin_matching_stream_network_modflow6.py"><a href="validation.html#val-twin-matching-stream-network-modflow6">Twin matching stream network modflow6.</a></li></ul></details><details class="hmp-tested-tier"><summary>unit: 21</summary><ul><li title="tests/unit/calibration/test_config.py">Config. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_criteria_series.py">Criteria series. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_metrics_solver_extract.py">Metrics solver extract. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_observations_network_geometry.py">Observations network geometry. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_optim_cost_margin.py">Optim cost margin. <span class="hmp-muted">calibration</span></li><li title="tests/unit/calibration/test_optim_objective.py">Optim objective. <span class="hmp-muted">calibration</span></li><li title="tests/unit/catchment/drainage/test_descent.py">Descent. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_distance.py">Distance. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_downslope_whitebox_golden.py">Downslope whitebox golden. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_filling.py">Filling. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_graph.py">Graph. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_routing.py">Routing. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/stream_network/test_cost.py">Cost. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_geometry.py">Geometry. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_heads.py">Heads. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_network.py">Network. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/core/scoring/test_metric_table.py">Metric table. <span class="hmp-muted">core/scoring</span></li><li title="tests/unit/model/forcing/test_recharge_rates.py">Recharge rates. <span class="hmp-muted">model/forcing</span></li><li title="tests/unit/results/stream/test_comparison.py">Comparison. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_redraw_comparison.py">Redraw comparison. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_run_extent.py">Run extent. <span class="hmp-muted">results/stream</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The flood on the mesh graph</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/drainage/filling.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The receivers and the distance to a set</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/drainage/distance.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The outlet, the catchment, <span class="math notranslate nohighlight">\(h_{obs}\)</span>, <span class="math notranslate nohighlight">\(V\)</span>, the supports</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/stream_network/geometry.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The heads rule</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/stream_network/heads.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The crossing rule</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/mesh/cells/crossed_by_lines.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The means and the criterion</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/stream_network/cost.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>The two estimators</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/criteria/hydrographic_network_distance.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>The root search</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/adapters/bisection_adapter.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/parameters/calibration/outputs.html"><span class="doc">[calibration.outputs]</span></a>: the keys of a calibration on
+the network, the two-bound mode of a transient run included.</p></li>
+<li><p><a class="reference internal" href="exits/simulated-network.html"><span class="doc">Where the water table reaches the surface</span></a>: the sources, the closure and the diagnostics
+against a map.</p></li>
+<li><p><a class="reference internal" href="../understand/stream-network.html"><span class="doc">How the model makes streams</span></a>: how the model makes streams, in plain
+words.</p></li>
+<li><p><a class="reference internal" href="bibliography.html"><span class="doc">Bibliography</span></a>: the full list of references.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="calibration/inverse-problem-formulation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The inverse problem of a calibration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="notation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Notation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-graph">The graph the distances follow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-distance-to-set">1. The downslope distance to a set</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-catchment">2. The outlet, the catchment and the saturation length</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-networks">3. The two networks on the cells</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-supports">4. The supports and the targets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-means">5. The two mean distances</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-criterion">6. The criterion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-validity">7. When a result is valid</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-identifies">What the criterion identifies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downslope-search">How a search reaches the zero</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#two-roots">Two roots</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#points-asked-together">Points asked together</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-budget-before-the-first-solve">The budget before the first solve</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-interval-around-the-root">The interval around the root</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measured">Measured</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-20.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

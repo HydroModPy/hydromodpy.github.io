@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Build a frontend" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/build-a-frontend.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="HydroModPy is a Python library. Its wheel ships no HTTP server, no FastAPI binding and no websocket. A source checkout carries a thin HTTP layer beside the wheel, hydromodpy_server, which Serve ove..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="HydroModPy is a Python library. Its wheel ships no HTTP server, no FastAPI binding and no websocket. A source checkout carries a thin HTTP layer beside the wheel, hydromodpy_server, which Serve ove..." />
+
+    <meta property="article:modified_time" content="2026-11-20T16:42:59+01:00" />
+    <title>Build a frontend &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/how-to/build-a-frontend';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'main';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/build-a-frontend.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Serve over HTTP" href="serve-over-http.html" />
+    <link rel="prev" title="Add a calibration method" href="add-a-calibration-method.html" />
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-20"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Recipes</a><details open="open"><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Recipes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Build a frontend</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="build-a-frontend">
+<h1>Build a frontend<a class="headerlink" href="#build-a-frontend" title="Link to this heading">#</a></h1>
+<p>HydroModPy is a Python library. Its wheel ships no HTTP server, no FastAPI binding and no
+websocket. A source checkout carries a thin HTTP layer beside the wheel,
+<code class="docutils literal notranslate"><span class="pre">hydromodpy_server</span></code>, which <a class="reference internal" href="serve-over-http.html"><span class="doc">Serve over HTTP</span></a> describes. Any frontend (Angular,
+React, a Jupyter widget, a desktop app) can use three pieces without importing the package.</p>
+<ol class="arabic simple">
+<li><p>A JSON Schema export of the whole configuration.</p></li>
+<li><p>A check of the document the form holds, which may still be incomplete.</p></li>
+<li><p>The run request, one JSON object that <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> reads, that <code class="docutils literal notranslate"><span class="pre">hmp.run</span></code> takes as a
+mapping and that a Docker container receives as a file.</p></li>
+</ol>
+<p>The verbs of <code class="docutils literal notranslate"><span class="pre">hydromodpy.project.api</span></code> are typed for a service. Each parameter is text, a
+number, a boolean, a path, a literal, a mapping or a list of those. Each value a verb returns
+has <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code>, which <code class="docutils literal notranslate"><span class="pre">json.dumps</span></code> writes, or is a path, a list of paths or a list of
+diagnostics. A verb never looks for a project above the working directory, so a service
+passes <code class="docutils literal notranslate"><span class="pre">workspace=</span></code> or a path. The verbs are listed in <a class="reference internal" href="../../../reference/python/index.html"><span class="doc">Python API</span></a>.</p>
+<section id="the-schema-export">
+<h2>The schema export<a class="headerlink" href="#the-schema-export" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">schema</span> <span class="pre">--bundle</span> <span class="pre">--to</span> <span class="pre">./schema/</span></code> writes three files. <code class="docutils literal notranslate"><span class="pre">config.json</span></code> is the
+full JSON Schema of <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code>. <code class="docutils literal notranslate"><span class="pre">config_meta.json</span></code> holds the ordered TOML
+sections, the UI groups and the titles, and a section with <code class="docutils literal notranslate"><span class="pre">repeated:</span> <span class="pre">true</span></code> (<code class="docutils literal notranslate"><span class="pre">[[export]]</span></code>)
+is an array of tables. <code class="docutils literal notranslate"><span class="pre">field_validators.json</span></code> maps a field path to its validator type.
+From Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">HydroModPyConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.schema.config_schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_full_schema</span>
+
+<span class="n">export_full_schema</span><span class="p">(</span><span class="s2">"./schema/"</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">HydroModPyConfig</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each field in <code class="docutils literal notranslate"><span class="pre">config.json</span></code> keeps what the models declare in <code class="docutils literal notranslate"><span class="pre">json_schema_extra</span></code>, the
+keys of <code class="docutils literal notranslate"><span class="pre">FieldMetadata</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/config_kit/field_metadata.py</span></code>. It also
+carries its visibility in <code class="docutils literal notranslate"><span class="pre">x-hmp-profile</span></code> (<code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">dev</span></code> or <code class="docutils literal notranslate"><span class="pre">expert</span></code>), so a form can
+hide the developer and expert fields. These annotations are the contract between the models
+and the UI, and <a class="reference internal" href="add-a-config-field.html"><span class="doc">Add a config field</span></a> shows how a field gets them.</p>
+<p>The contract is the property paths, their types and their annotations. The names under
+<code class="docutils literal notranslate"><span class="pre">$defs</span></code> are Python class names that a release may rename, so follow a <code class="docutils literal notranslate"><span class="pre">$ref</span></code> and never
+match on the name it points to. The document holds no package version, so two releases that
+leave the models alone export the same bytes. Which changes of a key each version allows is
+in <a class="reference internal" href="../../../about/versions.html"><span class="doc">Versions and stability</span></a>.</p>
+<p>A second file, <code class="docutils literal notranslate"><span class="pre">docs/source/_static/hydromodpy-schema.json</span></code>, is the editor schema. It
+accepts what the loader reads, such as <code class="docutils literal notranslate"><span class="pre">base_config</span></code>, the <code class="docutils literal notranslate"><span class="pre">__append</span></code>, <code class="docutils literal notranslate"><span class="pre">__delete</span></code> and
+<code class="docutils literal notranslate"><span class="pre">__merge</span></code> directives, quantities written with a unit and files that omit required keys.
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">schema</span> <span class="pre">--editor</span></code> writes it, and
+<code class="docutils literal notranslate"><span class="pre">tests/unit/docs/test_docs_config_consistency.py</span></code> keeps it equal to the code. A frontend
+that needs the required keys and the strict unions reads the model schema instead.</p>
+</section>
+<section id="the-check-of-a-document">
+<h2>The check of a document<a class="headerlink" href="#the-check-of-a-document" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">check(document,</span> <span class="pre">base=folder,</span> <span class="pre">partial=True)</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/config/check.py</span></code> is the call
+the form makes at each change. It takes the document as a mapping, reads no file, asks no
+network and answers in under 10 ms when warm. The <code class="docutils literal notranslate"><span class="pre">base</span></code> is the folder the relative paths
+are read from. A document in memory has no folder, so the call never reads the current one.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hydromodpy.config.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">phrase</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">on_change</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">check</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="n">project_dir</span><span class="p">):</span>
+        <span class="n">show</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span> <span class="n">phrase</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="s2">"fr"</span><span class="p">),</span> <span class="n">d</span><span class="o">.</span><span class="n">detail</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It walks the sections with the validator the loader uses, so it gives every diagnostic at
+once. A <code class="docutils literal notranslate"><span class="pre">Diagnostic</span></code> is this dataclass. The <code class="docutils literal notranslate"><span class="pre">phrase</span></code> of a code is read in English or
+French from <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/phrases.toml</span></code>, so the form writes the sentence in its own
+language.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Diagnostic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One finding of a check, at one key of the document.</span>
+
+<span class="sd">    ``path`` is the dotted key as the document spells it, ``flow.param.K.field``</span>
+<span class="sd">    or ``export[0].variable``, and ``""`` for the whole document. ``code`` is one</span>
+<span class="sd">    of the check codes, the keys of ``[check]`` in ``schema/phrases.toml``.</span>
+<span class="sd">    ``detail`` is what the validator said about this case, in English, and</span>
+<span class="sd">    ``help`` the description of the field at ``path`` when the model has one.</span>
+<span class="sd">    ``keys`` holds the exact segments of the path when it was read from a</span>
+<span class="sd">    validation error, so a key that holds a dot or a slash keeps its pointer.</span>
+<span class="sd">    ``error_type`` is the Pydantic type of the fault when Pydantic raised it.</span>
+<span class="sd">    """</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="n">Severity</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">line_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">keys</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">error_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+</pre></div>
+</div>
+<p>The severity is <code class="docutils literal notranslate"><span class="pre">error</span></code>, <code class="docutils literal notranslate"><span class="pre">warning</span></code> or <code class="docutils literal notranslate"><span class="pre">to_fill</span></code>. A <code class="docutils literal notranslate"><span class="pre">to_fill</span></code> is a key the document
+must hold and does not hold yet, so the form shows it as a field to fill. A rule that reads
+several sections says nothing until every section it reads is complete. <code class="docutils literal notranslate"><span class="pre">partial=False</span></code>
+turns each <code class="docutils literal notranslate"><span class="pre">to_fill</span></code> into an <code class="docutils literal notranslate"><span class="pre">error</span></code>, which is what a run needs. <code class="docutils literal notranslate"><span class="pre">inputs=True</span></code> also
+reads the header of each input file, so keep it for the submit button.</p>
+<p>A frontend that is not written in Python gives the document to the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hmp<span class="w"> </span>check<span class="w"> </span>--partial<span class="w"> </span>--format<span class="w"> </span>json<span class="w"> </span>draft.toml
+</pre></div>
+</div>
+<p>The output is <code class="docutils literal notranslate"><span class="pre">{ok,</span> <span class="pre">diagnostics,</span> <span class="pre">workspace}</span></code>. There is no check of one field on its own.
+Send the document, so a rule that crosses two sections is seen.</p>
+</section>
+<section id="a-form-on-the-schema">
+<h2>A form on the schema<a class="headerlink" href="#a-form-on-the-schema" title="Link to this heading">#</a></h2>
+<p>Export the schema at each HydroModPy release and serve <code class="docutils literal notranslate"><span class="pre">config.json</span></code> as a static asset.
+Angular applications usually pair it with <code class="docutils literal notranslate"><span class="pre">ngx-formly</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;rjsf/core</span></code>. With React the
+form is <code class="docutils literal notranslate"><span class="pre">&lt;Form</span> <span class="pre">schema={schema}</span> <span class="pre">validator={validator}</span> <span class="pre">/&gt;</span></code> from <code class="docutils literal notranslate"><span class="pre">&#64;rjsf/core</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&#64;rjsf/validator-ajv8</span></code>. A custom widget can switch on the <code class="docutils literal notranslate"><span class="pre">widget_type</span></code> annotation to
+choose between an input, a select and a checkbox.</p>
+</section>
+<section id="the-run-request">
+<h2>The run request<a class="headerlink" href="#the-run-request" title="Link to this heading">#</a></h2>
+<p>A request is the unit of work of a run, whether it comes from a TOML file, a Python call, a
+server or a container. It is a JSON object of the schema <code class="docutils literal notranslate"><span class="pre">hydromodpy.request.v1</span></code>. The site
+publishes it as <code class="docutils literal notranslate"><span class="pre">_static/hydromodpy-request-schema.json</span></code>, and the fields are the model
+below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RunRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A run as it is asked for: the document and the options that steer it.</span>
+
+<span class="sd">    The base of the relative paths and the environment of the call are not part</span>
+<span class="sd">    of it, so the request is the same on any machine.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">populate_by_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">schema_</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"hydromodpy.request.v1"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">REQUEST_SCHEMA</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"schema"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Schema id of the request."</span>
+    <span class="p">)</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The whole configuration document: a TOML file and its base_config chain and "</span>
+            <span class="s2">"overlays merged, or the document given as JSON or as a dict. It names no "</span>
+            <span class="s2">"base_config and no [workspace] project_root."</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="nb">set</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Values set on top of config by dotted path, the grammar of --set, applied once "</span>
+            <span class="s2">"at the load and sealed in lineage.overrides."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">overlays</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The names of the overlay files merged into config, for lineage.overrides."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The name of the run, which wins."</span><span class="p">)</span>
+    <span class="n">resume</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The run to continue in place; an empty text names the run of the request."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">from_step</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"First step of a partial run."</span><span class="p">)</span>
+    <span class="n">until_step</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Last step of a partial run."</span><span class="p">)</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Compute a run identical to a completed one."</span><span class="p">)</span>
+    <span class="n">fresh</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"File what a previous attempt left and start over."</span>
+    <span class="p">)</span>
+    <span class="n">frozen</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Require frozen input data references."</span><span class="p">)</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Say what would run, and run nothing."</span><span class="p">)</span>
+    <span class="n">no_display</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Draw no figure. It changes neither the identity nor the seal."</span>
+    <span class="p">)</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The one phase of a staged calibration to run."</span>
+    <span class="p">)</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The file the request was read from, relative to the base when it lies under it."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">form</span><span class="p">:</span> <span class="n">RequestForm</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"What the request was built from; json and dict write request.json."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">schema</span></code> and <code class="docutils literal notranslate"><span class="pre">config</span></code> are required. <code class="docutils literal notranslate"><span class="pre">config</span></code> holds the whole document with its
+<code class="docutils literal notranslate"><span class="pre">base_config</span></code> chain and its overlays already merged, and a <code class="docutils literal notranslate"><span class="pre">base_config</span></code> key in it is
+refused. A JSON file without <code class="docutils literal notranslate"><span class="pre">schema</span></code> is refused with a sentence that says to put the
+document under <code class="docutils literal notranslate"><span class="pre">config</span></code>.</p>
+<p>The request does not hold the base of the relative paths or the environment (credentials,
+allowed hosts, download limit). Both are arguments of the call, so the same request plays on
+any machine. The base is <code class="docutils literal notranslate"><span class="pre">--base</span> <span class="pre">DIR</span></code> on the command line and <code class="docutils literal notranslate"><span class="pre">base=</span></code> in Python. A
+request read from a file under a project folder takes that project as its base. A request
+given as a mapping or as text needs a base, and without one it is refused.</p>
+<p>The run writes the request it played as <code class="docutils literal notranslate"><span class="pre">request.json</span></code> in its folder, whole and never
+redacted, and writes its <code class="docutils literal notranslate"><span class="pre">request_id</span></code> in <code class="docutils literal notranslate"><span class="pre">outcome.json</span></code>. Two requests with the same
+<code class="docutils literal notranslate"><span class="pre">request_id</span></code> ask the same thing, whatever the paths and names they use. A run identical to
+a completed one is given back instead of computed, and the answer names that run.</p>
+</section>
+<section id="submission-flow">
+<h2>Submission flow<a class="headerlink" href="#submission-flow" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>The frontend builds the document from the form values, keeps the section structure, and
+puts it under <code class="docutils literal notranslate"><span class="pre">config</span></code> of a request.</p></li>
+<li><p>A thin service you write writes the request into the project folder. It calls
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">request.json</span> <span class="pre">--base</span> <span class="pre">&lt;project&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">hmp.run(document,</span> <span class="pre">base=&lt;project&gt;)</span></code>. In a
+container the command is <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">&lt;image&gt;</span> <span class="pre">run</span> <span class="pre">/project/request.json</span> <span class="pre">--base</span> <span class="pre">/project</span></code>.</p></li>
+<li><p>The service returns the run name and its <code class="docutils literal notranslate"><span class="pre">request_id</span></code>, and the frontend polls the
+<code class="docutils literal notranslate"><span class="pre">outcome.json</span></code> of the run. The server of <a class="reference internal" href="serve-over-http.html"><span class="doc">Serve over HTTP</span></a> does steps 2 and 3. The
+frontend posts the request to <code class="docutils literal notranslate"><span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/run</span></code>, and the job gives the
+<code class="docutils literal notranslate"><span class="pre">RunOutcome</span></code> once the run ends.</p></li>
+<li><p>Results come back through the verbs. <code class="docutils literal notranslate"><span class="pre">hmp.status</span></code> lists the outcomes,
+<code class="docutils literal notranslate"><span class="pre">hmp.show(name,</span> <span class="pre">what=...,</span> <span class="pre">save=path)</span></code> writes a summary, a table, a figure or a report,
+and <code class="docutils literal notranslate"><span class="pre">hmp.export</span></code> writes the files.</p></li>
+</ol>
+</section>
+<section id="what-hydromodpy-does-not-ship">
+<h2>What HydroModPy does not ship<a class="headerlink" href="#what-hydromodpy-does-not-ship" title="Link to this heading">#</a></h2>
+<p>The wheel has no HTTP server. The repository keeps <code class="docutils literal notranslate"><span class="pre">hydromodpy_server</span></code> beside it, on the
+Python standard library only, with no authentication of its own. There is no FastAPI,
+uvicorn or websocket dependency, no OpenAPI endpoint (the JSON Schemas are the contract) and
+no server-sent events.</p>
+</section>
+<section id="tests-to-add">
+<h2>Tests to add<a class="headerlink" href="#tests-to-add" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>A schema diff in your CI. Export again and fail on a difference you did not commit.</p></li>
+<li><p>A smoke call of <code class="docutils literal notranslate"><span class="pre">check</span></code> at each release on a complete document, a document with a key
+left out and a document with a wrong value. The first gives no <code class="docutils literal notranslate"><span class="pre">error</span></code>, the second a
+<code class="docutils literal notranslate"><span class="pre">to_fill</span></code> at that key, the third an <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="serve-over-http.html"><span class="doc">Serve over HTTP</span></a> for the HTTP layer of the repository.</p></li>
+<li><p><a class="reference internal" href="../packages/schema.html"><span class="doc">Package: schema</span></a> for the schema package map.</p></li>
+<li><p><a class="reference internal" href="../../../reference/parameters/explorer.html"><span class="doc">The whole file as a tree</span></a> for the interactive browser of the same models.</p></li>
+</ul>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="add-a-calibration-method.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Add a calibration method</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="serve-over-http.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Serve over HTTP</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-schema-export">The schema export</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-check-of-a-document">The check of a document</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-form-on-the-schema">A form on the schema</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-run-request">The run request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submission-flow">Submission flow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-hydromodpy-does-not-ship">What HydroModPy does not ship</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-to-add">Tests to add</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-20.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
