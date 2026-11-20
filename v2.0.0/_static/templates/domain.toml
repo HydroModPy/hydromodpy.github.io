@@ -1,0 +1,133 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: edition, domain
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# Domain configuration: the zones, the depth of the aquifer and its layering.
+# ----------------------------------------------------------------------
+
+[domain]
+# Zone identifiers Domain.set_zone is allowed to register.
+# It is an allowlist, not a request: nothing here causes a zone to be built.
+# 'catchment' and 'geology' are appended by HydroModPy because the binders write under those fixed names, and every support id is appended too, so what belongs here is a project's own zonations.
+# Order is never read.
+# Spatial-support declarations live under domain.supports.
+# Type: list[Annotated] | Default: []
+zone_ids = []
+
+# Named spatial supports available to heterogeneous parameters.
+# Each key is a support identifier referenced by field_spatial_id.
+# Type: dict[Annotated, Annotated] | Default: {}
+
+
+# Example entry, one [domain.supports.<id>] table per entry.
+# Shown with kind = "generated_bands". Other variants: kind = "generated_rings", kind = "catchment_zones", kind = "geology".
+# [domain.supports.<id>]
+# What the zones of this support are: bands along an axis, concentric rings, the catchment zones, or the geology units.
+# Type: Literal['generated_bands'] | one of: "generated_bands" | REQUIRED
+# kind = "generated_bands"
+# Axis the bands are cut along.
+# Type: Literal['x', 'y'] | one of: "x", "y" | Default: "x"
+# axis = "x"
+# How the coordinates of this support are read: as shares of the domain from 0 to 1 ('relative'), or as lengths converted to metres ('absolute').
+# Type: Literal['relative', 'absolute'] | one of: "relative", "absolute" | Default: "relative"
+# coordinate_mode = "relative"
+# Ordered break coordinates delimiting consecutive bands.
+# With coordinate_mode='relative', values are fractions in ]0,1[.
+# With coordinate_mode='absolute', values are converted to metres.
+# Type: list[float | str] | Default: []
+# breaks = []
+# Ordered band labels.
+# Length must be len(breaks)+1.
+# Type: list[str] | Default: []
+# labels = []
+
+
+# Vertical domain model configuration.
+# Use 'constant_thickness', 'flat_substratum', or 'raster' with a [data.substratum] raster.
+
+[domain.depth_model]
+# Depth-model kind discriminator.
+# Use 'constant_thickness' to define bottom as top-thickness.
+# Type: Literal['constant_thickness'] | one of: "constant_thickness" | Default: "constant_thickness"
+kind = "constant_thickness"
+
+# Constant aquifer thickness applied below topography (canonical metres).
+# Accepts inline units, e.g.
+# '0.2 km'.
+# Type: float | > 0.0 | Default: 50.0
+thickness = 50.0
+
+
+# How the aquifer between the top and the base set by depth_model is split into layers.
+# Every solver reads this one table.
+
+[domain.layers]
+# How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, the fractions you list, or one base per layer.
+# Type: Literal['constant', 'decay', 'list', 'surfaces'] | one of: "constant", "decay", "list", "surfaces" | Default: "constant"
+genmtd_lay = "constant"
+
+# Number of layers for 'constant' and 'decay'.
+# With 'list', the number of fractions sets it, with 'surfaces' the number of layer tables.
+# Type: int (optional) | Default: 1
+nlay = 1
+
+# Ratio of each layer's thickness to the thickness of the layer above it, above 1.
+# With 2, each layer is twice as thick as the one above.
+# Type: float (optional) | Optional | Examples: 2.0
+# lay_decay = 0.0
+
+# Share of the thickness each layer takes, from the top.
+# The shares must sum to 1.
+# Type: list (optional) | Optional | Examples: [0.2, 0.3, 0.5]
+# lay_proportions = []
+
+# What a layer thinner than its min_thickness becomes, for 'surfaces'.
+# Read only with that value of genmtd_lay.
+# Type: Literal['pass_through', 'keep_min_thickness'] | one of: "pass_through", "keep_min_thickness" | Default: "pass_through"
+pinch_out = "pass_through"
+
+
+# The layers from the top, each with its base, for 'surfaces'.
+# The last layer ends on the base of [domain.depth_model] and gives no base.
+# Example entry, one [[domain.layers.layer]] block per entry.
+# [[domain.layers.layer]]
+# Name of the layer, for example 'weathered' or 'fissured'.
+# Type: string | REQUIRED
+# name = ""
+
+# Base this far below the base of the layer above, or below the terrain for the first layer (canonical metres).
+# Type: Annotated (optional) | > 0.0 | Optional | Examples: 30.0
+# thickness = ""
+
+# Base this far below the terrain (canonical meters).
+# Type: Annotated (optional) | > 0.0 | Optional | Examples: 15.0
+# depth = ""
+
+# Base at this elevation, in the datum of the DEM (canonical meters).
+# Type: Annotated (optional) | Optional | Examples: 50.0
+# elevation = ""
+
+# Base read from the raster of this name under [[data.layer_base.sources]], whose values are the elevation of the base.
+# Type: Annotated (optional) | Optional | Examples: "weathered_base"
+# surface = ""
+
+# Thinnest the layer may be (canonical metres).
+# Where it is thinner, [domain.layers] pinch_out says what happens.
+# Type: float | > 0.0 | Default: 0.1
+# min_thickness = 0.1
+

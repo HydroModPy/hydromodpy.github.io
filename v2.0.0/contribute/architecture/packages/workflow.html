@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Package: workflow" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/packages/workflow.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The order in which a project is built and run. A file such as project.toml becomes thirteen steps, from validation to the seal of the run. Each step takes an immutable PipelineState, does its part ..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="The order in which a project is built and run. A file such as project.toml becomes thirteen steps, from validation to the seal of the run. Each step takes an immutable PipelineState, does its part ..." />
+
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <title>Package: workflow &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/packages/workflow';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/packages/workflow.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Package: project" href="project.html" />
+    <link rel="prev" title="Package: display" href="display.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-19"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/index.html">Recipes</a><details><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Architecture</a><details open="open"><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Packages</a><details open="open"><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="display.html">Package: display</a></li>
+<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Architecture</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Packages</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Package: workflow</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="package-workflow">
+<h1>Package: workflow<a class="headerlink" href="#package-workflow" title="Link to this heading">#</a></h1>
+<p>The order in which a project is built and run. A file such as <code class="docutils literal notranslate"><span class="pre">project.toml</span></code> becomes thirteen steps, from validation to the seal of the run. Each step takes an immutable <code class="docutils literal notranslate"><span class="pre">PipelineState</span></code>, does its part and returns the next one. A <code class="docutils literal notranslate"><span class="pre">Pipeline</span></code> chains the steps, records them in the journal of the run and can resume a run from the artifacts of the steps already done. The <code class="docutils literal notranslate"><span class="pre">Project</span></code> facade and every workflow launcher, simulation or calibration, call these steps, so one file always drives one lifecycle.</p>
+<p>A run writes its own directory and nothing else. It never opens the index of the project, and nothing here imports <code class="docutils literal notranslate"><span class="pre">hydromodpy.project</span></code>. <code class="docutils literal notranslate"><span class="pre">steps/</span></code> holds the thirteen steps and <code class="docutils literal notranslate"><span class="pre">steps/prepare_solver/</span></code> the step that opens the run. <code class="docutils literal notranslate"><span class="pre">record/</span></code> holds what a run writes about itself: the claim of its directory, its outcome, the step journal and the resume plan. The modules at the root hold the state, the step protocol, the pipeline, the step graph and the choice of a workflow from a file.</p>
+<p>It reads every layer below it and nothing reads it but <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">cli</span></code> and the package root. A lower layer that needs a workflow function receives it as an argument, as calibration does through the <code class="docutils literal notranslate"><span class="pre">TrialPipeline</span></code> protocol.</p>
+<p>The page of the package in the developer docs lists the modules, tells how a run goes through the steps and says where to add what.</p>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading">#</a></h2>
+<p><strong>top level</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dag.py</span></code></td>
+<td><p>Workflow DAG built from declared step dependencies.</p></td>
+<td><p>129</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">dispatch.py</span></code></td>
+<td><p>Which workflow a configuration file runs.</p></td>
+<td><p>135</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">overview.py</span></code></td>
+<td><p>Data-overview launcher - “watershed identity card” workflow.</p></td>
+<td><p>761</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">parallel.py</span></code></td>
+<td><p>Cohort executors of the workflow pipeline.</p></td>
+<td><p>95</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">products.py</span></code></td>
+<td><p>The one place workflow asks the product store, and the table of products.</p></td>
+<td><p>273</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">replay_checks.py</span></code></td>
+<td><p>What a replay of a sealed run checks before it runs: its inputs, then its producer.</p></td>
+<td><p>339</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">runner.py</span></code></td>
+<td><p>Pipeline orchestrator.</p></td>
+<td><p>711</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">solution_key.py</span></code></td>
+<td><p>The request id and the solution key of a case, told before or during its run.</p></td>
+<td><p>202</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">state.py</span></code></td>
+<td><p>Pipeline state - the object that flows between pipeline steps.</p></td>
+<td><p>89</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">step.py</span></code></td>
+<td><p>Pipeline step protocol.</p></td>
+<td><p>99</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">window.py</span></code></td>
+<td><p>The window of steps a run executes: from_step, until_step and the model phase.</p></td>
+<td><p>84</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>record/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">attempt.py</span></code></td>
+<td><p>One attempt of a run, from the claim of its directory to its outcome.</p></td>
+<td><p>225</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">journal.py</span></code></td>
+<td><p>The step journal of a run: <code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/checkpoints/steps.json</span></code>.</p></td>
+<td><p>296</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">manifest.py</span></code></td>
+<td><p>Resolved run manifest used to validate pipeline resume, and the config it signs.</p></td>
+<td><p>405</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">resume.py</span></code></td>
+<td><p>Resume planner driven by the step journal of the run directory.</p></td>
+<td><p>240</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">run_store.py</span></code></td>
+<td><p>The store of a run, opened for the span of one caller.</p></td>
+<td><p>86</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>steps/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">data.py</span></code></td>
+<td><p>Data step - load external forcings, bind to runtime, expose <code class="docutils literal notranslate"><span class="pre">LoadDataStep</span></code>.</p></td>
+<td><p>729</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">data_description.py</span></code></td>
+<td><p>What a data load read, and the document that says so.</p></td>
+<td><p>338</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dependencies.py</span></code></td>
+<td><p>Compute which pipeline step is the earliest affected by a set of overrides.</p></td>
+<td><p>125</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">derive.py</span></code></td>
+<td><p>Step 9 - what a run derives once its fields are in the store.</p></td>
+<td><p>119</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">display.py</span></code></td>
+<td><p>Step 13 - draw the <code class="docutils literal notranslate"><span class="pre">[[display.figure]]</span></code> tables of the config, after the seal.</p></td>
+<td><p>240</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">export.py</span></code></td>
+<td><p>Export step - clean the solver files and the scratch; the exports follow the seal.</p></td>
+<td><p>563</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">extract.py</span></code></td>
+<td><p>Extract step - solver result extraction, observation ingestion, modpath helpers.</p></td>
+<td><p>178</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">mesh.py</span></code></td>
+<td><p>Mesh step: plan one request, build the cell mesh with the chosen engine, store it.</p></td>
+<td><p>312</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mesh_inputs.py</span></code></td>
+<td><p>Gather what the mesh planner reads besides <code class="docutils literal notranslate"><span class="pre">[mesh]</span></code> from the run context.</p></td>
+<td><p>293</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">planning.py</span></code></td>
+<td><p>Planning step - build a SimulationPlan and decide the per-cell budget it keeps.</p></td>
+<td><p>166</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">resolve.py</span></code></td>
+<td><p>Step 1 - resolve workspace paths, create the workflow context.</p></td>
+<td><p>122</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">run_outputs.py</span></code></td>
+<td><p>What happens to the solver outputs of a run once it is solved.</p></td>
+<td><p>345</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">run_solver.py</span></code></td>
+<td><p>Run-solver step - execute the plan, record solver output locations and the time of each solve.</p></td>
+<td><p>215</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">sequence.py</span></code></td>
+<td><p>The canonical order of the thirteen steps of a run.</p></td>
+<td><p>56</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">setup.py</span></code></td>
+<td><p>Setup step - structural bootstrap, geographic, spatial supports, process objects.</p></td>
+<td><p>490</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">validate.py</span></code></td>
+<td><p>Step 0 - config validation.</p></td>
+<td><p>124</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>steps/prepare_solver/</strong></p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Lines</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dispatch.py</span></code></td>
+<td><p>Concern 3 of PrepareSolverStep: opening the run and freezing what it was built from.</p></td>
+<td><p>545</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">facts.py</span></code></td>
+<td><p>Concern 2 of PrepareSolverStep: the facts of the run and its artifact paths.</p></td>
+<td><p>208</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">forcings.py</span></code></td>
+<td><p>Concern 5 of PrepareSolverStep: persisting the input forcings of a run.</p></td>
+<td><p>401</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">freeze.py</span></code></td>
+<td><p>Concern 4 of PrepareSolverStep: freezing the configuration a run was built from.</p></td>
+<td><p>173</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">model.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">step_build_model</span></code>: freeze the <code class="docutils literal notranslate"><span class="pre">Flow</span></code> of a run into the <code class="docutils literal notranslate"><span class="pre">Model</span></code> its solver reads.</p></td>
+<td><p>396</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">prepare.py</span></code></td>
+<td><p>Concern 1 of PrepareSolverStep: persistence helpers.</p></td>
+<td><p>376</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">resolved.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">config.resolved.toml</span></code>: the whole configuration a run used, and what a replay compares.</p></td>
+<td><p>456</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">restart.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[flow]</span> <span class="pre">restart_from</span></code> by reference: a run name, a <code class="docutils literal notranslate"><span class="pre">sim_id</span></code> or a path.</p></td>
+<td><p>251</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">step.py</span></code></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PrepareSolverStep</span></code>: plans the simulation and opens the run it will execute.</p></td>
+<td><p>251</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="inside-the-package">
+<h2>Inside the package<a class="headerlink" href="#inside-the-package" title="Link to this heading">#</a></h2>
+<section id="the-steps">
+<h3>The steps<a class="headerlink" href="#the-steps" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">standard_steps()</span></code> of <code class="docutils literal notranslate"><span class="pre">steps/sequence.py</span></code> returns the thirteen steps in order, with the
+names of <code class="docutils literal notranslate"><span class="pre">core/pipeline_steps.py</span></code>. Each step declares the step it depends on, so the graph is
+a chain and every cohort holds one step. The order is <code class="docutils literal notranslate"><span class="pre">validate</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve</span></code>,
+<code class="docutils literal notranslate"><span class="pre">build_geographic</span></code>, <code class="docutils literal notranslate"><span class="pre">load_data</span></code>, <code class="docutils literal notranslate"><span class="pre">build_mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">setup_process</span></code>, <code class="docutils literal notranslate"><span class="pre">prepare_solver</span></code>,
+<code class="docutils literal notranslate"><span class="pre">run_solver</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code>, <code class="docutils literal notranslate"><span class="pre">derive</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">seal</span></code> and <code class="docutils literal notranslate"><span class="pre">display</span></code>. <code class="docutils literal notranslate"><span class="pre">prepare_solver</span></code> freezes the configuration into <code class="docutils literal notranslate"><span class="pre">config.toml</span></code>
+and <code class="docutils literal notranslate"><span class="pre">config.resolved.toml</span></code>. <code class="docutils literal notranslate"><span class="pre">seal</span></code> writes the seal from the facts of the run. The data exports and the views
+(<code class="docutils literal notranslate"><span class="pre">step_after_seal</span></code> of <code class="docutils literal notranslate"><span class="pre">steps/export.py</span></code>) and the figures come after it and carry its
+label.</p>
+</section>
+<section id="how-a-run-goes-through-it">
+<h3>How a run goes through it<a class="headerlink" href="#how-a-run-goes-through-it" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>The launcher claims the directory of the case under <code class="docutils literal notranslate"><span class="pre">runs/</span></code> through <code class="docutils literal notranslate"><span class="pre">record/attempt.py</span></code>,
+before the first step. <code class="docutils literal notranslate"><span class="pre">outcome.json</span></code> says <code class="docutils literal notranslate"><span class="pre">running</span></code> and a heartbeat pulses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code> builds the graph from <code class="docutils literal notranslate"><span class="pre">depends_on()</span></code> and runs it with
+<code class="docutils literal notranslate"><span class="pre">Pipeline.run(state,</span> <span class="pre">resume_from=...,</span> <span class="pre">parallel=...,</span> <span class="pre">heartbeat=...)</span></code>. Each step is
+<code class="docutils literal notranslate"><span class="pre">state.advance(...)</span></code> over the shared <code class="docutils literal notranslate"><span class="pre">PipelineState</span></code>, whose main member is the
+<code class="docutils literal notranslate"><span class="pre">WorkflowContext</span></code>. <code class="docutils literal notranslate"><span class="pre">window.py</span></code> bounds the steps with <code class="docutils literal notranslate"><span class="pre">from_step</span></code> and <code class="docutils literal notranslate"><span class="pre">until_step</span></code>.</p></li>
+<li><p>Each step is recorded in <code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/checkpoints/steps.json</span></code> with the hash of its
+artifacts. <code class="docutils literal notranslate"><span class="pre">ResolvedRunManifest</span></code> and the facts of the run (<code class="docutils literal notranslate"><span class="pre">RunFacts</span></code>) sit beside it in
+<code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/</span></code>. A step that writes durable artifacts implements <code class="docutils literal notranslate"><span class="pre">artifacts(state_out)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rebuild_state(...)</span></code>. At resume the runner rebuilds the state of a completed step from
+disk and does not run it again, as <a class="reference internal" href="../pipeline_resume.html"><span class="doc">Pipeline resume from artifacts</span></a> tells. There is no pickle layer.</p></li>
+<li><p>Before each cohort the runner reads the stop flag <code class="docutils literal notranslate"><span class="pre">.hmp/stop.json</span></code> and raises
+<code class="docutils literal notranslate"><span class="pre">StopRequested</span></code> when it is there. The step that a stop interrupts is marked <code class="docutils literal notranslate"><span class="pre">aborted</span></code>, so
+a resume plays it again from its start, <code class="docutils literal notranslate"><span class="pre">run_solver</span></code> included.</p></li>
+<li><p>After the seal, the attempt protocol flips the outcome to <code class="docutils literal notranslate"><span class="pre">completed</span></code> and removes
+<code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/</span></code>. A render that raises after the seal leaves the run sealed and <code class="docutils literal notranslate"><span class="pre">completed</span></code>,
+because <code class="docutils literal notranslate"><span class="pre">close_sealed_attempt</span></code> closes it and the error goes up. A run that stops before
+the seal keeps <code class="docutils literal notranslate"><span class="pre">failed</span></code>, <code class="docutils literal notranslate"><span class="pre">aborted</span></code> or, for a window ended by <code class="docutils literal notranslate"><span class="pre">--until</span></code>, <code class="docutils literal notranslate"><span class="pre">partial</span></code>.</p></li>
+</ol>
+<p>A calibration trial skips the shared steps, because it asks <code class="docutils literal notranslate"><span class="pre">earliest_affected_step</span></code> of
+<code class="docutils literal notranslate"><span class="pre">steps/dependencies.py</span></code> for the first step that an override reaches, from the
+<code class="docutils literal notranslate"><span class="pre">config_sections</span></code> of the steps.</p>
+</section>
+<section id="import-rules">
+<h3>Import rules<a class="headerlink" href="#import-rules" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">record/</span></code> imports <code class="docutils literal notranslate"><span class="pre">state</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> and never <code class="docutils literal notranslate"><span class="pre">steps</span></code>. A step’s <code class="docutils literal notranslate"><span class="pre">reads</span></code> and
+<code class="docutils literal notranslate"><span class="pre">writes</span></code> are exact, because <code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_run_path.py</span></code> derives both from the
+source of the step and fails when a declaration and the code disagree. A step never opens the
+index of the project. It writes through <code class="docutils literal notranslate"><span class="pre">run_store(ctx)</span></code> into the directory of the run, and
+the launcher derives the index once the worker has returned.</p>
+</section>
+<section id="where-to-add-what">
+<h3>Where to add what<a class="headerlink" href="#where-to-add-what" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>A step is described in the docstring of <code class="docutils literal notranslate"><span class="pre">steps/__init__.py</span></code>, with its name in
+<code class="docutils literal notranslate"><span class="pre">core/pipeline_steps.py</span></code>.</p></li>
+<li><p>Something that a run records about itself goes to <code class="docutils literal notranslate"><span class="pre">record/</span></code>. A fact of the run is a field
+of <code class="docutils literal notranslate"><span class="pre">RunFacts</span></code> in <code class="docutils literal notranslate"><span class="pre">results/storage/run_facts.py</span></code> and the block of the seal it feeds in
+<code class="docutils literal notranslate"><span class="pre">results/storage/sealing.py</span></code>.</p></li>
+<li><p>A derived field is a row of <code class="docutils literal notranslate"><span class="pre">VIRTUAL_FIELD_ROWS</span></code> in <code class="docutils literal notranslate"><span class="pre">results/derive/virtual_fields.py</span></code>,
+rebuilt on read and never written by a step.</p></li>
+<li><p>A workflow mode is a name in <code class="docutils literal notranslate"><span class="pre">KNOWN_WORKFLOWS</span></code> and its adapter in
+<code class="docutils literal notranslate"><span class="pre">project/dispatch/workflow.py</span></code>.</p></li>
+<li><p>A standalone launcher is a class next to <code class="docutils literal notranslate"><span class="pre">overview.py</span></code>, built on the steps it needs. A
+check at replay is a function of <code class="docutils literal notranslate"><span class="pre">replay_checks.py</span></code>.</p></li>
+</ul>
+</section>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="display.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Package: display</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="project.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Package: project</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules">Modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inside-the-package">Inside the package</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-steps">The steps</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-run-goes-through-it">How a run goes through it</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-rules">Import rules</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-add-what">Where to add what</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-19.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

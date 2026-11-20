@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Pipeline resume from artifacts" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/pipeline_resume.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="The simulation pipeline rebuilds its in-memory state exclusively from durable artifacts and the TOML config. There is no pickle layer, no CheckpointStore, and no signed-blob deserialization. Resume..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="The simulation pipeline rebuilds its in-memory state exclusively from durable artifacts and the TOML config. There is no pickle layer, no CheckpointStore, and no signed-blob deserialization. Resume..." />
+
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <title>Pipeline resume from artifacts &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/pipeline_resume';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/pipeline_resume.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Mesh engines" href="engines/mesh-engines.html" />
+    <link rel="prev" title="Contracts and design patterns" href="contracts.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-19"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/index.html">Recipes</a><details><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Architecture</a><details open="open"><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Architecture</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Pipeline resume from artifacts</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="pipeline-resume-from-artifacts">
+<h1>Pipeline resume from artifacts<a class="headerlink" href="#pipeline-resume-from-artifacts" title="Link to this heading">#</a></h1>
+<p>The simulation pipeline rebuilds its in-memory state exclusively from
+durable artifacts and the TOML config. There is no pickle layer, no
+<code class="docutils literal notranslate"><span class="pre">CheckpointStore</span></code>, and no signed-blob deserialization. Resume relies on
+three sources of truth:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/checkpoints/resolved_manifest.json</span></code>: tracks the step
+blueprint, the config SHA-256, and the cursor.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/checkpoints/steps.json</span></code>: per-step inputs/outputs hashes,
+<code class="docutils literal notranslate"><span class="pre">artifact_uris</span></code> and status.</p></li>
+<li><p>The Zarr arrays and Parquet tables of the run directory.</p></li>
+</ol>
+<p>All three live in the run directory, with the attempt state that the seal of
+a completed run removes. None is in the index: a run never opens it.</p>
+<section id="invariant">
+<h2>Invariant<a class="headerlink" href="#invariant" title="Link to this heading">#</a></h2>
+<blockquote>
+<div><p><em>Pipeline state at step N is a pure function of the persisted
+artifacts produced by steps 0 to N-1, plus the resolved config.</em></p>
+</div></blockquote>
+<p>Any step that produces durable output declares both <code class="docutils literal notranslate"><span class="pre">artifacts(state)</span></code>
+(workspace-relative URIs) and <code class="docutils literal notranslate"><span class="pre">rebuild_state(prior_state,</span> <span class="pre">workspace,</span>
+<span class="pre">run_id)</span></code>. The first method drives <code class="docutils literal notranslate"><span class="pre">outputs_hash</span></code> in the journal; the
+second one reconstructs the next <code class="docutils literal notranslate"><span class="pre">PipelineState</span></code> by reading those same
+artifacts (Zarr handles, Parquet tables, exports) without
+re-running the heavy operation.</p>
+</section>
+<section id="two-phase-execution">
+<h2>Two-phase execution<a class="headerlink" href="#two-phase-execution" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Pipeline.run</span></code> operates in two phases:</p>
+<ul class="simple">
+<li><p><strong>Rebuild phase</strong> <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">restart_index)</span></code>: every step either gets
+re-executed (cheap, idempotent: validate, resolve, geographic, data,
+mesh, setup) or its output state is rebuilt from artifacts
+(<code class="docutils literal notranslate"><span class="pre">prepare_solver</span></code>, <code class="docutils literal notranslate"><span class="pre">run_solver</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>). The
+journal is not written during this phase.</p></li>
+<li><p><strong>Execute phase</strong> <code class="docutils literal notranslate"><span class="pre">[restart_index,</span> <span class="pre">end)</span></code>: each step runs fully; the
+journal records inputs/outputs hashes and the heartbeat pulses in
+<code class="docutils literal notranslate"><span class="pre">logs/heartbeat.json</span></code>.</p></li>
+</ul>
+</section>
+<section id="resume-integrity">
+<h2>Resume integrity<a class="headerlink" href="#resume-integrity" title="Link to this heading">#</a></h2>
+<p>Before any work starts, two guards check that the workspace has not
+drifted:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ResolvedRunManifest.verify_state</span></code> compares the blueprint and the
+config SHA-256 with what was written at the previous attempt. A
+mismatch raises <code class="xref py py-class docutils literal notranslate"><span class="pre">hydromodpy.core.exceptions.ResumeError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ResumePlanner.compute</span></code> checks every completed row in
+<code class="docutils literal notranslate"><span class="pre">steps.json</span></code>: artifacts must still exist and <code class="docutils literal notranslate"><span class="pre">outputs_hash</span></code>
+must match a recomputed digest. Any divergence cascade-invalidates the
+rows from the offending step onwards and the runner restarts there.</p></li>
+</ul>
+<p>When <code class="docutils literal notranslate"><span class="pre">resume_from</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (or 0), the runner first calls
+<code class="docutils literal notranslate"><span class="pre">WorkflowJournal.invalidate_from(start_order=0,</span> <span class="pre">reason=&quot;from_scratch&quot;)</span></code>
+so a stale journal from a reused <code class="docutils literal notranslate"><span class="pre">run_id</span></code> cannot leak into the new run.</p>
+</section>
+<section id="resume-across-attempts">
+<h2>Resume across attempts<a class="headerlink" href="#resume-across-attempts" title="Link to this heading">#</a></h2>
+<p>The journal belongs to the attempt in progress, under <code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/</span></code>, and the
+attempt protocol of <a class="reference internal" href="storage-layout.html"><span class="doc">Storage layout</span></a> decides when it is read again. A new
+attempt of a failed case resumes in place by default: the checkpoints stay, so
+the runner restarts at the first step the journal does not cover. <code class="docutils literal notranslate"><span class="pre">--fresh</span></code>,
+or a config hash that changed, files the whole earlier attempt under
+<code class="docutils literal notranslate"><span class="pre">attempts/&lt;k&gt;/</span></code> and starts from scratch. The step window serves the
+launcher of a <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> project too: its <code class="docutils literal notranslate"><span class="pre">prepare</span></code> phase runs each case up
+to its data (<code class="docutils literal notranslate"><span class="pre">--until</span> <span class="pre">load_data</span></code>) to fill the workspace input cache, and the
+worker that solves the case later reads its inputs from that cache with
+<code class="docutils literal notranslate"><span class="pre">--frozen</span></code>.</p>
+</section>
+<section id="stopping-a-run">
+<h2>Stopping a run<a class="headerlink" href="#stopping-a-run" title="Link to this heading">#</a></h2>
+<p>A stop can be asked from outside a process, without a signal. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">stop</span> <span class="pre">REF</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hmp.stop</span></code>) calls <code class="docutils literal notranslate"><span class="pre">request_stop</span></code> of <code class="docutils literal notranslate"><span class="pre">results/storage/attempt.py</span></code>, which
+writes <code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/.hmp/stop.json</span></code> for a run that is running and refuses a run in
+any other state, with the state it read. A session of calibration has the same
+flag under <code class="docutils literal notranslate"><span class="pre">&lt;session&gt;/.hmp/</span></code>. The flag is read at the places where an
+unwinding does no harm.</p>
+<ul class="simple">
+<li><p>The pipeline reads it before each cohort of steps, so a stop falls between
+two steps and also just before the seal.</p></li>
+<li><p>The runner of the plan reads it between two runs of the plan. MODFLOW 6
+through libmf6 reads it at the end of each time step, and the Boussinesq
+solver between two periods. A backend that solves through an executable reads
+nothing, because killing the child would leave half-written files, and the
+flag is read after its solve.</p></li>
+<li><p>The calibration engine reads it before each <code class="docutils literal notranslate"><span class="pre">ask</span></code>, so the trials of the
+batch in flight finish and are journaled.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">StopRequested</span></code> is a <code class="docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code>, so the attempt hook, the line of
+the step journal and the closing of a session treat it as they treat a signal.
+The run ends <code class="docutils literal notranslate"><span class="pre">aborted</span></code> with <code class="docutils literal notranslate"><span class="pre">error.type</span> <span class="pre">=</span> <span class="pre">&quot;StopRequested&quot;</span></code>, no signal, no
+seal, and the line of the step it stopped in is <code class="docutils literal notranslate"><span class="pre">aborted</span></code>. A stop reads
+<code class="docutils literal notranslate"><span class="pre">aborted</span></code> in the vocabulary of the outcome and differs from a signal by that
+error type. A session records <code class="docutils literal notranslate"><span class="pre">stop</span> <span class="pre">requested</span> <span class="pre">at</span> <span class="pre">&lt;date&gt;</span></code> as its error.</p>
+<p>The flag belongs to the attempt in progress. The next attempt of a run files it
+under <code class="docutils literal notranslate"><span class="pre">attempts/&lt;k&gt;/stop.json</span></code>, so it does not stop at its first check and the
+history keeps who stopped the run and when. A session has no <code class="docutils literal notranslate"><span class="pre">attempts/&lt;k&gt;/</span></code>
+folder, so reopening it removes the flag, and the date stays in the error of the
+session until then.</p>
+</section>
+<section id="resuming-a-stopped-run">
+<h2>Resuming a stopped run<a class="headerlink" href="#resuming-a-stopped-run" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--resume</span> <span class="pre">REF</span></code> continues attempt <code class="docutils literal notranslate"><span class="pre">k</span></code> on the same <code class="docutils literal notranslate"><span class="pre">request_id</span></code>. It
+compares the <code class="docutils literal notranslate"><span class="pre">request_id</span></code> of the request with the one the outcome of attempt
+<code class="docutils literal notranslate"><span class="pre">k</span></code> recorded under <code class="docutils literal notranslate"><span class="pre">attempts/&lt;k&gt;/</span></code>. The request id counts the resolved
+configuration, the digests of the inputs and the state a window starts from, so
+it sees what <code class="docutils literal notranslate"><span class="pre">verify_state</span></code> does not. When they differ, <code class="docutils literal notranslate"><span class="pre">refuse_resume_if_changed</span></code>
+raises <code class="docutils literal notranslate"><span class="pre">ResumeError</span></code> and says an input or a key changed since the stop. The check
+of <code class="docutils literal notranslate"><span class="pre">ResolvedRunManifest</span></code> stays as a second guard. A plain <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> without
+<code class="docutils literal notranslate"><span class="pre">--resume</span></code> resumes in place when the request is equal and starts over when it is
+not.</p>
+<p>A stop in the solve leaves the <code class="docutils literal notranslate"><span class="pre">run_solver</span></code> row <code class="docutils literal notranslate"><span class="pre">aborted</span></code>, so the resume plays
+<code class="docutils literal notranslate"><span class="pre">run_solver</span></code> again from its start, the build of the solver files included. A stop
+between two steps resumes at the next step. The steps before the stopped one are
+rebuilt from their artifacts, and their lines in <code class="docutils literal notranslate"><span class="pre">profile.json</span></code> read
+<code class="docutils literal notranslate"><span class="pre">reused</span> <span class="pre">=</span> <span class="pre">&quot;prefix&quot;</span></code>.</p>
+</section>
+<section id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[simulation.time]</span> <span class="pre">window_length</span></code> cuts a transient run into windows that end on
+a stress period end. <code class="docutils literal notranslate"><span class="pre">project/windows.py</span></code> plays them in order. Each window is a
+run of its own, named <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_w1</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;_w2</span></code> (two digits from ten windows),
+that goes through the same claim, request, pipeline and seal as any run. The
+cut is made by <code class="docutils literal notranslate"><span class="pre">project/phases.py</span></code>, which gives <code class="docutils literal notranslate"><span class="pre">setup.time_grid</span></code> the periods
+of the window and keeps the grid of the whole simulation in
+<code class="docutils literal notranslate"><span class="pre">setup.whole_time_grid</span></code>. The data and the soil reservoir run on the whole grid, so a
+window takes the same forcing as the run in one piece.</p>
+<p>Window <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> starts from the <code class="docutils literal notranslate"><span class="pre">final_state/</span></code> of window <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">-</span> <span class="pre">1</span></code>. The pipeline
+receives it as <code class="docutils literal notranslate"><span class="pre">window_source</span></code>, <code class="docutils literal notranslate"><span class="pre">prepare_solver</span></code> reads it into <code class="docutils literal notranslate"><span class="pre">Model.initial</span></code>
+as a <code class="docutils literal notranslate"><span class="pre">PriorState</span></code>, and <code class="docutils literal notranslate"><span class="pre">inputs.json</span></code> gets a line with <code class="docutils literal notranslate"><span class="pre">variable</span> <span class="pre">=</span> <span class="pre">&quot;initial_state&quot;</span></code>
+and <code class="docutils literal notranslate"><span class="pre">provider</span> <span class="pre">=</span> <span class="pre">&quot;run&quot;</span></code>, whose digest is the one the <code class="docutils literal notranslate"><span class="pre">request_id</span></code> counts. A source
+that is absent, or that was played with another request, is refused before the claim.</p>
+<p>A window already sealed with the same request is skipped. After a stop in window 3,
+<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> gives back windows 1 and 2, resumes window 3 in place at <code class="docutils literal notranslate"><span class="pre">run_solver</span></code>,
+and plays the windows after it.</p>
+</section>
+<section id="step-contract-recap">
+<h2>Step contract recap<a class="headerlink" href="#step-contract-recap" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Step</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">reads</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+    <span class="n">writes</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_in</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_out</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Workspace-relative paths of durable outputs. Empty tuple = in-memory."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">rebuild_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">prior_state</span><span class="p">:</span> <span class="n">PipelineState</span><span class="p">,</span>
+        <span class="n">workspace</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Restore the output state from disk. Must not re-run the heavy op."""</span>
+</pre></div>
+</div>
+<p>In-memory steps (no <code class="docutils literal notranslate"><span class="pre">artifacts</span></code>) are simply re-executed at resume:
+they must stay idempotent and fast.</p>
+</section>
+<section id="surviving-a-process-death">
+<h2>Surviving a process death<a class="headerlink" href="#surviving-a-process-death" title="Link to this heading">#</a></h2>
+<p>A resume exists for the deaths that run no handler: a lost machine, the
+OOM killer, a canceled job. Nothing is flushed on the way out, so what
+the next process can do is decided entirely by what the disk already
+holds.</p>
+<p>Two consequences follow, and both are gated by
+<code class="docutils literal notranslate"><span class="pre">tests/e2e/test_resume_through_a_process_death.py</span></code>, which kills its own
+child with <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code> twice.</p>
+<ul class="simple">
+<li><p>The step that was running when the process died keeps the status
+<code class="docutils literal notranslate"><span class="pre">running</span></code>, not <code class="docutils literal notranslate"><span class="pre">failed</span></code>. <code class="docutils literal notranslate"><span class="pre">failed</span></code> is what an exception writes.
+<code class="docutils literal notranslate"><span class="pre">ResumePlanner</span></code> restarts at that step either way.</p></li>
+<li><p>The journal has to be readable afterwards. <code class="docutils literal notranslate"><span class="pre">steps.json</span></code> and the facts of
+the run are rewritten through a temporary file and a rename, so a death
+between two writes leaves the previous document whole, and the next attempt
+of the same directory reads what the dead one recorded. No database is
+involved: a run never opens the project index, so there is no write-ahead
+log to poison.</p></li>
+</ul>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="contracts.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Contracts and design patterns</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="engines/mesh-engines.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Mesh engines</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#invariant">Invariant</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-phase-execution">Two-phase execution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resume-integrity">Resume integrity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resume-across-attempts">Resume across attempts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stopping-a-run">Stopping a run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resuming-a-stopped-run">Resuming a stopped run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-contract-recap">Step contract recap</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surviving-a-process-death">Surviving a process death</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-19.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

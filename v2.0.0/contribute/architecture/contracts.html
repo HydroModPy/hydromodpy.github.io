@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Contracts and design patterns" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/contracts.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="This page says which names the contract of Versions and stability covers: the public import paths, the plugin ports, the two storage Protocols and the field registry. Then it lists the patterns the..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="This page says which names the contract of Versions and stability covers: the public import paths, the plugin ports, the two storage Protocols and the field registry. Then it lists the patterns the..." />
+
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <title>Contracts and design patterns &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/contracts';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/contracts.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Pipeline resume from artifacts" href="pipeline_resume.html" />
+    <link rel="prev" title="Data scopes and schema evolution" href="data-scopes.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-19"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="how-to/index.html">Recipes</a><details><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/plug-into-a-port.html">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Architecture</a><details open="open"><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Architecture</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Contracts and design patterns</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="contracts-and-design-patterns">
+<h1>Contracts and design patterns<a class="headerlink" href="#contracts-and-design-patterns" title="Link to this heading">#</a></h1>
+<p>This page says which names the contract of <a class="reference internal" href="../../about/versions.html"><span class="doc">Versions and stability</span></a> covers: the
+public import paths, the plugin ports, the two storage Protocols and the field
+registry. Then it lists the patterns the code reuses. Know the patterns and the
+code is predictable: adding a backend, a data variable or a figure follows one of
+them.</p>
+<section id="the-public-facade">
+<h2>The public facade<a class="headerlink" href="#the-public-facade" title="Link to this heading">#</a></h2>
+<p>A user imports <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">hydromodpy</span> <span class="pre">as</span> <span class="pre">hmp</span></code>. The package exports a short flat set:
+the fifteen verbs of <code class="docutils literal notranslate"><span class="pre">hydromodpy/project/api.py</span></code> (<code class="docutils literal notranslate"><span class="pre">open</span></code>, <code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">check</span></code>,
+<code class="docutils literal notranslate"><span class="pre">calibrate</span></code>, <code class="docutils literal notranslate"><span class="pre">spinup</span></code>, <code class="docutils literal notranslate"><span class="pre">replay</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">trash</span></code>, <code class="docutils literal notranslate"><span class="pre">compare</span></code>,
+<code class="docutils literal notranslate"><span class="pre">show</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">publish</span></code>, <code class="docutils literal notranslate"><span class="pre">example</span></code>, <code class="docutils literal notranslate"><span class="pre">doctor</span></code>), the five objects they take
+and return (<code class="docutils literal notranslate"><span class="pre">Project</span></code>, <code class="docutils literal notranslate"><span class="pre">Run</span></code>, <code class="docutils literal notranslate"><span class="pre">RunSet</span></code>, <code class="docutils literal notranslate"><span class="pre">Session</span></code>, <code class="docutils literal notranslate"><span class="pre">HydroModPyConfig</span></code>), the
+categories of the exception hierarchy and <code class="docutils literal notranslate"><span class="pre">__version__</span></code>, all listed in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.__all__</span></code>. A verb takes text, numbers, paths or mappings and returns a
+value with <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code>, a path or diagnostics, so a server sends it as JSON. A
+command of <code class="docutils literal notranslate"><span class="pre">hmp</span></code> calls its verb, and nothing else at the top level reads a lower
+package. <code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_surfaces.py</span></code> holds this. The generated <a class="reference internal" href="../../reference/python/index.html"><span class="doc">Python API</span></a> documents every
+name, so this page does not repeat them. Everything else, the config section of a
+variable or a solver class, stays reachable through <code class="docutils literal notranslate"><span class="pre">hydromodpy.&lt;module&gt;</span></code> and is out of
+the contract unless the list below names its module. <code class="docutils literal notranslate"><span class="pre">hmp.open(path)</span></code> opens what a path stands for: a <code class="docutils literal notranslate"><span class="pre">Project</span></code>, a <code class="docutils literal notranslate"><span class="pre">Run</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">Session</span></code> or a <code class="docutils literal notranslate"><span class="pre">Workspace</span></code>. <code class="docutils literal notranslate"><span class="pre">project.store</span></code> is the read-only <code class="docutils literal notranslate"><span class="pre">Catalog</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.facade.Catalog</span></code>) over
+<code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code>, the index derived from the run directories.</p>
+</section>
+<section id="public-import-paths">
+<h2>Public import paths<a class="headerlink" href="#public-import-paths" title="Link to this heading">#</a></h2>
+<p>Two lists are public. One is <code class="docutils literal notranslate"><span class="pre">hydromodpy.__all__</span></code>. The other is the short list
+of modules below, which a plugin, an extension or a test has to import from. Their
+public names follow the same rules as the facade. Every other module is internal
+whatever its name, and can move in any version. A module with a leading underscore
+is private to its package.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_public_import_paths.py</span></code> reads this list. It fails
+when a listed module disappears, and when a page of the reference or of the how-to
+guides imports a module that is neither listed nor in the facade.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.exceptions</span></code>: the exception hierarchy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.logging</span></code>: <code class="docutils literal notranslate"><span class="pre">get_logger</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.pipeline_steps</span></code>: <code class="docutils literal notranslate"><span class="pre">STEP_NAMES</span></code>, the frozen names of the steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.units.types</span></code>: the quantity types of a config field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.config_kit.profile</span></code>: <code class="docutils literal notranslate"><span class="pre">Profile</span></code>, the level of a config field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.tracking.input_file</span></code>: <code class="docutils literal notranslate"><span class="pre">InputFile</span></code>, a file a run depends on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.contracts.observables</span></code>: what a solver answers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.core.state.run_state</span></code>: <code class="docutils literal notranslate"><span class="pre">RunState</span></code>, what a transport adapter reads,
+and <code class="docutils literal notranslate"><span class="pre">SlotRequest</span></code>, what a calibration trial asks of the slot its runs solve in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.schema.config_schema</span></code>: the JSON Schema export, <code class="docutils literal notranslate"><span class="pre">export_full_schema</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.config.check</span></code>: <code class="docutils literal notranslate"><span class="pre">check</span></code> and <code class="docutils literal notranslate"><span class="pre">phrase</span></code>, the sentence of each code a
+check gives, read from <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/phrases.toml</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.catchment.terrain.port</span></code>: the terrain engine port.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.port</span></code>: the mesh engine port.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.port</span></code>: the data source port.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.exporters.port</span></code>: the export format port.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.contracts.spatial_field</span></code>: the records a gridded provider returns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.families.base_config</span></code>: the base of a data variable config.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.families.grids</span></code>: the base of a gridded variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.families.timeseries_config</span></code>: the base of a series variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.model.transport.transport_config</span></code>: <code class="docutils literal notranslate"><span class="pre">TransportConfig</span></code>, the [transport] section and its per-solver tables.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.adapter_protocol</span></code>: the solver port and the extractor port,
+<code class="docutils literal notranslate"><span class="pre">SolverAdapter</span></code> and <code class="docutils literal notranslate"><span class="pre">OutputAdapter</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.plan</span></code>: <code class="docutils literal notranslate"><span class="pre">RunSlot</span></code>, <code class="docutils literal notranslate"><span class="pre">SolverRun</span></code> and <code class="docutils literal notranslate"><span class="pre">RunContext</span></code>,
+what a solver adapter receives and returns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.storage.kept</span></code>: <code class="docutils literal notranslate"><span class="pre">Retention</span></code>, what a run keeps of its solver
+outputs, which <code class="docutils literal notranslate"><span class="pre">extract</span></code> receives.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluation.port</span></code>: the trial evaluator port.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.optimizer</span></code>: the base of a calibration method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.parameters</span></code>: <code class="docutils literal notranslate"><span class="pre">ParameterSpace</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.display.request</span></code>: <code class="docutils literal notranslate"><span class="pre">FigureRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">PanelRequest</span></code> and <code class="docutils literal notranslate"><span class="pre">SPECIALS</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.display.presets</span></code>: <code class="docutils literal notranslate"><span class="pre">PRESETS</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.display.report.engine</span></code>: the report engine with no domain: <code class="docutils literal notranslate"><span class="pre">Block</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Metric</span></code>, <code class="docutils literal notranslate"><span class="pre">Picture</span></code>, <code class="docutils literal notranslate"><span class="pre">Table</span></code>, <code class="docutils literal notranslate"><span class="pre">Link</span></code>, <code class="docutils literal notranslate"><span class="pre">Prose</span></code> and <code class="docutils literal notranslate"><span class="pre">write_pages</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.run.view</span></code>: <code class="docutils literal notranslate"><span class="pre">Run</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.zarr_store.simulation_zarr</span></code>: <code class="docutils literal notranslate"><span class="pre">SimulationZarr</span></code>, the field store an exporter reads.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.exporters.fields</span></code>: what every field exporter reads the same
+way.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.indexer</span></code>: <code class="docutils literal notranslate"><span class="pre">rebuild_index</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.annotations</span></code>: tags and notes of a run directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.trash</span></code>: the trash of a run directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.cli.conventions</span></code>: the shared argparse grammar.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.cli.output</span></code>: what a command writes for a program.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.cli.exit_codes</span></code>: the exit codes of a command and <code class="docutils literal notranslate"><span class="pre">fail</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.cli.refs</span></code>: the workspace and project a command is given.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.project.api</span></code>: the fifteen verbs, which each command of <code class="docutils literal notranslate"><span class="pre">hmp</span></code> calls.</p></li>
+</ul>
+</section>
+<section id="plugin-ports">
+<h2>Plugin ports<a class="headerlink" href="#plugin-ports" title="Link to this heading">#</a></h2>
+<p>A plugin joins through an entry-point group. Each group has one Protocol.
+The entry-point name of a plugin follows the key of its registry: a source is
+declared under <code class="docutils literal notranslate"><span class="pre">&lt;section&gt;_&lt;source_id&gt;</span></code>, an export format under its <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 33.0%" />
+<col style="width: 37.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Group</p></th>
+<th class="head"><p>Protocol</p></th>
+<th class="head"><p>Stability</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.terrain.engine</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TerrainEngine</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.catchment.terrain.port</span></code></p></td>
+<td><p>stable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.engine</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeshEngine</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.port</span></code></p></td>
+<td><p>stable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataSource</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.port</span></code></p></td>
+<td><p>stable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.export.format</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ExportWriter</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.results.exporters.port</span></code></p></td>
+<td><p>experimental</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TrialEvaluator</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluation.port</span></code></p></td>
+<td><p>experimental</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optimizer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.optimizer</span></code></p></td>
+<td><p>experimental</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SolverAdapter</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.adapter_protocol</span></code></p></td>
+<td><p>experimental</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.extractor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OutputAdapter</span></code>, <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.adapter_protocol</span></code></p></td>
+<td><p>experimental</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A stable port is frozen as the facade is: a change keeps the old form working for
+two minor versions. Its types are its own, so it depends on nothing else of the</p>
+<p>An experimental port can change in any minor version. <code class="docutils literal notranslate"><span class="pre">TrialEvaluator</span></code> waits for
+the rework of the calibration, and two of its construction options (<code class="docutils literal notranslate"><span class="pre">trial_ctx</span></code>,
+<code class="docutils literal notranslate"><span class="pre">metric_fn</span></code>) are internals of the calibration. <code class="docutils literal notranslate"><span class="pre">SolverAdapter</span></code> still hands a
+transport adapter <code class="docutils literal notranslate"><span class="pre">state.setup</span></code> and <code class="docutils literal notranslate"><span class="pre">state.cfg</span></code>, so a refactor of either reaches
+it, and <code class="docutils literal notranslate"><span class="pre">OutputAdapter</span></code> writes through the methods of <code class="docutils literal notranslate"><span class="pre">RunStore</span></code>. The stored
+result of a run is not experimental, whichever port wrote it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/ports/</span></code> holds the conformance suites, one file per port. They are not in the wheel, so run
+them from a clone with your distribution installed. The suites of the terrain, mesh and evaluator ports run on every engine the registry serves. The suite of the data source port runs its declarations and its refusals on
+every source the registry serves, as <a class="reference internal" href="how-to/add-a-data-source.html"><span class="doc">Add a data source</span></a> explains,
+and the suite of the export port holds every format of <code class="docutils literal notranslate"><span class="pre">export_formats</span></code> to
+what its declarations say, as <a class="reference internal" href="how-to/add-an-exporter.html"><span class="doc">Add an exporter</span></a> explains. The suite of the solver port,
+<code class="docutils literal notranslate"><span class="pre">tests/ports/test_solver.py</span></code>, checks the thirteen attributes of every backend the
+registry serves, and builds, solves and extracts every flow on every mesh engine it accepts.</p>
+</section>
+<section id="changing-a-contract">
+<h2>Changing a contract<a class="headerlink" href="#changing-a-contract" title="Link to this heading">#</a></h2>
+<p>A change to the facade, to a stable port or to the two Protocols below is announced.
+The old name follows the rules of <a class="reference internal" href="../../about/versions.html"><span class="doc">Versions and stability</span></a>. A name that leaves in 2.0.0
+or earlier is refused with its new form. From 2.2.0 on it keeps working for two minor
+versions and warns. This page and <a class="reference internal" href="storage-layout.html"><span class="doc">Storage layout</span></a> change with it. A renamed TOML key gets its
+<code class="docutils literal notranslate"><span class="pre">[[migration]]</span></code> row in the register of changes, <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/changes.toml</span></code>, with
+<code class="docutils literal notranslate"><span class="pre">since</span></code>, and the row stays there after its delay for the runs already sealed. A renamed name of
+<code class="docutils literal notranslate"><span class="pre">hmp.__all__</span></code> gets its entry in <code class="docutils literal notranslate"><span class="pre">OLD_NAMES</span></code> of <code class="docutils literal notranslate"><span class="pre">hydromodpy/_lazy.py</span></code>, and a renamed
+<code class="docutils literal notranslate"><span class="pre">hmp</span></code> command or flag its entry in <code class="docutils literal notranslate"><span class="pre">OLD_CLI_FORMS</span></code> of
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/cli/conventions.py</span></code>, both with <code class="docutils literal notranslate"><span class="pre">since</span></code>. Each warns with a
+<code class="docutils literal notranslate"><span class="pre">FutureWarning</span></code>, then forwards to the new form. A test fails once an entry outlives its
+delay. All three read that delay from <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/changes.py</span></code>, where it is written once. <code class="docutils literal notranslate"><span class="pre">OLD_NAMES</span></code> and <code class="docutils literal notranslate"><span class="pre">OLD_CLI_FORMS</span></code> hold, marked <code class="docutils literal notranslate"><span class="pre">refused</span></code>, the names,
+the members of the public objects, the commands and the flags that left before the first
+stable version. They keep no alias: each is refused with a message that names its new
+form, and leaves the table at 2.2. The members live in <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/old_members.py</span></code>,
+which each object reads. After 2.0.0 a public method of the result objects is not in them:
+the gate below names its removal, and the changelog says it. A change to a stored
+schema needs a bump of the matching
+version constant and a reader for the old version. The constants and where they live
+are in <a class="reference internal" href="data-scopes.html"><span class="doc">Data scopes and schema evolution</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/test_surfaces.py</span></code> compares the public
+surfaces with the snapshot files of <code class="docutils literal notranslate"><span class="pre">tests/unit/architecture/surface/</span></code>: the names
+and signatures of <code class="docutils literal notranslate"><span class="pre">hmp.__all__</span></code>, the public methods of the result objects, the
+command line with its flags, the exit codes, the TOML paths with their types and
+defaults, and the process descriptions. A difference fails the test, which says what
+changed. To accept it, regenerate the files and commit them with the change:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tools.surface_snapshot
+</pre></div>
+</div>
+<p>The command refuses to drop a stable TOML key that has no row in the migration table
+that rewrites it, because a form the loader only refuses is no migration. A key it drops
+goes into <code class="docutils literal notranslate"><span class="pre">removed_toml_keys.tsv</span></code>, and the test holds it there until its delay ends.
+From the first stable version on, the command refuses in the same way a name of
+<code class="docutils literal notranslate"><span class="pre">hmp.__all__</span></code>, a command or a flag that leaves with no entry in its table, and what
+leaves goes into <code class="docutils literal notranslate"><span class="pre">removed_names.tsv</span></code>. It also refuses a stable key marked experimental,
+because the mark would free the key from its promise. Before that version a key marked
+experimental stays in <code class="docutils literal notranslate"><span class="pre">demoted_toml_keys.tsv</span></code>, and it still needs its migration to leave.</p>
+</section>
+<section id="storage">
+<h2>Storage<a class="headerlink" href="#storage" title="Link to this heading">#</a></h2>
+<p>Disk is the truth and the index is derived. A run directory holds everything a run
+needs to be read, replayed, resumed or compared: Zarr for fields, Parquet for tables,
+and its manifest and provenance. <code class="docutils literal notranslate"><span class="pre">.hmp/index.duckdb</span></code> is a query index over those
+directories and rebuilds at any time (<a class="reference internal" href="storage-layout.html"><span class="doc">Storage layout</span></a>). DuckDB is the only SQL
+backend the contract promises. The catalog reaches it through a port, and the port
+takes SQL in the dialect of DuckDB.</p>
+<p>The data cache has no database and no Protocol. Each fetched file has a sidecar
+<code class="docutils literal notranslate"><span class="pre">&lt;file&gt;.json</span></code>, and the sidecars are the cache (<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/provenance/sidecars.py</span></code>,
+<a class="reference internal" href="data-scopes.html"><span class="doc">Data scopes and schema evolution</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy.lock</span></code> freezes the data cache and the files of the user of a project before a
+run. The launcher of a <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> project writes it, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">lock</span></code> writes it by hand
+for a single project. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--frozen</span></code> on a project TOML verifies it and refuses without one. No
+other run needs it, because the manifest of a run records the inputs of that run: <code class="docutils literal notranslate"><span class="pre">hmp</span>
+<span class="pre">replay</span> <span class="pre">&lt;run&gt;</span></code> reads that record. See
+<a class="reference internal" href="data-scopes.html#artifact-policy"><span class="std std-ref">Artifact policy</span></a> for the sidecar formats that are allowed.</p>
+</section>
+<section id="the-index-and-the-run-store">
+<h2>The index and the run store<a class="headerlink" href="#the-index-and-the-run-store" title="Link to this heading">#</a></h2>
+<p>The catalog facade reaches the SQL index through <code class="docutils literal notranslate"><span class="pre">DuckDBBackend</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hydromodpy/results/catalog/adapters/duckdb.py</span></code>), the one backend of the
+catalog, with no Protocol in front of it.
+<code class="docutils literal notranslate"><span class="pre">tests/unit/results/catalog/adapters/test_duckdb.py</span></code> holds its tests.</p>
+<p>Workflow steps, solver adapters and post-run extractors write a run through
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.results.storage.run_store.RunStore</span></code>, the run store of a run
+directory, which never opens an index: <code class="docutils literal notranslate"><span class="pre">write_parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">write_timeseries</span></code>,
+<code class="docutils literal notranslate"><span class="pre">write_budget</span></code>, <code class="docutils literal notranslate"><span class="pre">write_field</span></code>, <code class="docutils literal notranslate"><span class="pre">write_time</span></code>, <code class="docutils literal notranslate"><span class="pre">write_crs</span></code>, <code class="docutils literal notranslate"><span class="pre">write_mesh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">write_metric</span></code>, <code class="docutils literal notranslate"><span class="pre">write_provenance</span></code>, <code class="docutils literal notranslate"><span class="pre">write_run_environment</span></code>,
+<code class="docutils literal notranslate"><span class="pre">register_tracked_files</span></code> and more. The reads go through
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.results.catalog.facade.Catalog</span></code>, from the index.</p>
+</section>
+<section id="field-registry">
+<h2>Field registry<a class="headerlink" href="#field-registry" title="Link to this heading">#</a></h2>
+<p>Source: <code class="docutils literal notranslate"><span class="pre">hydromodpy/results/field_registry.py</span></code>. <code class="docutils literal notranslate"><span class="pre">FIELD_REGISTRY</span></code> maps a logical
+field name (<code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">watertable_depth</span></code>, <code class="docutils literal notranslate"><span class="pre">drain_accumulation_flux</span></code>, …) to a
+<code class="docutils literal notranslate"><span class="pre">FieldDescriptor</span></code>: its shape, the Zarr path inside the run store, and its CF
+metadata (standard name, units, coordinates). <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">has</span></code>, <code class="docutils literal notranslate"><span class="pre">all_names</span></code>,
+<code class="docutils literal notranslate"><span class="pre">all_zarr_paths</span></code> and <code class="docutils literal notranslate"><span class="pre">cf_attrs</span></code> read it. <code class="docutils literal notranslate"><span class="pre">Run.read</span></code>, the Zarr writers, the
+exporters and the figures all read this one table, so a field is described the
+same way in every layer. Adding a field is a registry entry and a writer; readers
+keep working.</p>
+</section>
+<section id="design-patterns">
+<h2>Design patterns<a class="headerlink" href="#design-patterns" title="Link to this heading">#</a></h2>
+<section id="solveradapter-a-protocol-and-thirteen-attributes-per-backend">
+<h3>SolverAdapter: a Protocol and thirteen attributes per backend<a class="headerlink" href="#solveradapter-a-protocol-and-thirteen-attributes-per-backend" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/adapter_protocol.py</span></code> defines the Protocol. An adapter
+class carries thirteen attributes (<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">process_type</span></code>, <code class="docutils literal notranslate"><span class="pre">accepted_meshes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">geometry</span></code>, <code class="docutils literal notranslate"><span class="pre">writes</span></code>, <code class="docutils literal notranslate"><span class="pre">reads</span></code>, <code class="docutils literal notranslate"><span class="pre">supports</span></code>, <code class="docutils literal notranslate"><span class="pre">options</span></code>, <code class="docutils literal notranslate"><span class="pre">category</span></code>,
+<code class="docutils literal notranslate"><span class="pre">native_step</span></code>, <code class="docutils literal notranslate"><span class="pre">cell_column</span></code>, <code class="docutils literal notranslate"><span class="pre">mutable</span></code> and <code class="docutils literal notranslate"><span class="pre">requires</span></code>) and five members the runner calls:
+<code class="docutils literal notranslate"><span class="pre">validate(model,</span> <span class="pre">options,</span> <span class="pre">slot)</span></code>, <code class="docutils literal notranslate"><span class="pre">build(model,</span> <span class="pre">options,</span> <span class="pre">slot,</span> <span class="pre">ctx)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">run(solver_run)</span></code>, <code class="docutils literal notranslate"><span class="pre">cleanup(solver_run)</span></code> and <code class="docutils literal notranslate"><span class="pre">extract(solver_run,</span> <span class="pre">store,</span> <span class="pre">retention)</span></code>.
+Three members are optional. <code class="docutils literal notranslate"><span class="pre">rerun(previous,</span> <span class="pre">model,</span> <span class="pre">slot)</span></code> is present if and only if
+<code class="docutils literal notranslate"><span class="pre">mutable</span></code> is not empty, and <code class="docutils literal notranslate"><span class="pre">observables</span></code> and <code class="docutils literal notranslate"><span class="pre">declared_observables</span></code> serve a
+calibration trial. Every call that makes or changes a run returns a <code class="docutils literal notranslate"><span class="pre">SolverRun</span></code>, the
+frozen record of the <code class="docutils literal notranslate"><span class="pre">Model</span></code>, the options, the <code class="docutils literal notranslate"><span class="pre">RunSlot</span></code> the run solves in, the solver
+model, the output folder, the input files written and whether the run is written and
+solved. Concrete adapters sit beside their backend (<code class="docutils literal notranslate"><span class="pre">solver/modflow6/adapter.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">solver/boussinesq/adapter.py</span></code>, <code class="docutils literal notranslate"><span class="pre">solver/modflow_nwt/adapter.py</span></code>, and the transports
+in <code class="docutils literal notranslate"><span class="pre">solver/modflow6/adapters/</span></code> and <code class="docutils literal notranslate"><span class="pre">solver/modflow_nwt/adapters/</span></code>), registered in
+<code class="docutils literal notranslate"><span class="pre">solver/base/registry.py</span></code>, which keys a backend on <code class="docutils literal notranslate"><span class="pre">&lt;process_type&gt;_&lt;name&gt;</span></code>. The
+planner resolves the key and the runner only sees the Protocol. <code class="docutils literal notranslate"><span class="pre">extract</span></code> hands the
+run to the extractor registered under the same key, a class that answers
+<code class="docutils literal notranslate"><span class="pre">OutputAdapter</span></code>, which a plugin publishes in the <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.extractor</span></code> group.</p>
+<p><em>Why:</em> the domain objects (<code class="docutils literal notranslate"><span class="pre">Flow</span></code>, <code class="docutils literal notranslate"><span class="pre">Transport</span></code>) stay independent of solver
+details. A solver is one adapter class with its attributes and a line in each registry table
+(<a class="reference internal" href="how-to/add-a-solver.html"><span class="doc">Add a solver</span></a>).</p>
+<p>A backend gets no hook into the runner. The runner fills the <code class="docutils literal notranslate"><span class="pre">RunSlot</span></code> (the run folder,
+the run name, the folder of the binaries, the early stop of a trial) and reads the
+<code class="docutils literal notranslate"><span class="pre">options</span></code> table, so a flow adapter reads nothing of the setup, the configuration or the
+store. <code class="docutils literal notranslate"><span class="pre">rerun</span></code> is a shortcut between two solves of a calibration. It rewrites only the
+input files that a changed K or Sy touches, and it is bit-identical to a new build. It has
+nothing to do with <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">rerun</span></code>, which replays a sealed run from its configuration.</p>
+<p>The TOML meets this port in three places, and none of them names a backend.
+<a class="hmp-toml-ref reference external" href="../../reference/parameters/solver.html#p-solver-backend" title="Flow solver of the run, by its registered name: MODFLOW 6, MODFLOW-NWT, Boussinesq or a plugin."><code class="docutils literal notranslate"><span class="pre">solver.backend</span></code></a> is a string checked against the registry while the file is read, and an
+unknown name is refused with the names the installation serves. The table
+<code class="docutils literal notranslate"><span class="pre">[solver.&lt;name&gt;]</span></code> is validated by the <code class="docutils literal notranslate"><span class="pre">options</span></code> class of the adapter. And
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/config/cross_checks.py</span></code> refuses a key the chosen backend leaves out of
+<code class="docutils literal notranslate"><span class="pre">supports</span></code>: the message gives the key the file wrote, the backend, and the backends that honor
+it, and the error is <code class="docutils literal notranslate"><span class="pre">IncompatibleCapabilitiesError</span></code>. A transport solver whose <code class="docutils literal notranslate"><span class="pre">requires</span></code>
+does not name the flow of the run is refused in the same way. Two pairs of keys spoil
+each other whatever the solver, a lake with a <code class="docutils literal notranslate"><span class="pre">spinup_cyclic</span></code> start for one, and they are rows
+of <code class="docutils literal notranslate"><span class="pre">CONTAMINATIONS</span></code>. A run sealed before a refusal existed is read back with a warning.
+The one refusal that waits for the solve is a transport behind a steady start whose heads
+did not converge, because convergence is only known then.</p>
+</section>
+<section id="pipeline-step">
+<h3>Pipeline step<a class="headerlink" href="#pipeline-step" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/steps/</span></code>, with the protocol in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/workflow/step.py</span></code>. A step is a class with a <code class="docutils literal notranslate"><span class="pre">name</span></code> and a
+<code class="docutils literal notranslate"><span class="pre">run(state:</span> <span class="pre">PipelineState)</span> <span class="pre">-&gt;</span> <span class="pre">PipelineState</span></code>. It declares the payload keys it
+reads and writes (<code class="docutils literal notranslate"><span class="pre">reads</span></code>, <code class="docutils literal notranslate"><span class="pre">writes</span></code>), checked in both directions by
+<code class="docutils literal notranslate"><span class="pre">test_run_path.py</span></code>, and optionally the TOML subtrees it consumes
+(<code class="docutils literal notranslate"><span class="pre">config_sections</span></code>), which is how a calibration finds the first step that must
+run again. A persistent step adds <code class="docutils literal notranslate"><span class="pre">artifacts</span></code> and <code class="docutils literal notranslate"><span class="pre">rebuild_state</span></code> so a resume
+does not repeat it. Pipelines are assembled by <code class="docutils literal notranslate"><span class="pre">standard_steps</span></code> in <code class="docutils literal notranslate"><span class="pre">workflow/steps/sequence.py</span></code>.</p>
+<p><em>Why:</em> testability and resume. A new workflow assembles steps without forking the
+orchestration layer.</p>
+</section>
+<section id="figure-requests">
+<h3>Figure requests<a class="headerlink" href="#figure-requests" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/display/request.py</span></code> defines <code class="docutils literal notranslate"><span class="pre">FigureRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">PanelRequest</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SPECIALS</span></code>. A figure is a request that names a variable, a preset, a list of panels or a
+special figure. <code class="docutils literal notranslate"><span class="pre">render.py</span></code> expands it against <code class="docutils literal notranslate"><span class="pre">PRESETS</span></code> of <code class="docutils literal notranslate"><span class="pre">presets.py</span></code> and draws each
+panel with a frame of <code class="docutils literal notranslate"><span class="pre">display/frames/</span></code>. A special figure is a function of
+<code class="docutils literal notranslate"><span class="pre">display/special/</span></code> listed in <code class="docutils literal notranslate"><span class="pre">SPECIALS</span></code>. <code class="docutils literal notranslate"><span class="pre">run.figure(&quot;watertable_depth&quot;)</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">[[display.figure]]</span></code> tables ask for a figure by that request. A figure reads a <code class="docutils literal notranslate"><span class="pre">Run</span></code> and
+never a solver file.</p>
+<p><em>Why:</em> on-demand rendering, consistent across families (<a class="reference internal" href="how-to/add-a-figure.html"><span class="doc">Add a figure</span></a>).</p>
+</section>
+<section id="plugin-registry">
+<h3>Plugin registry<a class="headerlink" href="#plugin-registry" title="Link to this heading">#</a></h3>
+<p>One engine, <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/plugin_registry.py</span></code>, holds every plugin
+surface of the package. Each surface is one instance with the attributes that
+key its members: the solver backends and the terrain, mesh and evaluator
+engines on their entry-point groups, the data sources on
+<code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code> keyed by the section and the name of the class, the
+export formats on <code class="docutils literal notranslate"><span class="pre">hydromodpy.export.format</span></code> keyed by their name. The
+figures are the exception on purpose: they have no group, and a frame, a preset or a special
+figure is added in the tree of <code class="docutils literal notranslate"><span class="pre">hydromodpy/display/</span></code>. Every registry names the members
+it ships and the members the installation resolves, so a config field
+validated against it (<a class="reference internal" href="data-scopes.html"><span class="doc">Data scopes and schema evolution</span></a>) refuses an unknown name with the
+names it serves.</p>
+<p>An entry point that cannot be imported is kept by the engine with its target
+and its reason: the name is refused with both when a user asks for it, and no
+package is named that the registry does not read. Two entry points of the same
+name and target, from two distributions, count as one.</p>
+<p><em>Why:</em> one lookup story for every plugin (<a class="reference internal" href="how-to/add-a-solver.html"><span class="doc">Add a solver</span></a>,
+<a class="reference internal" href="how-to/add-a-data-source.html"><span class="doc">Add a data source</span></a>, <a class="reference internal" href="how-to/add-an-exporter.html"><span class="doc">Add an exporter</span></a>), and no list
+of names written beside a registry.</p>
+</section>
+<section id="terrain-engine">
+<h3>Terrain engine<a class="headerlink" href="#terrain-engine" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/terrain/port.py</span></code>. <code class="docutils literal notranslate"><span class="pre">TerrainEngine</span></code> has five members
+(<code class="docutils literal notranslate"><span class="pre">condition_dem</span></code>, <code class="docutils literal notranslate"><span class="pre">drainage_directions</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_accumulation</span></code>, <code class="docutils literal notranslate"><span class="pre">stream_network</span></code> and
+<code class="docutils literal notranslate"><span class="pre">delineate</span></code>), the strings <code class="docutils literal notranslate"><span class="pre">engine_id</span></code> and <code class="docutils literal notranslate"><span class="pre">engine_version</span></code>, and <code class="docutils literal notranslate"><span class="pre">engine_digest()</span></code>.
+Each member writes where the caller says and returns a product that declares its units,
+transform, pointer convention and CRS. The conditioning method is <code class="docutils literal notranslate"><span class="pre">fill</span></code>, <code class="docutils literal notranslate"><span class="pre">breach</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">CappedBreach</span></code> or <code class="docutils literal notranslate"><span class="pre">provided</span></code>. <code class="docutils literal notranslate"><span class="pre">ConditionedDem.provided(path)</span></code> wraps a DEM that another
+tool conditioned, and <code class="docutils literal notranslate"><span class="pre">condition_dem</span></code> refuses <code class="docutils literal notranslate"><span class="pre">provided</span></code> with <code class="docutils literal notranslate"><span class="pre">TerrainRequestError</span></code>.
+The checks both engines share are <code class="docutils literal notranslate"><span class="pre">require_conditioning</span></code>, <code class="docutils literal notranslate"><span class="pre">require_accumulation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">require_stream</span></code> and <code class="docutils literal notranslate"><span class="pre">require_delineable</span></code>. An engine is found through <code class="docutils literal notranslate"><span class="pre">terrain_engines</span></code> in
+<code class="docutils literal notranslate"><span class="pre">catchment/terrain/registry.py</span></code>.</p>
+<p><em>Why:</em> the flow-routing library behind the port can change without a caller noticing.</p>
+</section>
+<section id="delineation-backend">
+<h3>Delineation backend<a class="headerlink" href="#delineation-backend" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/delineation/__init__.py</span></code>. The one backend is
+<code class="docutils literal notranslate"><span class="pre">whitebox_workflows</span></code>. <code class="docutils literal notranslate"><span class="pre">get_whitebox_backend()</span></code> builds the Whitebox facade on the first
+call and returns the same object after that. A function that wants another backend takes it
+as an argument, and <code class="docutils literal notranslate"><span class="pre">resolve_delineation_backend(backend)</span></code> returns it. There is no registry.
+A third party reaches the routing through the terrain engine port.</p>
+<p><em>Why:</em> one process holds one Whitebox environment, and a registry with one entry only added
+a name to remember.</p>
+</section>
+<section id="data-variable">
+<h3>Data variable<a class="headerlink" href="#data-variable" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/families/stations.py</span></code> holds
+<code class="docutils literal notranslate"><span class="pre">StationVariable</span></code>, with one subclass per variable under
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/data/variables/&lt;variable&gt;/</span></code>. A subclass sets <code class="docutils literal notranslate"><span class="pre">VARIABLE_NAME</span></code>,
+<code class="docutils literal notranslate"><span class="pre">INTERNAL_UNIT</span></code> and <code class="docutils literal notranslate"><span class="pre">SOURCES</span></code> and <code class="docutils literal notranslate"><span class="pre">load()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">LoadResult</span></code>.
+<code class="docutils literal notranslate"><span class="pre">DataPlanner</span></code> (<code class="docutils literal notranslate"><span class="pre">data/loading/planner.py</span></code>) turns the explicit config and the
+needs it infers into an immutable <code class="docutils literal notranslate"><span class="pre">DataLoadPlan</span></code>.</p>
+<p><em>Why:</em> one fetch, cache and verify story for sources as different as Hub’Eau, BD
+Topage, SIM2 and a synthetic series (<a class="reference internal" href="how-to/add-a-data-variable.html"><span class="doc">Add a data variable</span></a>).</p>
+</section>
+<section id="pydantic-config-with-unit-types">
+<h3>Pydantic config with unit types<a class="headerlink" href="#pydantic-config-with-unit-types" title="Link to this heading">#</a></h3>
+<p>The whole configuration is Pydantic models that inherit <code class="docutils literal notranslate"><span class="pre">HydroModelBase</span></code> and
+forbid extra keys. A field with a physical quantity uses a unit type from
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/units/</span></code> (<code class="docutils literal notranslate"><span class="pre">Length</span></code>, <code class="docutils literal notranslate"><span class="pre">Time</span></code>, <code class="docutils literal notranslate"><span class="pre">FlowRate</span></code>,
+<code class="docutils literal notranslate"><span class="pre">HydraulicConductivity</span></code>, …), so the file can write <code class="docutils literal notranslate"><span class="pre">&quot;50</span> <span class="pre">m&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">Profile</span></code>
+sets whether a field shows by default or behind the developer and expert buttons.</p>
+<p><em>Why:</em> one parser for TOML, CLI and Python, an exported JSON Schema for frontends,
+and units handled in one place (<a class="reference internal" href="how-to/add-a-config-field.html"><span class="doc">Add a config field</span></a>).</p>
+</section>
+<section id="calibration-adapters-objectives-and-criteria">
+<h3>Calibration adapters, objectives and criteria<a class="headerlink" href="#calibration-adapters-objectives-and-criteria" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Adapter.</strong> A search method is one module of
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/adapters/</span></code> declared with its <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">options</span></code>
+models and reached through <code class="docutils literal notranslate"><span class="pre">PluginRegistry</span></code> or entry points, with <code class="docutils literal notranslate"><span class="pre">ask</span></code> and <code class="docutils literal notranslate"><span class="pre">tell</span></code>
+(<a class="reference internal" href="how-to/add-a-calibration-method.html"><span class="doc">Add a calibration method</span></a>).</p></li>
+<li><p><strong>Objective.</strong> <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/objective.py</span></code> defines the
+<code class="docutils literal notranslate"><span class="pre">Objective</span></code> Protocol (<code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate(sim)</span></code>) and its implementations,
+<code class="docutils literal notranslate"><span class="pre">ConfigBlockObjective</span></code>, which scores one declared or implicit block, and
+<code class="docutils literal notranslate"><span class="pre">CompositeObjective</span></code>, their weighted sum.</p></li>
+<li><p><strong>Criterion.</strong> <code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/criteria/</span></code> defines the <code class="docutils literal notranslate"><span class="pre">Criterion</span></code>
+Protocol (<code class="docutils literal notranslate"><span class="pre">requirements()</span></code> and <code class="docutils literal notranslate"><span class="pre">score(simulated,</span> <span class="pre">observed)</span></code>). A file names a
+criterion and <code class="docutils literal notranslate"><span class="pre">criteria/registry.py</span></code> answers. The scoring kernels are in
+<code class="docutils literal notranslate"><span class="pre">criteria/series.py</span></code> (<code class="docutils literal notranslate"><span class="pre">METRICS</span></code>), and the canonical series metrics (NSE, KGE,
+RMSE, MAE, bias, correlation) in <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/scoring/metrics.py</span></code>.</p></li>
+</ul>
+<p><em>Why:</em> the engine stays generic. A new strategy, a new objective or a new score
+plugs in without touching it.</p>
+</section>
+<section id="frontend-hooks">
+<h3>Frontend hooks<a class="headerlink" href="#frontend-hooks" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/</span></code> exports the Pydantic models as JSON Schema and validates one
+field at a time, so a UI follows the models without copying their structure
+(<a class="reference internal" href="how-to/build-a-frontend.html"><span class="doc">Build a frontend</span></a>).</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mental-model.html"><span class="doc">Mental model and design choices</span></a> for the layer responsibilities behind these patterns.</p></li>
+<li><p><a class="reference internal" href="storage-layout.html"><span class="doc">Storage layout</span></a> for the on-disk layout these Protocols cover.</p></li>
+<li><p><a class="reference internal" href="data-scopes.html"><span class="doc">Data scopes and schema evolution</span></a> for the migration policy and the version constants.</p></li>
+<li><p><a class="reference internal" href="packages/results.html"><span class="doc">Package: results</span></a> for the Python surface.</p></li>
+</ul>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data-scopes.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Data scopes and schema evolution</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pipeline_resume.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Pipeline resume from artifacts</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-public-facade">The public facade</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-import-paths">Public import paths</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plugin-ports">Plugin ports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-a-contract">Changing a contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#storage">Storage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-index-and-the-run-store">The index and the run store</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#field-registry">Field registry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-patterns">Design patterns</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solveradapter-a-protocol-and-thirteen-attributes-per-backend">SolverAdapter: a Protocol and thirteen attributes per backend</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pipeline-step">Pipeline step</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#figure-requests">Figure requests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plugin-registry">Plugin registry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#terrain-engine">Terrain engine</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delineation-backend">Delineation backend</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-variable">Data variable</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pydantic-config-with-unit-types">Pydantic config with unit types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-adapters-objectives-and-criteria">Calibration adapters, objectives and criteria</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frontend-hooks">Frontend hooks</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-19.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

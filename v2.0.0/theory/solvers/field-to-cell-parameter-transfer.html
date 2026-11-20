@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="From a zone map to the cells" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/theory/solvers/field-to-cell-parameter-transfer.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A property such as K is given per zone of a map: geology classes, bands, rings, or the zones of a raster. It can also be given by a raster that holds its own value in each pixel. The solver needs o..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_images/f2c_zones.png" />
+<meta property="og:image:alt" content="Nine square cells cut by a vertical zone boundary with their sample points, and the cell conductivity against the share of zone A." />
+<meta name="description" content="A property such as K is given per zone of a map: geology classes, bands, rings, or the zones of a raster. It can also be given by a raster that holds its own value in each pixel. The solver needs o..." />
+
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <title>From a zone map to the cells &#8212; HydroModPy 2.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-zoom-image.css?v=fa5dac89" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-validation.css?v=66ea1472" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/hmp-zoom-image.js?v=f02c5857"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/solvers/field-to-cell-parameter-transfer';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/theory/solvers/field-to-cell-parameter-transfer.html" />
+    <link rel="icon" href="../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="The mesh" href="../mesh.html" />
+    <link rel="prev" title="The groundwater flow problem" href="../groundwater-flow.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-19"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contribute/index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">1. Rain and evaporation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../forcing.html">Rain and evaporation: the forcing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../soil-reservoir.html">The daily soil reservoir</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../groundwater-flow.html">The groundwater flow problem</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">From a zone map to the cells</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the grid</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../mesh.html">The mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xt3d-on-irregular-disv-meshes.html">XT3D on irregular meshes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the solvers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../solvers.html">The solvers of the aquifer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../boussinesq.html">Boussinesq theory</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">4. Exits</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../exits.html">How water leaves the aquifer</a><details><summary aria-label="Show or hide the pages under How water leaves the aquifer"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../exits/head-boundaries.html">Fixed heads: the sea, the rivers and the sides</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exits/routing-on-the-mesh.html">Routing on the mesh: the descent D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exits/drains-and-et.html">Drains and evapotranspiration at the top of the model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exits/lakes.html">Lakes and reservoirs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exits/streams-and-mover.html">Streams and the water mover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../exits/simulated-network.html">Where the water table reaches the surface</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">5. Observations</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../time-alignment.html">Time alignment of outputs and observations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calibration/inverse-problem-formulation.html">The inverse problem of a calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downslope-distance.html">Downslope distance between two networks</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">For every step</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../notation.html">Notation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../validation.html">Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../science-map.html">Science map</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Theory</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">From a zone map to the cells</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Theory" hidden></span><section class="tex2jax_ignore mathjax_ignore" id="from-a-zone-map-to-the-cells">
+<h1>From a zone map to the cells<a class="headerlink" href="#from-a-zone-map-to-the-cells" title="Link to this heading">#</a></h1>
+<p>A property such as <span class="math notranslate nohighlight">\(K\)</span> is given per zone of a map: geology classes, bands, rings, or the
+zones of a raster. It can also be given by a raster that holds its own value in each pixel.
+The solver needs one value per cell and per layer. This page gives the rule that turns
+each of them into the cell values, what that rule means for the conductivity, and a worked
+example. The keys of a value per zone or per pixel are in
+<a class="reference internal" href="../../reference/parameters/flow/param.html"><span class="doc">[flow.param]</span></a>.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Notation of this page</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 50.0%" />
+<col style="width: 10.0%" />
+<col style="width: 24.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Unit</p></th>
+<th class="head"><p>Set by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(K\)</span></p></td>
+<td><p>horizontal hydraulic conductivity, the same along <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span></p></td>
+<td><p>m/s</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../../reference/parameters/flow/param.html#p-flow-param-k-field-value" title="Hydraulic conductivity of the `K` table, in m/s. (m/s)"><code class="docutils literal notranslate"><span class="pre">flow.param.K.field.value</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(f(d)\)</span></p></td>
+<td><p>factor that scales a property with the depth <span class="math notranslate nohighlight">\(d\)</span> below the top</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><a class="hmp-toml-ref reference external" href="../../reference/parameters/flow/param.html#p-flow-param-id-field_vertical_profile-kind" title="Depth dependency shared over the full domain."><code class="docutils literal notranslate"><span class="pre">kind</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(a_n\)</span></p></td>
+<td><p>plan area of cell <span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p>m²</p></td>
+<td><p>the grid</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(v_z\)</span></p></td>
+<td><p>value the parameter gives to zone <span class="math notranslate nohighlight">\(z\)</span></p></td>
+<td><p>that of the property</p></td>
+<td><p><a class="hmp-toml-ref reference external" href="../../reference/parameters/flow/param.html#p-flow-param-id-field-values" title="Inline key/value mapping used when values_source='inline'."><code class="docutils literal notranslate"><span class="pre">values</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(F_{c,z}\)</span></p></td>
+<td><p>share of the sample points of cell <span class="math notranslate nohighlight">\(c\)</span> that fall in zone <span class="math notranslate nohighlight">\(z\)</span></p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>derived</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(n_s\)</span></p></td>
+<td><p>sample points per axis of a cell</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p><a class="hmp-toml-ref reference external" href="../../reference/parameters/data/geology.html#p-data-geology-cell_samples_per_axis" title="Sub-sampling density for GeologyField.on_mesh() on a raster source. (-)"><code class="docutils literal notranslate"><span class="pre">cell_samples_per_axis</span></code></a>, <a class="hmp-toml-ref reference external" href="../../reference/parameters/domain.html#p-domain-supports-name-default_cell_samples_per_axis" title="Sub-sampling resolution per cell axis used when rasterizing band masks. (-)"><code class="docutils literal notranslate"><span class="pre">default_cell_samples_per_axis</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(u_{c,j}\)</span></p></td>
+<td><p>value of a property in cell <span class="math notranslate nohighlight">\(c\)</span> and layer <span class="math notranslate nohighlight">\(j\)</span></p></td>
+<td><p>that of the property</p></td>
+<td><p>derived</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</details><section id="transfer-rule">
+<span id="the-rule"></span><h2>The rule<a class="headerlink" href="#transfer-rule" title="Link to this heading">#</a></h2>
+<p>A parameter with one value is spread over every cell. A parameter that points to a zone
+map through its <code class="docutils literal notranslate"><span class="pre">field_spatial_id</span></code> is mapped in three steps.</p>
+<ol class="arabic simple">
+<li><p><strong>Find the zones of the cell.</strong> <span class="math notranslate nohighlight">\(F_{c,z}\)</span> is the share of the area of <span class="math notranslate nohighlight">\(c\)</span> that lies in
+zone <span class="math notranslate nohighlight">\(z\)</span>, among the area that lies in a zone. It comes from the first of three sources
+that applies. A mesh engine whose faces lie on the contacts gives each cell its zone
+whole. A vector map gives the exact area of each zone polygon in the cell. Any other map
+(a raster, the analytical bands and rings) is sampled: <span class="math notranslate nohighlight">\(n_s\)</span> points per axis of the cell,
+each taking the zone that contains it, and <span class="math notranslate nohighlight">\(F_{c,z}\)</span> is the share of the points that
+fall in <span class="math notranslate nohighlight">\(z\)</span>.</p></li>
+<li><p><strong>Leave out what no zone covers.</strong> An area, or a point, outside every zone of a geology
+map or of a raster map is left out of the count.</p></li>
+<li><p><strong>Average, then scale with depth.</strong> The value of the cell in layer <span class="math notranslate nohighlight">\(j\)</span> is</p></li>
+</ol>
+<div class="math notranslate nohighlight" id="equation-eq-cell-value">
+<span class="eqno">(22)<a class="headerlink" href="#equation-eq-cell-value" title="Link to this equation">#</a></span>\[u_{c,j} = f(d_j)\,\sum_{z} F_{c,z}\,v_z ,
+\qquad \sum_z F_{c,z} = 1 ,\]</div>
+<p>with <span class="math notranslate nohighlight">\(v_z\)</span> the value of zone <span class="math notranslate nohighlight">\(z\)</span> and <span class="math notranslate nohighlight">\(f(d_j)\)</span> the depth factor <a class="reference internal" href="../groundwater-flow.html#equation-eq-depth-factor">(17)</a> at
+the depth of the middle of layer <span class="math notranslate nohighlight">\(j\)</span>. A parameter with one value <span class="math notranslate nohighlight">\(v\)</span> gives
+<span class="math notranslate nohighlight">\(u_{c,j} = f(d_j)\,v\)</span>.</p>
+<p>A sampled <span class="math notranslate nohighlight">\(F_{c,z}\)</span> is an estimate of the share of the area of <span class="math notranslate nohighlight">\(c\)</span> that lies in <span class="math notranslate nohighlight">\(z\)</span>. Its
+resolution is <span class="math notranslate nohighlight">\(1 / n_s^2\)</span> of the cell: a zone that covers less than that may get no
+point. The same rule applies to every property, <span class="math notranslate nohighlight">\(K\)</span>, <span class="math notranslate nohighlight">\(S_y\)</span>, <span class="math notranslate nohighlight">\(S_s\)</span> or the porosity. The
+two MODFLOW solvers apply it per layer; the Boussinesq solver applies it once, at the
+depth <span class="math notranslate nohighlight">\(d = 0\)</span>, because it has one layer. In the code: <code class="docutils literal notranslate"><span class="pre">FieldParam.to_mesh_field</span></code>.</p>
+<p>A zone of the map with no value in the parameter stops the run, with a message that
+names the missing keys. A cell that no zone reaches gets
+<span class="math notranslate nohighlight">\(\sum_z F_{c,z} = 0\)</span>, so a value of zero, and a zero <span class="math notranslate nohighlight">\(K\)</span> on an active cell is refused.</p>
+</section>
+<section id="transfer-raster">
+<span id="a-raster-with-a-value-per-pixel"></span><h2>A raster with a value per pixel<a class="headerlink" href="#transfer-raster" title="Link to this heading">#</a></h2>
+<p>A parameter written <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">&quot;raster&quot;</span></code> reads a map declared under
+<a class="hmp-toml-ref reference external" href="../../reference/parameters/data/property_map.html#p-data-property_map-sources" title="One raster per property map, each under its own name."><code class="docutils literal notranslate"><span class="pre">data.property_map.sources</span></code></a>, by its <code class="docutils literal notranslate"><span class="pre">name</span></code>. Each pixel holds a value in the <code class="docutils literal notranslate"><span class="pre">unit</span></code> of
+the parameter, and the cell takes the mean of the pixels it covers.</p>
+<ol class="arabic simple">
+<li><p><strong>Read the pixels under the cell.</strong> The cell is sampled on a lattice of points as for a
+zone map, but their number follows the pixels: about two per pixel along a side of the
+median cell, between 4 and 16 per axis. Each point reads the pixel that contains it.
+The points are moved into the CRS of the map first, so a map in another CRS than the
+mesh is read where it lies and its pixels are never resampled. This works on any cell
+shape, a square of a regular grid, a triangle or a Voronoi polygon.</p></li>
+<li><p><strong>Leave out what the map does not cover.</strong> A point outside the map or on a nodata pixel
+is left out. A cell with no point left gets a value of zero, so an active cell outside
+the map is refused, with the name of the map.</p></li>
+<li><p><strong>Average, then scale with depth.</strong> The mean is set by <code class="docutils literal notranslate"><span class="pre">mean</span></code>. <code class="docutils literal notranslate"><span class="pre">arithmetic</span></code> adds the
+values, <code class="docutils literal notranslate"><span class="pre">geometric</span></code> takes the exponential of the mean of their logarithms, and
+<code class="docutils literal notranslate"><span class="pre">harmonic</span></code> takes the inverse of the mean of their inverses. A conductivity takes the
+geometric mean unless told, any other property the arithmetic mean. The two last means
+take positive values only, so a pixel at or below zero under a cell stops the run. The
+depth factor <span class="math notranslate nohighlight">\(f(d_j)\)</span> then applies as for a zone map.</p></li>
+</ol>
+<p>On a regular grid whose cells are the pixels of the map, each cell takes its pixel
+exactly. A map of values is not calibrated, and a calibration of a parameter read from a
+map is refused before the first run.</p>
+</section>
+<section id="transfer-conductivity">
+<span id="what-the-rule-means-for-the-conductivity"></span><h2>What the rule means for the conductivity<a class="headerlink" href="#transfer-conductivity" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="#equation-eq-cell-value">(22)</a> is an arithmetic mean weighted by area, the upper bound of the
+equivalent conductivity of a cell cut by several zones; the harmonic mean is the lower
+bound, and a random mix lies between <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id13" title="Ph. Renard and G. de Marsily. Calculating equivalent permeability: a review. Advances in Water Resources, 20(5-6):253–278, 1997. doi:10.1016/S0309-1708(96)00050-4.">Renard and de Marsily, 1997</a>]</span>. A cell that holds a thin layer
+of low <span class="math notranslate nohighlight">\(K\)</span> across the flow therefore conducts more in the model than in the ground.</p>
+<p>Between two cells, the conductance <a class="reference internal" href="../groundwater-flow.html#equation-eq-conductance">(20)</a> joins the two cell values in
+series. A contrast that follows the cell faces is represented in series; a contrast
+inside a cell is represented in parallel.</p>
+</section>
+<section id="transfer-example">
+<span id="a-worked-example"></span><h2>A worked example<a class="headerlink" href="#transfer-example" title="Link to this heading">#</a></h2>
+<p>Three cells of a row, two zones, <span class="math notranslate nohighlight">\(v_A = 10^{-5}\)</span> m/s and <span class="math notranslate nohighlight">\(v_B = 10^{-7}\)</span> m/s, no depth
+factor. The interface between the zones crosses the middle cell.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Cell</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(F_{c,A}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(F_{c,B}\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(u_c\)</span> by <a class="reference internal" href="#equation-eq-cell-value">(22)</a></p></th>
+<th class="head"><p>harmonic mean, for comparison</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.0 \times 10^{-5}\)</span> m/s</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.0 \times 10^{-5}\)</span> m/s</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>0.5</p></td>
+<td><p>0.5</p></td>
+<td><p><span class="math notranslate nohighlight">\(5.05 \times 10^{-6}\)</span> m/s</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.98 \times 10^{-7}\)</span> m/s</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.0 \times 10^{-7}\)</span> m/s</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.0 \times 10^{-7}\)</span> m/s</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For a flow along the row, across the interface, the middle cell conducts about 25 times
+more than its harmonic mean. Refining the mesh at the interface, or aligning the cell
+faces with it, removes the mixed cell.</p>
+<figure class="align-default" id="id2">
+<img alt="Nine square cells cut by a vertical zone boundary with their sample points, and the cell conductivity against the share of zone A." class="plot-directive" src="../../_images/f2c_zones.png" width="938" height="480" />
+<figcaption>
+<p><span class="caption-number">Fig. 27 </span><span class="caption-text">The example above, three rows of it, run through the code. Left: the sample
+points of each cell (<span class="math notranslate nohighlight">\(n_s = 8\)</span> per axis, the default) take the color of
+their zone, and <span class="math notranslate nohighlight">\(F_{c,A}\)</span> counts them. Right: the value
+<code class="docutils literal notranslate"><span class="pre">FieldParam.to_mesh_field</span></code> gives each cell (dots) lies on the arithmetic mean;
+the harmonic mean (dashed) is the value for a flow across the boundary. Look at the
+middle cells: <span class="math notranslate nohighlight">\(5.05 \times 10^{-6}\)</span> m/s against
+<span class="math notranslate nohighlight">\(1.98 \times 10^{-7}\)</span> m/s.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="assumptions">
+<h2>Assumptions<a class="headerlink" href="#assumptions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>A cell holds one value of each property per layer.</p></li>
+<li><p>The zone of a point is the zone of the map that contains it; the map is not smoothed.</p></li>
+<li><p>The depth factor is the same function in every zone.</p></li>
+</ul>
+</section>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Arithmetic mean only for zones.</strong> The aggregation of a zone map is <code class="docutils literal notranslate"><span class="pre">weighted_average</span></code>;
+no geometric or harmonic option exists. A raster with a value per pixel has the three
+means.</p></li>
+<li><p><strong>A sampled share for a raster.</strong> For a raster map and for the analytical bands and rings,
+<span class="math notranslate nohighlight">\(F_{c,z}\)</span> is counted on <span class="math notranslate nohighlight">\(n_s\)</span> points per axis, not computed from the exact intersection of
+the cell and the zone. A vector map gives the exact intersection.</p></li>
+<li><p><strong>Same rule on every grid.</strong> A coarse structured grid and a fine irregular mesh mix the
+zones differently, so two runs that share a zone map do not share their cell values.
+Compare them on the same grid, or report the grid with the result.</p></li>
+</ul>
+</section>
+<section id="parameters-of-this-page">
+<h2>Parameters of this page<a class="headerlink" href="#parameters-of-this-page" title="Link to this heading">#</a></h2>
+<div class="hmp-embedded"><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/flow/param.html#p-flow-param-k">[flow.param.K.field]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-unset-ex tl-cmt" data-path="flow.param.K.field.value"><summary><span class="tl-code"><span class="cm"># </span><span class="k">value</span><span class="eq"> = </span><span class="v">&quot;1e-5 m/s&quot;</span></span><span class="tl-note"><span class="tl-sum">Hydraulic conductivity of the <code>K</code> table, in m/s.</span> <span class="tc tc-unit">m/s</span> <span class="tc tc-range">[1e-14, 100]</span> <span class="tc tc-when">only if kind = &quot;homogeneous&quot;</span> <span class="tc tc-cal">calibrable · log</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.param.K.field.value</code> <button class="hmp-copy" type="button" data-copy="flow.param.K.field.value" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-param-k-field-value" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A value outside 1e-14 .. 100 m/s is refused.</p></dd><dt>Accepted</dt><dd>number or &quot;&lt;n&gt; m/s&quot;</dd><dt>Valid range</dt><dd>[1e-14, 100] <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>m/s</dd><dt>Example</dt><dd><code>&quot;1e-5 m/s&quot;</code></dd><dt>Calibration</dt><dd>yes, search space log, sampling log_uniform, bounds belong to the site: write them in <a class="hmp-toml-ref" href="../../reference/parameters/calibration/parameters.html#p-calibration-parameters-name-bounds"><code>calibration.parameters.&lt;name&gt;.bounds</code></a>; the valid range [1e-14, 100] caps them</dd><dt>Only if</dt><dd>kind = &quot;homogeneous&quot;</dd><dt>Same as</dt><dd><a class="hmp-toml-ref" href="../../reference/parameters/flow/param.html#p-flow-param-id-field-value"><code>flow.param.&lt;id&gt;.field.value</code></a>, with the unit and range of <code>K</code></dd></dl></div></details></div><pre class="tb-src" hidden>[flow.param.K.field]
+# value = &quot;1e-5 m/s&quot;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/flow/param.html#p-flow-param-id-field">[flow.param.&lt;id&gt;.field]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-req-ex" data-path="flow.param.&lt;id&gt;.field.map"><summary><span class="tl-code"><span class="k">map</span><span class="eq"> = </span><span class="v">&quot;k_map&quot;</span></span><span class="tl-note"><span class="tl-sum">Name of the raster under [[<span class="hmp-toml-ref">data.property_map.sources</span>]] that holds the values.</span> <span class="tc tc-req">required</span> <span class="tc tc-when">only if kind = &quot;raster&quot;</span> <span class="tc tc-ex" title="first value of Field(examples=...)">example value</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.param.&lt;id&gt;.field.map</code> <button class="hmp-copy" type="button" data-copy="flow.param.&lt;id&gt;.field.map" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-param-id-field-map" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Any mesh reads it, regular or not: each cell takes the mean of the pixels it covers, sampled at points spread evenly over its area, in the CRS of the map.</p></dd><dt>See</dt><dd><a class="hmp-toml-ref" href="../../reference/parameters/data/property_map.html#p-data-property_map-sources">data.property_map.sources</a></dd><dt>Accepted</dt><dd>string</dd><dt>Example</dt><dd><code>&quot;k_map&quot;</code></dd><dt>Only if</dt><dd>kind = &quot;raster&quot;</dd></dl></div></details><details class="tl tl-unset tl-cmt" data-path="flow.param.&lt;id&gt;.field.mean"><summary><span class="tl-code"><span class="cm"># </span><span class="k">mean</span><span class="eq"> = </span><span class="ph">‹&quot;arithmetic&quot; | &quot;geometric&quot; | &quot;harmonic&quot;›</span></span><span class="tl-note"><span class="tl-sum">How the pixels a cell covers make its value.</span> <span class="tc tc-when">only if kind = &quot;raster&quot;</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.param.&lt;id&gt;.field.mean</code> <button class="hmp-copy" type="button" data-copy="flow.param.&lt;id&gt;.field.mean" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-param-id-field-mean" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Unset, &#x27;geometric&#x27; for a conductivity (K, Kv, K22), the effective value of a block of random conductivities, and &#x27;arithmetic&#x27; for every other property, such as Sy and Ss, whose volumes add up.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;arithmetic&quot;</code> : The mean of the pixel values.</li><li><code>&quot;geometric&quot;</code> : The exponential of the mean of their logarithms.</li><li><code>&quot;harmonic&quot;</code> : The inverse of the mean of their inverses, the lowest of three.</li></ul></dd><dt>Accepted</dt><dd>&quot;arithmetic&quot; | &quot;geometric&quot; | &quot;harmonic&quot;</dd><dt>Only if</dt><dd>kind = &quot;raster&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[flow.param.&lt;id&gt;.field]
+map = &quot;k_map&quot;
+# mean = &lt;&quot;arithmetic&quot; | &quot;geometric&quot; | &quot;harmonic&quot;&gt;</pre></div><div class="tb"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/flow/param.html#p-flow-param-id-field_vertical_profile">[flow.param.&lt;id&gt;.field_vertical_profile]</a><span class="tb-actions"><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-cmt" data-path="flow.param.&lt;id&gt;.field_vertical_profile.kind"><summary><span class="tl-code"><span class="cm"># </span><span class="k">kind</span><span class="eq"> = </span><span class="v">&quot;none&quot;</span></span><span class="tl-note"><span class="tl-sum">Depth dependency shared over the full domain.</span> </span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">flow.param.&lt;id&gt;.field_vertical_profile.kind</code> <button class="hmp-copy" type="button" data-copy="flow.param.&lt;id&gt;.field_vertical_profile.kind" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-flow-param-id-field_vertical_profile-kind" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>Allowed values: &#x27;none&#x27;, &#x27;exponential&#x27;, &#x27;tabulated&#x27;.</p></dd><dt>Values</dt><dd><ul class="hmp-values"><li><code>&quot;none&quot;</code></li><li><code>&quot;exponential&quot;</code></li><li><code>&quot;tabulated&quot;</code></li></ul></dd><dt>Accepted</dt><dd>&quot;none&quot; | &quot;exponential&quot; | &quot;tabulated&quot;</dd><dt>Was</dt><dd><code>flow.param.field_vertical_profile.mode</code></dd></dl></div></details></div><pre class="tb-src" hidden>[flow.param.&lt;id&gt;.field_vertical_profile]
+# kind = &quot;none&quot;</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/data/geology.html#p-data-geology">[data.geology]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="data.geology.cell_samples_per_axis"><summary><span class="tl-code"><span class="cm"># </span><span class="k">cell_samples_per_axis</span><span class="eq"> = </span><span class="v">8</span></span><span class="tl-note"><span class="tl-sum">Sub-sampling density for GeologyField.on_mesh() on a raster source.</span> <span class="tc tc-unit">-</span> <span class="tc tc-range">&gt;= 2</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">data.geology.cell_samples_per_axis</code> <button class="hmp-copy" type="button" data-copy="data.geology.cell_samples_per_axis" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-data-geology-cell_samples_per_axis" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>More</dt><dd><p>A vector source gets the exact polygon areas in the solver and ignores it. Higher = more precise geology interface, slower runtime.</p></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt;= 2 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>-</dd></dl></div></details></div><pre class="tb-src" hidden>[data.geology]</pre></div><div class="tb tb-all-adv"><div class="tb-bar"><a class="tb-h" href="../../reference/parameters/domain.html#p-domain-supports-name">[domain.supports.&lt;name&gt;]</a><span class="tb-actions"><button class="tb-adv" type="button" aria-pressed="false" data-n="1"><span class="hmp-adv-off">show 1 dev/expert key</span><span class="hmp-adv-on">hide 1 dev/expert key</span></button><button class="tb-copy hmp-copy" type="button" aria-label="Copy the block" title="Copy the block"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div><div class="tb-lines"><details class="tl tl-default tl-adv tl-cmt" data-path="domain.supports.&lt;name&gt;.default_cell_samples_per_axis"><summary><span class="tl-code"><span class="cm"># </span><span class="k">default_cell_samples_per_axis</span><span class="eq"> = </span><span class="v">8</span></span><span class="tl-note"><span class="tl-sum">Sub-sampling resolution per cell axis used when rasterizing band masks.</span> <span class="tc tc-unit">-</span> <span class="tc tc-range">&gt;= 2</span> <span class="tc tc-when">only if kind = &quot;generated_bands&quot; | &quot;generated_rings&quot; | &quot;catchment_zones&quot;</span> <span class="tc tc-prof">dev</span></span></summary><div class="hmp-card" data-pagefind-weight="0.5"><dl><dt>Path</dt><dd><code class="hmp-path">domain.supports.&lt;name&gt;.default_cell_samples_per_axis</code> <button class="hmp-copy" type="button" data-copy="domain.supports.&lt;name&gt;.default_cell_samples_per_axis" aria-label="Copy the path" title="Copy the path"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="hmp-copy" type="button" data-anchor="p-domain-supports-name-default_cell_samples_per_axis" aria-label="Copy a link to this key" title="Copy a link to this key"><svg class="hmp-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button></dd><dt>Accepted</dt><dd>integer</dd><dt>Valid range</dt><dd>&gt;= 2 <span class="hmp-muted">(refused outside)</span></dd><dt>Unit</dt><dd>-</dd><dt>Only if</dt><dd>kind = &quot;generated_bands&quot; | &quot;generated_rings&quot; | &quot;catchment_zones&quot;</dd></dl></div></details></div><pre class="tb-src" hidden>[domain.supports.&lt;name&gt;]</pre></div><p class="hmp-embed-note">Lines generated from the models, as in the reference. Open one for its card.</p></div></section>
+<section id="checked-by">
+<h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">21 test files import <code>hydromodpy.model.properties.field_param</code>, <code>hydromodpy.model.properties.cell_sampling</code>, <code>hydromodpy.model.properties.raster_cells</code>, <code>hydromodpy.model.domain.spatial_support</code>, <code>hydromodpy.model.properties.property_table</code>. Their names say what they check.</p><details class="hmp-tested-tier"><summary>ports: 1</summary><ul><li title="tests/ports/test_solver.py">Solver.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 20</summary><ul><li title="tests/unit/calibration/test_optim_parameters.py">Optim parameters. <span class="hmp-muted">calibration</span></li><li title="tests/unit/core/config_kit/test_field_param_config.py">Field param config. <span class="hmp-muted">core/config_kit</span></li><li title="tests/unit/core/site/test_config.py">Config. <span class="hmp-muted">core/site</span></li><li title="tests/unit/model/domain/test_spatial_support.py">Spatial support. <span class="hmp-muted">model/domain</span></li><li title="tests/unit/model/domain/test_support_fields.py">Support fields. <span class="hmp-muted">model/domain</span></li><li title="tests/unit/model/properties/test_cell_sampling.py">Cell sampling. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/properties/test_field_param.py">Field param. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/properties/test_field_param_io.py">Field param io. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/properties/test_geology_field.py">Geology field. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/properties/test_raster_cells.py">Raster cells. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/properties/test_vertical_profile.py">Vertical profile. <span class="hmp-muted">model/properties</span></li><li title="tests/unit/model/test_supports.py">Supports. <span class="hmp-muted">model</span></li><li title="tests/unit/solver/boussinesq/test_flow_to_boussinesq_adapter.py">Flow to boussinesq adapter. <span class="hmp-muted">solver/boussinesq</span></li><li title="tests/unit/solver/modflow6/test_k_tensor.py">K tensor. <span class="hmp-muted">solver/modflow6</span></li><li title="tests/unit/solver/modflow_common/test_property_mapping.py">Property mapping. <span class="hmp-muted">solver/modflow_common</span></li><li title="tests/unit/solver/modflow_common/test_runtime_arrays.py">Runtime arrays. <span class="hmp-muted">solver/modflow_common</span></li><li title="tests/unit/solver/modflow_nwt/test_modflow_config.py">Modflow config. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_nwt_solver.py">Nwt solver. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/solver/modflow_nwt/test_property_mapping_spatial_support.py">Property mapping spatial support. <span class="hmp-muted">solver/modflow_nwt</span></li><li title="tests/unit/tools/cases/field/test_run_field_demo.py">Run field demo. <span class="hmp-muted">tools/cases/field</span></li></ul></details></div></section>
+<section id="in-the-code">
+<h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>What</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The weighted average and the depth factor</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/field_param.py</span></code> (<code class="docutils literal notranslate"><span class="pre">FieldParam.to_mesh_field</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/vertical_profile.py</span></code> (<code class="docutils literal notranslate"><span class="pre">vertical_factor</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh_vertical_factor</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The shares of each zone in a cell</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/zone_fractions.py</span></code> (<code class="docutils literal notranslate"><span class="pre">zone_fractions</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The sampled shares</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/domain/support_fields.py</span></code> (<code class="docutils literal notranslate"><span class="pre">on_mesh</span></code>), <code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/geology_field.py</span></code> (<code class="docutils literal notranslate"><span class="pre">GeologyField.on_mesh</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The sample points of a cell</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/cell_sampling.py</span></code> (<code class="docutils literal notranslate"><span class="pre">sample_points_in_cell</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>The mean of a raster of values on each cell</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/raster_cells.py</span></code> (<code class="docutils literal notranslate"><span class="pre">raster_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">read_property_maps</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>The mapping, for the three solvers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy/model/properties/property_table.py</span></code> (<code class="docutils literal notranslate"><span class="pre">map_flow_properties</span></code>): per layer for MODFLOW, once for Boussinesq</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../groundwater-flow.html"><span class="doc">The groundwater flow problem</span></a>: the properties in the flow equation, and the depth factor.</p></li>
+<li><p><a class="reference internal" href="../mesh.html"><span class="doc">The mesh</span></a>: the cells the values land on.</p></li>
+<li><p><a class="reference internal" href="../../reference/parameters/flow/param.html"><span class="doc">[flow.param]</span></a>: give a value per zone or per pixel.</p></li>
+</ul>
+</section>
+</section>
+</div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../groundwater-flow.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The groundwater flow problem</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../mesh.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The mesh</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-rule">The rule</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-raster">A raster with a value per pixel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-conductivity">What the rule means for the conductivity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transfer-example">A worked example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions">Assumptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-of-this-page">Parameters of this page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checked-by">Checked by</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-code">In the code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-19.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
