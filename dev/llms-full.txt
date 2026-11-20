@@ -3598,6 +3598,8 @@ A computation or a rule that changes without a bug. The effect says what it touc
 | `old_figure_ledger_entries_skipped` | 2.0.0 | refusal | none | hmp export –regen figures skips a figure that figures/index.json records from a figure of a pre-release, with the command that draws it now, and draws the other entries. It used to redraw it from its old options. |
 | `geotiff_resolution_in_the_output_crs` | 2.0.0 | layout | none | A GeoTIFF of a field exported into another CRS reads resolution in the units of that CRS, as the reference says. The mesh is rasterized at its own pixel, the side of its smallest cell, then reprojected onto pixels of resolution. resolution was applied in the units of the model CRS before the reprojection, so resolution = 0.0005 with crs = “EPSG:4326” asked for 23 100 000 by 20 850 000 pixels on a 120 km2 model and the export failed. An export in the model CRS does not change. No value of a run changes. |
 | `figures_after_a_failed_export` | 2.0.0 | layout | none | An export that fails after the seal no longer stops the figures: they are drawn, then the run exits with the export error. A figure with engine = [“static”, “interactive”] writes its PNG and its HTML page during a run, where it wrote the PNG alone. A series of one period, on a steady run or in a window of one month, is skipped with its reason, where it drew an empty panel. hmp show <run> –figure <name> –time <date> draws that date and records it in figures/index.json, where it drew the default instant. No value of a run changes. |
+| `dates_are_iso_8601_only` | 2.0.0 | refusal | none | A date of [simulation.time], of a steady_window and of a calibration window is a TOML date, a TOML datetime or an ISO 8601 string. start_datetime = 2003 and “2003” were read as 2003 seconds after 1970-01-01, and a window bound “01/02/2003” as 2 January. All three are refused with the form a date takes, and so are two bounds of which only one carries a UTC offset. No valid date changes. |
+| `monthly_edges_counted_from_the_start` | 2.0.0 | numbers | heads@modflow6, fluxes@modflow6, heads@modflow_nwt, fluxes@modflow_nwt, heads@boussinesq, fluxes@boussinesq, metrics | Each edge of a time grid with a step in months or years is the start plus k steps. A start on the 29th, 30th or 31st drifted, because each step was added to the previous edge: from 31 January the periods began on 28 February, 28 March and 28 April, and they now begin on 28 February, 31 March and 30 April. A start on the 1st to the 28th, and a step in days or hours, give the same grid as before. |
 
 ## Key moves
 
@@ -3654,64 +3656,7 @@ Fields added, renamed, removed or changed between two versions. Pick the two ver
 
 From 2.0.0 to this documentation.
 
-Defaults that changed
-
-A file that does not write these keys gets a different run.
-
-- `display.dpi``150` to `300`
-
-## Renamed (3)
-
-A file that writes an old name still loads, as each line says. Write the new name.
-
-- `[export]`
-  - `export.variables` is now `export.variable`(still loads; ConfigKeyRenamedWarning names the new key, and hmp doctor --fix-config rewrites the file; a calibration phase that overrides `"export.variables"` is moved to `"export.variable"` too)
-- `[sites]`
-  - `sites.export.variables` is now `sites.export.variable`(still loads; ConfigKeyRenamedWarning names the new key, and hmp doctor --fix-config rewrites the file; a calibration phase that overrides `"sites.export.variables"` is moved to `"sites.export.variable"` too)
-  - `sites.summary.variables` is now `sites.summary.variable`(still loads; ConfigKeyRenamedWarning names the new key, and hmp doctor --fix-config rewrites the file; a calibration phase that overrides `"sites.summary.variables"` is moved to `"sites.summary.variable"` too)
-
-## Removed (9) breaking
-
-A file that writes them is refused.
-
-- `[data]`
-  - `data.dem.sources.dataset`
-- `[display]`
-  - `display.backend`
-  - `display.cmap`
-  - `display.figures`
-  - `display.overrides`
-  - `display.preset`
-  - `display.save`
-  - `display.show`
-  - `display.time`
-
-## Added (10)
-
-- `[data]`
-  - `data.property_map`
-- `[display]`
-  - `display.figure`
-  - `display.presets`
-  - `display.theme`
-- `[flow]`
-  - `flow.param.<id>.field.map`
-  - `flow.param.<id>.field.mean`
-  - `flow.param.<id>.field_vertical_profile.characteristic_depth_high`
-  - `flow.param.<id>.field_vertical_profile.depth_at`
-  - `flow.param.<id>.field_vertical_profile.ground_high`
-  - `flow.param.<id>.field_vertical_profile.ground_low`
-
-## Changed (4)
-
-- `[data]`
-  - `data.dem.sources.source` form: `"file" | "url" | "ign_geoplateforme_dem"` to `"file" | "url" | "bdalti" | "rgealti"`
-- `[display]`
-  - `display.dpi` default: `150` to `300`
-- `[export]`
-  - `export.layer` profile: `dev` to `user`
-- `[flow]`
-  - `flow.param.<id>.field.kind` form: `"homogeneous" | "heterogeneous"` to `"homogeneous" | "heterogeneous" | "raster"`
+No key changed between these two versions.
 
 
 <!-- https://docs.hydromodpy.fr/dev/reference/cli/calibrate.html -->
@@ -23591,7 +23536,7 @@ Examples
 ** property name: str[source]**: Name of the session directory, `<case>[_vN]`.
 ** property phases: list[PhaseDescriptor][source]**: The phases of a staged search, by rank; empty for a single search.
 ** property sites: tuple[str, ...][source]**: The sites of the calibrated cases.
-** property status: Vocabulary object at 0x7e933f2b6680>][source]**: running, completed, partial, aborted or failed.
+** property status: Vocabulary object at 0x781ceb0e23e0>][source]**: running, completed, partial, aborted or failed.
 **Type:**: Where the search stands
 ** property trials: DataFrame[source]**: Every trial of the session, one row per trial and case. The columns are `TRIAL_COLUMNS`, then one column per searched parameter, named as in `[calibration.parameters]`, with the value the trial tried, empty in a phase that did not search it. A parameter named like a column of `TRIAL_COLUMNS` stays in `parameters` alone.
 ** property windows: dict[str, PeriodWindow][source]**: The periods of the search whose best the session holds, by name.
@@ -27702,7 +27647,7 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-119 test files import `hydromodpy.model.forcing`, `hydromodpy.model.forcing.steady_periods`, `hydromodpy.model.forcing.time_forcing`, `hydromodpy.model.boundaries`, `hydromodpy.core.time`, `hydromodpy.core.time.coverage`, `hydromodpy.solver.modflow6.builders.recharge`. Their names say what they check.
+120 test files import `hydromodpy.model.forcing`, `hydromodpy.model.forcing.steady_periods`, `hydromodpy.model.forcing.time_forcing`, `hydromodpy.model.boundaries`, `hydromodpy.core.time`, `hydromodpy.core.time.coverage`, `hydromodpy.solver.modflow6.builders.recharge`. Their names say what they check.
 
 validation: 1
 - A routed impulse matches the exponential reservoir.
@@ -27720,7 +27665,7 @@ integration: 8
 ports: 1
 - Solver.
 
-unit: 109
+unit: 110
 - Config. calibration
 - Metrics composite. calibration
 - Parameter resolution. calibration
@@ -27736,6 +27681,7 @@ unit: 109
 - Soil reservoir config. config
 - Toml examples. config
 - Coverage. core/time
+- Instant. core/time
 - Period aggregation. core/time
 - Selection. core/time
 - Steady initialization. core/time
@@ -28459,7 +28405,7 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-168 test files import `hydromodpy.model.flow`, `hydromodpy.model.model`, `hydromodpy.model.flow_config`, `hydromodpy.model.domain`, `hydromodpy.model.properties.field_param`, `hydromodpy.model.properties.property_table`, `hydromodpy.solver.modflow_grid`, `hydromodpy.model.initial.state`, `hydromodpy.model.initial.heads`, `hydromodpy.model.initial_config`, `hydromodpy.solver.modflow6.build`, `hydromodpy.solver.modflow_nwt.nwt`. Their names say what they check.
+169 test files import `hydromodpy.model.flow`, `hydromodpy.model.model`, `hydromodpy.model.flow_config`, `hydromodpy.model.domain`, `hydromodpy.model.properties.field_param`, `hydromodpy.model.properties.property_table`, `hydromodpy.solver.modflow_grid`, `hydromodpy.model.initial.state`, `hydromodpy.model.initial.heads`, `hydromodpy.model.initial_config`, `hydromodpy.solver.modflow6.build`, `hydromodpy.solver.modflow_nwt.nwt`. Their names say what they check.
 
 validation: 1
 - Stress period substepping.
@@ -28479,7 +28425,7 @@ integration: 10
 ports: 1
 - Solver.
 
-unit: 156
+unit: 157
 - Surfaces. architecture
 - Metrics solver extract. calibration
 - Optim parameters. calibration
@@ -28537,6 +28483,7 @@ unit: 156
 - Model. model
 - Supports. model
 - Api. project
+- Environment. project
 - Spinup. project
 - Prior state. results
 - Request identity. results
@@ -30001,7 +29948,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Sfr network.
 - Sfr period.
  | - | - |
-| Rain and evaporation: the forcing | `hydromodpy.model.forcing` `hydromodpy.model.forcing.steady_periods` `hydromodpy.model.forcing.time_forcing` `hydromodpy.model.boundaries` `hydromodpy.core.time` `hydromodpy.core.time.coverage` `hydromodpy.solver.modflow6.builders.recharge` | 109
+| Rain and evaporation: the forcing | `hydromodpy.model.forcing` `hydromodpy.model.forcing.steady_periods` `hydromodpy.model.forcing.time_forcing` `hydromodpy.model.boundaries` `hydromodpy.core.time` `hydromodpy.core.time.coverage` `hydromodpy.solver.modflow6.builders.recharge` | 110
 - Config.
 - Metrics composite.
 - Parameter resolution.
@@ -30017,6 +29964,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Soil reservoir config.
 - Toml examples.
 - Coverage.
+- Instant.
 - Period aggregation.
 - Selection.
 - Steady initialization.
@@ -30114,7 +30062,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
  | - | 1
 - A routed impulse matches the exponential reservoir.
  |
-| The groundwater flow problem | `hydromodpy.model.flow` `hydromodpy.model.model` `hydromodpy.model.flow_config` `hydromodpy.model.domain` `hydromodpy.model.properties.field_param` `hydromodpy.model.properties.property_table` `hydromodpy.solver.modflow_grid` `hydromodpy.model.initial.state` `hydromodpy.model.initial.heads` `hydromodpy.model.initial_config` `hydromodpy.solver.modflow6.build` `hydromodpy.solver.modflow_nwt.nwt` | 156
+| The groundwater flow problem | `hydromodpy.model.flow` `hydromodpy.model.model` `hydromodpy.model.flow_config` `hydromodpy.model.domain` `hydromodpy.model.properties.field_param` `hydromodpy.model.properties.property_table` `hydromodpy.solver.modflow_grid` `hydromodpy.model.initial.state` `hydromodpy.model.initial.heads` `hydromodpy.model.initial_config` `hydromodpy.solver.modflow6.build` `hydromodpy.solver.modflow_nwt.nwt` | 157
 - Surfaces.
 - Metrics solver extract.
 - Optim parameters.
@@ -30172,6 +30120,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Model.
 - Supports.
 - Api.
+- Environment.
 - Spinup.
 - Prior state.
 - Request identity.
@@ -36934,6 +36883,7 @@ The keys added, removed or changed in the TOML file between two versions are lis
 
 ### Changed
 
+- A TOML key renamed after 2.0.0 keeps loading, with a warning, until 3.0, so a file written for 2.0.0 loads in every 2.x. Inside the 2 line a stable key moves and is never removed, and `changes.toml` refuses a row that would remove one. A key that only a pre-release wrote keeps its delay and is refused from 2.2.0. Old Python names and old `hmp` commands keep the rule of two minor versions.
 - An overlay that inherits a file the run file also inherits no longer applies that file again over the run file. The file is read once, and the values of the run file hold.
 - The banner of a calibration protocol names its departures from the paper on one line, with the value of each, and `-v` says how each one departs. It took about forty lines.
 - A transient run whose `[flow.param]` declares no `Sy` or no `Ss` takes `Sy = 0.05` and `Ss = 1e-5 1/m` as homogeneous fields, with a warning that names them, where MODFLOW refused it. Declare `[flow.param.Sy.field]` and `[flow.param.Ss.field]` to set other values.
@@ -37010,7 +36960,7 @@ The keys added, removed or changed in the TOML file between two versions are lis
 - The MODPATH and MT3DMS models read the DEM grid and the catchment polygon from `Model.geometry` through the MODFLOW-NWT solver. `get_geographic` of `hydromodpy.solver.modflow_nwt.modpath.resolvers` is replaced by `get_raster` and `get_catchment`.
 - The auxiliary steady solve of MODFLOW 6 and MODFLOW-NWT always starts from the top of the model. It started 0.01 m below the top when `[flow.runtime]` set `backend = "petsc"` and `surface_interaction_model = "vi_obstacle"`, two Boussinesq settings. See the recipe `modflow_steady_start_ignores_boussinesq_runtime` of `changes.toml`.
 - Every plugin surface (solver backends and extractors, data sources, mesh and terrain engines, trial evaluators) resolves through one registry class, `hydromodpy.core.plugin_registry.PluginRegistry`, with the calls `register`, `get` and `names`. A registry keys a class on one or more of its attributes joined by `_`, and an entry-point name is compared with that join and never split. The entry-point groups keep their names.
-- Each registry module exposes its registry object and no module function: `solvers` and `extractors` in `hydromodpy.solver.base.registry`, `data_sources` in `hydromodpy.data.source.registry`, `mesh_engines` in `hydromodpy.mesh.registry`, `terrain_engines` in `hydromodpy.catchment.terrain.registry`, `evaluators` in `hydromodpy.calibration.evaluation.registry` and `forward_models` in `hydromodpy.calibration.evaluation.forward_registry`. Write `mesh_engines.get(name)`, `terrain_engines.create(name)` or `evaluators.register(cls)` where the module functions `get`, `create`, `register`, `unregister` and `load_plugins` were called, `mesh_engines.names()` for `list_*_ids()`, `mesh_engines.names(shipped_only=True)` for `builtin_*_ids()`, `name in mesh_engines.names()` for `is_registered(name)`, and `evaluators.get(name).evaluator_id` for `resolve_id(name)`.
+- Each registry module exposes its registry object and no module function: `solvers` and `extractors` in `hydromodpy.solver.base.registry`, `data_sources` in `hydromodpy.data.source.registry`, `mesh_engines` in `hydromodpy.mesh.registry`, `terrain_engines` in `hydromodpy.catchment.terrain.registry` and `evaluators` in `hydromodpy.calibration.evaluation.registry`. Write `mesh_engines.get(name)`, `terrain_engines.create(name)` or `evaluators.register(cls)` where the module functions `get`, `create`, `register`, `unregister` and `load_plugins` were called, `mesh_engines.names()` for `list_*_ids()`, `mesh_engines.names(shipped_only=True)` for `builtin_*_ids()`, `name in mesh_engines.names()` for `is_registered(name)`, and `evaluators.get(name).evaluator_id` for `resolve_id(name)`.
 - A solver backend declares on its adapter class `name`, `process_type`, `accepted_meshes`, `geometry`, `writes`, `reads`, `supports`, `options`, `category`, `native_step`, `mutable` and `requires`. `solver_name` becomes `name`, `capabilities` is split into `writes` and `supports`, and the category moves from the extractor to the adapter. The registry refuses a backend that lacks one of them or declares one with the wrong type, and names it.
 - An unknown solver key raises `SolverInputError` instead of `KeyError`.
 - The category a run records in its manifest is the one its solver backend declares. The shipped backends keep theirs, and a third-party backend records its own where it recorded none.
@@ -37385,6 +37335,7 @@ The keys added, removed or changed in the TOML file between two versions are lis
 
 ### Fixed
 
+- The `water_budget` figure stacks `constant_head` alone. It also stacked `constant_head_stream`, a part of it, so the stream-role constant head was counted twice. The monthly climatology of the overview reads `Mean daily rate (mm/d)`, since it draws the monthly mean of a daily forcing, and the report prints the outlet coordinates to the metre instead of `3.485e+05`.
 - A staged calibration passes the value an earlier phase froze, such as K, to every trial of the later phase. When that phase sampled profiles only, such as Sy, its trials and a run promoted from a kept solve solved at the value of the file. Run such a calibration again: its later phases, and the runs it promoted, change.
 - A section that crosses inactive cells, such as the nodata border of a DEM taken whole as the domain, leaves them out. It drew their sentinel base of -9999 m in the frame and in the label.
 - A map leaves the inactive cells of a domain blank. A DEM with a nodata border drew them at -9999 m and stretched the colour bar of the relief down to it.
@@ -37467,9 +37418,11 @@ The keys added, removed or changed in the TOML file between two versions are lis
 - The matching card of a calibration now reads the unit of K from the session journal (`bounds.<name>.units`) before the session config, so its axis no longer shows `K (-)` when the journal says `m/s`.
 - `hmp run` ends on `Run completed` and `next:` again, after the figures it draws, as the Get started page says. The figure summary came after them. The Quick start check keeps `HMP_EXAMPLES_SOURCE`, so CI fetches example 04 from the checkout before the tag exists.
 - `hmp.calibrate` takes a run request, which it failed on with `'NoneType' object has no attribute 'model_dump'`, and reads its `set`, `phase`, `name`, `resume`, `force` and `dry_run` as the keywords. `PlanDraft.to_dict()` of a plan with no `[sites]` gives no `lines` where it failed with an `AttributeError`, so a `dry_run` of `hmp.run` answers over the HTTP server.
+- A date of `[simulation.time]`, of a `steady_window` or of a calibration `window` is a TOML date or an ISO 8601 string. `start_datetime = 2003` and `"2003"` were read as 1970-01-01 00:33:23, and `"01/02/2003"` in a window as 2 January, so all three are refused, and so are two bounds of which only one carries a UTC offset.
 
 ### Security
 
+- A call with allowed roots, as the server gives each project, checks every path its document names before a step reads it, and the run `flow.restart_from` names. Before, only the DEM, a file source, an export, a delivery and the `base_config` chain were checked, so a `mask_path` or a `values_table_path` could read a file of another organisation.
 - The HTTP server refuses a TOML file whose `base_config` chain leaves the project, before the file outside is read. An uploaded TOML could read the configuration of another organisation through `..` or an absolute `base_config`. `Environment.require_chain` holds the check.
 - `Pillow` now starts at 13.0.0, the first version with the 2026 security fixes.
 
@@ -37512,6 +37465,7 @@ Sizes come from example 04 unless another case is named. Runs of a pre-release a
 - A calibration with no pin on the protocol follows 1.3: the map is cut to the catchment and the network is rasterized from the heads of the observed streams. On the shipped mesh of example 04 every K and cost is the same, and the heads examined fall from 154 to 29. On 30 x 30, J at the best trial goes from 11.0 to 50.3 m.
 - catchment_mismatch changes meaning and enters no cost, and the number it held is now basin_mismatch. On the shipped mesh of 21 406 cells 0 becomes 0.37 %, and on 30 x 30 it becomes 11.0 %.
 - calibration.precision writes a relative fatol, so Nelder-Mead stops on the same simplex two trials earlier. On example 04 the calibrated Sy goes from 0.04411 to 0.04296 and 1 - nse_log from 0.083976 to 0.083988, with two solves less. K does not move.
+- Each edge of a time grid with a step in months or years is the start plus k steps. A start on the 29th, 30th or 31st drifted, because each step was added to the previous edge: from 31 January the periods began on 28 February, 28 March and 28 April, and they now begin on 28 February, 31 March and 30 April. A start on the 1st to the 28th, and a step in days or hours, give the same grid as before.
 - No number moves for MODFLOW 6 on example 04 (the 55 arrays, `timeseries`, `budgets` and the 11 scores, NSE 0.9345), nor for a run with no override.
 - A Python calibration without phases and with a `linearized` width now pays one model run per parameter plus one at the optimum. Search results and costs are unchanged.
 - `run_calibration_api_daily.toml` ranks its five K on 2016-2018 instead of 2016-2020. The size of the change was not measured.
@@ -38176,13 +38130,15 @@ The rules below hold from `2.0.0` on, and this page is their only statement. The
 
 A run you stored stays readable. Its folder layout, its Parquet and Zarr schemas, its manifest and its provenance can be read by every later 2.x, and so can the keys of its frozen `config.toml`. Only a major version can change this. A stored format can gain a new version inside the line, and the build that writes it then also reads the older ones.
 
+A calibration session you stored stays readable too. Its `session.json`, its phases, its `trials.jsonl` and its trial series are read and shown by every later 2.x, and the run it promoted is a stored run like any other. Resuming a session, running one more of its phases or promoting one of its trials again by replay needs the version that wrote it, because the session records the code that scored its trials. A later version refuses it with a sentence that says so.
+
 The index `.hmp/index.duckdb` is outside this promise, because it is derived from the run folders. `hmp catalog reindex` rebuilds it at any time.
 
 ### Can change in a minor version, with a migration
 
 This covers the name or the place of a TOML key, an `hmp` command or flag, a name of `hydromodpy.__all__` and the shape of a config table.
 
-The old name of a TOML key or table keeps working for two minor versions, the one that changes it included, when the change comes in 2.0.0 or later. A key renamed in 2.3 still loads in 2.3 and 2.4, and can go in 2.5. While it works it prints a warning that gives the old name and the new one, once per key and per file. `hmp doctor --fix-config <file>` rewrites your file and the files it inherits, and keeps your comments. The changelog lists the rename under `Changed` with both names, and later its removal under `Removed`.
+The old name of a TOML key or table keeps working until the next major version when the change comes after 2.0.0, so a file written for 2.0.0 loads in every later 2.x. A key renamed in 2.3 still loads in 2.4, 2.9 and every other 2.x, and can only go in 3.0. Inside the 2 line a stable key moves to the key that replaces it and is never removed, and the register of changes refuses a row that would remove one. An experimental key follows its own rule, below. While an old name works it prints a warning that gives the old name and the new one, once per key and per file. `hmp doctor --fix-config <file>` rewrites your file and the files it inherits, and keeps your comments. The changelog lists the rename under `Changed` with both names.
 
 A key or a table that only a pre-release wrote (an alpha, a beta or a release candidate) is refused from 2.0.0. The message names every such key the file holds, at once. HydroModPy does not rewrite the file. The list of key changes shows each such key with the version that refuses it and the name that replaces it. A run stored by a pre-release is refused the same way. The keys are listed in `hydromodpy/config/prerelease_forms.txt`, and the list leaves in 2.2.0. One key is not on it. A pre-release wrote `type` in `[[simulation.process]]`. So a project it made still loads with a warning, and `hmp doctor --fix-config` writes `kind`.
 

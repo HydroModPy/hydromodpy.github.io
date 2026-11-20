@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Every TOML knob in HydroModPy is backed by a Pydantic v2 model that forbids extra keys. This page covers a field in an existing section, a new section, and the way to write the field so that the ge..." />
 
-    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <meta property="article:modified_time" content="2026-11-20T01:37:54+01:00" />
     <title>Add a config field &#8212; HydroModPy 2.0.0</title>
   
   
@@ -81,7 +81,7 @@
         href="../../../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-19"/>
+    <meta name="docbuild:last-update" content="2026-11-20"/>
   </head>
   <body data-default-mode="auto">
   
@@ -794,13 +794,15 @@ fault at once, and <code class="docutils literal notranslate"><span class="pre">
 </section>
 <section id="rename-move-or-remove-a-key">
 <h2>Rename, move or remove a key<a class="headerlink" href="#rename-move-or-remove-a-key" title="Link to this heading">#</a></h2>
-<p>A stable key leaves under the rules of <a class="reference internal" href="../../../about/versions.html"><span class="doc">Versions and stability</span></a>, so it keeps loading for
-two minor versions. In one change:</p>
+<p>A stable key moves under the rules of <a class="reference internal" href="../../../about/versions.html"><span class="doc">Versions and stability</span></a>. A key moved after 2.0.0
+keeps loading until the next major version, and inside the 2 line a key is never removed,
+so a file written for 2.0.0 loads in every 2.x. In one change:</p>
 <ol class="arabic simple">
 <li><p>Add a <code class="docutils literal notranslate"><span class="pre">[[migration]]</span></code> row of <code class="docutils literal notranslate"><span class="pre">document</span> <span class="pre">=</span> <span class="pre">&quot;config&quot;</span></code> to
 <code class="docutils literal notranslate"><span class="pre">hydromodpy/schema/changes.toml</span></code>. Use <code class="docutils literal notranslate"><span class="pre">old</span></code> and <code class="docutils literal notranslate"><span class="pre">new</span></code> for a key or a table
 that moves, <code class="docutils literal notranslate"><span class="pre">key</span></code>, <code class="docutils literal notranslate"><span class="pre">old_value</span></code> and <code class="docutils literal notranslate"><span class="pre">new_value</span></code> for a value that takes another
-name, or <code class="docutils literal notranslate"><span class="pre">old</span></code> and <code class="docutils literal notranslate"><span class="pre">instead</span></code> for a key that leaves. <code class="docutils literal notranslate"><span class="pre">since</span></code> is the version
+name, or <code class="docutils literal notranslate"><span class="pre">old</span></code> and <code class="docutils literal notranslate"><span class="pre">instead</span></code> for a key that leaves, which the register refuses after
+the first release of a major version. <code class="docutils literal notranslate"><span class="pre">since</span></code> is the version
 that ships the change. Add <code class="docutils literal notranslate"><span class="pre">rule</span></code> when the row cannot say the whole change. It
 names a function of <code class="docutils literal notranslate"><span class="pre">RULES</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/config/config_migration.py</span></code>. A load
 then reads the old name with a warning, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--fix-config</span></code> rewrites the
@@ -818,10 +820,10 @@ no such row, and it records the key in <code class="docutils literal notranslate
 </ol>
 <p><code class="docutils literal notranslate"><span class="pre">tests/unit/config/test_historical_configs.py</span></code> reads real files of the published
 alphas from <code class="docutils literal notranslate"><span class="pre">tests/unit/config/corpus/</span></code>, so a rename with no row fails there.</p>
-<p>A row stays in the register after its delay, which ends when the version of the
-package reaches <code class="docutils literal notranslate"><span class="pre">since</span></code> plus two minor versions. From then on a live file is refused
-with the new name, and a run sealed under the old name stays readable for the whole
-major line.</p>
+<p>A row stays in the register for good. A row of 2.0.0, whose old key only a pre-release
+wrote, has a delay that ends at 2.2.0, and from then on a live file is refused with the
+new name. A row of a later 2.x has no end inside the 2 line. A run sealed under the old
+name stays readable for the whole major line.</p>
 </section>
 <section id="layer-boundaries">
 <h2>Layer boundaries<a class="headerlink" href="#layer-boundaries" title="Link to this heading">#</a></h2>
@@ -936,7 +938,7 @@ never read it. The full rules are on <a class="reference internal" href="../gene
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-19.
+  Last updated on 2026-11-20.
 </p></div>
       
     </div>
