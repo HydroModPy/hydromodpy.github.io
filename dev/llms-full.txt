@@ -3484,8 +3484,8 @@ A fix that changes the numbers of a run. A run of one of the listed versions is 
 | `hubeau_named_stations_capped` | 2.0.0 | >=2.0.0a1,<=2.0.0rc1 | source@hydrometry_hubeau | With station_ids and max_stations both set, Hub’Eau hydrometry loaded only the first max_stations named stations that had data and never said so. max_stations now counts only the stations a search over the extent finds, and every named station is loaded. |
 | `hubeau_cache_ignores_product` | 2.0.0 | >=2.0.0a1,<=2.0.0rc1 | source@hydrometry_hubeau | Hub’Eau cache looked up cached series without product in the cache key. An entry whose product differed answered anyway. |
 | `discharge_scores_before_period_alignment` | 2.0.0 | <2.0.0a1 | metrics | A stress-period stamp was compared with the observed value at the stamp instead of the mean of the period it closes, so discharge scores (NSE, KGE, RMSE) of these runs are not comparable with later ones. |
-| `voronoi_nwt_boussinesq_fixes_2026_10_09` | 2.0.0 | <2.0.0a5 | mesh@voronoi, fluxes@modflow_nwt, heads@boussinesq, fluxes@boussinesq | MF6 wells and sides were placed on the triangulation instead of the Voronoi dual cells, MODFLOW-NWT stored one slice per time step and read a wrong budget, and Boussinesq ignored the steady first period, the bed thickness of drains, the recharge rule of fixed-head cells and the sub-steps; fixed between c14c1b4c6 and 48d7db46e. |
-| `mf6_computation_top` | 2.0.0 | <2.0.0a5 | heads@modflow6, fluxes@modflow6 | The MODFLOW 6 DISV took the ground as its top, so the top layer had an uneven thickness and heads under a varying thickness were off by 0.16 to 0.31 m on the Nancon; the DISV now carries a computation top, fixed between b1fa87021 and ec7f8de88. |
+| `voronoi_nwt_boussinesq_fixes_2026_10_09` | 2.0.0 | <2.0.0a5 | mesh@voronoi, fluxes@modflow_nwt, heads@boussinesq, fluxes@boussinesq | MF6 wells and sides were placed on the triangulation instead of the Voronoi dual cells, MODFLOW-NWT stored one slice per time step and read a wrong budget, and Boussinesq ignored the steady first period, the bed thickness of drains, the recharge rule of fixed-head cells and the sub-steps; fixed between a8323c810 and eb4d34e2a. |
+| `mf6_computation_top` | 2.0.0 | <2.0.0a5 | heads@modflow6, fluxes@modflow6 | The MODFLOW 6 DISV took the ground as its top, so the top layer had an uneven thickness and heads under a varying thickness were off by 0.16 to 0.31 m on the Nancon; the DISV now carries a computation top, fixed in 5d0d5bb87. |
 | `restart_read_the_rounded_head` | 2.0.0 | >=2.0.0a1,<=2.0.0rc1 | start@restart_from | A run started from flow.restart_from read the last head of the earlier run as stored, rounded to 2^-17 under the compact precision, up to 0.8 mm on 100 m of head. It now reads final_state, in double precision. |
 | `cyclic_spinup_restarted_the_lake` | 2.0.0 | >=2.0.0a1,<=2.0.0rc1 | start@spinup_cyclic_lake | The cyclic spin-up carried the heads from one cycle to the next and restarted every lake from its initial_stage, so the lake never settled. Each cycle now starts from the final stage of the previous one. |
 | `mass_balance_percent_error_rounded` | 2.0.0 | >=2.0.0a1,<=2.0.0rc1 | fluxes@modflow6, fluxes@modflow_nwt | The percent_error of the water mass_balance of a stamp that closes one time step was copied from the PERCENT DISCREPANCY column of the listing, which MODFLOW prints to 0.01 %. It is now recomputed from IN - OUT and the totals, as for a stamp of several steps. On example 05 (Gouville, 366 daily steps) 365 steps read 0.00, they now read a median of 3.2e-4 %, and the largest stays 0.13 %. |
@@ -23536,7 +23536,7 @@ Examples
 ** property name: str[source]**: Name of the session directory, `<case>[_vN]`.
 ** property phases: list[PhaseDescriptor][source]**: The phases of a staged search, by rank; empty for a single search.
 ** property sites: tuple[str, ...][source]**: The sites of the calibrated cases.
-** property status: Vocabulary object at 0x71d511b2ddb0>][source]**: running, completed, partial, aborted or failed.
+** property status: Vocabulary object at 0x7d9102e8efe0>][source]**: running, completed, partial, aborted or failed.
 **Type:**: Where the search stands
 ** property trials: DataFrame[source]**: Every trial of the session, one row per trial and case. The columns are `TRIAL_COLUMNS`, then one column per searched parameter, named as in `[calibration.parameters]`, with the value the trial tried, empty in a phase that did not search it. A parameter named like a column of `TRIAL_COLUMNS` stays in `parameters` alone.
 ** property windows: dict[str, PeriodWindow][source]**: The periods of the search whose best the session holds, by name.
@@ -36711,6 +36711,8 @@ The keys added, removed or changed in the TOML file between two versions are lis
 
 ## Unreleased
 
+## v2.0.0 - 2026-11-20
+
 ### What to do when you update
 
 - A run or a session stored by a pre-release (2.0.0a5 and earlier) is refused. Run it again with this version.
@@ -37434,8 +37436,8 @@ Sizes come from example 04 unless another case is named. Runs of a pre-release a
 - With station_ids and max_stations both set, Hub’Eau hydrometry loaded only the first max_stations named stations that had data and never said so. max_stations now counts only the stations a search over the extent finds, and every named station is loaded.
 - Hub’Eau cache looked up cached series without product in the cache key. An entry whose product differed answered anyway.
 - A stress-period stamp was compared with the observed value at the stamp instead of the mean of the period it closes, so discharge scores (NSE, KGE, RMSE) of these runs are not comparable with later ones.
-- MF6 wells and sides were placed on the triangulation instead of the Voronoi dual cells, MODFLOW-NWT stored one slice per time step and read a wrong budget, and Boussinesq ignored the steady first period, the bed thickness of drains, the recharge rule of fixed-head cells and the sub-steps; fixed between c14c1b4c6 and 48d7db46e.
-- The MODFLOW 6 DISV took the ground as its top, so the top layer had an uneven thickness and heads under a varying thickness were off by 0.16 to 0.31 m on the Nancon; the DISV now carries a computation top, fixed between b1fa87021 and ec7f8de88.
+- MF6 wells and sides were placed on the triangulation instead of the Voronoi dual cells, MODFLOW-NWT stored one slice per time step and read a wrong budget, and Boussinesq ignored the steady first period, the bed thickness of drains, the recharge rule of fixed-head cells and the sub-steps; fixed between a8323c810 and eb4d34e2a.
+- The MODFLOW 6 DISV took the ground as its top, so the top layer had an uneven thickness and heads under a varying thickness were off by 0.16 to 0.31 m on the Nancon; the DISV now carries a computation top, fixed in 5d0d5bb87.
 - A run started from flow.restart_from read the last head of the earlier run as stored, rounded to 2^-17 under the compact precision, up to 0.8 mm on 100 m of head. It now reads final_state, in double precision.
 - The cyclic spin-up carried the heads from one cycle to the next and restarted every lake from its initial_stage, so the lake never settled. Each cycle now starts from the final stage of the previous one.
 - The percent_error of the water mass_balance of a stamp that closes one time step was copied from the PERCENT DISCREPANCY column of the listing, which MODFLOW prints to 0.01 %. It is now recomputed from IN - OUT and the totals, as for a stamp of several steps. On example 05 (Gouville, 366 daily steps) 365 steps read 0.00, they now read a median of 3.2e-4 %, and the largest stays 0.13 %.
@@ -37990,6 +37992,7 @@ When you cite a result, add the solver that computed it (MODFLOW 6, MODFLOW-NWT 
              and Sallou, June and Bourcier, Johan and Combemale, Benoit and
              Brunner, Philip and Aquilina, Luc and de Dreuzy, Jean-Raynald},
   version = {2.0.0},
+  year    = {2026},
   doi     = {10.5281/zenodo.22141925},
   url     = {https://github.com/HydroModPy/HydroModPy},
   license = {EPL-2.0}
@@ -38070,6 +38073,7 @@ AU  - Brunner, Philip
 AU  - Aquilina, Luc
 AU  - de Dreuzy, Jean-Raynald
 ET  - 2.0.0
+PY  - 2026
 DO  - 10.5281/zenodo.22141925
 UR  - https://github.com/HydroModPy/HydroModPy
 N1  - License: EPL-2.0
@@ -38091,7 +38095,7 @@ Gauvain, A., Abhervé, R., Boivin, B., Coche, A., Le Mesnil, M., Babey, T., Maug
 Touzeau, T., Issolah, I., Roques, C., Bouchez, C., Marçais, J., Leray, S., Marti, E.,
 Bresciani, E., Figueroa, R., Pélissier, M., Carlier, S., Guillaumot, L., Bagagnan, R.
 S., Vautier, C., Longuevergne, L., Sallou, J., Bourcier, J., Combemale, B., Brunner, P.,
-Aquilina, L., & de Dreuzy, J.-R. (n.d.). HydroModPy: a Python toolbox for deploying
+Aquilina, L., & de Dreuzy, J.-R. (2026). HydroModPy: a Python toolbox for deploying
 catchment-scale shallow groundwater models (Version 2.0.0) [Computer software]. EPL-2.0.
 https://doi.org/10.5281/zenodo.22141925
 ```
