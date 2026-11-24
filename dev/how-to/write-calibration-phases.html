@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="This page shows how to split a calibration into phases and how to use a published protocol that writes them for you. A calibration runs as one or more phases. A phase says which parameters it moves..." />
 
-    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>Write calibration phases &#8212; HydroModPy 2.0.0</title>
+    <meta property="article:modified_time" content="2026-11-21T05:22:12+01:00" />
+    <title>Write calibration phases &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -52,7 +52,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -81,7 +81,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-19"/>
+    <meta name="docbuild:last-update" content="2026-11-21"/>
   </head>
   <body data-default-mode="auto">
   
@@ -631,6 +631,29 @@ in transient against the gauge and the network, with 2000 left out as spin-up.</
 <span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2001-01-01"</span><span class="w">           </span><span class="c1"># the network state read, December 2002, lies inside</span>
 </pre></div>
 </div>
+<p>The soil capacity first. With a soil reservoir, <code class="docutils literal notranslate"><span class="pre">regime</span> <span class="pre">=</span> <span class="pre">&quot;soil&quot;</span></code> sets <code class="docutils literal notranslate"><span class="pre">ru</span></code> without a
+solver, to the capacity that closes the multi-year recharge plus runoff against the gauge
+(<a class="reference internal" href="../theory/soil-reservoir.html"><span class="doc">The daily soil reservoir</span></a>, section “The capacity that closes the budget”). It lists the one
+parameter that moves <code class="docutils literal notranslate"><span class="pre">ru</span></code>, scores no block, and needs a phase after it, which calibrates K and
+Sy with <code class="docutils literal notranslate"><span class="pre">ru</span></code> fixed. The calibration then separates the volume, which the budget sets, from the
+dynamics, which the hydrograph sets.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># not checked: fragment, needs [flow.sinks_sources.recharge.soil] and [data.hydrometry]</span>
+<span class="k">[calibration.parameters.ru]</span>
+<span class="n">bounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">]</span><span class="w">            </span><span class="c1"># mm</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"soil_capacity"</span>
+<span class="n">parameters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"ru"</span><span class="p">]</span>
+<span class="n">regime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"soil"</span>
+
+<span class="k">[[calibration.phases]]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"k_sy_transient"</span>
+<span class="n">parameters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"K"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Sy"</span><span class="p">]</span>
+<span class="n">regime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"transient"</span>
+<span class="n">objective_blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"hydrograph"</span><span class="p">]</span>
+<span class="n">depends_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"soil_capacity"</span>
+</pre></div>
+</div>
 <p>Both at once. One phase, both parameters, one regime. Two parameters and a cost to minimize give
 Nelder-Mead, and <code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">&quot;cma_es&quot;</span></code> is written for a global search.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># not checked: fragment, continues the declarations of the first block</span>
@@ -824,7 +847,7 @@ must change, as a dotted path into the project configuration.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-19.
+  Last updated on 2026-11-21.
 </p></div>
       
     </div>

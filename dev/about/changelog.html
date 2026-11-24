@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Every release of HydroModPy and every change since the last one, newest first. The page is the CHANGELOG.md file at the root of the repository, included as it is. It follows Keep a Changelog and Se..." />
 
-    <meta property="article:modified_time" content="2026-11-20T11:22:40+01:00" />
-    <title>Changelog &#8212; HydroModPy 2.0.0</title>
+    <meta property="article:modified_time" content="2026-11-24T13:56:03+01:00" />
+    <title>Changelog &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -52,7 +52,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -81,7 +81,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-20"/>
+    <meta name="docbuild:last-update" content="2026-11-24"/>
   </head>
   <body data-default-mode="auto">
   
@@ -524,6 +524,59 @@ promises, see <a class="reference internal" href="versions.html"><span class="do
 <hr class="docutils" />
 <section id="unreleased">
 <h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0...dev">Unreleased</a><a class="headerlink" href="#unreleased" title="Link to this heading">#</a></h2>
+<section id="added">
+<h3>Added<a class="headerlink" href="#added" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span></code> takes <code class="docutils literal notranslate"><span class="pre">--overlay</span></code> and <code class="docutils literal notranslate"><span class="pre">--set</span></code>, merged as <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> merges them, so a model and the site file it runs with are checked together: <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span> <span class="pre">project.toml</span> <span class="pre">--overlay</span> <span class="pre">sites/canut.toml</span></code>. <code class="docutils literal notranslate"><span class="pre">hydromodpy.check</span></code> takes them as <code class="docutils literal notranslate"><span class="pre">overlays</span></code> and <code class="docutils literal notranslate"><span class="pre">set</span></code>. A <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> project refuses an overlay and names the recipe or the site file to write it in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Run.hydrographic_network(&quot;mesh_constraint&quot;)</span></code> returns the rivers the mesh carries, one line per chain of river cells through their solver centers. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">compare</span></code> scores the flowing cells against it beside the mapped networks.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">network</span></code> table of <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">compare</span></code> now keeps how each row was cut: the field, the active rule, its thresholds, the buffer, the distance rule and, for the mesh row, the contributing area or cell count that traced its streams.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.soil]</span> <span class="pre">method</span></code> names the storage law of the soil reservoir: <code class="docutils literal notranslate"><span class="pre">fao56</span></code> (the law so far, the default), <code class="docutils literal notranslate"><span class="pre">thornthwaite</span></code>, <code class="docutils literal notranslate"><span class="pre">dingman</span></code> or <code class="docutils literal notranslate"><span class="pre">edijatno_michel</span></code> (the production store of GR4J). The sealed share, the curve number, the bypass and the transit work the same under each law.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.soil.snow]</span></code> turns on a snow pack melted linearly from 0 to 6 °C, read from <code class="docutils literal notranslate"><span class="pre">[data.temperature]</span></code>. <code class="docutils literal notranslate"><span class="pre">kc</span></code> also takes a table <code class="docutils literal notranslate"><span class="pre">{low,</span> <span class="pre">high,</span> <span class="pre">months}</span></code> that follows the growing season.</p></li>
+<li><p>The soil budget printed by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--until</span> <span class="pre">load_data</span></code> now gives, when a gauge is loaded, the <code class="docutils literal notranslate"><span class="pre">ru</span></code> that closes recharge + runoff against the gauge over the run, its range over resampled years and its move under a 5 % bias of the rain or the gauge. Write it as <code class="docutils literal notranslate"><span class="pre">ru</span></code>, then calibrate K and Sy with it fixed. A calibration phase with <code class="docutils literal notranslate"><span class="pre">regime</span> <span class="pre">=</span> <span class="pre">&quot;soil&quot;</span></code> does the same without a solver and freezes <code class="docutils literal notranslate"><span class="pre">ru</span></code> for the phases after it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[data.etp]</span> <span class="pre">formula</span> <span class="pre">=</span> <span class="pre">&quot;oudin&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;hamon&quot;</span></code> computes the ETP from <code class="docutils literal notranslate"><span class="pre">[data.temperature]</span></code> instead of loading it. Every reader of the ETP receives it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[recharge_estimates]</span></code> runs the recharge methods of ESPERE (BRGM) on the loaded data before the solver: Turc, Guttman and Zuckerman, Kessler, the Wallingford, Chapman and Maxwell and Eckhardt baseflow filters, the water table fluctuation, and the factor that would scale the run’s recharge onto the gauged volume. None enters the model. The run prints them beside its own recharge and writes the table <code class="docutils literal notranslate"><span class="pre">recharge_estimates</span></code>. The figures <code class="docutils literal notranslate"><span class="pre">recharge_estimates</span></code> and <code class="docutils literal notranslate"><span class="pre">water_balance_loop</span></code> read it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[data.impervious]</span></code> gives the soil reservoir its sealed share cell by cell, from OCS GE of the IGN (<code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;ocsge&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">year</span></code> pinned), from the built-up class of ESA WorldCover (<code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;worldcover&quot;</span></code>), or from a file. <code class="docutils literal notranslate"><span class="pre">[data.curve_number]</span></code> does the same for the curve number from a file such as GCN250. Each cell reads the mean inside the catchment, in place of <code class="docutils literal notranslate"><span class="pre">impervious_fraction</span></code> or <code class="docutils literal notranslate"><span class="pre">curve_number</span></code>, and writing that value beside its map is refused. On the Nancon the sealed share is 3.95 % with OCS GE 2023 and 2.39 % with WorldCover 2021.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[data.recharge]</span> <span class="pre">formula</span> <span class="pre">=</span> <span class="pre">&quot;turc&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;guttman_zuckerman&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;kessler&quot;</span></code> gives a steady run its recharge: the mean over the complete years of the run of the yearly formula on the basin rain. A transient run is refused, since no share of the year is invented.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[recharge_estimates]</span> <span class="pre">soil_methods</span> <span class="pre">=</span> <span class="pre">&quot;all&quot;</span></code> runs every soil law on the run’s forcing, and <code class="docutils literal notranslate"><span class="pre">compare_loaded</span> <span class="pre">=</span> <span class="pre">true</span></code> loads <code class="docutils literal notranslate"><span class="pre">[data.recharge]</span></code> and <code class="docutils literal notranslate"><span class="pre">[data.runoff]</span></code> (SIM2 for instance) beside a soil run for the comparison only. Their monthly recharge and runoff, the run’s and the weather go to <code class="docutils literal notranslate"><span class="pre">recharge_estimates</span></code>, drawn by the new figures <code class="docutils literal notranslate"><span class="pre">recharge_signals</span></code> and <code class="docutils literal notranslate"><span class="pre">recharge_regime</span></code>. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--until</span> <span class="pre">prepare_solver</span></code> writes them without a solve.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.soil]</span> <span class="pre">infiltration_ratio</span></code> sends only that share of the water leaving the soil to the aquifer, the RIPE of ESPERE; the rest runs off on the same day and reaches the discharge through the runoff of the run. 1, the default, changes nothing. The soil budget of <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--until</span> <span class="pre">load_data</span></code> prints the ratio ESPERE takes from the gauge, the lowest yearly Wallingford baseflow index, for the user to copy: 0.70 on the Nancon over 2015-2020. <code class="docutils literal notranslate"><span class="pre">[data.infiltration_ratio]</span></code> gives it cell by cell from a file, or from OCS GE with one ratio per cover written in the section; HydroModPy ships no value per cover.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[data.curve_number]</span></code> builds the curve number from a land cover: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;ocsge&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;worldcover&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;land_cover&quot;</span></code> for a raster of a named legend (<code class="docutils literal notranslate"><span class="pre">cci</span></code>, <code class="docutils literal notranslate"><span class="pre">worldcover</span></code>, <code class="docutils literal notranslate"><span class="pre">clc</span></code>, or <code class="docutils literal notranslate"><span class="pre">custom</span></code>). Each class goes to one class of the ESA CCI legend and reads its GCN250 row (Jaafar et al. 2019) on the hydrologic soil group the section writes, a letter or a HYSOGs250m map. Sealed and built-up classes stay out, left to <code class="docutils literal notranslate"><span class="pre">[data.impervious]</span></code>; any row can be overridden under <code class="docutils literal notranslate"><span class="pre">classes</span></code>. On the Nancon with group C, OCS GE 2023 gives 74.2, WorldCover 2021 76.8, the GCN250 map itself 78.5.</p></li>
+<li><p>The OCS GE department archives now sit once per machine in the user cache, shared by the sealed share, the infiltration ratio and the curve number. A soil map larger than the catchment, such as the global GCN250, is now read only over the window of the forcing grid.</p></li>
+<li><p>A run scores <code class="docutils literal notranslate"><span class="pre">bfi_gap</span></code>, the baseflow index of the simulated discharge minus the one of the gauge, both by the Wallingford filter on the same days, and a calibration may weigh <code class="docutils literal notranslate"><span class="pre">bfi_error</span></code>, its absolute value, beside a fit such as <code class="docutils literal notranslate"><span class="pre">nse</span></code>. It asks whether the stream is fed by its aquifer in the share the gauge shows, and is blind to volume and timing. It reads daily discharge only: a monthly run leaves <code class="docutils literal notranslate"><span class="pre">bfi_gap</span></code> empty, and the criterion is refused outside a transient run with a daily step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.scenario]</span></code> replaces the loaded recharge by its mean year, with dry years put in a row, to test a sequence of droughts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;explore2&quot;</span></code> reads a DRIAS Explore2 file of projected recharge or runoff under <code class="docutils literal notranslate"><span class="pre">[data.recharge]</span></code> and <code class="docutils literal notranslate"><span class="pre">[data.runoff]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">example</span> <span class="pre">add</span></code> takes several ids (<code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">example</span> <span class="pre">add</span> <span class="pre">00</span> <span class="pre">07</span> <span class="pre">08</span></code>) or <code class="docutils literal notranslate"><span class="pre">--all</span></code>, and <code class="docutils literal notranslate"><span class="pre">hmp.example([&quot;00&quot;,</span> <span class="pre">&quot;07&quot;],</span> <span class="pre">add=True)</span></code> or <code class="docutils literal notranslate"><span class="pre">hmp.example(add=True)</span></code> does the same from Python. Every id is checked before the first download. The catalog now ships the twelve examples 00 to 11: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.dev</span> <span class="pre">examples</span> <span class="pre">manifest</span></code> takes every folder <code class="docutils literal notranslate"><span class="pre">NN_name</span></code> of <code class="docutils literal notranslate"><span class="pre">examples/projects/</span></code> that holds a <code class="docutils literal notranslate"><span class="pre">project.toml</span></code> and a <code class="docutils literal notranslate"><span class="pre">README.md</span></code>, so a new example needs no code. Under <code class="docutils literal notranslate"><span class="pre">--format</span> <span class="pre">json</span></code> the command writes one row per example, schema <code class="docutils literal notranslate"><span class="pre">hmp.example.add.v2</span></code>, with the new field <code class="docutils literal notranslate"><span class="pre">example_id</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">gc</span> <span class="pre">--solver-files-days</span> <span class="pre">DAYS</span></code>, and <code class="docutils literal notranslate"><span class="pre">Project.gc(solver_files_days=...)</span></code>, removes the <code class="docutils literal notranslate"><span class="pre">solver/</span></code> folder that <code class="docutils literal notranslate"><span class="pre">keep_solver_files</span></code> kept in the sealed runs older than DAYS. The rule is off by default, so the folders stay unless it is asked. The seal never lists them, so the run reads the same without them. On a daily run such a folder can weigh 5.6 GB, beside 195 MB for its <code class="docutils literal notranslate"><span class="pre">fields.zarr</span></code>.</p></li>
+<li><p>The Parquet views of the index (<code class="docutils literal notranslate"><span class="pre">timeseries</span></code>, <code class="docutils literal notranslate"><span class="pre">budgets</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_balance</span></code> and the Parquet <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">provenance</span></code>) now read the kept trials of the sessions too, each row by its <code class="docutils literal notranslate"><span class="pre">sim_id</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">read_workspace_runs</span></code>, which reads the runs of several projects without any index, now gives <code class="docutils literal notranslate"><span class="pre">label</span></code> and <code class="docutils literal notranslate"><span class="pre">rule_version</span></code> for each run, computed on read as the index does.</p></li>
+<li><p>The sidecar of a sealed share, an infiltration ratio or a curve number built from OCS GE now gives the editions read, one per department, in <code class="docutils literal notranslate"><span class="pre">product_version</span></code>.</p></li>
+</ul>
+</section>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>The index no longer stamps the <code class="docutils literal notranslate"><span class="pre">logs/</span></code> and <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> folders of a run, and reads a seal again only when its folder moved. The pulse a live run writes every 30 s made every read of the project write the index again. <code class="docutils literal notranslate"><span class="pre">Catalog.cases</span></code> now reads the status and the pulse of a live case on the disk.</p></li>
+</ul>
+</section>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span></code> now names, before the solve, the particle figures (<code class="docutils literal notranslate"><span class="pre">particle_tracks</span></code>, <code class="docutils literal notranslate"><span class="pre">residence_time_distribution</span></code>) a run without particle tracking will skip, and each map whose <code class="docutils literal notranslate"><span class="pre">pathlines</span></code> overlay will be drawn empty. Only the <code class="docutils literal notranslate"><span class="pre">pathlines</span></code> export was named so far, and a <code class="docutils literal notranslate"><span class="pre">[transport.modflow6_prt]</span></code> table with no transport entry in <code class="docutils literal notranslate"><span class="pre">[[simulation.process]]</span></code> went unnoticed until the end of the run.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;url&quot;</span></code> file whose address has no suffix, such as a WCS <code class="docutils literal notranslate"><span class="pre">GetCoverage</span></code> request, now takes the suffix the server names in <code class="docutils literal notranslate"><span class="pre">Content-Disposition</span></code> or <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>. It was cached as <code class="docutils literal notranslate"><span class="pre">.bin</span></code>, and Whitebox refused to read it as a DEM. The CRS stamp on a Whitebox output is skipped when the file already holds that CRS: rewriting it made Whitebox fail to read back some GeoTIFFs it wrote, such as a DEM served by GeoServer, on the first run of a project.</p></li>
+<li><p>The relief shade of a map now stops at the active cells. On a catchment with a concave outline it used to leave grey streaks across the bays, outside the mesh, and it shaded the inactive cells of the border.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">publish</span> <span class="pre">--package</span></code> and the example catalog now ship every data file a TOML names, wherever the key sits. A catchment polygon (<code class="docutils literal notranslate"><span class="pre">[geographic.catchment]</span> <span class="pre">polyg_shp_path</span></code>) and a file read by a boundary condition, such as the sea level of example 05, were left out, so the copy failed on a missing file. A shapefile now travels with its <code class="docutils literal notranslate"><span class="pre">.shx</span></code>, <code class="docutils literal notranslate"><span class="pre">.dbf</span></code>, <code class="docutils literal notranslate"><span class="pre">.prj</span></code> and <code class="docutils literal notranslate"><span class="pre">.cpg</span></code>; example 00 shipped its stream network as a lone <code class="docutils literal notranslate"><span class="pre">.shp</span></code>.</p></li>
+<li><p>A grid of <code class="docutils literal notranslate"><span class="pre">data/</span></code> that a larger one contains is no longer removed when a sealed run or a lockfile cites it. The skip of an identical run and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">--frozen</span></code> failed once an enclosing catchment was fetched. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">prune</span></code> removes the smaller grid once nothing cites it.</p></li>
+</ul>
+</section>
+<section id="numbers">
+<h3>Numbers<a class="headerlink" href="#numbers" title="Link to this heading">#</a></h3>
+<!-- numbers:begin -->
+<ul class="simple">
+<li><p>With depth_model kind = “flat_substratum”, the aquifer bottom of a DEM pixel without data was set 1 m under the no-data value, so it stopped being read as no data. A mesh that samples the bottom (triangle, voronoi, a regular grid resampled from the DEM) blended it with the flat elevation on the cells next to the mask. With domain_extent = “watershed” these are the cells of the catchment edge: on a 31 km2 catchment at a flat bottom of 15 m, 768 of 779 edge cells had a bottom between -800 and -9 891 m, a column 100 times thicker than the 76 m of the others. A no-data pixel now keeps the no-data value and every sampled cell gets the flat elevation. A constant_thickness model and a regular grid on the DEM pixels do not change.</p></li>
+<li><p>map.drawn_by defaults to “crossing”: the mapped network is drawn on the cells as the data gives it, the rule of the paper, still cut to the catchment. It defaulted to “heads”, which kept only the stream heads of the map and drew the rest down the model’s own descent. A calibration with no pin on the protocol follows 1.4, which differs from 1.3 by this rule alone. A pin on 1.3, or map.drawn_by = “heads” in the network output, gives the heads rule back. A run that sealed no network output draws its network figures by the crossing rule too. A file of edition 2.0 that writes no drawn_by moves with it, at the request of the owner, so its K and costs change wherever heads and crossing draw different cells.</p></li>
+<li><p>On a mesh whose faces follow the lake shores but leave the ring open somewhere (an arm narrower than a cell, a wall that leaves the shore), a lake owns the cells its polygon covers for more than half of their area, each cell whole. It owned every cell the polygon touched, so a ring of land cells one cell wide joined the lake and had its top carved under the highest stage of the abacus. On a reservoir of 200.3 ha whose shore the faces cover at 99.45 %, the lake goes from 1 256 cells and 296.3 ha to 885 cells and 201.3 ha, and the cells it leaves keep their terrain and get their drain back. A mesh that closes every shore, and a mesh without lake faces, do not change.</p></li>
+</ul>
+<!-- numbers:end -->
+</section>
 </section>
 <section id="v2-0-0-2026-11-20">
 <span id="v200---2026-11-20"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0a5...v2.0.0">v2.0.0</a> - 2026-11-20<a class="headerlink" href="#v2-0-0-2026-11-20" title="Link to this heading">#</a></h2>
@@ -546,8 +599,8 @@ promises, see <a class="reference internal" href="versions.html"><span class="do
 <li><p>The IGN DEM is two sources. <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;bdalti&quot;</span></code> fetches the 25 m BD ALTI and <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;rgealti&quot;</span></code> the RGE ALTI at 5 m, or 1 m with <code class="docutils literal notranslate"><span class="pre">resolution_m</span> <span class="pre">=</span> <span class="pre">1</span></code>. A file that writes <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;ign_geoplateforme_dem&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">dataset</span></code> is refused, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--fix-config</span></code> rewrites it.</p></li>
 </ul>
 </section>
-<section id="added">
-<h3>Added<a class="headerlink" href="#added" title="Link to this heading">#</a></h3>
+<section id="id1">
+<span id="added-1"></span><h3>Added<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>The HTTP server sends a file of a project with <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/v1/&lt;org&gt;/&lt;project&gt;/files/&lt;path&gt;</span></code>, the path an answer gave: an export, a saved figure, a report or a tar from <code class="docutils literal notranslate"><span class="pre">publish</span></code>. A folder, an absent file and a path or a link that leaves the project are refused.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[flow.param.&lt;id&gt;.field_vertical_profile]</span></code> takes <code class="docutils literal notranslate"><span class="pre">depth_at</span> <span class="pre">=</span> <span class="pre">&quot;top&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;middle&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;base&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;surface_then_base&quot;</span></code> (the ground for the first layer, the base for the others), the depth at which each layer reads its profile, the middle by default as before. An exponential profile takes <code class="docutils literal notranslate"><span class="pre">characteristic_depth_high</span></code>, <code class="docutils literal notranslate"><span class="pre">ground_low</span></code> and <code class="docutils literal notranslate"><span class="pre">ground_high</span></code>: its decay length then goes linearly with the ground elevation from <code class="docutils literal notranslate"><span class="pre">characteristic_depth</span></code> to <code class="docutils literal notranslate"><span class="pre">characteristic_depth_high</span></code>, for a weathered zone that thins under the hills.</p></li>
@@ -723,8 +776,8 @@ connection, with the refusal naming the option or argument that widens the list.
 <li><p><code class="docutils literal notranslate"><span class="pre">base_config</span></code> takes a list of files, such as <code class="docutils literal notranslate"><span class="pre">base_config</span> <span class="pre">=</span> <span class="pre">[&quot;sites/nancon.toml&quot;,</span> <span class="pre">&quot;experiments/steady.toml&quot;]</span></code>, and each of them may inherit others. A file two bases inherit is read once. For each key the most derived file that writes it wins, and two files that do not inherit each other must agree, or the file is refused with both names and both values. The items they add with <code class="docutils literal notranslate"><span class="pre">__append</span></code> are all kept, bases first. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">resolve</span> <span class="pre">FILE</span> <span class="pre">--origin</span></code> writes each value of the merged file with the file that set it.</p></li>
 </ul>
 </section>
-<section id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading">#</a></h3>
+<section id="id2">
+<span id="changed-1"></span><h3>Changed<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>A TOML key renamed after 2.0.0 keeps loading, with a warning, until 3.0, so a file written for 2.0.0 loads in every 2.x. Inside the 2 line a stable key moves and is never removed, and <code class="docutils literal notranslate"><span class="pre">changes.toml</span></code> refuses a row that would remove one. A key that only a pre-release wrote keeps its delay and is refused from 2.2.0. Old Python names and old <code class="docutils literal notranslate"><span class="pre">hmp</span></code> commands keep the rule of two minor versions.</p></li>
 <li><p>An overlay that inherits a file the run file also inherits no longer applies that file again over the run file. The file is read once, and the values of the run file hold.</p></li>
@@ -1421,8 +1474,8 @@ geology map, as an argument passed by the caller.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">show</span> <span class="pre">--lang</span></code> and the <code class="docutils literal notranslate"><span class="pre">lang</span></code> argument of <code class="docutils literal notranslate"><span class="pre">hydromodpy.show</span></code>. The report is written in English, and the sheet of <code class="docutils literal notranslate"><span class="pre">--preset</span> <span class="pre">management</span></code> goes to <code class="docutils literal notranslate"><span class="pre">report/sheet/index.html</span></code> instead of <code class="docutils literal notranslate"><span class="pre">report/sheet-en</span></code> and <code class="docutils literal notranslate"><span class="pre">report/sheet-fr</span></code>.</p></li>
 </ul>
 </section>
-<section id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading">#</a></h3>
+<section id="id3">
+<span id="fixed-1"></span><h3>Fixed<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">water_budget</span></code> figure stacks <code class="docutils literal notranslate"><span class="pre">constant_head</span></code> alone. It also stacked <code class="docutils literal notranslate"><span class="pre">constant_head_stream</span></code>, a part of it, so the stream-role constant head was counted twice. The monthly climatology of the overview reads <code class="docutils literal notranslate"><span class="pre">Mean</span> <span class="pre">daily</span> <span class="pre">rate</span> <span class="pre">(mm/d)</span></code>, since it draws the monthly mean of a daily forcing, and the report prints the outlet coordinates to the metre instead of <code class="docutils literal notranslate"><span class="pre">3.485e+05</span></code>.</p></li>
 <li><p>A staged calibration passes the value an earlier phase froze, such as K, to every trial of the later phase. When that phase sampled profiles only, such as Sy, its trials and a run promoted from a kept solve solved at the value of the file. Run such a calibration again: its later phases, and the runs it promoted, change.</p></li>
@@ -1532,8 +1585,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <li><p><code class="docutils literal notranslate"><span class="pre">Pillow</span></code> now starts at 13.0.0, the first version with the 2026 security fixes.</p></li>
 </ul>
 </section>
-<section id="numbers">
-<h3>Numbers<a class="headerlink" href="#numbers" title="Link to this heading">#</a></h3>
+<section id="id4">
+<span id="numbers-1"></span><h3>Numbers<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p>Sizes come from example 04 unless another case is named. Runs of a pre-release are not comparable on these quantities.</p>
 <!-- numbers:begin -->
 <ul class="simple">
@@ -1587,8 +1640,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <section id="v2-0-0a5-2026-10-13">
 <span id="v200a5---2026-10-13"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0a4...v2.0.0a5">v2.0.0a5</a> - 2026-10-13<a class="headerlink" href="#v2-0-0a5-2026-10-13" title="Link to this heading">#</a></h2>
 <p>This alpha adds a daily soil reservoir for the recharge, a new way to draw the observed network from its heads, and a computational top for MODFLOW 6. It also removes the burn of the mapped network into the DEM and fixes many Boussinesq and validation errors.</p>
-<section id="id1">
-<span id="added-1"></span><h3>Added<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<section id="id5">
+<span id="added-2"></span><h3>Added<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">[flow.sinks_sources.recharge.soil]</span></code> computes the recharge from a daily soil reservoir fed by the rain and the ETP, instead of the SIM2 drainage. It works with MODFLOW 6 only. Main keys: <code class="docutils literal notranslate"><span class="pre">ru</span></code> (required, calibratable as <code class="docutils literal notranslate"><span class="pre">soil.ru</span></code>), <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">kc</span></code>, <code class="docutils literal notranslate"><span class="pre">impervious_fraction</span></code>, <code class="docutils literal notranslate"><span class="pre">bypass_fraction</span></code>, <code class="docutils literal notranslate"><span class="pre">transit_time</span></code>, <code class="docutils literal notranslate"><span class="pre">spinup</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">&lt;file&gt;</span> <span class="pre">--until</span> <span class="pre">load_data</span></code> checks the soil alone. It prints the budget in mm/year and the recharge for <code class="docutils literal notranslate"><span class="pre">ru</span></code> from 50 to 250 mm, and writes no run. The section refuses what would count water twice and says what to write instead.</p></li>
@@ -1617,8 +1670,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <li><p>Documentation: Understand pages, a glossary, reference pages for calibratable parameters, minimal files, exceptions and exit codes, and a Get started quick start. Every <code class="docutils literal notranslate"><span class="pre">hmp</span></code> command shows an example in <code class="docutils literal notranslate"><span class="pre">--help</span></code>. The data-source registry states each licence.</p></li>
 </ul>
 </section>
-<section id="id2">
-<span id="changed-1"></span><h3>Changed<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<section id="id6">
+<span id="changed-2"></span><h3>Changed<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>A run keeps its whole per-cell budget by default, storage terms included. The developer key <code class="docutils literal notranslate"><span class="pre">[simulation.results]</span> <span class="pre">keep_per_cell_budget</span> <span class="pre">=</span> <span class="pre">false</span></code> keeps only what the run’s figures, exports and outputs read. A calibration that saves runs keeps the whole budget for the best run only.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[simulation.results.derived]</span></code> and <code class="docutils literal notranslate"><span class="pre">[simulation.results.budget]</span></code> are dropped on load with one line. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--fix-config</span></code> removes them from the file. Every derived field is now rebuilt on read.</p></li>
@@ -1646,8 +1699,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <li><p>The technical note is cited as HESS 30, 5571-5592 (2026).</p></li>
 </ul>
 </section>
-<section id="id3">
-<span id="removed-1"></span><h3>Removed<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<section id="id7">
+<span id="removed-1"></span><h3>Removed<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">[geographic.enforce_streams]</span></code>, the burn of the mapped network into the routing DEM, with its drift check and download. A file that declares it is refused. The geographic cache changes for every project, so each rebuilds its geographic tree once.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[geographic.snap_streams]</span></code> and everything built for it. A file that declares it is refused.</p></li>
@@ -1662,8 +1715,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <li><p>The user guide pages of the documentation. Old URLs redirect to the matching reference, Understand or Theory page.</p></li>
 </ul>
 </section>
-<section id="id4">
-<span id="fixed-1"></span><h3>Fixed<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<section id="id8">
+<span id="fixed-2"></span><h3>Fixed<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Time steps: a stress period cut into steps now stores the head of its last step and every flux as the length-weighted mean of its steps, for MODFLOW 6, MODFLOW-NWT and Boussinesq. A run of one step per period is unchanged. A MODFLOW 6 run with a lake or stream network and several steps per period no longer fails at extraction.</p></li>
 <li><p>A transient Boussinesq run now solves its first period at steady state (<code class="docutils literal notranslate"><span class="pre">flow.first_period_steady</span></code>, true by default), stamps each period at its end, and honors <code class="docutils literal notranslate"><span class="pre">simulation.time.substeps_per_period</span></code> with every engine.</p></li>
@@ -1692,8 +1745,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <li><p>Validation references and thresholds were corrected for the drainage, island, pumping, Brutsaert and Ogata-Banks cases. Their errors now compare what the model computes.</p></li>
 </ul>
 </section>
-<section id="id5">
-<span id="numbers-1"></span><h3>Numbers<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<section id="id9">
+<span id="numbers-2"></span><h3>Numbers<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>MODFLOW 6 heads change on every model whose thickness varies (<code class="docutils literal notranslate"><span class="pre">flat_substratum</span></code>, <code class="docutils literal notranslate"><span class="pre">raster_substratum</span></code>, <code class="docutils literal notranslate"><span class="pre">raster_thickness</span></code>, a zonal top). The head RMSE against MODFLOW-NWT on the Nançon was 0.16 to 0.31 m before. MODFLOW 6 calibrations made on such geometries are not comparable. Example 04 is unchanged.</p></li>
 <li><p>Soil reservoir on the Nançon, daily 2015-2020: the KGE of the gauged discharge goes from 0.65 (SIM2 drainage) to 0.79 (<code class="docutils literal notranslate"><span class="pre">ru</span> <span class="pre">=</span> <span class="pre">150</span> <span class="pre">mm</span></code>). The mean yearly recharge stays within 3 % of the SIM2 drainage plus runoff.</p></li>
@@ -1713,8 +1766,8 @@ remedy: <code class="docutils literal notranslate"><span class="pre">hmp</span> 
 <section id="v2-0-0a4-2026-09-29">
 <span id="v200a4---2026-09-29"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0a3...v2.0.0a4">v2.0.0a4</a> - 2026-09-29<a class="headerlink" href="#v2-0-0a4-2026-09-29" title="Link to this heading">#</a></h2>
 <p>This alpha makes stored results smaller and calibration promotion faster.</p>
-<section id="id6">
-<span id="changed-2"></span><h3>Changed<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<section id="id10">
+<span id="changed-3"></span><h3>Changed<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Time-varying fields are stored in float32 with a rounded mantissa. This is the default
 (<code class="docutils literal notranslate"><span class="pre">[simulation.results.persistence]</span> <span class="pre">field_precision</span> <span class="pre">=</span> <span class="pre">&quot;compact&quot;</span></code>). Use <code class="docutils literal notranslate"><span class="pre">&quot;exact&quot;</span></code> to keep float64.</p></li>
@@ -1727,8 +1780,8 @@ solves again. The promoted run is the same bit for bit and carries the tag <code
 blocks. The composite calibration draws a cost profile and a distance crossing against K.</p></li>
 </ul>
 </section>
-<section id="id7">
-<span id="fixed-2"></span><h3>Fixed<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<section id="id11">
+<span id="fixed-3"></span><h3>Fixed<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>The scan of <code class="docutils literal notranslate"><span class="pre">data/&lt;variable&gt;/</span></code> removes an orphan sidecar when its data file is gone. A sidecar with
 a stated licence or notes is kept. <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">check</span></code> tells which case applies.</p></li>
@@ -1736,8 +1789,8 @@ a stated licence or notes is kept. <code class="docutils literal notranslate"><s
 launch because a station location held numpy values the catalog could not write as JSON.</p></li>
 </ul>
 </section>
-<section id="id8">
-<span id="numbers-2"></span><h3>Numbers<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id12">
+<span id="numbers-3"></span><h3>Numbers<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Compact storage costs at most 2**-17 of the value, under 1 mm on a 130 m head. The NSE of example 04
 moves by 7e-8. A daily 6-year run goes from 1375 to 397 MB and a monthly one from 16 to 5.5 MB.</p></li>
@@ -1749,15 +1802,15 @@ moves by 7e-8. A daily 6-year run goes from 1375 to 397 MB and a monthly one fro
 <section id="v2-0-0a3-2026-09-29">
 <span id="v200a3---2026-09-29"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0a2...v2.0.0a3">v2.0.0a3</a> - 2026-09-29<a class="headerlink" href="#v2-0-0a3-2026-09-29" title="Link to this heading">#</a></h2>
 <p>This alpha fixes concurrent runs, parallel calibration and several wrong budgets and figures.</p>
-<section id="id9">
-<span id="changed-3"></span><h3>Changed<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<section id="id13">
+<span id="changed-4"></span><h3>Changed<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>On a terminal, a console log line starts with a glyph for its level: <code class="docutils literal notranslate"><span class="pre">✗</span></code> error, <code class="docutils literal notranslate"><span class="pre">!</span></code> warning,
 <code class="docutils literal notranslate"><span class="pre">›</span></code> milestone, <code class="docutils literal notranslate"><span class="pre">·</span></code> debug. A pipe keeps the <code class="docutils literal notranslate"><span class="pre">[WARNING]</span></code> labels.</p></li>
 </ul>
 </section>
-<section id="id10">
-<span id="fixed-3"></span><h3>Fixed<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<section id="id14">
+<span id="fixed-4"></span><h3>Fixed<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Several runs of one project can run at once. Each run or calibration session works in its own
 <code class="docutils literal notranslate"><span class="pre">.hmp/scratch/&lt;config&gt;.p&lt;pid&gt;/</span></code>. Before, concurrent runs lost each other’s files.</p></li>
@@ -1781,8 +1834,8 @@ is redrawn at that date. Both used to make the promotion or its figures fail.</p
 duration. The <code class="docutils literal notranslate"><span class="pre">if_exists</span> <span class="pre">=</span> <span class="pre">&quot;replace&quot;</span></code> help now describes what <code class="docutils literal notranslate"><span class="pre">replace</span></code> does.</p></li>
 </ul>
 </section>
-<section id="id11">
-<span id="numbers-3"></span><h3>Numbers<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<section id="id15">
+<span id="numbers-4"></span><h3>Numbers<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>A budget that summed both zones drew 1.68 m3/s of recharge for 1.09 on the domain and 0.59 on the
 catchment. It now reads one zone.</p></li>
@@ -1795,8 +1848,8 @@ and two roots take 8 rounds (26) instead of 24. With <code class="docutils liter
 <section id="v2-0-0a2-2026-09-28">
 <span id="v200a2---2026-09-28"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v2.0.0a1...v2.0.0a2">v2.0.0a2</a> - 2026-09-28<a class="headerlink" href="#v2-0-0a2-2026-09-28" title="Link to this heading">#</a></h2>
 <p>This alpha adds a general <code class="docutils literal notranslate"><span class="pre">[[export]]</span></code> mechanism and a two-bound, transient network calibration.</p>
-<section id="id12">
-<span id="added-2"></span><h3>Added<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<section id="id16">
+<span id="added-3"></span><h3>Added<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">[[export]]</span></code>: one block per export request (<code class="docutils literal notranslate"><span class="pre">variables</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">period</span></code>, <code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">folder</span></code>,
 <code class="docutils literal notranslate"><span class="pre">file</span></code>, <code class="docutils literal notranslate"><span class="pre">crs</span></code>, <code class="docutils literal notranslate"><span class="pre">resolution</span></code>, <code class="docutils literal notranslate"><span class="pre">layer</span></code>, <code class="docutils literal notranslate"><span class="pre">nodata</span></code>). The format follows the data. <code class="docutils literal notranslate"><span class="pre">format</span></code> also takes
@@ -1820,8 +1873,8 @@ the talwegs of the criterion graph, with two figures that show what moved.</p></
 a short recap and writes <code class="docutils literal notranslate"><span class="pre">methods.md</span></code>.</p></li>
 </ul>
 </section>
-<section id="id13">
-<span id="changed-4"></span><h3>Changed<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
+<section id="id17">
+<span id="changed-5"></span><h3>Changed<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">optimizer_kwargs</span></code> is now <code class="docutils literal notranslate"><span class="pre">method_options</span></code> and <code class="docutils literal notranslate"><span class="pre">*_engine_options</span></code> are <code class="docutils literal notranslate"><span class="pre">*_method_options</span></code>. The
 per-figure <code class="docutils literal notranslate"><span class="pre">timestep</span></code> is now <code class="docutils literal notranslate"><span class="pre">time</span></code>. Old names load, and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">doctor</span> <span class="pre">--fix-config</span></code> rewrites them.</p></li>
@@ -1835,8 +1888,8 @@ published as a validation outside the cost. roptim is always Doptim / h_obs.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">config</span> <span class="pre">template</span></code> without <code class="docutils literal notranslate"><span class="pre">--modules</span></code> writes every module, <code class="docutils literal notranslate"><span class="pre">[calibration]</span></code> included.</p></li>
 </ul>
 </section>
-<section id="id14">
-<span id="removed-2"></span><h3>Removed<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
+<section id="id18">
+<span id="removed-2"></span><h3>Removed<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">data</span> <span class="pre">export-package</span></code> and <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">catalog</span> <span class="pre">export</span></code>. Use <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">export</span></code>.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">[export]</span></code> format toggles, <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">[[export.artifacts]]</span></code>.</p></li>
@@ -1844,8 +1897,8 @@ published as a validation outside the cost. roptim is always Doptim / h_obs.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">geometry_from_run</span></code>. Use <code class="docutils literal notranslate"><span class="pre">network_maps_from_run</span></code>.</p></li>
 </ul>
 </section>
-<section id="id15">
-<span id="fixed-4"></span><h3>Fixed<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
+<section id="id19">
+<span id="fixed-5"></span><h3>Fixed<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">calibrate</span> <span class="pre">--check</span></code> names an option a phase-two method refuses before phase one spends its budget.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">flux_timeseries</span></code> draws each flux over its own period instead of one period late.</p></li>
@@ -1856,8 +1909,8 @@ second run on. A station named in <code class="docutils literal notranslate"><sp
 <li><p>An IGN BD ALTI DEM sets its sea to nodata, so the breach step can route it.</p></li>
 </ul>
 </section>
-<section id="id16">
-<span id="numbers-4"></span><h3>Numbers<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<section id="id20">
+<span id="numbers-5"></span><h3>Numbers<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>The default <code class="docutils literal notranslate"><span class="pre">dem_correc_type</span> <span class="pre">=</span> <span class="pre">&quot;fill&quot;</span></code> changes the DEM, so calibration results move. The renames
 change every calibration <code class="docutils literal notranslate"><span class="pre">params_hash</span></code> once.</p></li>
@@ -1869,8 +1922,8 @@ change every calibration <code class="docutils literal notranslate"><span class=
 <p>Version 2 rebuilds HydroModPy around a project TOML, the <code class="docutils literal notranslate"><span class="pre">hmp</span></code> command line and a catalog of runs.
 It adds lakes, streams and flow barriers in MODFLOW 6, a calibration engine and a data layer.
 This first alpha adds the stream-network calibration.</p>
-<section id="id17">
-<span id="added-3"></span><h3>Added<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<section id="id21">
+<span id="added-4"></span><h3>Added<a class="headerlink" href="#id21" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>MODFLOW 6 Lake (LAK) with stage, bathymetry abacus and bed leakance, a bathymetry raster that
 lowers the cell bottoms under a lake, and <code class="docutils literal notranslate"><span class="pre">variable</span> <span class="pre">=</span> <span class="pre">&quot;lake_level&quot;</span></code> for calibration.</p></li>
@@ -1907,8 +1960,8 @@ source, plus a <code class="docutils literal notranslate"><span class="pre">requ
 <li><p>The twelve v1 examples run again in the current format.</p></li>
 </ul>
 </section>
-<section id="id18">
-<span id="changed-5"></span><h3>Changed<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<section id="id22">
+<span id="changed-6"></span><h3>Changed<a class="headerlink" href="#id22" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span> <span class="pre">&lt;calibration.toml&gt;</span></code> now runs real MODFLOW simulations. <code class="docutils literal notranslate"><span class="pre">save_runs</span> <span class="pre">=</span> <span class="pre">&quot;best_n&quot;</span></code> promotes
 only the best trials to full runs.</p></li>
@@ -1940,8 +1993,8 @@ can read it. <code class="docutils literal notranslate"><span class="pre">import
 4 to 28 % against a refined run, and a discharge calibration absorbs it into the parameters.</p></li>
 </ul>
 </section>
-<section id="id19">
-<span id="removed-3"></span><h3>Removed<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
+<section id="id23">
+<span id="removed-3"></span><h3>Removed<a class="headerlink" href="#id23" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">migrate</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_values</span></code> in calibration protocols and the <code class="docutils literal notranslate"><span class="pre">hydromodpy.optimizer</span></code>
 entry-point group. Pass your own <code class="docutils literal notranslate"><span class="pre">Optimizer</span></code> to <code class="docutils literal notranslate"><span class="pre">CalibrationEngine(optimizer=...)</span></code>.</p></li>
@@ -1957,8 +2010,8 @@ report is <code class="docutils literal notranslate"><span class="pre">outputs/r
 <li><p>The Chèze lake project <code class="docutils literal notranslate"><span class="pre">19_cheze_reservoir</span></code> and the <code class="docutils literal notranslate"><span class="pre">new_to_sort</span></code> projects leave <code class="docutils literal notranslate"><span class="pre">examples/</span></code>.</p></li>
 </ul>
 </section>
-<section id="id20">
-<span id="fixed-5"></span><h3>Fixed<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
+<section id="id24">
+<span id="fixed-6"></span><h3>Fixed<a class="headerlink" href="#id24" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>A stress-period stamp is the end of its period. Fluxes are now compared with the mean of the
 previous period and states at the stamp. Fit metrics, scores and figures follow.</p></li>
@@ -1981,8 +2034,8 @@ cache no longer serves an answer fetched for another question.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">list</span></code> can run beside <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> because <code class="docutils literal notranslate"><span class="pre">SimulationCatalog</span></code> retries on DuckDB lock errors.</p></li>
 </ul>
 </section>
-<section id="id21">
-<span id="numbers-5"></span><h3>Numbers<a class="headerlink" href="#id21" title="Link to this heading">#</a></h3>
+<section id="id25">
+<span id="numbers-6"></span><h3>Numbers<a class="headerlink" href="#id25" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Discharge NSE of the stored example 04 run moves from 0.531 to 0.665, and the stage-two
 <code class="docutils literal notranslate"><span class="pre">nse_log</span></code> from 0.595 to 0.731, because of the end-of-period stamp. A monthly run on the Nancon
@@ -2007,8 +2060,8 @@ so the paper link always points to a working release, while feature development
 continues on <code class="docutils literal notranslate"><span class="pre">main</span></code> as HydroModPy v2.</p>
 <p>Install the maintained paper version with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;hydromodpy==1.0.*&quot;</span></code>,
 which resolves to the latest <code class="docutils literal notranslate"><span class="pre">1.0.X</span></code> patch and never upgrades to the v2 series.</p>
-<section id="id22">
-<span id="added-4"></span><h3>Added<a class="headerlink" href="#id22" title="Link to this heading">#</a></h3>
+<section id="id26">
+<span id="added-5"></span><h3>Added<a class="headerlink" href="#id26" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>First PyPI release published from GitHub, with MODFLOW, MODPATH and MT3D-USGS binaries bundled in the wheel.</p></li>
 <li><p>Release pipeline on GitHub Actions: tag/version guard, build, <code class="docutils literal notranslate"><span class="pre">twine</span> <span class="pre">check</span> <span class="pre">--strict</span></code>, PyPI Trusted Publishing (OIDC) and a GitHub release carrying the changelog notes.</p></li>
@@ -2016,8 +2069,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Multi-version documentation served at <a class="reference external" href="https://docs.hydromodpy.fr/v1.0/">https://docs.hydromodpy.fr/v1.0/</a>, rebuilt on every push to the <code class="docutils literal notranslate"><span class="pre">v1.0</span></code> branch.</p></li>
 </ul>
 </section>
-<section id="id23">
-<span id="changed-6"></span><h3>Changed<a class="headerlink" href="#id23" title="Link to this heading">#</a></h3>
+<section id="id27">
+<span id="changed-7"></span><h3>Changed<a class="headerlink" href="#id27" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Repository, issues and CI moved from GitLab to GitHub.</p></li>
 <li><p>Documentation moved from ReadTheDocs to GitHub Pages under the <code class="docutils literal notranslate"><span class="pre">docs.hydromodpy.fr</span></code> domain.</p></li>
@@ -2026,8 +2079,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Development status classifier raised to <code class="docutils literal notranslate"><span class="pre">5</span> <span class="pre">-</span> <span class="pre">Production/Stable</span></code>.</p></li>
 </ul>
 </section>
-<section id="id24">
-<span id="fixed-6"></span><h3>Fixed<a class="headerlink" href="#id24" title="Link to this heading">#</a></h3>
+<section id="id28">
+<span id="fixed-7"></span><h3>Fixed<a class="headerlink" href="#id28" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>MODPATH particle flux is sampled with <code class="docutils literal notranslate"><span class="pre">rasterio</span></code> instead of <code class="docutils literal notranslate"><span class="pre">whitebox</span></code>.</p></li>
 <li><p>Interactive matplotlib backend detected through <code class="docutils literal notranslate"><span class="pre">backend_registry</span></code>.</p></li>
@@ -2035,8 +2088,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Transport and PyHELP examples run headless, without user interaction.</p></li>
 </ul>
 </section>
-<section id="id25">
-<span id="removed-4"></span><h3>Removed<a class="headerlink" href="#id25" title="Link to this heading">#</a></h3>
+<section id="id29">
+<span id="removed-4"></span><h3>Removed<a class="headerlink" href="#id29" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>GitLab CI pipeline and ReadTheDocs configuration.</p></li>
 </ul>
@@ -2045,8 +2098,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-3-5-2026-01-28">
 <span id="v035---2026-01-28"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.3.4...v0.3.5">v0.3.5</a> - 2026-01-28<a class="headerlink" href="#v0-3-5-2026-01-28" title="Link to this heading">#</a></h2>
-<section id="id26">
-<span id="changed-7"></span><h3>Changed<a class="headerlink" href="#id26" title="Link to this heading">#</a></h3>
+<section id="id30">
+<span id="changed-8"></span><h3>Changed<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Pinned pandas to <code class="docutils literal notranslate"><span class="pre">&lt;3.0</span></code> across pip/conda install files and docs to avoid breaking changes from pandas 3.0.</p></li>
 </ul>
@@ -2055,22 +2108,22 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-3-4-2026-01-04">
 <span id="v034---2026-01-04"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.3.3...v0.3.4">v0.3.4</a> - 2026-01-04<a class="headerlink" href="#v0-3-4-2026-01-04" title="Link to this heading">#</a></h2>
-<section id="id27">
-<span id="added-5"></span><h3>Added<a class="headerlink" href="#id27" title="Link to this heading">#</a></h3>
+<section id="id31">
+<span id="added-6"></span><h3>Added<a class="headerlink" href="#id31" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">install/requirements-docker-light.txt</span></code> for pip-only Docker/server installs without IDE or visualization dependencies.</p></li>
 <li><p>Added optional Dask handling in SIM2 (chunked xarray only when Dask is available).</p></li>
 </ul>
 </section>
-<section id="id28">
-<span id="changed-8"></span><h3>Changed<a class="headerlink" href="#id28" title="Link to this heading">#</a></h3>
+<section id="id32">
+<span id="changed-9"></span><h3>Changed<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>HydroModPy now loads display modules only when display features are invoked.</p></li>
 <li><p>Dockerfile updated for a light production flow using pip requirements.</p></li>
 </ul>
 </section>
-<section id="id29">
-<span id="fixed-7"></span><h3>Fixed<a class="headerlink" href="#id29" title="Link to this heading">#</a></h3>
+<section id="id33">
+<span id="fixed-8"></span><h3>Fixed<a class="headerlink" href="#id33" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Improved PROJ database detection and fallback (including rasterio data dirs) to reduce <code class="docutils literal notranslate"><span class="pre">proj.db</span></code> layout errors in containers.</p></li>
 </ul>
@@ -2079,14 +2132,14 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-3-3-2025-12-03">
 <span id="v033---2025-12-03"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.3.2...v0.3.3">v0.3.3</a> - 2025-12-03<a class="headerlink" href="#v0-3-3-2025-12-03" title="Link to this heading">#</a></h2>
-<section id="id30">
-<span id="added-6"></span><h3>Added<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
+<section id="id34">
+<span id="added-7"></span><h3>Added<a class="headerlink" href="#id34" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Lightweight conda environment option (<code class="docutils literal notranslate"><span class="pre">env_hydromodpy_light.yml</span></code>) and matching light dependency set in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> for setups without VTK or Jupyter kernels.</p></li>
 </ul>
 </section>
-<section id="id31">
-<span id="changed-9"></span><h3>Changed<a class="headerlink" href="#id31" title="Link to this heading">#</a></h3>
+<section id="id35">
+<span id="changed-10"></span><h3>Changed<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Replaced the former <code class="docutils literal notranslate"><span class="pre">downslope</span></code> helper with <code class="docutils literal notranslate"><span class="pre">masstransfer</span></code> as the single surface routing engine.</p></li>
 <li><p>Standardized raster reads on <code class="docutils literal notranslate"><span class="pre">imageio.v2</span></code> and removed deprecation warnings.</p></li>
@@ -2096,15 +2149,15 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Replace ‘imageio’ by ‘rasterio’ to resolve deprecation.</p></li>
 </ul>
 </section>
-<section id="id32">
-<span id="fixed-8"></span><h3>Fixed<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
+<section id="id36">
+<span id="fixed-9"></span><h3>Fixed<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Pandas warnings in PyHELP CSV ingestion and daily output aggregation (removed deprecated args and axis-based groupby).</p></li>
 <li><p>Multiprocessing pools in PyHELP now use a spawn context to avoid fork-in-multithreaded warnings on Python 3.11-3.13.</p></li>
 </ul>
 </section>
-<section id="id33">
-<span id="removed-5"></span><h3>Removed<a class="headerlink" href="#id33" title="Link to this heading">#</a></h3>
+<section id="id37">
+<span id="removed-5"></span><h3>Removed<a class="headerlink" href="#id37" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.modeling.downslope</span></code> module (functionality consolidated into <code class="docutils literal notranslate"><span class="pre">masstransfer</span></code>).</p></li>
 </ul>
@@ -2113,15 +2166,15 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-3-2-2025-11-28">
 <span id="v032---2025-11-28"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.3.1...v0.3.2">v0.3.2</a> - 2025-11-28<a class="headerlink" href="#v0-3-2-2025-11-28" title="Link to this heading">#</a></h2>
-<section id="id34">
-<span id="changed-10"></span><h3>Changed<a class="headerlink" href="#id34" title="Link to this heading">#</a></h3>
+<section id="id38">
+<span id="changed-11"></span><h3>Changed<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Reworked SIM2 workflow: coarse clip without reprojection to trim inputs, resample on that reduced dataset, then final clip/mask with reprojection for clean outputs without wasted time or RAM.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">disk_clip</span></code> now accepts <code class="docutils literal notranslate"><span class="pre">.shp</span></code>, <code class="docutils literal notranslate"><span class="pre">.gpkg</span></code>, and <code class="docutils literal notranslate"><span class="pre">.geojson</span></code>, and SIM2 filename parsing keeps the full variable name before <code class="docutils literal notranslate"><span class="pre">_SIM2_</span></code>.</p></li>
 </ul>
 </section>
-<section id="id35">
-<span id="fixed-9"></span><h3>Fixed<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
+<section id="id39">
+<span id="fixed-10"></span><h3>Fixed<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">toolbox.load_to_xarray</span></code> reprojects when <code class="docutils literal notranslate"><span class="pre">dst_crs</span></code> is provided even without a mask, matching the new SIM2 flow and avoiding extra memory use.</p></li>
 <li><p>SIM2 resampling preserves encodings and applies masking with the reprojected DEM consistently.</p></li>
@@ -2131,16 +2184,16 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-3-1-2025-11-14">
 <span id="v031---2025-11-14"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.3.0...v0.3.1">v0.3.1</a> - 2025-11-14<a class="headerlink" href="#v0-3-1-2025-11-14" title="Link to this heading">#</a></h2>
-<section id="id36">
-<span id="changed-11"></span><h3>Changed<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
+<section id="id40">
+<span id="changed-12"></span><h3>Changed<a class="headerlink" href="#id40" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Installation guide reorganized with ready-made command recipes, dual YAML options (runtime vs editable), and clearer guidance for conda-versus-pip setups.</p></li>
 <li><p>README now flags v0.3.1 as the stable release and the conda YAMLs pin Python 3.11-3.13 explicitly.</p></li>
 <li><p>Add spyder package to the conda environment for users of that IDE.</p></li>
 </ul>
 </section>
-<section id="id37">
-<span id="fixed-10"></span><h3>Fixed<a class="headerlink" href="#id37" title="Link to this heading">#</a></h3>
+<section id="id41">
+<span id="fixed-11"></span><h3>Fixed<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> now lets setuptools auto-discover all <code class="docutils literal notranslate"><span class="pre">hydromodpy*</span></code> packages so <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hydromodpy</span></code> (and ReadTheDocs builds) no longer fail if optional submodules such as <code class="docutils literal notranslate"><span class="pre">hydromodpy.modeling.gr4j</span></code> are absent from the current branch.</p></li>
 <li><p>Pinned NumPy to &gt;= 2.0 and restricted supported Python to &gt;= 3.11, &lt; 3.14 to avoid incompatibilities with other packages.</p></li>
@@ -2156,8 +2209,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Runtime baseline jumps from Python 3.8.10 to the Python 3.11-3.13 series. Tested on Linux, macOS, and Windows.</p></li>
 </ul>
 </section>
-<section id="id38">
-<span id="added-7"></span><h3>Added<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
+<section id="id42">
+<span id="added-8"></span><h3>Added<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Logging system with <code class="docutils literal notranslate"><span class="pre">LogManager</span></code> class (replaces all <code class="docutils literal notranslate"><span class="pre">print()</span></code> statements).</p></li>
 <li><p>GitHub Actions pipeline for automated builds and PyPI publication.</p></li>
@@ -2169,8 +2222,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p><code class="docutils literal notranslate"><span class="pre">pyhelp</span></code> CLI now exports <code class="docutils literal notranslate"><span class="pre">PYHELP_WORKDIR</span></code> and <code class="docutils literal notranslate"><span class="pre">help_example.py</span> <span class="pre">--workdir</span></code> to stop the Windows crash on Example 10.</p></li>
 </ul>
 </section>
-<section id="id39">
-<span id="changed-12"></span><h3>Changed<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
+<section id="id43">
+<span id="changed-13"></span><h3>Changed<a class="headerlink" href="#id43" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Renamed package from <code class="docutils literal notranslate"><span class="pre">src</span></code> to <code class="docutils literal notranslate"><span class="pre">hydromodpy</span></code> following standard Python conventions.</p></li>
 <li><p>Replaced GDAL with rasterio for pip-only installation (tested with Python 3.13).</p></li>
@@ -2182,8 +2235,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Replaced deepdish with pickle for serialization.</p></li>
 </ul>
 </section>
-<section id="id40">
-<span id="removed-6"></span><h3>Removed<a class="headerlink" href="#id40" title="Link to this heading">#</a></h3>
+<section id="id44">
+<span id="removed-6"></span><h3>Removed<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Platform-specific environment files (<code class="docutils literal notranslate"><span class="pre">env_pyhelp-0.1_windows.yml</span></code>, <code class="docutils literal notranslate"><span class="pre">environment-crossplatform-3119.yml</span></code>).</p></li>
 <li><p>Fortran compilation requirements for PyHELP.</p></li>
@@ -2192,8 +2245,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Removed obsolete third-party packages (e.g., hydroeval, deepdish) to ensure compatibility with Python 3.11+.</p></li>
 </ul>
 </section>
-<section id="id41">
-<span id="fixed-11"></span><h3>Fixed<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
+<section id="id45">
+<span id="fixed-12"></span><h3>Fixed<a class="headerlink" href="#id45" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Normalized example folder names.</p></li>
 <li><p>Cross-platform file path handling.</p></li>
@@ -2206,8 +2259,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-2-0-2025-11-05">
 <span id="v020---2025-11-05"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/compare/v0.1.0...v0.2.0">v0.2.0</a> - 2025-11-05<a class="headerlink" href="#v0-2-0-2025-11-05" title="Link to this heading">#</a></h2>
-<section id="id42">
-<span id="added-8"></span><h3>Added<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
+<section id="id46">
+<span id="added-9"></span><h3>Added<a class="headerlink" href="#id46" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Added MT3D-USGS support with new <code class="docutils literal notranslate"><span class="pre">Mt3dms</span></code>, <code class="docutils literal notranslate"><span class="pre">Masstransfer</span></code>, and <code class="docutils literal notranslate"><span class="pre">watershed.transport</span></code> modules, included Example 09, and provided executables for Linux, macOS, and Windows.</p></li>
 <li><p>Added the GR4J rainfall-runoff calibration toolbox with scripts, figures, and sample data under <code class="docutils literal notranslate"><span class="pre">src/modeling/gr4j</span></code>.</p></li>
@@ -2218,8 +2271,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Added platform-specific conda environment files for HydroModPy 0.1.</p></li>
 </ul>
 </section>
-<section id="id43">
-<span id="changed-13"></span><h3>Changed<a class="headerlink" href="#id43" title="Link to this heading">#</a></h3>
+<section id="id47">
+<span id="changed-14"></span><h3>Changed<a class="headerlink" href="#id47" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Updated <code class="docutils literal notranslate"><span class="pre">modflow.py</span></code> to support elevation-driven decay parameters, optional EVT extinction depth, and creation of the LMT link file when using MT3DMS.</p></li>
 <li><p>Updated the hydraulic configuration so it keeps the new decay settings and <code class="docutils literal notranslate"><span class="pre">exdp</span></code> value.</p></li>
@@ -2229,8 +2282,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <li><p>Updated geographic and hydrography helpers to fall back on existing DEM rasters and clip optional stream inputs.</p></li>
 </ul>
 </section>
-<section id="id44">
-<span id="fixed-12"></span><h3>Fixed<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
+<section id="id48">
+<span id="fixed-13"></span><h3>Fixed<a class="headerlink" href="#id48" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>SIM2 climate ingestion now uses the current Météo-France variable names and units and exposes the soil drought index.</p></li>
 <li><p>Watershed visualizations restore the DEM color bar, scale bar, and labeled watershed overlay.</p></li>
@@ -2240,8 +2293,8 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
 <hr class="docutils" />
 <section id="v0-1-0-2025-10-31">
 <span id="v010---2025-10-31"></span><h2><a class="reference external" href="https://github.com/HydroModPy/HydroModPy/releases/tag/v0.1.0">v0.1.0</a> - 2025-10-31<a class="headerlink" href="#v0-1-0-2025-10-31" title="Link to this heading">#</a></h2>
-<section id="id45">
-<span id="added-9"></span><h3>Added<a class="headerlink" href="#id45" title="Link to this heading">#</a></h3>
+<section id="id49">
+<span id="added-10"></span><h3>Added<a class="headerlink" href="#id49" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><strong>First official release</strong> of the HydroModPy package.</p></li>
 <li><p>Established the initial project structure for hydrological/hydrogeological modeling workflows.</p></li>
@@ -2301,103 +2354,109 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0-2026-11-20">v2.0.0 - 2026-11-20</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-when-you-update">What to do when you update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#added">Added</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changed">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#removed">Removed</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#numbers">Numbers</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a5-2026-10-13">v2.0.0a5 - 2026-10-13</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0-2026-11-20">v2.0.0 - 2026-11-20</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-when-you-update">What to do when you update</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Added</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Removed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Numbers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#removed">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Numbers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a5-2026-10-13">v2.0.0a5 - 2026-10-13</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Numbers</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a4-2026-09-29">v2.0.0a4 - 2026-09-29</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Numbers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Numbers</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a3-2026-09-29">v2.0.0a3 - 2026-09-29</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Numbers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Numbers</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a2-2026-09-28">v2.0.0a2 - 2026-09-28</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Removed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Numbers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Numbers</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v2-0-0a1-2026-09-28">v2.0.0a1 - 2026-09-28</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Removed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Numbers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Numbers</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v1-0-0-2026-08-10">v1.0.0 - 2026-08-10</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Removed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-5-2026-01-28">v0.3.5 - 2026-01-28</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Changed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-4-2026-01-04">v0.3.4 - 2026-01-04</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Fixed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-3-2025-12-03">v0.3.3 - 2025-12-03</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Fixed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Removed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-2-2025-11-28">v0.3.2 - 2025-11-28</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Fixed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-1-2025-11-14">v0.3.1 - 2025-11-14</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Fixed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-0-2025-11-06">v0.3.0 - 2025-11-06</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compatibility">Compatibility</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Removed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Removed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Fixed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-2-0-2025-11-05">v0.2.0 - 2025-11-05</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Added</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Changed</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Fixed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Fixed</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-1-0-2025-10-31">v0.1.0 - 2025-10-31</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Added</a></li>
 </ul>
 </li>
 </ul>
@@ -2440,7 +2499,7 @@ which resolves to the latest <code class="docutils literal notranslate"><span cl
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-20.
+  Last updated on 2026-11-24.
 </p></div>
       
     </div>

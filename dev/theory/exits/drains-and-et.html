@@ -18,7 +18,7 @@
 <meta name="description" content="Two exits act at the top of the model. A drain discharges where the water table reaches the ground. The evapotranspiration package draws water where the water table is shallow. Recharge is not an e..." />
 
     <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>Drains and evapotranspiration at the top of the model &#8212; HydroModPy 2.0.0</title>
+    <title>Drains and evapotranspiration at the top of the model &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="nav bd-sidenav">
@@ -753,12 +754,12 @@ cell, with the floor: <span class="math notranslate nohighlight">\(C_n = \max(C^
 declares none, which is the case of example 04, each drain derives its
 conductance from the conductivity of its cell:</p>
 <div class="math notranslate nohighlight" id="equation-eq-drain-conductance">
-<span class="eqno">(38)<a class="headerlink" href="#equation-eq-drain-conductance" title="Link to this equation">#</a></span>\[C_n = \max\!\left(\frac{K_n\,a_n}{b_d},\ C_\mathrm{min}\right).\]</div>
+<span class="eqno">(44)<a class="headerlink" href="#equation-eq-drain-conductance" title="Link to this equation">#</a></span>\[C_n = \max\!\left(\frac{K_n\,a_n}{b_d},\ C_\mathrm{min}\right).\]</div>
 <p>The thickness <span class="math notranslate nohighlight">\(b_d\)</span> is that of the clogging layer at the bottom of a
 watercourse, decimeters to a meter. It is not the thickness of an aquifer layer.
 A cell passes its own recharge when the head stands above the drain elevation by</p>
 <div class="math notranslate nohighlight" id="equation-eq-drain-excess">
-<span class="eqno">(39)<a class="headerlink" href="#equation-eq-drain-excess" title="Link to this equation">#</a></span>\[h_n - z^d_n = \frac{N_n\, a_n}{C_n} = \frac{N_n\, b_d}{K_n} .\]</div>
+<span class="eqno">(45)<a class="headerlink" href="#equation-eq-drain-excess" title="Link to this equation">#</a></span>\[h_n - z^d_n = \frac{N_n\, a_n}{C_n} = \frac{N_n\, b_d}{K_n} .\]</div>
 <p>The excess does not depend on the size of the cell. It depends on <span class="math notranslate nohighlight">\(K/N\)</span>, the
 ratio a network calibration searches (<a class="reference internal" href="../downslope-distance.html"><span class="doc">Downslope distance between two networks</span></a>), and on
 <span class="math notranslate nohighlight">\(b_d\)</span>. The drain is meant to be a seepage face: <span class="math notranslate nohighlight">\(K\)</span> and the recharge decide where
@@ -784,7 +785,7 @@ With a band of depth <span class="math notranslate nohighlight">\(\delta\)</span
 (<a class="hmp-toml-ref reference external" href="../../reference/parameters/solver.html#p-solver-drain_band_depth_m" title="Metres. (m)"><code class="docutils literal notranslate"><span class="pre">solver.drain_band_depth_m</span></code></a>), the drain sits lower and its conductance
 grows:</p>
 <div class="math notranslate nohighlight" id="equation-eq-drain-band">
-<span class="eqno">(40)<a class="headerlink" href="#equation-eq-drain-band" title="Link to this equation">#</a></span>\[z^d_n = z_{\mathrm{top},n} - \frac{\delta}{2},
+<span class="eqno">(46)<a class="headerlink" href="#equation-eq-drain-band" title="Link to this equation">#</a></span>\[z^d_n = z_{\mathrm{top},n} - \frac{\delta}{2},
 \qquad
 C^{\delta}_n = C_n\,\frac{b_d}{\delta}.\]</div>
 <p>The factor is the bed thickness and not the cell area: the conductance it scales
@@ -813,8 +814,8 @@ question in opposite directions, and a file that sets both is refused.</p>
 <span id="one-cell-by-hand"></span><h2>One cell, by hand<a class="headerlink" href="#drains-worked-cell" title="Link to this heading">#</a></h2>
 <p>A cell of 25 m by 25 m (<span class="math notranslate nohighlight">\(a_n = 625\)</span> m²), <span class="math notranslate nohighlight">\(K = 10^{-7}\)</span> m/s, and a recharge of
 439 mm per year, <span class="math notranslate nohighlight">\(1.39 \times 10^{-8}\)</span> m/s. The conductance and the head the
-drain needs to pass the recharge, from <a class="reference internal" href="#equation-eq-drain-conductance">(38)</a>,
-<a class="reference internal" href="#equation-eq-drain-excess">(39)</a> and <a class="reference internal" href="#equation-eq-drain-band">(40)</a>:</p>
+drain needs to pass the recharge, from <a class="reference internal" href="#equation-eq-drain-conductance">(44)</a>,
+<a class="reference internal" href="#equation-eq-drain-excess">(45)</a> and <a class="reference internal" href="#equation-eq-drain-band">(46)</a>:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Drain bed <span class="math notranslate nohighlight">\(b_d\)</span></p></th>

@@ -23,7 +23,7 @@ edition = "2.0"
 [data]
 # Ordered list of data variables explicitly requested in [data].
 # The launcher may append inferred types deduced from other sections (for example domain.zone_ids, a [flow.bc.stream] table).
-# Allowed values: 'crossings', 'dem', 'etp', 'geology', 'humidity', 'hydrography', 'hydrometry', 'intermittency', 'lake_abacus', 'lake_bathymetry', 'lake_geometry', 'lake_inflow', 'lake_levels', 'lake_outflow', 'lake_withdrawal', 'layer_base', 'oceanic', 'piezometry', 'precipitation', 'property_map', 'radiation', 'recharge', 'runoff', 'soil_capacity', 'soil_moisture', 'substratum', 'temperature', 'water_quality', 'wind'.
+# Allowed values: 'crossings', 'curve_number', 'dem', 'etp', 'geology', 'humidity', 'hydrography', 'hydrometry', 'impervious', 'infiltration_ratio', 'intermittency', 'lake_abacus', 'lake_bathymetry', 'lake_geometry', 'lake_inflow', 'lake_levels', 'lake_outflow', 'lake_withdrawal', 'layer_base', 'oceanic', 'piezometry', 'precipitation', 'property_map', 'radiation', 'recharge', 'runoff', 'soil_capacity', 'soil_moisture', 'substratum', 'temperature', 'water_quality', 'wind'.
 # Type: list[str] | Default: []
 types = []
 
@@ -772,8 +772,17 @@ inference_mode = "warn"
 # Type: string (optional) | Optional | Examples: "2025-12-31"
 # date_end = ""
 
+# Compute a steady recharge from the yearly weather instead of loading a series: the formula runs on each complete calendar year of the run on the basin mean of [data.precipitation] (and of [data.temperature] for turc), and the run takes the mean over the years as its one rate.
+# Only a run with [flow] flow_regime = "steady" reads it.
+# "turc" gives an effective rainfall, which the run takes whole as recharge, so the drains do the share a RIPE would do.
+# Guttman and Zuckerman and Kessler were fitted on karsts.
+# Type: string (optional) | Optional | Examples: "turc"
+# formula = ""
 
-# At least one data source.
+
+# Data sources of the recharge.
+# Write at least one, or a formula, not both.
+# Example entry, one [[data.recharge.sources]] block per entry.
 # [[data.recharge.sources]]
 # Station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
 # For a station source of hydrometry, recharge or runoff, unset means [site] gauge, and a list that leaves the gauge out is refused.
@@ -997,8 +1006,17 @@ inference_mode = "warn"
 # Type: string (optional) | Optional | Examples: "2025-12-31"
 # date_end = ""
 
+# Compute the ETP from the daily mean temperature of [data.temperature], which the run then loads, instead of loading an ETP product.
+# "oudin" uses the extraterrestrial radiation (Oudin et al.
+# 2005), "hamon" the day length (Hamon 1963).
+# The result is mm/day on the grid of the temperature, and every reader of [data.etp] receives it.
+# Type: string (optional) | Optional | Examples: "oudin"
+# formula = ""
 
-# At least one data source.
+
+# Data sources of the ETP.
+# Write at least one, or a formula, not both.
+# Example entry, one [[data.etp.sources]] block per entry.
 # [[data.etp.sources]]
 # Station identifiers to select, whether stations are read from a custom source or fetched from an API source such as Hub'Eau.
 # For a station source of hydrometry, recharge or runoff, unset means [site] gauge, and a list that leaves the gauge out is refused.
@@ -1484,6 +1502,68 @@ inference_mode = "warn"
 # source = "file"
 
 # Path to a raster of soil available water capacity in mm (GeoTIFF, ASC).
+# Read only by [flow.sinks_sources.recharge.soil].
+# Type: path | REQUIRED
+# path = ""
+
+# CRS to use for a raster that carries none of its own.
+# Only a value written here is used: without it, a file with no CRS is refused.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# Sealed share of the ground, 0 to 1 per pixel, read by the soil reservoir in place of its impervious_fraction ([flow.sinks_sources.recharge.soil]).
+
+# Exactly one source of the sealed share.
+# Each soil column takes the mean share of its SAFRAN cell inside the catchment, in place of impervious_fraction.
+# [[data.impervious.sources]]
+# Discriminator tag selecting the 'file' impervious provider.
+# Type: Literal['file'] | one of: "file" | Default: "file"
+# source = "file"
+
+# Path to a raster of the sealed share of each pixel, 0 to 1 (GeoTIFF, ASC).
+# Read only by [flow.sinks_sources.recharge.soil].
+# Type: path | REQUIRED
+# path = ""
+
+# CRS to use for a raster that carries none of its own.
+# Only a value written here is used: without it, a file with no CRS is refused.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# Share of the soil excess that reaches the aquifer, 0 to 1 per pixel, read by the soil reservoir in place of its infiltration_ratio ([flow.sinks_sources.recharge.soil]); the rest runs off.
+
+# Exactly one source of the infiltration ratio.
+# Each soil column takes the mean ratio of its SAFRAN cell inside the catchment, in place of infiltration_ratio.
+# [[data.infiltration_ratio.sources]]
+# Discriminator tag selecting the 'file' infiltration ratio provider.
+# Type: Literal['file'] | one of: "file" | Default: "file"
+# source = "file"
+
+# Path to a raster of the share of the soil excess that reaches the aquifer, 0 to 1 per pixel (GeoTIFF, ASC).
+# Read only by [flow.sinks_sources.recharge.soil].
+# Type: path | REQUIRED
+# path = ""
+
+# CRS to use for a raster that carries none of its own.
+# Only a value written here is used: without it, a file with no CRS is refused.
+# Type: string | Default: "EPSG:2154"
+# default_crs = "EPSG:2154"
+
+
+# SCS curve number (AMC II), read by the soil reservoir in place of its curve_number ([flow.sinks_sources.recharge.soil]): a raster, or a land cover (OCS GE, WorldCover, a raster of a named legend) read in the GCN250 table.
+
+# Exactly one curve number source.
+# Each soil column takes the mean curve number of its SAFRAN cell inside the catchment, in place of curve_number.
+# A source built from land cover leaves the sealed and built-up classes out, since [data.impervious] runs them off whole, and leaves water and snow out, which GCN250 gives no curve number.
+# [[data.curve_number.sources]]
+# Discriminator tag selecting the 'file' curve number provider.
+# Type: Literal['file'] | one of: "file" | Default: "file"
+# source = "file"
+
+# Path to a raster of the SCS curve number under average moisture (AMC II), for instance the GCN250 map of Jaafar et al.
+# (2019) (GeoTIFF, ASC).
 # Read only by [flow.sinks_sources.recharge.soil].
 # Type: path | REQUIRED
 # path = ""

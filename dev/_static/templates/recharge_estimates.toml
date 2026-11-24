@@ -1,0 +1,212 @@
+# ======================================================================
+# HydroModPy Configuration
+# Profile: user | Modules: edition, recharge_estimates
+# Auto-generated from Pydantic models.
+# Edit values below. Comments describe each parameter.
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Root-level workflow selector.
+# ----------------------------------------------------------------------
+
+# The set of defaults the file is read with.
+# A key the file does not write takes its default in this edition, so a later version never moves a number of a file that did not ask.
+# config.resolved.toml writes it.
+# Type: string | Default: "2.0" | Examples: "2.0"
+edition = "2.0"
+
+# ----------------------------------------------------------------------
+# Recharge estimated from the loaded data, to compare with the run's own.
+# ----------------------------------------------------------------------
+
+[recharge_estimates]
+# Methods to run, or "all".
+# "all" skips wtf when no specific yield is given.
+# Weather: turc (an effective rainfall), guttman_zuckerman, kessler.
+# Gauge: wallingford, chapman_maxwell, eckhardt, closing_factor.
+# Piezometer: wtf.
+# Type: Union[list, Literal] | Default: "all" | Examples: "all", ["turc", "eckhardt"]
+methods = "all"
+
+# Soil laws to run on the same weather and the same ru, or "all".
+# Each gives a daily recharge and runoff, written as monthly rows and as yearly recharge, to set beside the run's own and beside a loaded product.
+# The laws read the soil section of the run, else [recharge_estimates.soil].
+# One ru is not one soil: the ru that closes the budget differs from law to law.
+# Type: Union[list, Literal] | Default: [] | Examples: "all", ["fao56", "dingman"]
+soil_methods = []
+
+# In a run whose soil section computes the recharge, load [data.recharge] and [data.runoff] for the comparison only, such as SIM2 DRAINC and RUNC: they are written beside the soil laws and never reach the model.
+# List recharge, and runoff if it has one, in data.types.
+# Type: bool | Default: false
+compare_loaded = false
+
+
+# Parameter of the Chapman and Maxwell filter.
+
+[recharge_estimates.chapman_maxwell]
+# Daily recession constant, between 0 and 1.
+# Unset, it is read on the recessions of the gauge.
+# Type: float (optional) | > 0.0 | < 1.0 | Optional
+# k = 1.0
+
+
+# Parameters of the Eckhardt filter.
+
+[recharge_estimates.eckhardt]
+# Daily recession constant, between 0 and 1.
+# Unset, it is read on the recessions of the gauge.
+# Type: float (optional) | > 0.0 | < 1.0 | Optional
+# k = 1.0
+
+# Largest share of baseflow in the discharge, Eckhardt filter only.
+# Unset, the largest yearly baseflow index of the Wallingford method, as ESPERE does.
+# Eckhardt (2005) gives 0.80 for perennial streams on porous aquifers and 0.25 on hard rock.
+# Type: float (optional) | > 0.0 | < 1.0 | Optional
+# bfi_max = 1.0
+
+
+# Water table fluctuation; required when methods names wtf.
+
+# [recharge_estimates.wtf]
+# Specific yield Sy at the piezometers.
+# The estimate is proportional to it, so give the value the run uses or the calibrated one.
+# Type: float | > 0.0 | <= 0.5 | REQUIRED
+# specific_yield = 1.0
+
+# "recession" adds the decline the water table would have made without the rain; "none" sums the rises alone (RISE).
+# Type: Literal['recession', 'none'] | one of: "recession", "none" | Default: "recession"
+# correction = "recession"
+
+
+# The soil the laws of soil_methods run with, when the run has no [flow.sinks_sources.recharge.soil] of its own, such as a run forced by SIM2.
+# Its method is replaced by each law in turn.
+# The run then loads [data.precipitation] and [data.etp], and never reads this soil.
+
+# [recharge_estimates.soil]
+# Storage law of the soil, the one thing that differs between methods.
+# "fao56" lowers ETR linearly below alpha x ru (Allen et al.
+# 1998).
+# "thornthwaite" meets the full demand while water is left (Thornthwaite 1948).
+# "dingman" empties the soil as an exponential of the deficit on dry days (Dingman 2008).
+# "edijatno_michel" is the production store of GR4J without its percolation (Edijatno and Michel 1989).
+# The sealed share, the curve number, the bypass, the transit and the snow work the same around every law.
+# Type: string | Default: "fao56" | Examples: "fao56", "thornthwaite"
+# method = "fao56"
+
+# Available water capacity of the soil, in mm of water: what the roots can draw between field capacity and wilting point.
+# A bare number is in mm; "120 mm" and "12 cm" also read.
+# Between 0 and 1000 mm.
+# Required, since it belongs to the site.
+# Start from a soil map, then compare the recharge the soil alone prints for 50 to 250 mm with the gauged discharge (hmp run <file> --until load_data).
+# With [data.soil_capacity], it is the mean capacity over the catchment, and the raster spreads it over classes inside each cell.
+# Calibrate it with [calibration.parameters.ru].
+# Type: float | >= 0.0 | <= 1000.0 | REQUIRED | Examples: "150 mm"
+# ru = 0.0
+
+# Share of ru above which the soil evaporates at the full rate kc x ETP.
+# Below alpha x ru, ETR falls linearly with the stored water.
+# It is 1 - p of FAO-56 and LP of HBV.
+# The default 0.45 is a choice: it means p = 0.55, the value of FAO-56 table 22 for cereals and maize (pasture 0.60).
+# Above 0, at most 1.
+# Kept fixed by default: on the discharge alone it trades off with ru, since both move the annual volume.
+# Type: float | > 0.0 | <= 1.0 | Default: 0.45
+# alpha = 0.45
+
+# Share of the area that is sealed (roofs, roads).
+# The rain that falls on it runs off at once, with no infiltration and no evaporation, and reaches the streams, the lakes and the gauged discharge.
+# The soil reservoir covers the rest of the area.
+# From 0 up to, not including, 1.
+# Calibrate it with [calibration.parameters.impervious_fraction]; the range belongs to the site, so a file has to state it.
+# [data.impervious] gives it cell by cell instead, and then it is not written here.
+# Type: float | >= 0.0 | < 1.0 | Default: 0.0
+# impervious_fraction = 0.0
+
+# Share of the rain on the unsealed area that skips the soil through macropores and joins the recharge the same day, even when the soil is dry.
+# From 0 up to, not including, 1.
+# Keep it at 0 while K and Sy are calibrated: a bypass can rebuild the summer recharge the soil reservoir removes.
+# Type: float | >= 0.0 | < 1.0 | Default: 0.0
+# bypass_fraction = 0.0
+
+# Mean time the water leaving the soil takes to cross the unsaturated zone down to the water table, in days.
+# A linear reservoir with this time constant delays and smooths the recharge; 0 sends it the same day.
+# A bare number is in days; "5 days" also reads.
+# At most 30 days: a longer delay would rebuild the slow groundwater memory MODFLOW computes itself.
+# Type: float | >= 0.0 | <= 30.0 | Default: 0.0
+# transit_time = 0.0
+
+# SCS curve number (AMC II), dimensionless, of a HELP-style surface runoff (Schroeder et al.
+# 1994): the unsealed share of the rain above a daily retention loses some to a fast runoff, more as the soil is wetter.
+# None turns the term off, bit for bit as before.
+# Between 30 and 98.
+# It reads the soil and never the water table, so it renders saturation runoff badly: leave it off where the drains already give that runoff.
+# To calibrate it, state a range under [calibration.parameters.curve_number]: it belongs to the soil group and the land use of the site.
+# [data.curve_number] gives it cell by cell instead, and then it is not written here.
+# Type: float (optional) | >= 30.0 | <= 98.0 | Optional
+# curve_number = 30.0
+
+# Share of the water leaving the soil that goes on to the aquifer, the RIPE of ESPERE (BRGM): the rest runs off on the same day, beside the sealed share and the curve number, and reaches the streams through the runoff of the run.
+# 1, the default, sends it all to the aquifer, bit for bit as before, and the drains give back what saturates.
+# Between 0 and 1.
+# ESPERE proposes the lowest yearly baseflow index of the gauge, which the soil budget of `hmp run --until load_data` prints when a gauge is loaded: copy it here, the gauge never sets it on its own.
+# [data.infiltration_ratio] gives it cell by cell instead, and then it is not written here.
+# Type: float | >= 0.0 | <= 1.0 | Default: 1.0
+# infiltration_ratio = 1.0
+
+# Time constant of the linear reservoir that routes the curve-number runoff to the outlet, in days.
+# No effect without a curve number, here or in [data.curve_number].
+# 0 sends it the same day; "2 days" also reads.
+# Between 0 and 10 days: a longer delay would smooth away the fast surface peak the term exists for.
+# Type: float | >= 0.0 | <= 10.0 | Default: 1.0
+# runoff_time = 1.0
+
+# Pure delay applied to the routed curve-number runoff, after runoff_time, before it reaches the gauged discharge: the travel time to the outlet plus any lag between the forcing's daily step and the gauge's.
+# No effect without a curve number, here or in [data.curve_number].
+# 0 adds no delay, bit for bit as before; "0.75 days" also reads, interpolated linearly between the neighbouring whole-day shifts.
+# Between 0 and 5 days: a longer shift belongs to runoff_time's reservoir, not to a fixed travel time.
+# Calibrate it with [calibration.parameters.runoff_lag].
+# Type: float | >= 0.0 | <= 5.0 | Default: 0.0
+# runoff_lag = 0.0
+
+# State of the soil on the first day.
+# "first_year" repeats the first 365 days of the run until the storage at the end of that year moves by less than 0.1 mm, 20 times at most; the run must last 364 days (52 weeks) at least, and a 364-day run repeats those 364 days.
+# "none" starts from a full soil, the state of a soil in a wet winter.
+# Beside a cyclic spin-up of the aquifer (flow.ic.kind = "spinup_cyclic"), the two starts are computed over two windows: the soil settles on the first year, the heads on the whole run.
+# That pair is allowed without a warning, because it is sometimes what the study wants.
+# Type: Literal['first_year', 'none'] | one of: "first_year", "none" | Default: "first_year"
+# spinup = "first_year"
+
+
+# Crop coefficient applied to the loaded ETP: the soil evaporates at most kc x ETP a day.
+# 1.0 takes the ETP as loaded, which assumes the surface of that ETP looks like the site: check what the product refers to.
+# Between 0 and 2.
+# A table {low, high, months} makes it follow the growing season.
+# Kept fixed by default: kc and ru move the same annual volume, and only a number can be calibrated.
+
+# [recharge_estimates.soil.kc]
+# Crop coefficient outside the growing season, between 0 and 2.
+# Type: float | >= 0.0 | <= 2.0 | REQUIRED | Examples: 0.6
+# low = 0.0
+
+# Crop coefficient at full cover, between 0 and 2.
+# Type: float | >= 0.0 | <= 2.0 | REQUIRED | Examples: 1.15
+# high = 0.0
+
+# Four months, 1 to 12, in the order of the season: planting, full cover, start of senescence, harvest.
+# A winter crop wraps over the new year, for instance [10, 3, 6, 7].
+# Type: tuple[int, int, int, int] | REQUIRED | Examples: [4, 6, 8, 10]
+# months = ""
+
+
+# Snow pack melted with the daily temperature of [data.temperature].
+# Absent, all precipitation reaches the ground as rain the same day.
+
+# [recharge_estimates.soil.snow]
+# Temperature at or below which nothing melts and all precipitation is snow, in degC.
+# Type: float | >= -10.0 | <= 10.0 | Default: 0.0
+# melt_start = 0.0
+
+# Temperature at or above which the whole pack melts and no snow falls, in degC.
+# Type: float | >= -5.0 | <= 15.0 | Default: 6.0
+# melt_full = 6.0
+

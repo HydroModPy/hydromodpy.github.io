@@ -18,7 +18,7 @@
 <meta name="description" content="The solver does not see the DEM. It sees cells, each with one top, one bottom and one center. This page explains how the code builds these cells from the DEM and how it checks them. The chain in on..." />
 
     <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>The mesh &#8212; HydroModPy 2.0.0</title>
+    <title>The mesh &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="nav bd-sidenav">
@@ -904,7 +905,7 @@ distance <span class="math notranslate nohighlight">\(\xi_s\)</span> = <a class=
 <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh.html#p-mesh-refinement_zone-cell_size" title="Target cell size, in metres, inside the zone: the side of the square of the same mean area as the cells, as mesh.cell_size. (m)"><code class="docutils literal notranslate"><span class="pre">mesh.refinement_zone.cell_size</span></code></a> (<a class="reference internal" href="#mesh-refinement-zones"><span class="std std-ref">Refinement zones drawn by a field</span></a>) are other terms. The field
 reads</p>
 <div class="math notranslate nohighlight" id="equation-eq-mesh-size">
-<span class="eqno">(23)<a class="headerlink" href="#equation-eq-mesh-size" title="Link to this equation">#</a></span>\[\ell(\mathbf{x}) = \min\Bigl(\ell_b(\mathbf{x}),\ \min_k\bigl[\ell_{s,k}
+<span class="eqno">(29)<a class="headerlink" href="#equation-eq-mesh-size" title="Link to this equation">#</a></span>\[\ell(\mathbf{x}) = \min\Bigl(\ell_b(\mathbf{x}),\ \min_k\bigl[\ell_{s,k}
 + \sigma_k\, \xi_k(\mathbf{x})\bigr]\Bigr),\]</div>
 <p>where <span class="math notranslate nohighlight">\(\xi_k\)</span> is the distance to line <span class="math notranslate nohighlight">\(k\)</span> and
 <span class="math notranslate nohighlight">\(\sigma_k = \min\bigl((\ell_g - \ell_{s,k}) / \xi_{s,k},\ \sigma_{\max}\bigr)\)</span> its growth per
@@ -968,7 +969,7 @@ line. The same line counts as another when the way along it is more than twice t
 distance. So a narrow lake arm makes a gap, and so does a corner sharper than 53 degrees, but a
 right-angle junction makes none. The planner sizes the chord of a gap inside the domain as</p>
 <div class="math notranslate nohighlight" id="equation-eq-gap-size">
-<span class="eqno">(24)<a class="headerlink" href="#equation-eq-gap-size" title="Link to this equation">#</a></span>\[\ell_e = \max\bigl(e / n_e,\ \Delta\bigr),\]</div>
+<span class="eqno">(30)<a class="headerlink" href="#equation-eq-gap-size" title="Link to this equation">#</a></span>\[\ell_e = \max\bigl(e / n_e,\ \Delta\bigr),\]</div>
 <p>where <span class="math notranslate nohighlight">\(n_e\)</span> = <a class="hmp-toml-ref reference external" href="../reference/parameters/mesh.html#p-mesh-gap_cells" title="Cells across the gap between two face lines (lake shores, barriers, geology contacts, catchment boundary) or between one and the domain outline: the cell size there, with the meaning of cell_size, is the gap divided by this number, never finer than the DEM pixel. (cells)"><code class="docutils literal notranslate"><span class="pre">mesh.gap_cells</span></code></a> is the number of cells across, 2 by default and 0 to
 switch the term off. After rounding, a gap holds <span class="math notranslate nohighlight">\(n_e\)</span> to <span class="math notranslate nohighlight">\(1.19\,n_e\)</span> cells. The rivers stay
 out, because a river is a chain of cells. On a generated Voronoi mesh with lakes, only the
@@ -978,7 +979,7 @@ shores the faces follow count.</p>
 <section id="mesh-triangle">
 <span id="the-triangle-engine"></span><span id="3-the-triangle-engine"></span><h2>3. The triangle engine<a class="headerlink" href="#mesh-triangle" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">triangle</span></code> engine builds a constrained Delaunay triangulation of <span class="math notranslate nohighlight">\(\Omega\)</span> with Gmsh
-<span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id61" title="C. Geuzaine and J.-F. Remacle. Gmsh: a 3-d finite element mesh generator with built-in pre- and post-processing facilities. International Journal for Numerical Methods in Engineering, 79(11):1309–1331, 2009. doi:10.1002/nme.2579.">Geuzaine and Remacle, 2009</a>]</span> under the size field. Rivers, contacts, shores and barriers are
+<span class="bibtex-citation" id="id3">[<a class="reference internal" href="bibliography.html#id64" title="C. Geuzaine and J.-F. Remacle. Gmsh: a 3-d finite element mesh generator with built-in pre- and post-processing facilities. International Journal for Numerical Methods in Engineering, 79(11):1309–1331, 2009. doi:10.1002/nme.2579.">Geuzaine and Remacle, 2009</a>]</span> under the size field. Rivers, contacts, shores and barriers are
 edges, so no triangle holds two zones, and the cells of a river are the triangles on one bank.
 The center of a triangle is the mean of its vertices, so a connection has an angle
 (<a class="reference internal" href="#mesh-angle"><span class="std std-ref">5. Flow between two cells, and the angle</span></a>), and MODFLOW 6 turns XT3D on by default. An explicit
@@ -1004,7 +1005,7 @@ points closer to <span class="math notranslate nohighlight">\(\mathbf{s}_i\)</sp
 The generator is the cell center. The engine puts one generator on each vertex of a river
 line, so the river runs through a chain of centers. It puts a pair of mirror generators across
 each segment of a contact, a shore, a barrier or the catchment boundary, after
-<span class="bibtex-citation" id="id4">Berge <em>et al.</em> [<a class="reference internal" href="bibliography.html#id63" title="R. L. Berge, Ø. S. Klemetsdal, and K.-A. Lie. Unstructured Voronoi grids conforming to lower-dimensional objects. Computational Geosciences, 23:169–188, 2019. doi:10.1007/s10596-018-9790-0.">2019</a>]</span>, so the segment is a face. Other generators sit on the domain
+<span class="bibtex-citation" id="id4">Berge <em>et al.</em> [<a class="reference internal" href="bibliography.html#id66" title="R. L. Berge, Ø. S. Klemetsdal, and K.-A. Lie. Unstructured Voronoi grids conforming to lower-dimensional objects. Computational Geosciences, 23:169–188, 2019. doi:10.1007/s10596-018-9790-0.">2019</a>]</span>, so the segment is a face. Other generators sit on the domain
 boundary. Free generators fill the rest with the density <span class="math notranslate nohighlight">\(\ell^{-2}\)</span>, and a Lloyd relaxation
 weighted by <span class="math notranslate nohighlight">\(\ell^{-4}\)</span> moves them. So the engine draws about <span class="math notranslate nohighlight">\(\int_\Omega \ell^{-2}\,\mathrm{d}A\)</span>
 generators, one per cell of area <span class="math notranslate nohighlight">\(\ell^2\)</span> (<a class="reference internal" href="#mesh-budget"><span class="std std-ref">Three sizes, read in order</span></a>).</p>
@@ -1020,12 +1021,12 @@ generators, so <span class="math notranslate nohighlight">\(\varphi_{nm} = 0\)</
 <section id="mesh-angle">
 <span id="flow-between-two-cells-and-the-angle"></span><span id="5-flow-between-two-cells-and-the-angle"></span><h2>5. Flow between two cells, and the angle<a class="headerlink" href="#mesh-angle" title="Link to this heading">#</a></h2>
 <p>MODFLOW 6 writes the flow between two cells as <span class="math notranslate nohighlight">\(G_{nm}\,(h_m - h_n)\)</span>, the two-point term of
-<a class="reference internal" href="groundwater-flow.html#equation-eq-cell-balance">(19)</a> <span class="bibtex-citation" id="id5">[<a class="reference internal" href="bibliography.html#id8" title="A. W. Harbaugh. MODFLOW-2005, the U.S. Geological Survey modular ground-water model: the ground-water flow process. Techniques and Methods 6-A16, U.S. Geological Survey, 2005. doi:10.3133/tm6A16.">Harbaugh, 2005</a>, <a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>. It is exact only when the
+<a class="reference internal" href="groundwater-flow.html#equation-eq-cell-balance">(25)</a> <span class="bibtex-citation" id="id5">[<a class="reference internal" href="bibliography.html#id8" title="A. W. Harbaugh. MODFLOW-2005, the U.S. Geological Survey modular ground-water model: the ground-water flow process. Techniques and Methods 6-A16, U.S. Geological Survey, 2005. doi:10.3133/tm6A16.">Harbaugh, 2005</a>, <a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>. It is exact only when the
 conductivity is isotropic in the plane and the line between the centers is perpendicular to
 the shared face. The code measures the departure as an angle. With <span class="math notranslate nohighlight">\(\mathbf{d}_{nm}\)</span> the vector
 between the centers and <span class="math notranslate nohighlight">\(\mathbf{n}_{nm}\)</span> the unit normal of the shared edge, it reads</p>
 <div class="math notranslate nohighlight" id="equation-eq-nonorthogonality">
-<span class="eqno">(25)<a class="headerlink" href="#equation-eq-nonorthogonality" title="Link to this equation">#</a></span>\[\varphi_{nm} = \arccos\!\left(\frac{\lvert \mathbf{d}_{nm} \cdot \mathbf{n}_{nm} \rvert}
+<span class="eqno">(31)<a class="headerlink" href="#equation-eq-nonorthogonality" title="Link to this equation">#</a></span>\[\varphi_{nm} = \arccos\!\left(\frac{\lvert \mathbf{d}_{nm} \cdot \mathbf{n}_{nm} \rvert}
 {\lVert \mathbf{d}_{nm} \rVert}\right).\]</div>
 <p>Over the edges shared by two cells, the code keeps the median, the 95th and 99th percentiles,
 the maximum and the share of angles above 30 degrees. The effect on the flux and the XT3D
@@ -1043,7 +1044,7 @@ same rectangle, taken as seeds, give four Voronoi cells of <span class="math not
 <p>The two-point term also assumes that the line of the centers crosses the face in its middle.
 On a face of length <span class="math notranslate nohighlight">\(L\)</span> crossed at a distance <span class="math notranslate nohighlight">\(s\)</span> from one end, the bisection offset is</p>
 <div class="math notranslate nohighlight" id="equation-eq-bisection-offset">
-<span class="eqno">(26)<a class="headerlink" href="#equation-eq-bisection-offset" title="Link to this equation">#</a></span>\[\beta = \frac{\lvert s - L/2 \rvert}{L},\]</div>
+<span class="eqno">(32)<a class="headerlink" href="#equation-eq-bisection-offset" title="Link to this equation">#</a></span>\[\beta = \frac{\lvert s - L/2 \rvert}{L},\]</div>
 <p>which is 0 for a bisected face and 0.5 when the line passes through a face end. A cell takes
 the largest <span class="math notranslate nohighlight">\(\beta\)</span> of its faces. A Voronoi face is bisected only when its two generators sit
 at the same distance from its two ends, so the offset can be large where the angle is zero.</p>
@@ -1083,7 +1084,7 @@ pixel is a hillslope pixel. With the statistic of
 <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-modflow6-sgrid-top_sampling-channel_stat" title="Zonal statistic over channel pixels inside a cell (thalweg-preserving; 'min' keeps the incised low)."><code class="docutils literal notranslate"><span class="pre">solver.modflow6.sgrid.top_sampling.channel_stat</span></code></a> on the channel pixels and of
 <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-modflow6-sgrid-top_sampling-hillslope_stat" title="Zonal statistic over non-channel (hillslope) pixels inside a cell."><code class="docutils literal notranslate"><span class="pre">solver.modflow6.sgrid.top_sampling.hillslope_stat</span></code></a> on the others, the top reads</p>
 <div class="math notranslate nohighlight" id="equation-eq-zonal-top">
-<span class="eqno">(27)<a class="headerlink" href="#equation-eq-zonal-top" title="Link to this equation">#</a></span>\[\begin{split}z_{\mathrm{top},c} =
+<span class="eqno">(33)<a class="headerlink" href="#equation-eq-zonal-top" title="Link to this equation">#</a></span>\[\begin{split}z_{\mathrm{top},c} =
 \begin{cases}
 \operatorname{stat}_{\mathrm{ch}}\{Z_p : p \in P_c^{\mathrm{ch}}\}
   &amp; P_c^{\mathrm{ch}} \neq \emptyset, \\[0.5ex]
@@ -1123,7 +1124,7 @@ structured grid cover fewer than two DEM pixels.</p>
 alike, and the code moves the older <code class="docutils literal notranslate"><span class="pre">[modflow6.sgrid.vertical]</span></code> or
 <code class="docutils literal notranslate"><span class="pre">[modflownwt.sgrid.vertical]</span></code> to it. With <a class="hmp-toml-ref reference external" href="../reference/parameters/domain.html#p-domain-layers-genmtd_lay" title="How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, the fractions you list, or one base per layer."><code class="docutils literal notranslate"><span class="pre">domain.layers.genmtd_lay</span></code></a> at <code class="docutils literal notranslate"><span class="pre">constant</span></code>,
 <code class="docutils literal notranslate"><span class="pre">decay</span></code> or <code class="docutils literal notranslate"><span class="pre">list</span></code>, the layers are the same shares of the thickness in every cell
-(<a class="reference internal" href="groundwater-flow.html#equation-eq-layer-bottom">(16)</a>, <a class="reference internal" href="groundwater-flow.html#gwf-layers"><span class="std std-ref">The solver grid and its layers</span></a>). Every layer shares the cells of the plan. A cell is
+(<a class="reference internal" href="groundwater-flow.html#equation-eq-layer-bottom">(22)</a>, <a class="reference internal" href="groundwater-flow.html#gwf-layers"><span class="std std-ref">The solver grid and its layers</span></a>). Every layer shares the cells of the plan. A cell is
 inactive in every layer when its top or its bottom is nodata, not finite, or at or below the
 nodata value.</p>
 <section id="mesh-layer-surfaces">
@@ -1203,7 +1204,7 @@ pixel side <span class="math notranslate nohighlight">\(\Delta\)</span> is the c
 area <span class="math notranslate nohighlight">\(\frac{\sqrt3}{4}\ell_T^2\)</span>, and a Voronoi hexagon has <span class="math notranslate nohighlight">\(\frac{\sqrt3}{2}\ell_V^2\)</span> when
 neighboring seeds are <span class="math notranslate nohighlight">\(\ell_V\)</span> apart, so</p>
 <div class="math notranslate nohighlight" id="equation-eq-cell-count">
-<span class="eqno">(28)<a class="headerlink" href="#equation-eq-cell-count" title="Link to this equation">#</a></span>\[N_T = \frac{4}{\sqrt3}\,\frac{A_\Omega}{\ell_T^2} \approx 2.31\,\frac{A_\Omega}{\ell_T^2},
+<span class="eqno">(34)<a class="headerlink" href="#equation-eq-cell-count" title="Link to this equation">#</a></span>\[N_T = \frac{4}{\sqrt3}\,\frac{A_\Omega}{\ell_T^2} \approx 2.31\,\frac{A_\Omega}{\ell_T^2},
 \qquad
 N_V = \frac{2}{\sqrt3}\,\frac{A_\Omega}{\ell_V^2} \approx 1.15\,\frac{A_\Omega}{\ell_V^2}.\]</div>
 <p>Setting <span class="math notranslate nohighlight">\(N_T = N_V = A_\Omega/\ell^2\)</span> gives <span class="math notranslate nohighlight">\(\ell_T = \sqrt{4/\sqrt3}\,\ell \approx 1.52\,\ell\)</span> and
@@ -1225,7 +1226,7 @@ mesh lies in <span class="math notranslate nohighlight">\(\Omega\)</span>.</p>
 <figure class="align-default" id="id16">
 <img alt="Number of cells against the pixel side, the seed distance and the triangle side." class="plot-directive" src="../_images/mesh_cell_count.png" width="945" height="525" loading="lazy" decoding="async" />
 <figcaption>
-<p><span class="caption-number">Fig. 39 </span><span class="caption-text"><a class="reference internal" href="#equation-eq-cell-count">(28)</a> for <span class="math notranslate nohighlight">\(A_\Omega\)</span> = 120 km². Each dot holds 21406 cells. The
+<p><span class="caption-number">Fig. 39 </span><span class="caption-text"><a class="reference internal" href="#equation-eq-cell-count">(34)</a> for <span class="math notranslate nohighlight">\(A_\Omega\)</span> = 120 km². Each dot holds 21406 cells. The
 Voronoi dot sits at 1.07 times the pixel side and the triangle dot at 1.52 times.</span><a class="headerlink" href="#id16" title="Link to this image">#</a></p>
 </figcaption>
 </figure>

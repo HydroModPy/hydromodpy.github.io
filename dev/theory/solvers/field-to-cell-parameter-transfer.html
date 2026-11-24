@@ -18,7 +18,7 @@
 <meta name="description" content="A property such as K is given per zone of a map: geology classes, bands, rings, or the zones of a raster. It can also be given by a raster that holds its own value in each pixel. The solver needs o..." />
 
     <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>From a zone map to the cells &#8212; HydroModPy 2.0.0</title>
+    <title>From a zone map to the cells &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="current nav bd-sidenav">
@@ -641,9 +642,9 @@ map or of a raster map is left out of the count.</p></li>
 <li><p><strong>Average, then scale with depth.</strong> The value of the cell in layer <span class="math notranslate nohighlight">\(j\)</span> is</p></li>
 </ol>
 <div class="math notranslate nohighlight" id="equation-eq-cell-value">
-<span class="eqno">(22)<a class="headerlink" href="#equation-eq-cell-value" title="Link to this equation">#</a></span>\[u_{c,j} = f(d_j)\,\sum_{z} F_{c,z}\,v_z ,
+<span class="eqno">(28)<a class="headerlink" href="#equation-eq-cell-value" title="Link to this equation">#</a></span>\[u_{c,j} = f(d_j)\,\sum_{z} F_{c,z}\,v_z ,
 \qquad \sum_z F_{c,z} = 1 ,\]</div>
-<p>with <span class="math notranslate nohighlight">\(v_z\)</span> the value of zone <span class="math notranslate nohighlight">\(z\)</span> and <span class="math notranslate nohighlight">\(f(d_j)\)</span> the depth factor <a class="reference internal" href="../groundwater-flow.html#equation-eq-depth-factor">(17)</a> at
+<p>with <span class="math notranslate nohighlight">\(v_z\)</span> the value of zone <span class="math notranslate nohighlight">\(z\)</span> and <span class="math notranslate nohighlight">\(f(d_j)\)</span> the depth factor <a class="reference internal" href="../groundwater-flow.html#equation-eq-depth-factor">(23)</a> at
 the depth of the middle of layer <span class="math notranslate nohighlight">\(j\)</span>. A parameter with one value <span class="math notranslate nohighlight">\(v\)</span> gives
 <span class="math notranslate nohighlight">\(u_{c,j} = f(d_j)\,v\)</span>.</p>
 <p>A sampled <span class="math notranslate nohighlight">\(F_{c,z}\)</span> is an estimate of the share of the area of <span class="math notranslate nohighlight">\(c\)</span> that lies in <span class="math notranslate nohighlight">\(z\)</span>. Its
@@ -683,11 +684,11 @@ map is refused before the first run.</p>
 </section>
 <section id="transfer-conductivity">
 <span id="what-the-rule-means-for-the-conductivity"></span><h2>What the rule means for the conductivity<a class="headerlink" href="#transfer-conductivity" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="#equation-eq-cell-value">(22)</a> is an arithmetic mean weighted by area, the upper bound of the
+<p><a class="reference internal" href="#equation-eq-cell-value">(28)</a> is an arithmetic mean weighted by area, the upper bound of the
 equivalent conductivity of a cell cut by several zones; the harmonic mean is the lower
 bound, and a random mix lies between <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id13" title="Ph. Renard and G. de Marsily. Calculating equivalent permeability: a review. Advances in Water Resources, 20(5-6):253–278, 1997. doi:10.1016/S0309-1708(96)00050-4.">Renard and de Marsily, 1997</a>]</span>. A cell that holds a thin layer
 of low <span class="math notranslate nohighlight">\(K\)</span> across the flow therefore conducts more in the model than in the ground.</p>
-<p>Between two cells, the conductance <a class="reference internal" href="../groundwater-flow.html#equation-eq-conductance">(20)</a> joins the two cell values in
+<p>Between two cells, the conductance <a class="reference internal" href="../groundwater-flow.html#equation-eq-conductance">(26)</a> joins the two cell values in
 series. A contrast that follows the cell faces is represented in series; a contrast
 inside a cell is represented in parallel.</p>
 </section>
@@ -700,7 +701,7 @@ factor. The interface between the zones crosses the middle cell.</p>
 <tr class="row-odd"><th class="head"><p>Cell</p></th>
 <th class="head"><p><span class="math notranslate nohighlight">\(F_{c,A}\)</span></p></th>
 <th class="head"><p><span class="math notranslate nohighlight">\(F_{c,B}\)</span></p></th>
-<th class="head"><p><span class="math notranslate nohighlight">\(u_c\)</span> by <a class="reference internal" href="#equation-eq-cell-value">(22)</a></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(u_c\)</span> by <a class="reference internal" href="#equation-eq-cell-value">(28)</a></p></th>
 <th class="head"><p>harmonic mean, for comparison</p></th>
 </tr>
 </thead>

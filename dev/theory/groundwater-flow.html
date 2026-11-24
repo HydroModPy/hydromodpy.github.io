@@ -18,7 +18,7 @@
 <meta name="description" content="What head does the aquifer hold, in every cell and at every time? This page gives the geometry HydroModPy builds for that head, the properties that enter it and the state it starts from. The flow e..." />
 
     <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>The groundwater flow problem &#8212; HydroModPy 2.0.0</title>
+    <title>The groundwater flow problem &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -79,7 +79,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="From a zone map to the cells" href="solvers/field-to-cell-parameter-transfer.html" />
-    <link rel="prev" title="The daily soil reservoir" href="soil-reservoir.html" />
+    <link rel="prev" title="Recharge estimated from the data" href="recharge-estimates.html" />
     <meta name="robots" content="noindex"/>
   <meta name="color-scheme" content="light dark"/>
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="current nav bd-sidenav">
@@ -929,7 +930,7 @@ names the columns thicker than 500 m and than 10 times the median: a raster
 nodata value read as an elevation produces them (<a class="reference internal" href="mesh.html#mesh-acceptance"><span class="std std-ref">9. The checks the code applies</span></a>).</p>
 <p>The thickness is then cut into <span class="math notranslate nohighlight">\(n_\mathrm{lay}\)</span> layers. The bottom of layer <span class="math notranslate nohighlight">\(j\)</span> is</p>
 <div class="math notranslate nohighlight" id="equation-eq-layer-bottom">
-<span class="eqno">(16)<a class="headerlink" href="#equation-eq-layer-bottom" title="Link to this equation">#</a></span>\[z_{\mathrm{bot},j} = z_\mathrm{top} - H\,p_j ,
+<span class="eqno">(22)<a class="headerlink" href="#equation-eq-layer-bottom" title="Link to this equation">#</a></span>\[z_{\mathrm{bot},j} = z_\mathrm{top} - H\,p_j ,
 \qquad p_{n_\mathrm{lay}} = 1 .\]</div>
 <p>The shares <span class="math notranslate nohighlight">\(p_j\)</span> are the same for every cell. Three rules build them, chosen by
 <a class="hmp-toml-ref reference external" href="../reference/parameters/domain.html#p-domain-layers-genmtd_lay" title="How the aquifer thickness is split into layers: equal layers, layers that thicken with depth, the fractions you list, or one base per layer."><code class="docutils literal notranslate"><span class="pre">domain.layers.genmtd_lay</span></code></a>:</p>
@@ -1034,7 +1035,7 @@ or the base of the layer, or takes the ground for the first layer and the base f
 others (<code class="docutils literal notranslate"><span class="pre">surface_then_base</span></code>). A thick layer reads one value, so the choice moves its K. For
 <code class="docutils literal notranslate"><span class="pre">kind</span> <span class="pre">=</span> <span class="pre">&quot;exponential&quot;</span></code>:</p>
 <div class="math notranslate nohighlight" id="equation-eq-depth-factor">
-<span class="eqno">(17)<a class="headerlink" href="#equation-eq-depth-factor" title="Link to this equation">#</a></span>\[f(d) = e^{-d/d_c}, \qquad \text{or } \max\bigl(e^{-d/d_c},\ f_\mathrm{min}\bigr)
+<span class="eqno">(23)<a class="headerlink" href="#equation-eq-depth-factor" title="Link to this equation">#</a></span>\[f(d) = e^{-d/d_c}, \qquad \text{or } \max\bigl(e^{-d/d_c},\ f_\mathrm{min}\bigr)
 \text{ when } f_\mathrm{min} \text{ is set.}\]</div>
 <p>Without <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/param.html#p-flow-param-id-field_vertical_profile-min_factor" title="Optional floor factor for kind 'exponential'. (-)"><code class="docutils literal notranslate"><span class="pre">min_factor</span></code></a>, the
 factor has no floor and tends to zero with depth. The decay length <span class="math notranslate nohighlight">\(d_c\)</span> can also follow the
@@ -1115,10 +1116,10 @@ are written once.</p>
 <p>In a catchment the aquifer is mostly unconfined. The head can sit below the top of
 a cell, and then the thickness that carries flow is the saturated thickness</p>
 <div class="math notranslate nohighlight" id="equation-eq-saturated-thickness">
-<span class="eqno">(18)<a class="headerlink" href="#equation-eq-saturated-thickness" title="Link to this equation">#</a></span>\[B(h) = \min\bigl(\max(h - z_\mathrm{bot},\ 0),\ H\bigr) .\]</div>
+<span class="eqno">(24)<a class="headerlink" href="#equation-eq-saturated-thickness" title="Link to this equation">#</a></span>\[B(h) = \min\bigl(\max(h - z_\mathrm{bot},\ 0),\ H\bigr) .\]</div>
 <p>For a cell <span class="math notranslate nohighlight">\(n\)</span>, the balance of one time step is</p>
 <div class="math notranslate nohighlight" id="equation-eq-cell-balance">
-<span class="eqno">(19)<a class="headerlink" href="#equation-eq-cell-balance" title="Link to this equation">#</a></span>\[\sum_{m \in \mathcal{N}(n)} G_{nm}\,(h_m - h_n)
+<span class="eqno">(25)<a class="headerlink" href="#equation-eq-cell-balance" title="Link to this equation">#</a></span>\[\sum_{m \in \mathcal{N}(n)} G_{nm}\,(h_m - h_n)
 + \sum_{p} \Phi_{n,p}
 = \frac{1}{\delta t}\Bigl[\,S_s\,a_n\,B_n\,(h_n - h_n^\mathrm{old})
 + S_y\,a_n\,(B_n - B_n^\mathrm{old})\Bigr] .\]</div>
@@ -1128,7 +1129,7 @@ stored. <span class="math notranslate nohighlight">\(h^\mathrm{old}\)</span> is 
 statement of the balance on the site; the solver pages refer to it. Between two
 cells of a layer, the conductance joins the two half cells in series:</p>
 <div class="math notranslate nohighlight" id="equation-eq-conductance">
-<span class="eqno">(20)<a class="headerlink" href="#equation-eq-conductance" title="Link to this equation">#</a></span>\[\frac{1}{G_{nm}}
+<span class="eqno">(26)<a class="headerlink" href="#equation-eq-conductance" title="Link to this equation">#</a></span>\[\frac{1}{G_{nm}}
 = \frac{c_{nm}}{K_n\,B_n\,w_{nm}}
 + \frac{c_{mn}}{K_m\,B_m\,w_{nm}} ,\]</div>
 <p>with <span class="math notranslate nohighlight">\(w_{nm}\)</span> the width of the shared face and <span class="math notranslate nohighlight">\(c_{nm}\)</span> the distance from the
@@ -1149,7 +1150,7 @@ formulation of MODFLOW-2005 <span class="bibtex-citation" id="id5">[<a class="re
 layers and a structured grid. The options and the stopping tests are on
 <a class="reference internal" href="solvers.html#solvers-newton-ims"><span class="std std-ref">The solution: Newton and IMS</span></a>.</p></li>
 <li><p><strong>Voronoi faces bisect the centers.</strong> That is the case the two-point form of
-<a class="reference internal" href="#equation-eq-conductance">(20)</a> needs. Elsewhere, the XT3D correction is on
+<a class="reference internal" href="#equation-eq-conductance">(26)</a> needs. Elsewhere, the XT3D correction is on
 <a class="reference internal" href="solvers/xt3d-on-irregular-disv-meshes.html"><span class="doc">XT3D on irregular meshes</span></a>.</p></li>
 <li><p><strong>The Boussinesq solver</strong> writes the same balance on triangles. Its edge flux
 takes the harmonic mean of <span class="math notranslate nohighlight">\(K\)</span> and the arithmetic mean of <span class="math notranslate nohighlight">\(B\)</span> of the two cells,
@@ -1163,7 +1164,7 @@ and its storage has no <span class="math notranslate nohighlight">\(S_s\)</span>
 (<a class="reference internal" href="forcing.html"><span class="doc">Rain and evaporation: the forcing</span></a>). Within a period the forcing is constant. Each period is cut into
 <span class="math notranslate nohighlight">\(n_\mathrm{sub}\)</span> equal time steps <span class="math notranslate nohighlight">\(\delta t = \Delta t / n_\mathrm{sub}\)</span>, and the
 time integration is the backward Euler scheme of <span class="bibtex-citation" id="id6">[<a class="reference internal" href="bibliography.html#id10" title="C. D. Langevin, J. D. Hughes, E. R. Banta, R. G. Niswonger, S. Panday, and A. M. Provost. Documentation for the MODFLOW 6 groundwater flow model. Techniques and Methods 6-A55, U.S. Geological Survey, 2017. doi:10.3133/tm6A55.">Langevin <em>et al.</em>, 2017</a>]</span>:
-<a class="reference internal" href="#equation-eq-cell-balance">(19)</a> is written with the stress and the conductances at the end
+<a class="reference internal" href="#equation-eq-cell-balance">(25)</a> is written with the stress and the conductances at the end
 of the step. The time step multiplier is 1, so the steps of a period are equal.
 The one exception is <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-modflow6-runtime-mf6_ats" title="Enable MODFLOW 6 adaptive time stepping (ATS) on transient periods."><code class="docutils literal notranslate"><span class="pre">solver.modflow6.runtime.mf6_ats</span></code></a>: with it, MODFLOW 6 may cut a
 transient step further where the solver does not converge, never above the step
@@ -1303,13 +1304,13 @@ the boundaries per unit area, held at the value of the first period
 the first cycle starts from <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/ic.html#p-flow-ic-h-first_cycle_from" title="Where cycle one starts."><code class="docutils literal notranslate"><span class="pre">flow.ic.h.first_cycle_from</span></code></a>. <code class="docutils literal notranslate"><span class="pre">cycle_variant</span></code> hands
 the end heads of cycle <span class="math notranslate nohighlight">\(c\)</span> to cycle <span class="math notranslate nohighlight">\(c + 1\)</span> as its start. The loop stops when</p>
 <div class="math notranslate nohighlight" id="equation-eq-spinup">
-<span class="eqno">(21)<a class="headerlink" href="#equation-eq-spinup" title="Link to this equation">#</a></span>\[\max_n \bigl|\,h^{(c+1)}_{\mathrm{end},n} - h^{(c)}_{\mathrm{end},n}\,\bigr| \le \varepsilon_h ,\]</div>
+<span class="eqno">(27)<a class="headerlink" href="#equation-eq-spinup" title="Link to this equation">#</a></span>\[\max_n \bigl|\,h^{(c+1)}_{\mathrm{end},n} - h^{(c)}_{\mathrm{end},n}\,\bigr| \le \varepsilon_h ,\]</div>
 <p>with <span class="math notranslate nohighlight">\(\varepsilon_h\)</span> the <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/ic.html#p-flow-ic-h-tol_head" title="Largest head change between two cycles that counts as settled, anywhere in the domain. (m)"><code class="docutils literal notranslate"><span class="pre">flow.ic.h.tol_head</span></code></a>, or after
 <a class="hmp-toml-ref reference external" href="../reference/parameters/flow/ic.html#p-flow-ic-h-max_cycles" title="Most cycles the loop may run. (-)"><code class="docutils literal notranslate"><span class="pre">flow.ic.h.max_cycles</span></code></a> cycles. The maximum counts every cell, not the mean.</p>
 <figure class="align-default" id="id15">
 <img alt="Largest and mean change of the end-of-cycle heads against the cycle number, with the tolerance." class="plot-directive" src="../_images/gwf_spinup.png" width="934" height="525" loading="lazy" decoding="async" />
 <figcaption>
-<p><span class="caption-number">Fig. 25 </span><span class="caption-text">The stopping test of <a class="reference internal" href="#equation-eq-spinup">(21)</a>, applied by <code class="docutils literal notranslate"><span class="pre">cycles_have_settled</span></code> to 200
+<p><span class="caption-number">Fig. 25 </span><span class="caption-text">The stopping test of <a class="reference internal" href="#equation-eq-spinup">(27)</a>, applied by <code class="docutils literal notranslate"><span class="pre">cycles_have_settled</span></code> to 200
 cells of which 10 drift slowly. Look at the two curves: the mean change falls under
 <span class="math notranslate nohighlight">\(\varepsilon_h\)</span> at cycle 6, the largest change only at cycle 10, and
 the largest change decides. With the default of 4 cycles, this loop would stop
@@ -1432,7 +1433,7 @@ top, and a stream imposed as a head fixes the head of the whole cell. With
 <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-modflow6-process_specific-vka" title="Uniform vertical anisotropy ratio kh/kv (dimensionless, &gt; 0); k33 = k / vka. (-)"><code class="docutils literal notranslate"><span class="pre">solver.modflow6.process_specific.vka</span></code></a>, MODFLOW 6 and MODFLOW-NWT carry one head per
 layer, so the vertical resistance enters the solution. The code computes none of
 these ratios and refuses no model for its aspect ratio. A depth factor
-(<a class="reference internal" href="#equation-eq-depth-factor">(17)</a>) shortens the effective thickness.</p>
+(<a class="reference internal" href="#equation-eq-depth-factor">(23)</a>) shortens the effective thickness.</p>
 </section>
 </section>
 <section id="parameters-of-this-page">
@@ -1541,12 +1542,12 @@ appears here on the next build.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="soil-reservoir.html"
+       href="recharge-estimates.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">The daily soil reservoir</p>
+        <p class="prev-next-title">Recharge estimated from the data</p>
       </div>
     </a>
     <a class="right-next"

@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="Four maps of a toy valley of 24 by 24 cells. The seepage mask covers the valley floor; the release is largest downstream; the accumulated flux grows along the valley; the last map shows the sources and the cells added by the downstream closure." />
 <meta name="description" content="The model produces sources, not a stream network. A cell where the aquifer releases water to the surface is a point where water appears, not a reach. The simulated network is built from those point..." />
 
-    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>Where the water table reaches the surface &#8212; HydroModPy 2.0.0</title>
+    <meta property="article:modified_time" content="2026-11-21T03:13:38+01:00" />
+    <title>Where the water table reaches the surface &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -86,7 +86,7 @@
         href="../../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-19"/>
+    <meta name="docbuild:last-update" content="2026-11-21"/>
   </head>
   <body data-default-mode="auto">
   
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="nav bd-sidenav">
@@ -713,7 +714,7 @@ and release none.</span><a class="headerlink" href="#id2" title="Link to this im
 <p>The water table of a cell is the head of its uppermost layer with a finite
 head. A cell seeps in period <span class="math notranslate nohighlight">\(t\)</span> when the water table reaches the drain:</p>
 <div class="math notranslate nohighlight" id="equation-eq-seepage-mask">
-<span class="eqno">(42)<a class="headerlink" href="#equation-eq-seepage-mask" title="Link to this equation">#</a></span>\[\begin{split}m_n(t) = \begin{cases} 1 &amp; h^{\mathrm{wt}}_n(t) \geq z_{\mathrm{top},n} - \delta/2,\\ 0 &amp; \text{otherwise.}\end{cases}\end{split}\]</div>
+<span class="eqno">(48)<a class="headerlink" href="#equation-eq-seepage-mask" title="Link to this equation">#</a></span>\[\begin{split}m_n(t) = \begin{cases} 1 &amp; h^{\mathrm{wt}}_n(t) \geq z_{\mathrm{top},n} - \delta/2,\\ 0 &amp; \text{otherwise.}\end{cases}\end{split}\]</div>
 <p>With no band, <span class="math notranslate nohighlight">\(\delta = 0\)</span> and the test is against the top
 (<a class="reference internal" href="drains-and-et.html"><span class="doc">Drains and evapotranspiration at the top of the model</span></a>). A solver that reports a surface release flux of its own,
 the Boussinesq solver, uses that flux instead: the cell seeps where the flux is
@@ -730,7 +731,7 @@ A run whose streams are an SFR network sends most of its water through that
 package, so the drain alone misses it. The release flux is the union of every
 path from the aquifer to the surface:</p>
 <div class="math notranslate nohighlight" id="equation-eq-release-flux">
-<span class="eqno">(43)<a class="headerlink" href="#equation-eq-release-flux" title="Link to this equation">#</a></span>\[q^\mathrm{rel}_n(t) = q^\mathrm{drn}_n(t) + \max(-\Phi_{n,\mathrm{sfr}}, 0) + \max(-\Phi_{n,\mathrm{lak}}, 0)
+<span class="eqno">(49)<a class="headerlink" href="#equation-eq-release-flux" title="Link to this equation">#</a></span>\[q^\mathrm{rel}_n(t) = q^\mathrm{drn}_n(t) + \max(-\Phi_{n,\mathrm{sfr}}, 0) + \max(-\Phi_{n,\mathrm{lak}}, 0)
 + \max(-\Phi^{\mathrm{stream}}_{n,\mathrm{chd}}, 0) + \max(q^{\mathrm{ex}}_n, 0).\]</div>
 <p><span class="math notranslate nohighlight">\(\Phi^{\mathrm{stream}}_{n,\mathrm{chd}}\)</span> is the fixed-head flux of the cells
 that carry the river role (<a class="reference internal" href="head-boundaries.html"><span class="doc">Fixed heads: the sea, the rivers and the sides</span></a>), stored as
@@ -750,7 +751,7 @@ by default (<a class="hmp-toml-ref reference external" href="../../reference/par
 <p>The drain outflow is routed downstream on the stored descent <span class="math notranslate nohighlight">\(D\)</span>
 (<a class="reference internal" href="routing-on-the-mesh.html"><span class="doc">Routing on the mesh: the descent D</span></a>): the accumulated flux <span class="math notranslate nohighlight">\(F_n\)</span> of a cell is its own
 outflow plus that of every cell upstream, the usual flow accumulation on a
-single-flow-direction graph <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id60" title="J. F. O'Callaghan and D. M. Mark. The extraction of drainage networks from digital elevation data. Computer Vision, Graphics, and Image Processing, 28(3):323–344, 1984. doi:10.1016/S0734-189X(84)80011-0.">O'Callaghan and Mark, 1984</a>]</span>. High values mark the
+single-flow-direction graph <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../bibliography.html#id63" title="J. F. O'Callaghan and D. M. Mark. The extraction of drainage networks from digital elevation data. Computer Vision, Graphics, and Image Processing, 28(3):323–344, 1984. doi:10.1016/S0734-189X(84)80011-0.">O'Callaghan and Mark, 1984</a>]</span>. High values mark the
 confluences and the persistent branches. <span class="math notranslate nohighlight">\(F_n\)</span> is a routed diagnostic: the same
 water is counted again in every cell downstream, so the sum of <span class="math notranslate nohighlight">\(F\)</span> over the cells
 is not a water budget. Use the budget for a mass balance. <span class="math notranslate nohighlight">\(F\)</span> is the field
@@ -803,7 +804,7 @@ criterion (<a class="reference internal" href="routing-on-the-mesh.html#routing-
 <p><strong>The sources.</strong> A cell is a source in period <span class="math notranslate nohighlight">\(t\)</span> when its release exceeds a
 share of the mean basin recharge over its own area, strictly:</p>
 <div class="math notranslate nohighlight" id="equation-eq-sources">
-<span class="eqno">(44)<a class="headerlink" href="#equation-eq-sources" title="Link to this equation">#</a></span>\[\Sigma(t) = \{\, n : q^\mathrm{rel}_n(t) &gt; \tau_\mathrm{s}\,\bar N\,a_n \,\} .\]</div>
+<span class="eqno">(50)<a class="headerlink" href="#equation-eq-sources" title="Link to this equation">#</a></span>\[\Sigma(t) = \{\, n : q^\mathrm{rel}_n(t) &gt; \tau_\mathrm{s}\,\bar N\,a_n \,\} .\]</div>
 <p><span class="math notranslate nohighlight">\(\bar N\)</span> is the mean recharge rate of the run. Each period counts by its length,
 like <code class="docutils literal notranslate"><span class="pre">first_clim</span> <span class="pre">=</span> <span class="pre">&quot;mean&quot;</span></code>, and takes the mean of its finite rates over the cells,
 weighted by their area, so that the small cells of a refined mesh do not outweigh
@@ -819,7 +820,7 @@ of the sources: every cell the water of <span class="math notranslate nohighligh
 included. When a visible flow <span class="math notranslate nohighlight">\(\Phi_\mathrm{vis}\)</span> is set, a cell of the closure
 must also carry it, as the release of the sources routed down the same graph:</p>
 <div class="math notranslate nohighlight" id="equation-eq-visible-flow">
-<span class="eqno">(45)<a class="headerlink" href="#equation-eq-visible-flow" title="Link to this equation">#</a></span>\[\Phi_n(t) = \sum_{m\,:\,m \rightsquigarrow n} q^\mathrm{rel}_m(t)\,\mathbb{1}[\,m \in \Sigma(t)\,] \;\geq\; \Phi_\mathrm{vis} ,
+<span class="eqno">(51)<a class="headerlink" href="#equation-eq-visible-flow" title="Link to this equation">#</a></span>\[\Phi_n(t) = \sum_{m\,:\,m \rightsquigarrow n} q^\mathrm{rel}_m(t)\,\mathbb{1}[\,m \in \Sigma(t)\,] \;\geq\; \Phi_\mathrm{vis} ,
 \qquad \Phi_n(t) &gt; 0 .\]</div>
 <p>The sum runs over the sources whose chain passes through <span class="math notranslate nohighlight">\(n\)</span>. The visible flow
 is a discharge with its unit, or a share of the discharge at the outlet in the
@@ -843,7 +844,7 @@ the dry one. How a network is scored against a mapped one is on
 </section>
 <section id="network-diagnostics">
 <span id="comparing-a-network-with-a-map"></span><h2>Comparing a network with a map<a class="headerlink" href="#network-diagnostics" title="Link to this heading">#</a></h2>
-<p>A run stores up to three line networks, each under a role:</p>
+<p>A run serves up to four line networks, each under a role:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Role</p></th>
@@ -860,11 +861,17 @@ the dry one. How a network is scored against a mapped one is on
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">generated</span></code></p></td>
 <td><p>the network traced on the routing of the DEM, <a class="hmp-toml-ref reference external" href="../../reference/parameters/geographic.html#p-geographic-river_network" title="Optional DEM-derived river-network extraction settings."><code class="docutils literal notranslate"><span class="pre">geographic.river_network</span></code></a></p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mesh_constraint</span></code></p></td>
+<td><p>the rivers the mesh carries, one line per chain of river cells through their solver centers</p></td>
+</tr>
 </tbody>
 </table>
 </div>
-<p>The roles <code class="docutils literal notranslate"><span class="pre">simulated_active</span></code> and <code class="docutils literal notranslate"><span class="pre">mesh_constraint</span></code> are reserved names that no run
-writes today: the simulated network is the cell field above. A mapped network is
+<p>The first three are stored. <code class="docutils literal notranslate"><span class="pre">mesh_constraint</span></code> is rebuilt on read from the river chains of
+the stored mesh, so a run whose mesh followed no river has none. It is the traced network
+as the solver sees it, so it departs from the traced line by the distance of the cell
+centers to it. A river that falls in one cell has no line. The role <code class="docutils literal notranslate"><span class="pre">simulated_active</span></code> is a
+reserved name that no run writes: the simulated network is the cell field above. A mapped network is
 never a model input: it enters a criterion, a figure or a diagnostic, never the
 model top or the routing.</p>
 <p>Three families of diagnostics compare a mask of active cells <span class="math notranslate nohighlight">\(A\)</span> with a network.
@@ -882,7 +889,7 @@ the nearest line of the network is <span class="math notranslate nohighlight">\(
 center to the nearest active cell <span class="math notranslate nohighlight">\(\delta_{M\to A}\)</span>. Each direction gives its
 mean, median, 95th percentile and maximum, then</p>
 <div class="math notranslate nohighlight" id="equation-eq-planar-distance">
-<span class="eqno">(46)<a class="headerlink" href="#equation-eq-planar-distance" title="Link to this equation">#</a></span>\[\bar\delta = \tfrac12\bigl(\overline{\delta_{A\to M}} + \overline{\delta_{M\to A}}\bigr),
+<span class="eqno">(52)<a class="headerlink" href="#equation-eq-planar-distance" title="Link to this equation">#</a></span>\[\bar\delta = \tfrac12\bigl(\overline{\delta_{A\to M}} + \overline{\delta_{M\to A}}\bigr),
 \qquad
 \rho_\delta = \frac{\overline{\delta_{A\to M}}}{\overline{\delta_{M\to A}}} ,\]</div>
 <p>published as <code class="docutils literal notranslate"><span class="pre">bidirectional_distance_mean_m</span></code>, <code class="docutils literal notranslate"><span class="pre">planar_distance_ratio</span></code> and its
@@ -928,7 +935,7 @@ given here as the one to use.</p></li>
 <h2>Checked by<a class="headerlink" href="#checked-by" title="Link to this heading">#</a></h2>
 <p>The tests that import the code of this page. The box is generated: a new test
 appears here on the next build.</p>
-<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">27 test files import <code>hydromodpy.catchment.drainage.graph</code>, <code>hydromodpy.catchment.stream_network.network</code>, <code>hydromodpy.catchment.stream_network.extent</code>, <code>hydromodpy.results.derive.virtual_fields</code>, <code>hydromodpy.results.derive.views</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>validation: 1</summary><ul><li title="tests/validation/calibration/test_twin_matching_stream_heads_modflow6.py"><a href="../validation.html#val-twin-matching-stream-heads-modflow6">Twin matching stream heads modflow6.</a></li></ul></details><details class="hmp-tested-tier"><summary>scenarios: 2</summary><ul><li title="tests/scenarios/test_a_sites_plan_and_a_two_layer_budget.py">A sites plan and a two layer budget.</li><li title="tests/scenarios/test_transport_chains.py">Transport chains.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 24</summary><ul><li title="tests/unit/catchment/drainage/test_descent.py">Descent. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_graph.py">Graph. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_routing.py">Routing. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/stream_network/test_cost.py">Cost. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_extent.py">Extent. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_geometry.py">Geometry. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_network.py">Network. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/results/derive/test_accumulation.py">Accumulation. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/derive/test_views.py">Views. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/derive/test_virtual_fields.py">Virtual fields. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/run/test_descent.py">Descent. <span class="hmp-muted">results/run</span></li><li title="tests/unit/results/run/test_geographic.py">Geographic. <span class="hmp-muted">results/run</span></li><li title="tests/unit/results/stream/test_active_network_stack.py">Active network stack. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_cell_fields.py">Cell fields. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_comparison.py">Comparison. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/test_cell_field_views.py">Cell field views. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_concentration_subgroup.py">Concentration subgroup. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_mesh_quality_fields.py">Mesh quality fields. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_metric_views.py">Metric views. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_rebuilt_fields.py">Rebuilt fields. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_simulated_active_network_modes.py">Simulated active network modes. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_storage_contracts.py">Storage contracts. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_time_alignment.py">Time alignment. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_virtual_fields.py">Virtual fields. <span class="hmp-muted">results</span></li></ul></details></div></section>
+<div class="hmp-links hmp-tested"><div class="hmp-links-h">Checked by</div><p class="hmp-muted">28 test files import <code>hydromodpy.catchment.drainage.graph</code>, <code>hydromodpy.catchment.stream_network.network</code>, <code>hydromodpy.catchment.stream_network.extent</code>, <code>hydromodpy.results.derive.virtual_fields</code>, <code>hydromodpy.results.derive.views</code>. Their names say what they check.</p><details class="hmp-tested-tier" open><summary>validation: 1</summary><ul><li title="tests/validation/calibration/test_twin_matching_stream_heads_modflow6.py"><a href="../validation.html#val-twin-matching-stream-heads-modflow6">Twin matching stream heads modflow6.</a></li></ul></details><details class="hmp-tested-tier"><summary>scenarios: 2</summary><ul><li title="tests/scenarios/test_a_sites_plan_and_a_two_layer_budget.py">A sites plan and a two layer budget.</li><li title="tests/scenarios/test_transport_chains.py">Transport chains.</li></ul></details><details class="hmp-tested-tier"><summary>unit: 25</summary><ul><li title="tests/unit/catchment/drainage/test_descent.py">Descent. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_graph.py">Graph. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/drainage/test_routing.py">Routing. <span class="hmp-muted">catchment/drainage</span></li><li title="tests/unit/catchment/stream_network/test_cost.py">Cost. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_extent.py">Extent. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_geometry.py">Geometry. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/catchment/stream_network/test_network.py">Network. <span class="hmp-muted">catchment/stream_network</span></li><li title="tests/unit/results/derive/test_accumulation.py">Accumulation. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/derive/test_views.py">Views. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/derive/test_virtual_fields.py">Virtual fields. <span class="hmp-muted">results/derive</span></li><li title="tests/unit/results/run/test_descent.py">Descent. <span class="hmp-muted">results/run</span></li><li title="tests/unit/results/run/test_geographic.py">Geographic. <span class="hmp-muted">results/run</span></li><li title="tests/unit/results/stream/test_active_network_stack.py">Active network stack. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_cell_fields.py">Cell fields. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/stream/test_comparison.py">Comparison. <span class="hmp-muted">results/stream</span></li><li title="tests/unit/results/test_cell_field_views.py">Cell field views. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_concentration_subgroup.py">Concentration subgroup. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_export_outputs.py">Export outputs. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_mesh_quality_fields.py">Mesh quality fields. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_metric_views.py">Metric views. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_rebuilt_fields.py">Rebuilt fields. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_simulated_active_network_modes.py">Simulated active network modes. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_storage_contracts.py">Storage contracts. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_time_alignment.py">Time alignment. <span class="hmp-muted">results</span></li><li title="tests/unit/results/test_virtual_fields.py">Virtual fields. <span class="hmp-muted">results</span></li></ul></details></div></section>
 <section id="in-the-code">
 <h2>In the code<a class="headerlink" href="#in-the-code" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1059,7 +1066,7 @@ appears here on the next build.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-19.
+  Last updated on 2026-11-21.
 </p></div>
       
     </div>

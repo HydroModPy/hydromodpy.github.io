@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Disk is the truth. The database is an index rebuilt from disk. A project keeps its results as ordinary directories: one per run, one per calibration session. The DuckDB file under.hmp/ is a query i..." />
 
-    <meta property="article:modified_time" content="2026-11-20T03:05:20+01:00" />
-    <title>Storage layout &#8212; HydroModPy 2.0.0</title>
+    <meta property="article:modified_time" content="2026-11-24T11:36:22+01:00" />
+    <title>Storage layout &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -52,7 +52,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -81,7 +81,7 @@
         href="../../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-20"/>
+    <meta name="docbuild:last-update" content="2026-11-24"/>
   </head>
   <body data-default-mode="auto">
   
@@ -633,8 +633,11 @@ relative to the project root, whichever directory the file sits in.</p>
 <h2>Two state roots<a class="headerlink" href="#two-state-roots" title="Link to this heading">#</a></h2>
 <p><strong>The project</strong> <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code> <strong>is strictly rebuildable.</strong> It holds the index (<code class="docutils literal notranslate"><span class="pre">index.duckdb</span></code>), the
 debug log (<code class="docutils literal notranslate"><span class="pre">logs/hydromodpy_debug.log</span></code>, written by each attempt beside its <code class="docutils literal notranslate"><span class="pre">run.log</span></code>, which
-rotates past 8 MiB and keeps <code class="docutils literal notranslate"><span class="pre">.1</span></code> to <code class="docutils literal notranslate"><span class="pre">.3</span></code>), the launcher lease (<code class="docutils literal notranslate"><span class="pre">launcher.lease</span></code>) and the product store
-(<code class="docutils literal notranslate"><span class="pre">products/</span></code>). A product is a folder keyed by a sha256 of the inputs the step read, the
+rotates past 8 MiB and keeps <code class="docutils literal notranslate"><span class="pre">.1</span></code> to <code class="docutils literal notranslate"><span class="pre">.3</span></code>), the launcher lease (<code class="docutils literal notranslate"><span class="pre">launcher.lease</span></code>), the product store
+(<code class="docutils literal notranslate"><span class="pre">products/</span></code>), the scratch of the live runs (<code class="docutils literal notranslate"><span class="pre">scratch/&lt;case&gt;.p&lt;pid&gt;/</span></code>, where a run does its
+preprocessing, removed once its process is gone) and the cache of the point-to-cell maps
+(<code class="docutils literal notranslate"><span class="pre">cache/cell_index/</span></code>). <code class="docutils literal notranslate"><span class="pre">SCRATCH_DIRNAME</span></code> and <code class="docutils literal notranslate"><span class="pre">CACHE_DIRNAME</span></code> of
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">hydromodpy.core.state.layout</span></code> name the last two. A product is a folder keyed by a sha256 of the inputs the step read, the
 processing keys and the code of the package that computes it, so the workflow asks the store for
 the mesh, the soil reservoir and the terrain (the conditioned DEM, its D8 directions and its
 accumulation, described by <code class="docutils literal notranslate"><span class="pre">terrain.json</span></code>) before it computes them. <code class="docutils literal notranslate"><span class="pre">[workspace]</span>
@@ -1102,7 +1105,11 @@ removal, so <code class="docutils literal notranslate"><span class="pre">dry_run
 bounds the versions of each run, <code class="docutils literal notranslate"><span class="pre">max_age_days</span></code> the age of a run, and <code class="docutils literal notranslate"><span class="pre">trial_fields_days</span></code> (90 by
 default) the age of the fields of a kept trial; <code class="docutils literal notranslate"><span class="pre">never</span></code> removes none on age. <code class="docutils literal notranslate"><span class="pre">gc</span></code> also removes
 the scratch of a dead attempt, the earlier attempts of a sealed run, and the products of the store
-past its cap, and it purges a kept trial past its window but the best. The report gives the plan,
+past its cap, and it purges a kept trial past its window but the best. The <code class="docutils literal notranslate"><span class="pre">solver/</span></code> folder that
+<code class="docutils literal notranslate"><span class="pre">keep_solver_files</span></code> keeps in a sealed run leaves only when <code class="docutils literal notranslate"><span class="pre">solver_files_days</span></code>
+(<code class="docutils literal notranslate"><span class="pre">--solver-files-days</span></code>) is given, a rule off by default, because a user who keeps the raw files
+of the solver may want them for good. It can weigh 5.6 GB on a daily run, beside 195 MB for its
+<code class="docutils literal notranslate"><span class="pre">fields.zarr</span></code>, and the seal never lists it, so the run reads the same without it. The report gives the plan,
 what it applied, the bytes freed and the weight before and after.</p>
 </section>
 <section id="versions-of-the-stored-documents">
@@ -1284,7 +1291,12 @@ its directory, never from its files: a rename moves the directory, so the tree i
 <code class="docutils literal notranslate"><span class="pre">attempt_id</span></code>: it inserts new directories, updates a row whose directory moved (a rename, a
 restore, an extracted archive), deletes rows whose directory disappeared, and moves the previous
 attempt to <code class="docutils literal notranslate"><span class="pre">attempts</span></code> before inserting the new one. Its trigger is the latest modification time
-of the <code class="docutils literal notranslate"><span class="pre">outcome.json</span></code> and <code class="docutils literal notranslate"><span class="pre">session.json</span></code> files.</p>
+of the <code class="docutils literal notranslate"><span class="pre">outcome.json</span></code> and <code class="docutils literal notranslate"><span class="pre">session.json</span></code> files. The stamp of a directory reads its subfolders
+too, so a figure or an export written after the seal is indexed, but never <code class="docutils literal notranslate"><span class="pre">logs/</span></code> nor <code class="docutils literal notranslate"><span class="pre">.hmp/</span></code>:
+a live attempt writes its pulse there every 30 s, and stamping them would write the index again at
+every read. A pass reads the seal of a directory only when its stamp moved. <code class="docutils literal notranslate"><span class="pre">Catalog.cases</span></code>
+reads the status and the pulse of a live case on the disk, by the rule of the status precedence
+below, so a case that stopped beating reads <code class="docutils literal notranslate"><span class="pre">stale</span></code> without a new pass.</p>
 <p><strong>A schema change is a full reindex.</strong> There are no SQL migrations: the index is derived, so it is
 rebuilt from the directories. The columns of <code class="docutils literal notranslate"><span class="pre">simulations</span></code>, <code class="docutils literal notranslate"><span class="pre">parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and
 <code class="docutils literal notranslate"><span class="pre">provenance</span></code> are generated from the Parquet schemas they mirror, so <code class="docutils literal notranslate"><span class="pre">metrics.metric</span></code> has the
@@ -1689,6 +1701,11 @@ make it cheap, and neither exists.</p>
 <p><strong>A network file system is not supported.</strong> <code class="docutils literal notranslate"><span class="pre">os.mkdir</span></code>, <code class="docutils literal notranslate"><span class="pre">rename</span></code> and the file locks depend on
 the mount options. The layout reduces the shared writers to one (the launcher) and proves
 death through the scheduler, but it does not make DuckDB safe on NFS.</p>
+<p><strong>An object store is not a project root.</strong> The attempt protocol rests on an exclusive <code class="docutils literal notranslate"><span class="pre">mkdir</span></code>,
+an atomic rename, file locks and modification times, which an object store such as S3 does not
+give, and a path that is not local is refused. A sealed run never changes, so a platform that
+computes on a local disk and then copies the sealed runs to an object store changes nothing here:
+Zarr 3 and Parquet read well there.</p>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
@@ -1812,7 +1829,7 @@ this storage.</p></li>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-20.
+  Last updated on 2026-11-24.
 </p></div>
       
     </div>

@@ -17,8 +17,8 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="The register is the file hydromodpy/schema/changes.toml. One row says one change that a reader of an older run or an older file has to know about. The code reads the same rows that this page lists...." />
 
-    <meta property="article:modified_time" content="2026-11-20T11:22:40+01:00" />
-    <title>Register of changes &#8212; HydroModPy 2.0.0</title>
+    <meta property="article:modified_time" content="2026-11-24T11:51:32+01:00" />
+    <title>Register of changes &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -53,7 +53,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -82,7 +82,7 @@
         href="../_static/fonts/inter-latin-wght.woff2"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="2.0" />
-    <meta name="docbuild:last-update" content="2026-11-20"/>
+    <meta name="docbuild:last-update" content="2026-11-24"/>
   </head>
   <body data-default-mode="auto">
   
@@ -486,6 +486,9 @@
 <li class="toctree-l3"><a class="reference internal" href="parameters/data/layer_base.html"><code class="docutils literal notranslate"><span class="pre">[data.layer_base]</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="parameters/data/property_map.html"><code class="docutils literal notranslate"><span class="pre">[data.property_map]</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="parameters/data/soil_capacity.html"><code class="docutils literal notranslate"><span class="pre">[data.soil_capacity]</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parameters/data/impervious.html"><code class="docutils literal notranslate"><span class="pre">[data.impervious]</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parameters/data/infiltration_ratio.html"><code class="docutils literal notranslate"><span class="pre">[data.infiltration_ratio]</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parameters/data/curve_number.html"><code class="docutils literal notranslate"><span class="pre">[data.curve_number]</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="parameters/flow/index.html"><code class="docutils literal notranslate"><span class="pre">[flow]</span></code></a><details><summary aria-label="Show or hide the pages under [flow]"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -517,6 +520,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="parameters/spinup.html"><code class="docutils literal notranslate"><span class="pre">[spinup]</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters/recharge_estimates.html"><code class="docutils literal notranslate"><span class="pre">[recharge_estimates]</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">What changed in the TOML</a></li>
@@ -794,6 +798,12 @@ that names every such key of the file, as <a class="reference internal" href="..
 <td><p>&gt;=2.0.0a5,&lt;=2.0.0rc1</p></td>
 <td><p>heads&#64;modflow6, fluxes&#64;modflow6, heads&#64;modflow_nwt, fluxes&#64;modflow_nwt, heads&#64;boussinesq, fluxes&#64;boussinesq, heads&#64;linear_reservoir, fluxes&#64;linear_reservoir, metrics</p></td>
 <td><p>In a staged calibration, a phase that samples property profiles only built its model once, before the values an earlier phase froze were written, and each trial rebuilt only the profiles it sampled. So the trials of the later phase, and a run promoted from a kept solve, solved at the value of the file while config.resolved.toml showed the frozen one. Each trial now rebuilds the frozen profiles too, and a frozen value that is no profile builds the model per trial. On example 04 with K frozen at 1.006e-4 m/s, the Sy stage solved at the 5e-5 m/s of project.toml and found Sy 0.0266 with NSE 0.962; at the frozen K it finds Sy 0.0253 with NSE 0.958. The phase scored on heads and the one scored on crossings gave the same Sy trials to the last digit, they now differ.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">flat_substratum_sentinel_at_the_mask_edge</span></code></p></td>
+<td><p>2.0.1</p></td>
+<td><p>&gt;=2.0.0a1,&lt;=2.0.0</p></td>
+<td><p>heads&#64;modflow6, fluxes&#64;modflow6, heads&#64;modflow_nwt, fluxes&#64;modflow_nwt, heads&#64;boussinesq, fluxes&#64;boussinesq, metrics</p></td>
+<td><p>With depth_model kind = “flat_substratum”, the aquifer bottom of a DEM pixel without data was set 1 m under the no-data value, so it stopped being read as no data. A mesh that samples the bottom (triangle, voronoi, a regular grid resampled from the DEM) blended it with the flat elevation on the cells next to the mask. With domain_extent = “watershed” these are the cells of the catchment edge: on a 31 km2 catchment at a flat bottom of 15 m, 768 of 779 edge cells had a bottom between -800 and -9 891 m, a column 100 times thicker than the 76 m of the others. A no-data pixel now keeps the no-data value and every sampled cell gets the flat elevation. A constant_thickness model and a regular grid on the DEM pixels do not change.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1388,6 +1398,18 @@ a refusal, the label of a run, the identity of a run or the layout of its folder
 <td><p>heads&#64;modflow6, fluxes&#64;modflow6, heads&#64;modflow_nwt, fluxes&#64;modflow_nwt, heads&#64;boussinesq, fluxes&#64;boussinesq, metrics</p></td>
 <td><p>Each edge of a time grid with a step in months or years is the start plus k steps. A start on the 29th, 30th or 31st drifted, because each step was added to the previous edge: from 31 January the periods began on 28 February, 28 March and 28 April, and they now begin on 28 February, 31 March and 30 April. A start on the 1st to the 28th, and a step in days or hours, give the same grid as before.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">protocol_1_4_draws_the_map_as_given</span></code></p></td>
+<td><p>2.0.1</p></td>
+<td><p>numbers</p></td>
+<td><p>metrics</p></td>
+<td><p>map.drawn_by defaults to “crossing”: the mapped network is drawn on the cells as the data gives it, the rule of the paper, still cut to the catchment. It defaulted to “heads”, which kept only the stream heads of the map and drew the rest down the model’s own descent. A calibration with no pin on the protocol follows 1.4, which differs from 1.3 by this rule alone. A pin on 1.3, or map.drawn_by = “heads” in the network output, gives the heads rule back. A run that sealed no network output draws its network figures by the crossing rule too. A file of edition 2.0 that writes no drawn_by moves with it, at the request of the owner, so its K and costs change wherever heads and crossing draw different cells.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lake_keeps_the_cells_it_covers</span></code></p></td>
+<td><p>2.0.1</p></td>
+<td><p>numbers</p></td>
+<td><p>heads&#64;modflow6, fluxes&#64;modflow6, metrics</p></td>
+<td><p>On a mesh whose faces follow the lake shores but leave the ring open somewhere (an arm narrower than a cell, a wall that leaves the shore), a lake owns the cells its polygon covers for more than half of their area, each cell whole. It owned every cell the polygon touched, so a ring of land cells one cell wide joined the lake and had its top carved under the highest stage of the abacus. On a reservoir of 200.3 ha whose shore the faces cover at 99.45 %, the lake goes from 1 256 cells and 296.3 ha to 885 cells and 201.3 ha, and the cells it leaves keep their terrain and get their drain back. A mesh that closes every shore, and a mesh without lake faces, do not change.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1752,7 +1774,7 @@ line. A key that left is refused at once, with what to write instead.</p>
     <div class="footer-items__center">
       
         <div class="footer-item"><p class="last-updated">
-  Last updated on 2026-11-20.
+  Last updated on 2026-11-24.
 </p></div>
       
     </div>

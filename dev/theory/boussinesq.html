@@ -18,7 +18,7 @@
 <meta name="description" content="This page gives the equations of the in-house Boussinesq solver, in the order the code applies them, with what they assume and where they stop being true. It does not say how to set up a run: the s..." />
 
     <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
-    <title>Boussinesq theory &#8212; HydroModPy 2.0.0</title>
+    <title>Boussinesq theory &#8212; HydroModPy 2.0.1</title>
   
   
   
@@ -54,7 +54,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=db988ed8"></script>
+    <script src="../_static/documentation_options.js?v=bf575e9c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -450,6 +450,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">2. Soil</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="soil-reservoir.html">The daily soil reservoir</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recharge-estimates.html">Recharge estimated from the data</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">3. Aquifer, the problem</span></p>
 <ul class="nav bd-sidenav">
@@ -778,7 +779,7 @@ message says <code class="docutils literal notranslate"><span class="pre">z_top_
 <code class="docutils literal notranslate"><span class="pre">internal_edge_flux_from_head</span></code> defines one oriented flux, positive when water
 leaves <span class="math notranslate nohighlight">\(a\)</span> and enters <span class="math notranslate nohighlight">\(b\)</span>:</p>
 <div class="math notranslate nohighlight" id="equation-eq-bq-edge-flux">
-<span class="eqno">(30)<a class="headerlink" href="#equation-eq-bq-edge-flux" title="Link to this equation">#</a></span>\[q_e = -\tau_e\,(h_b - h_a),
+<span class="eqno">(36)<a class="headerlink" href="#equation-eq-bq-edge-flux" title="Link to this equation">#</a></span>\[q_e = -\tau_e\,(h_b - h_a),
 \qquad
 \tau_e = K^{H}_e\,\bar{B}_e\,\frac{L_e}{d_e}\]</div>
 <p>where <span class="math notranslate nohighlight">\(K^{H}_e = 2 / (1/K_a + 1/K_b)\)</span> is the harmonic mean of the two
@@ -795,7 +796,7 @@ handles (see <a class="reference internal" href="#the-lower-obstacle">The lower 
 <figure class="align-default" id="id4">
 <img alt="Two triangles with their centroids and shared edge, and the flow between them against the saturated thickness of the upper one." class="plot-directive" src="../_images/bq_stencil.png" width="955" height="480" />
 <figcaption>
-<p><span class="caption-number">Fig. 47 </span><span class="caption-text">Left: the two cells of <a class="reference internal" href="#equation-eq-bq-edge-flux">(30)</a>, the shared edge of length
+<p><span class="caption-number">Fig. 47 </span><span class="caption-text">Left: the two cells of <a class="reference internal" href="#equation-eq-bq-edge-flux">(36)</a>, the shared edge of length
 <span class="math notranslate nohighlight">\(L_e\)</span> and the distance <span class="math notranslate nohighlight">\(d_e\)</span> between the centroids. Right: cell
 <span class="math notranslate nohighlight">\(b\)</span> sits 6 m higher on the substratum and drains into <span class="math notranslate nohighlight">\(a\)</span>, whose
 saturated thickness stays 5 m; the flow comes from <code class="docutils literal notranslate"><span class="pre">internal_edge_flux_from_head</span></code>.
@@ -901,7 +902,7 @@ It does not include the release at the surface, defined below.</p>
 held by a cell is lower-bounded and not capped (<code class="docutils literal notranslate"><span class="pre">_stored_saturated_volume_m3</span></code> in
 <code class="docutils literal notranslate"><span class="pre">assembly/residuals.py</span></code>):</p>
 <div class="math notranslate nohighlight" id="equation-eq-bq-storage">
-<span class="eqno">(31)<a class="headerlink" href="#equation-eq-bq-storage" title="Link to this equation">#</a></span>\[M_i(h) = a_i\,S_{y,i}\,\max\bigl(h_i - z_{\mathrm{bot},i},\ 0\bigr)\]</div>
+<span class="eqno">(37)<a class="headerlink" href="#equation-eq-bq-storage" title="Link to this equation">#</a></span>\[M_i(h) = a_i\,S_{y,i}\,\max\bigl(h_i - z_{\mathrm{bot},i},\ 0\bigr)\]</div>
 <p>and the term that enters the residual is</p>
 <div class="math notranslate nohighlight">
 \[\frac{M_i(h^{\mathrm{new}}) - M_i(h^{\mathrm{old}})}{\Delta t}\]</div>
@@ -932,7 +933,7 @@ internal fluxes, the drain, the release at the surface <span class="math notrans
 recharge and the wells, all at the new time level
 (<code class="docutils literal notranslate"><span class="pre">_transient_raw_residual_from_spatial_terms</span></code>):</p>
 <div class="math notranslate nohighlight" id="equation-eq-bq-transient-residual">
-<span class="eqno">(32)<a class="headerlink" href="#equation-eq-bq-transient-residual" title="Link to this equation">#</a></span>\[R_i^{\mathrm{transient}}(h^{\mathrm{new}})
+<span class="eqno">(38)<a class="headerlink" href="#equation-eq-bq-transient-residual" title="Link to this equation">#</a></span>\[R_i^{\mathrm{transient}}(h^{\mathrm{new}})
 = \frac{M_i(h^{\mathrm{new}}) - M_i(h^{\mathrm{old}})}{\Delta t}
 + R^{\mathrm{int}}_i(h^{\mathrm{new}})
 + q^{\mathrm{drain}}_i(h^{\mathrm{new}})
@@ -971,7 +972,7 @@ negative:</p>
 + \frac{\Phi^{\mathrm{well}}_i}{a_i},\ 0\right)\]</div>
 <p>and the release is</p>
 <div class="math notranslate nohighlight" id="equation-eq-bq-partition">
-<span class="eqno">(33)<a class="headerlink" href="#equation-eq-bq-partition" title="Link to this equation">#</a></span>\[s_i(h) = \exp\!\left(-\frac{d_i(h)}{\delta}\right)\gamma_i\]</div>
+<span class="eqno">(39)<a class="headerlink" href="#equation-eq-bq-partition" title="Link to this equation">#</a></span>\[s_i(h) = \exp\!\left(-\frac{d_i(h)}{\delta}\right)\gamma_i\]</div>
 <p>The depth scale <span class="math notranslate nohighlight">\(\delta\)</span> is <a class="hmp-toml-ref reference external" href="../reference/parameters/solver.html#p-solver-boussinesq-partition_release_depth_m" title="Depth scale, in metres, of the regularized partition, the surface closure the Boussinesq solver uses by default on every engine but petsc. (m)"><code class="docutils literal notranslate"><span class="pre">solver.boussinesq.partition_release_depth_m</span></code></a>, 0.05 m by
 default. A cell with an imposed head releases nothing: its constant-head flux
 carries the water it receives. The law follows the regularized partition of seepage
@@ -980,7 +981,7 @@ table in meters. The factor in front of <span class="math notranslate nohighligh
 <figure class="align-default" id="id6">
 <img alt="The release factor against the depth of the water table below the land surface, on a linear and a log scale, for three depth scales." class="plot-directive" src="../_images/bq_partition.png" width="945" height="509" loading="lazy" decoding="async" />
 <figcaption>
-<p><span class="caption-number">Fig. 49 </span><span class="caption-text">The factor of <a class="reference internal" href="#equation-eq-bq-partition">(33)</a>, from
+<p><span class="caption-number">Fig. 49 </span><span class="caption-text">The factor of <a class="reference internal" href="#equation-eq-bq-partition">(39)</a>, from
 <code class="docutils literal notranslate"><span class="pre">regularized_partition_surface_rate_from_balance</span></code>. The dots are the depths 0,
 0.05, 0.1, 0.2 and 1 m. Look at the left panel: with the default 0.05 m the
 factor is 0.37 one depth scale below the surface and 0.018 at 0.2 m. The right
