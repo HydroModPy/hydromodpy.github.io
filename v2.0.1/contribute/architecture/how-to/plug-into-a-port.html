@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png" type="image/png" sizes="64x64">
+    <link rel="icon" href="../../../_static/logoHydroModPy.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="../../../_static/apple-touch-icon.png" sizes="180x180" type="image/png"><meta property="og:title" content="Plug into a port" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/plug-into-a-port.html" />
+<meta property="og:site_name" content="HydroModPy" />
+<meta property="og:description" content="A port is a place where HydroModPy takes a class it does not know in advance: a solver backend, an output extractor, a data source, a trial evaluator, an optimizer, a terrain engine, a mesh engine,..." />
+<meta property="og:image" content="https://docs.hydromodpy.fr/main/_static/social-card.png" />
+<meta property="og:image:alt" content="HydroModPy" />
+<meta name="description" content="A port is a place where HydroModPy takes a class it does not know in advance: a solver backend, an output extractor, a data source, a trial evaluator, an optimizer, a terrain engine, a mesh engine,..." />
+
+    <meta property="article:modified_time" content="2026-11-19T22:08:56+01:00" />
+    <title>Plug into a port &#8212; HydroModPy 2.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/hmp.css?v=6cc42929" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/hmp-site.css?v=007028dd" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=bf575e9c"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=15591f4d"></script>
+    <script defer="defer" src="../../../_static/js/hmp-site.js?v=e68bfb58"></script>
+    <script defer="defer" src="../../../_static/hmp.js?v=d773d96e"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'contribute/architecture/how-to/plug-into-a-port';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.hydromodpy.fr/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v2.0.1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://docs.hydromodpy.fr/main/contribute/architecture/how-to/plug-into-a-port.html" />
+    <link rel="icon" href="../../../_static/logoHydroModPy.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Add a config field" href="add-a-config-field.html" />
+    <link rel="prev" title="Recipes" href="index.html" />
+    <meta name="robots" content="noindex"/>
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="../../../_static/fonts/inter-latin-wght.woff2"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2.0" />
+    <meta name="docbuild:last-update" content="2026-11-19"/>
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logoHydroModPy_long.png" class="logo__image only-light" alt="HydroModPy - Home"/>
+    <img src="../../../_static/logoHydroModPy_long_dark.png" class="logo__image only-dark pst-js-only" alt="HydroModPy - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory/index.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    Contribute
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="HydroModPy Resources">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/HydroModPy/HydroModPy/issues" title="Issues" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-bug fa-lg" aria-hidden="true"></i><span class="visually-hidden">Issues</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../handbook.html">Contributor handbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quick-start.html">Quick start</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Recipes</a><details open="open"><summary aria-label="Show or hide the pages under Recipes"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Plug into a port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-config-field.html">Add a config field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-solver.html">Add a solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-process.html">Add a process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-variable.html">Add a data variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-data-source.html">Add a data source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-figure.html">Add a figure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-block-html-report.html">Add a block to the HTML report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-an-exporter.html">Add an exporter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-cli-command.html">Add a CLI command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-calibration-method.html">Add a calibration method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build-a-frontend.html">Build a frontend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serve-over-http.html">Serve over HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="add-a-test.html">Add a test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fix-an-architecture-gate.html">Fix a failing architecture gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cut-a-release.html">Cut a release</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">Architecture</a><details><summary aria-label="Show or hide the pages under Architecture"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../mental-model.html">Mental model and design choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../layered-architecture.html">Layered architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/layers.html">Layer graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/guards.html">Architecture gates</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../packages/index.html">Packages</a><details><summary aria-label="Show or hide the pages under Packages"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/packages.html">Packages and registries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/core.html">Package: core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/config.html">Package: config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/model.html">Package: model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/data.html">Package: data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/catchment.html">Package: catchment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/mesh.html">Package: mesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/solver.html">Package: solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/calibration.html">Package: calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/results.html">Package: results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/display.html">Package: display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/workflow.html">Package: workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/project.html">Package: project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/schema.html">Package: schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/cli.html">Package: cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packages/validity_frame.html">Package: validity_frame</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage-layout.html">Storage layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/storage-tree.html">Storage tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data-scopes.html">Data scopes and schema evolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contracts.html">Contracts and design patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline_resume.html">Pipeline resume from artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-engines.html">Mesh engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/mesh-pivot.html">The mesh pivot and the cell mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/backends.html">MODFLOW and Boussinesq backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/boussinesq-engines.html">Boussinesq engines and experimental closures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/toml-to-solver.html">From TOML to solver outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/calibration-internals.html">Calibration internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/processes-and-boundaries.html">Processes and boundaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../engines/stream-network-support.html">Supports and the simulated network</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../documentation/index.html">Documentation</a><details><summary aria-label="Show or hide the pages under Documentation"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/how-the-docs-are-built.html">How the docs are built</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../write-a-theory-page.html">Write a theory page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../docstring-policy.html">Docstring policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../documentation/coverage.html">Documentation coverage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../project/index.html">Project</a><details><summary aria-label="Show or hide the pages under Project"><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../project/ci-workflows.html">Reading a failing check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../project/tests.html">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/ci.html">CI workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/tests.html">Test inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/environment.html">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../generated/extras.html">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roadmap.html">Roadmap</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Contribute</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Recipes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Plug into a port</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div data-pagefind-body><span data-pagefind-filter="door:Contribute" hidden></span><div data-pagefind-weight="0.3"><section id="plug-into-a-port">
+<h1>Plug into a port<a class="headerlink" href="#plug-into-a-port" title="Link to this heading">#</a></h1>
+<p>A port is a place where HydroModPy takes a class it does not know in advance: a solver
+backend, an output extractor, a data source, a trial evaluator, an optimizer, a terrain
+engine, a mesh engine, an export format or a figure. Each port is one instance of
+<code class="docutils literal notranslate"><span class="pre">PluginRegistry</span></code> (<code class="docutils literal notranslate"><span class="pre">hydromodpy/core/plugin_registry.py</span></code>), so they all resolve a name the
+same way.</p>
+<section id="the-ports">
+<h2>The ports<a class="headerlink" href="#the-ports" title="Link to this heading">#</a></h2>
+<p>The table is read from the registries when the docs are built. Each row gives the
+registry, the noun it uses in its messages, the names it serves in this build, the
+entry-point group, the members a plugin declares, the README that holds the contract of the
+port, and the test files that import the registry.</p>
+<p>Built from the <code class="docutils literal notranslate"><span class="pre">PluginRegistry</span></code> instances of <code class="docutils literal notranslate"><span class="pre">hydromodpy</span></code> each time the site is built. Fix a wrong row there.</p>
+<div class="pst-scrollable-table-container"><table class="hmp-contribute-table table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Registry</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>A plugin declares</p></th>
+<th class="head"><p>Joins by</p></th>
+<th class="head"><p>Served</p></th>
+<th class="head"><p>README</p></th>
+<th class="head"><p>Tests</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluation.registry.evaluators</span></code></td>
+<td><p>trial evaluator</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluator_id</span></code>, <code class="docutils literal notranslate"><span class="pre">needs_prepared_model</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluator</span></code></p></td>
+<td><p>2</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/evaluation/README.md</span></code></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optim.optimizer.optimizers</span></code></td>
+<td><p>optimizer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ask</span></code>, <code class="docutils literal notranslate"><span class="pre">tell</span></code>, <code class="docutils literal notranslate"><span class="pre">best</span></code>, <code class="docutils literal notranslate"><span class="pre">converged</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optimizer</span></code></p></td>
+<td><p>10</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/calibration/optim/README.md</span></code></td>
+<td><p>28</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.catchment.terrain.registry.terrain_engines</span></code></td>
+<td><p>terrain engine</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">condition_dem</span></code>, <code class="docutils literal notranslate"><span class="pre">delineate</span></code>, <code class="docutils literal notranslate"><span class="pre">drainage_directions</span></code>, <code class="docutils literal notranslate"><span class="pre">engine_digest</span></code>, <code class="docutils literal notranslate"><span class="pre">engine_id</span></code>, <code class="docutils literal notranslate"><span class="pre">engine_version</span></code>, <code class="docutils literal notranslate"><span class="pre">flow_accumulation</span></code>, <code class="docutils literal notranslate"><span class="pre">stream_network</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.terrain.engine</span></code></p></td>
+<td><p>2</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/catchment/terrain/README.md</span></code></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source.registry.data_sources</span></code></td>
+<td><p>data source</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">source_id</span></code>, <code class="docutils literal notranslate"><span class="pre">section</span></code>, <code class="docutils literal notranslate"><span class="pre">payload_kind</span></code>, <code class="docutils literal notranslate"><span class="pre">extent_crs</span></code>, <code class="docutils literal notranslate"><span class="pre">selectors</span></code>, <code class="docutils literal notranslate"><span class="pre">period_need</span></code>, <code class="docutils literal notranslate"><span class="pre">writes_out_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">fetch</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code></p></td>
+<td><p>89</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/data/source/README.md</span></code></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.registry.mesh_engines</span></code></td>
+<td><p>mesh engine</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">capabilities</span></code>, <code class="docutils literal notranslate"><span class="pre">engine_id</span></code>, <code class="docutils literal notranslate"><span class="pre">engine_version</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.engine</span></code></p></td>
+<td><p>4</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/mesh/README.md</span></code></td>
+<td><p>15</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.results.exporters.registry.export_formats</span></code></td>
+<td><p>export format</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">suffix</span></code>, <code class="docutils literal notranslate"><span class="pre">writes</span></code>, <code class="docutils literal notranslate"><span class="pre">natural</span></code>, <code class="docutils literal notranslate"><span class="pre">instants</span></code>, <code class="docutils literal notranslate"><span class="pre">reprojects</span></code>, <code class="docutils literal notranslate"><span class="pre">help</span></code>, <code class="docutils literal notranslate"><span class="pre">write</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.export.format</span></code></p></td>
+<td><p>9</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/results/exporters/README.md</span></code></td>
+<td><p>5</p></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.registry.extractors</span></code></td>
+<td><p>output extractor</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">process_type</span></code>, <code class="docutils literal notranslate"><span class="pre">solver_name</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.extractor</span></code></p></td>
+<td><p>8</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/README.md</span></code></td>
+<td><p>19</p></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.base.registry.solvers</span></code></td>
+<td><p>solver backend</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">process_type</span></code>, <code class="docutils literal notranslate"><span class="pre">accepted_meshes</span></code>, <code class="docutils literal notranslate"><span class="pre">geometry</span></code>, <code class="docutils literal notranslate"><span class="pre">writes</span></code>, <code class="docutils literal notranslate"><span class="pre">reads</span></code>, <code class="docutils literal notranslate"><span class="pre">supports</span></code>, <code class="docutils literal notranslate"><span class="pre">category</span></code>, <code class="docutils literal notranslate"><span class="pre">mutable</span></code>, <code class="docutils literal notranslate"><span class="pre">requires</span></code>, <code class="docutils literal notranslate"><span class="pre">validate</span></code>, <code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">cleanup</span></code>, <code class="docutils literal notranslate"><span class="pre">extract</span></code></p></td>
+<td><p>entry-point group <code class="docutils literal notranslate"><span class="pre">hydromodpy.solver</span></code></p></td>
+<td><p>8</p></td>
+<td><code class="docutils literal notranslate"><span class="pre">hydromodpy/solver/base/README.md</span></code></td>
+<td><p>19</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="how-a-plugin-is-registered">
+<h2>How a plugin is registered<a class="headerlink" href="#how-a-plugin-is-registered" title="Link to this heading">#</a></h2>
+<p>A registry looks a name up in three steps. It serves the classes registered by hand.
+Then it imports the dotted path of that name from its table of built-in paths,
+a <code class="docutils literal notranslate"><span class="pre">_BUILTIN_PATHS</span></code> dict of <code class="docutils literal notranslate"><span class="pre">&quot;&lt;module&gt;:&lt;Class&gt;&quot;</span></code> strings in the registry module.
+Last, if the name is still unknown, it scans its entry-point group once and loads every
+class declared there. Nothing is imported before a lookup asks for it.</p>
+<p>So there are two ways in. A class of this repository is one line in the
+<code class="docutils literal notranslate"><span class="pre">_BUILTIN_PATHS</span></code> table of its registry module. A class of another package publishes an
+entry point in the group of the port, in the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> of that package. The name
+of the entry point is the key of the class in the registry:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[project.entry-points.</span><span class="s2">"hydromodpy.mesh.engine"</span><span class="k">]</span>
+<span class="n">my_engine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"my_package.engine:MyEngine"</span>
+</pre></div>
+</div>
+<p>The registry never splits a key. It joins the id attributes of the loaded class with
+<code class="docutils literal notranslate"><span class="pre">_</span></code> and compares the result with the entry-point name. A solver of key
+<code class="docutils literal notranslate"><span class="pre">flow_mysolver</span></code> is the <code class="docutils literal notranslate"><span class="pre">process_type</span></code> <code class="docutils literal notranslate"><span class="pre">flow</span></code> and the <code class="docutils literal notranslate"><span class="pre">name</span></code> <code class="docutils literal notranslate"><span class="pre">mysolver</span></code>, and a
+name that holds an underscore, such as <code class="docutils literal notranslate"><span class="pre">modflow_nwt</span></code>, stays whole. An entry point named like a built-in is ignored with a
+warning, two entry points that name different targets for one key are refused by name,
+and an entry point that cannot be imported is refused with its target and the reason.</p>
+<p>The groups, read from the registry modules, are:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Group</p></th>
+<th class="head"><p>Registry</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">solvers</span></code> (<code class="docutils literal notranslate"><span class="pre">solver/base/registry.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.solver.extractor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">extractors</span></code> (same file)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.data.source</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data_sources</span></code> (<code class="docutils literal notranslate"><span class="pre">data/source/registry.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.optimizer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">optimizers</span></code> (<code class="docutils literal notranslate"><span class="pre">calibration/optim/optimizer.py</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.calibration.evaluator</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">evaluators</span></code> (<code class="docutils literal notranslate"><span class="pre">calibration/evaluation/registry.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.mesh.engine</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mesh_engines</span></code> (<code class="docutils literal notranslate"><span class="pre">mesh/registry.py</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.terrain.engine</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">terrain_engines</span></code> (<code class="docutils literal notranslate"><span class="pre">catchment/terrain/registry.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hydromodpy.export.format</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">export_formats</span></code> (<code class="docutils literal notranslate"><span class="pre">results/exporters/registry.py</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">register</span></code> refuses a class that leaves out a member the port table names, and says
+which. A key of a document that names a plugin is read by <code class="docutils literal notranslate"><span class="pre">check_registered_name</span></code>. It
+refuses a name nothing serves, lists the names this installation serves and gives the
+group a third party joins through.</p>
+</section>
+<section id="steps-for-a-new-class">
+<h2>Steps for a new class<a class="headerlink" href="#steps-for-a-new-class" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Write the class with the members the port table names. The README of the port says what
+each member receives and returns, and the Protocol of the port module types them.</p></li>
+<li><p>Register it as above. The README of the port gives the form of the key.</p></li>
+<li><p>If the port is new, write its README. <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">tools.docs.check_readmes</span></code> finds the
+ports from the code and checks that each has one.</p></li>
+<li><p>Run the suite of the port. The tests of <code class="docutils literal notranslate"><span class="pre">tests/ports/</span></code> run over <code class="docutils literal notranslate"><span class="pre">names()</span></code> of their
+registry, never over a list written in <code class="docutils literal notranslate"><span class="pre">tests/</span></code>, so an installed plugin meets the same
+cases as a built-in one.</p></li>
+</ol>
+<p>The figure port has no entry-point group. A figure is a request. A new kind of plot is a
+frame in <code class="docutils literal notranslate"><span class="pre">hydromodpy/display/frames/</span></code>, and a new named request is a preset of
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/display/presets.py</span></code>.</p>
+</section>
+<section id="the-two-closed-tables">
+<h2>The two closed tables<a class="headerlink" href="#the-two-closed-tables" title="Link to this heading">#</a></h2>
+<p>Two lists are tables of the code and take no plugin. The metric names are the rows of
+<code class="docutils literal notranslate"><span class="pre">METRIC_SPECS</span></code> in <code class="docutils literal notranslate"><span class="pre">hydromodpy/core/scoring/metric_table.py</span></code>, one <code class="docutils literal notranslate"><span class="pre">MetricSpec</span></code> per
+name, and the boundary ids are the rows of <code class="docutils literal notranslate"><span class="pre">FLOW_BOUNDARY_DEFINITIONS</span></code> in
+<code class="docutils literal notranslate"><span class="pre">hydromodpy/model/boundaries/boundary_condition_registry.py</span></code>, one
+<code class="docutils literal notranslate"><span class="pre">FlowBoundaryDefinition</span></code> per id. A new metric or a new boundary is a row added in the
+code, with its kernel or its binder. The <code class="docutils literal notranslate"><span class="pre">Literal</span></code> of the names a TOML may write is built
+from the rows, so a document that writes another name is refused when it is read. The
+README of each folder is the contract of its table.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<p>Recipes of one port:
+<a class="reference internal" href="add-a-solver.html"><span class="doc">Add a solver</span></a>, <a class="reference internal" href="add-a-data-source.html"><span class="doc">Add a data source</span></a>, <a class="reference internal" href="add-a-calibration-method.html"><span class="doc">Add a calibration method</span></a>,
+<a class="reference internal" href="add-an-exporter.html"><span class="doc">Add an exporter</span></a> and <a class="reference internal" href="add-a-figure.html"><span class="doc">Add a figure</span></a>. The mesh port is described in
+<a class="reference internal" href="../engines/mesh-engines.html"><span class="doc">Mesh engines</span></a>.</p>
+</section>
+</section>
+</div></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Recipes</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="add-a-config-field.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Add a config field</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ports">The ports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-plugin-is-registered">How a plugin is registered</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steps-for-a-new-class">Steps for a new class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-two-closed-tables">The two closed tables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, HydroModPy contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on 2026-11-19.
+</p></div>
+      
+    </div>
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
