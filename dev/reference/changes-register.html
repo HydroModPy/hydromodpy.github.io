@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="The register is the file hydromodpy/schema/changes.toml. One row says one change that a reader of an older run or an older file has to know about. The code reads the same rows that this page lists...." />
 
-    <meta property="article:modified_time" content="2026-11-25T12:17:59+01:00" />
+    <meta property="article:modified_time" content="2026-11-25T16:46:17+01:00" />
     <title>Register of changes &#8212; HydroModPy 2.0.1</title>
   
   
@@ -1421,6 +1421,24 @@ a refusal, the label of a run, the identity of a run or the layout of its folder
 <td><p>numbers</p></td>
 <td><p>fluxes&#64;modflow6, metrics</p></td>
 <td><p>The observations of the LAK and SFR packages of MODFLOW 6 are written in binary and read at the double precision of the solver. They were written as CSV text with 10 significant digits, so a lake stage, a lake flow or a reach flow moves by at most 5e-10 in relative terms. The files are lake.lak.obs.bin and model.sfr.obs.bin instead of .csv. The CSV form came out garbled once MODFLOW runs with FORT_BUFFERED.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">specific_yield_ceiling_at_one</span></code></p></td>
+<td><p>2.0.2</p></td>
+<td><p>refusal</p></td>
+<td><p>none</p></td>
+<td><p>A specific yield is accepted up to 1, in a field and in the bounds of a calibration. The ceiling was 0.5, so a calibration that searched Sy up to 0.8, as some v1 scripts did, was refused when the file was read. The floor stays at 1e-4. A value that was accepted reads as before.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">specific_yield_floor_at_1e_6</span></code></p></td>
+<td><p>2.0.2</p></td>
+<td><p>refusal</p></td>
+<td><p>none</p></td>
+<td><p>A specific yield is accepted down to 1e-6, in a field and in the bounds of a calibration. The floor was 1e-4, so a search could not go below 0.01 per cent, while a sparsely fractured bedrock drains some 1e-5. A value that was accepted reads as before.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interval_end_at_the_bound_when_nothing_lies_beyond</span></code></p></td>
+<td><p>2.0.2</p></td>
+<td><p>label</p></td>
+<td><p>none</p></td>
+<td><p>An end of the cost_profile interval of a calibrated value is marked as reaching the bound of its range when no solved trial lies beyond it. It was marked only when a trial sat exactly on the bound, which a design drawn over the whole box (lhs, lhs_zoom, random_search, scipy_de) never does, so a band that ran to a bound was reported as closed. A local search (scipy_nelder_mead, cma_es) keeps the old rule, since its band may stop where it stopped looking. The interval itself and the calibrated value do not change, and a session sealed before keeps the flag it was written with.</p></td>
 </tr>
 </tbody>
 </table>

@@ -725,25 +725,31 @@ every launch and by <code class="docutils literal notranslate"><span class="pre"
 <td><p>design</p></td>
 <td><p>yes</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#optuna"><span class="std std-ref">optuna</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#lhs-zoom"><span class="std std-ref">lhs_zoom</span></a></p></td>
+<td><p>Latin hypercubes in turn, each one in the zone the trials so far leave open.</p></td>
+<td><p>One</p></td>
+<td><p>design</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#optuna"><span class="std std-ref">optuna</span></a></p></td>
 <td><p>An Optuna study driven trial by trial, with the TPE sampler by default.</p></td>
 <td><p>Any number</p></td>
 <td><p>budget</p></td>
 <td><p>yes</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#random-search"><span class="std std-ref">random_search</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#random-search"><span class="std std-ref">random_search</span></a></p></td>
 <td><p>Independent draws from the sampling of each parameter.</p></td>
 <td><p>Any number</p></td>
 <td><p>budget</p></td>
 <td><p>yes</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#scipy-de"><span class="std std-ref">scipy_de</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#scipy-de"><span class="std std-ref">scipy_de</span></a></p></td>
 <td><p>Differential evolution, <code class="docutils literal notranslate"><span class="pre">scipy.optimize.differential_evolution</span></code>.</p></td>
 <td><p>Any number</p></td>
 <td><p>budget</p></td>
 <td><p>yes</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#scipy-nelder-mead"><span class="std std-ref">scipy_nelder_mead</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#scipy-nelder-mead"><span class="std std-ref">scipy_nelder_mead</span></a></p></td>
 <td><p>A local simplex, <code class="docutils literal notranslate"><span class="pre">scipy.optimize.minimize(method='Nelder-Mead')</span></code>.</p></td>
 <td><p>Any number</p></td>
 <td><p>precision</p></td>
@@ -1012,6 +1018,48 @@ every launch and by <code class="docutils literal notranslate"><span class="pre"
 </div>
 <ul class="simple">
 <li><p><strong>Parameters:</strong> Any number</p></li>
+<li><p><strong>Stops:</strong> When every point of its design is solved: a budget below the design is refused. <a class="hmp-toml-ref reference external" href="parameters/calibration/index.html#p-calibration-precision" title="How precisely the search has to pin a parameter before it stops, as a relative precision on the parameter itself: 0.01 asks for one per cent, 0.1 for ten. (-)"><code class="docutils literal notranslate"><span class="pre">calibration.precision</span></code></a> is refused.</p></li>
+<li><p><strong>Budget:</strong> <code class="docutils literal notranslate"><span class="pre">max_trials</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> counts the evaluations its rule needs before the first solve. A smaller number is refused or warned before anything is prepared, at every launch and by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span></code>.</p></li>
+<li><p><strong>Parallel trials:</strong> Yes, with <a class="hmp-toml-ref reference external" href="parameters/calibration/index.html#p-calibration-parallel" title="Trials solved side by side, each in its own folder, for every phase that sets none of its own. (-)"><code class="docutils literal notranslate"><span class="pre">calibration.parallel</span></code></a>.</p></li>
+<li><p><strong>Starts from an earlier phase:</strong> No.</p></li>
+<li><p><strong>Restarts:</strong> Accepted by the <code class="docutils literal notranslate"><span class="pre">multistart</span></code> uncertainty.</p></li>
+</ul>
+</section>
+<section id="lhs-zoom">
+<h3><code class="docutils literal notranslate"><span class="pre">lhs_zoom</span></code><a class="headerlink" href="#lhs-zoom" title="Link to this heading">#</a></h3>
+<p>Latin hypercubes in turn, each one in the zone the trials so far leave open.</p>
+<p>Level 1 covers the bounds of the phase. Each next level covers the range of the trials whose cost stays within the phase margin of the best one, widened to the solved trial on each side and by at least one stratum of the level before. It moves one parameter, whose cost curve it reads. Use it to find a flat bottom and its width with a fixed budget.</p>
+<p>Options, written under <a class="hmp-toml-ref reference external" href="parameters/calibration/index.html#p-calibration-method_options" title="Options of the method, named as that method names them: points_per_dim for 'grid', sampler for 'optuna', sweep_points for 'bisection'."><code class="docutils literal notranslate"><span class="pre">calibration.method_options</span></code></a> with <code class="docutils literal notranslate"><span class="pre">method</span></code> beside them, or in the <code class="docutils literal notranslate"><span class="pre">method_options</span></code> of a phase:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 16.0%" />
+<col style="width: 14.0%" />
+<col style="width: 52.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it sets</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">optimization</span></code></p></td>
+<td><p>‘random-cd’ | ‘lloyd’ or None</p></td>
+<td><p>not set</p></td>
+<td><p>Post-processing passed to scipy.stats.qmc.LatinHypercube: None keeps the raw stratified draw and ‘random-cd’ spread the points further apart while still hitting every stratum exactly once; ‘lloyd’ can spread points further apart too, but is a best-effort relaxation that is not guaranteed to keep the one-point-per-stratum property.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">levels</span></code></p></td>
+<td><p>list of int</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[24,</span> <span class="pre">16]</span></code></p></td>
+<td><p>Points of each level, in order. Each level is a Latin hypercube. At least two levels of at least two points. The budget is their sum. A multiple of <code class="docutils literal notranslate"><span class="pre">parallel</span></code> keeps the workers busy.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><strong>Parameters:</strong> One</p></li>
 <li><p><strong>Stops:</strong> When every point of its design is solved: a budget below the design is refused. <a class="hmp-toml-ref reference external" href="parameters/calibration/index.html#p-calibration-precision" title="How precisely the search has to pin a parameter before it stops, as a relative precision on the parameter itself: 0.01 asks for one per cent, 0.1 for ten. (-)"><code class="docutils literal notranslate"><span class="pre">calibration.precision</span></code></a> is refused.</p></li>
 <li><p><strong>Budget:</strong> <code class="docutils literal notranslate"><span class="pre">max_trials</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> counts the evaluations its rule needs before the first solve. A smaller number is refused or warned before anything is prepared, at every launch and by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span></code>.</p></li>
 <li><p><strong>Parallel trials:</strong> Yes, with <a class="hmp-toml-ref reference external" href="parameters/calibration/index.html#p-calibration-parallel" title="Trials solved side by side, each in its own folder, for every phase that sets none of its own. (-)"><code class="docutils literal notranslate"><span class="pre">calibration.parallel</span></code></a>.</p></li>

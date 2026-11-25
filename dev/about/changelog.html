@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="HydroModPy" />
 <meta name="description" content="Every release of HydroModPy and every change since the last one, newest first. The page is the CHANGELOG.md file at the root of the repository, included as it is. It follows Keep a Changelog and Se..." />
 
-    <meta property="article:modified_time" content="2026-11-25T12:17:59+01:00" />
+    <meta property="article:modified_time" content="2026-11-25T16:46:17+01:00" />
     <title>Changelog &#8212; HydroModPy 2.0.1</title>
   
   
@@ -528,6 +528,7 @@ promises, see <a class="reference internal" href="versions.html"><span class="do
 <h3>Added<a class="headerlink" href="#added" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">run</span></code> on a <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> project shows the launch while it runs. On a terminal it draws a bar over the cases with the time left, and one line per running case with the step it is on and, while MODFLOW solves, its stress periods. Without a terminal it prints one line per finished case with the counts and the time left. Each case writes its progress events to <code class="docutils literal notranslate"><span class="pre">jobs/&lt;stamp&gt;-local/progress/</span></code> while it runs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">&quot;lhs_zoom&quot;</span></code> calibrates one parameter with Latin hypercubes in turn, <code class="docutils literal notranslate"><span class="pre">method_options</span> <span class="pre">=</span> <span class="pre">{</span> <span class="pre">levels</span> <span class="pre">=</span> <span class="pre">[24,</span> <span class="pre">16]</span> <span class="pre">}</span></code>. Level 1 covers the bounds of the phase. Each next level covers the range of the trials whose cost stays within the margin of the phase of the best one, widened to the solved trial on each side and by at least one stratum, so a flat bottom such as <code class="docutils literal notranslate"><span class="pre">Sy</span></code> is found with its width. The budget is the sum of the levels (<code class="docutils literal notranslate"><span class="pre">max_trials</span> <span class="pre">=</span> <span class="pre">&quot;auto&quot;</span></code> counts it), a second parameter is refused by <code class="docutils literal notranslate"><span class="pre">hmp</span> <span class="pre">check</span></code>, and the report lists the box of each level under <code class="docutils literal notranslate"><span class="pre">zoom</span></code>. Write the margin as <code class="docutils literal notranslate"><span class="pre">cost_margin</span></code> in the phase.</p></li>
 </ul>
 </section>
 <section id="changed">
@@ -537,11 +538,13 @@ promises, see <a class="reference internal" href="versions.html"><span class="do
 <li><p>The prepare phase of a <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> launch runs once for the cases whose files differ only by their name and the values <code class="docutils literal notranslate"><span class="pre">[sites.design]</span></code> draws. A plan of 300 points on one catchment is prepared once instead of 300 times, which took 6 hours on that server. The other cases share its outcome, journaled as a <code class="docutils literal notranslate"><span class="pre">prepare_end</span></code> that names it in <code class="docutils literal notranslate"><span class="pre">like</span></code>.</p></li>
 <li><p>A recharge period with the same rate on every cell is one <code class="docutils literal notranslate"><span class="pre">CONSTANT</span></code> line of the MODFLOW 6 input. A daily run of 34 years no longer writes 12 418 binary files and 2.7 GB of recharge per run.</p></li>
 <li><p>The MODFLOW progress bar moves by a thousandth of the run at least, so a long chronicle writes 1 000 progress events instead of one per stress period.</p></li>
+<li><p>The period edges of an hourly or daily window are built in one call instead of one by one. A daily window of 34 years takes 7 ms instead of 87 ms, the edges stay the same, and the dry run of a 300 point plan went from 55 s to 34 s.</p></li>
 </ul>
 </section>
 <section id="fixed">
 <h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading">#</a></h3>
 <ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">cost_profile</span></code> interval of a calibrated value says it reaches a bound of its range when no solved trial lies beyond that end. This holds for a search drawn over the whole box (<code class="docutils literal notranslate"><span class="pre">lhs</span></code>, <code class="docutils literal notranslate"><span class="pre">lhs_zoom</span></code>, <code class="docutils literal notranslate"><span class="pre">random_search</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy_de</span></code>). It said so only for a trial exactly on the bound, which such a design never has, so a band running to a bound was reported as closed. A local search keeps the old rule.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">[sites]</span></code> project with one site accepts a site key written in the project file itself, such as the path of a station folder, so a plan on one catchment needs no <code class="docutils literal notranslate"><span class="pre">site_overrides/</span></code> file. With several sites the key is still refused, since every catchment would read the same value.</p></li>
 </ul>
 </section>
