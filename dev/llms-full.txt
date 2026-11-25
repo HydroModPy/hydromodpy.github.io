@@ -100,6 +100,7 @@ Do a task
 - Write calibration phases
 - Long transient runs in windows
 - Many catchments
+- Plan experiments and score them later
 - On a cluster
 - Run in Docker
 - Deliver exports
@@ -397,55 +398,55 @@ cd ~/hydromodpy/projects/04_streamflow_intermittence_in_transient
 
 ## The model file
 
-The file opens with the catchment. `[site]` names it and its gauge, `NANCON`. Every series below reads that station: the discharge, and the SIM2 recharge and runoff averaged over the catchment. `[metrics]` sets the window the discharge is scored on, 2001 and 2002, so the year 2000 is spin-up.
+`hmp run` plays the file as one forward simulation, because it holds no `[calibration]` and no `[overview]`. The file opens with the catchment. `[site]` names it and its gauge, `NANCON`. Every series below reads that station: the discharge, and the SIM2 recharge and runoff averaged over the catchment. `[metrics]` sets the window the discharge is scored on, 2001 and 2002, so the year 2000 is spin-up.
 
 examples/projects/04_streamflow_intermittence_in_transient/project.toml · keys link to their card
 
 ```
-11# The catchment. The gauge is the station of every series below: the discharge,
-12# the recharge and the runoff read station NANCON. The recharge and the runoff
-13# are the SIM2 means over the catchment. The uri is the Hub'Eau code of the
-14# site, a key that survives a move to another workspace.
-15[site]
-16name = "nancon"
-17label = "Le Nançon à Lécousse"
-18gauge = "NANCON"
-19uri = "hubeau:J0014010"
+16# The catchment. The gauge is the station of every series below: the discharge,
+17# the recharge and the runoff read station NANCON. The recharge and the runoff
+18# are the SIM2 means over the catchment. The uri is the Hub'Eau code of the
+19# site, a key that survives a move to another workspace.
+20[site]
+21name = "nancon"
+22label = "Le Nançon à Lécousse"
+23gauge = "NANCON"
+24uri = "hubeau:J0014010"
 ```
 
 ...
 
 ```
-21# The discharge is scored on 2001 and 2002. The year 2000 is spin-up.
-22[metrics]
-23window = { start = "2001-01-01", end = "2002-12-31" }
+26# The discharge is scored on 2001 and 2002. The year 2000 is spin-up.
+27[metrics]
+28window = { start = "2001-01-01", end = "2002-12-31" }
 ```
 
 ...
 
 ```
-25[simulation]
-26name = "nancon_intermittence_mf6"
-27description = "Nancon catchment, monthly transient 2000-2002, seasonal seepage intermittence."
+30[simulation]
+31name = "nancon_intermittence_mf6"
+32description = "Nancon catchment, monthly transient 2000-2002, seasonal seepage intermittence."
 ```
 
 ...
 
 ```
-29# Thirty-six monthly stress periods, one time step each.
-30[simulation.time]
-31start_datetime = "2000-01-01"
-32end_datetime = "2002-12-31"
-33step_value = "1 month"
+34# Thirty-six monthly stress periods, one time step each.
+35[simulation.time]
+36start_datetime = "2000-01-01"
+37end_datetime = "2002-12-31"
+38step_value = "1 month"
 ```
 
 ...
 
 ```
-35[[simulation.process]]
-36id = "flow_main"
-37kind = "flow"
-38solvers = ["modflow6"]
+40[[simulation.process]]
+41id = "flow_main"
+42kind = "flow"
+43solvers = ["modflow6"]
 ```
 
 The catchment is cut out of a regional DEM of 75 m, upstream of the outlet, after the depressions of the DEM are breached. The domain is the box around the catchment, 172 by 157 cells, and the aquifer is one layer of 30 m under the ground.
@@ -453,138 +454,148 @@ The catchment is cut out of a regional DEM of 75 m, upstream of the outlet, afte
 examples/projects/04_streamflow_intermittence_in_transient/project.toml · keys link to their card
 
 ```
-40# The catchment is cut out of a regional 75 m DEM, upstream of the outlet,
-41# after the depressions of the DEM are breached. The domain is the box around
-42# the catchment widened by 10 % of the square root of its area: 172 x 157 cells.
-43[geographic]
-44crs_project = "EPSG:2154"
-45dem_correc_type = "breach"
+45# The catchment is cut out of a regional 75 m DEM, upstream of the outlet,
+46# after the depressions of the DEM are breached. The domain is the box around
+47# the catchment widened by 10 % of the square root of its area: 172 x 157 cells.
+48[geographic]
+49crs_project = "EPSG:2154"
+50dem_correc_type = "breach"
 ```
 
 ...
 
 ```
-47[geographic.catchment]
-48kind = "from_outlet_coord"
-49x_outlet = 389285.910
-50y_outlet = 6816518.749
-51snap_dist = "150 m"
-52buff_area = "10% of sqrt(area)"
+52[geographic.catchment]
+53kind = "from_outlet_coord"
+54x_outlet = 389285.910
+55y_outlet = 6816518.749
+56snap_dist = "150 m"
+57buff_area = "10% of sqrt(area)"
 ```
 
 ...
 
 ```
-54# One layer, 30 m thick under the ground surface.
-55[domain.depth_model]
-56kind = "constant_thickness"
-57thickness = "30 m"
+59# One layer, 30 m thick under the ground surface.
+60[domain.depth_model]
+61kind = "constant_thickness"
+62thickness = "30 m"
 ```
 
-`[data]` lists what the run reads, each from a file of the shared `data/` folder of the workspace, named by `workspace:`. A folder source, `workspace:.`, reads the station that `site.gauge` names.
+`[data]` lists what the run reads, each from a file of the shared `data/` folder of the workspace, named by `workspace:` and read in the folder of its variable. The discharge, the recharge and the runoff are chronicles of the station `site.gauge` names, each read with the location file of its folder, which gives the place and the unit of the station.
 
 examples/projects/04_streamflow_intermittence_in_transient/project.toml · keys link to their card
 
 ```
-59# The DEM, the mapped streams, the gauge, and the monthly recharge and runoff of
-60# station NANCON. The mapped streams are drawn and exported. The model does not
-61# read them.
-62[data]
-63types = ["dem", "hydrography", "hydrometry", "recharge", "runoff"]
+64# The DEM, the mapped streams, the gauge, and the monthly recharge and runoff of
+65# station NANCON. The mapped streams are drawn and exported. The model does not
+66# read them. Each name is read in the folder of its variable, data/dem/,
+67# data/hydrometry/ and so on. A chronicle CSV is read with the location file of
+68# its folder, here hydrometry_custom_LOC.csv, recharge_custom_LOC.csv and
+69# runoff_custom_LOC.csv, which give the place and the unit of station NANCON.
+70[data]
+71types = ["dem", "hydrography", "hydrometry", "recharge", "runoff"]
 ```
 
 ...
 
 ```
-65[[data.dem.sources]]
-66source = "file"
-67path = "workspace:DEM_armorican_massif.tif"
-```
-
-...
-
-```
-69[[data.hydrography.sources]]
-70source = "file"
-71path = "workspace:nancon_stream_network.gpkg"
-```
-
-...
-
-```
-73[[data.hydrometry.sources]]
+73[[data.dem.sources]]
 74source = "file"
-75path = "workspace:."
+75path = "workspace:DEM_armorican_massif.tif"
 ```
 
 ...
 
 ```
-77[[data.recharge.sources]]
+77[[data.hydrography.sources]]
 78source = "file"
-79path = "workspace:."
+79path = "workspace:nancon_stream_network.gpkg"
 ```
 
 ...
 
 ```
-81[[data.runoff.sources]]
-82source = "file"
-83path = "workspace:."
+81# Daily discharge of the gauge, 1982 to 2022.
+82[[data.hydrometry.sources]]
+83source = "file"
+84path = "workspace:hydrometry_custom_NANCON_19820201_20220125_D.csv"
 ```
 
-The aquifer has one K, one Sy and one Ss. Every cell drains at the ground, with a conductance that follows K. The first month is solved in steady state under the recharge of January 2000, so the run starts from a wet winter water table.
+...
+
+```
+86# Monthly SIM2 recharge and runoff of the catchment, 2000 to 2002, in mm/day.
+87[[data.recharge.sources]]
+88source = "file"
+89path = "workspace:recharge_custom_NANCON_20000101_20021231_M.csv"
+```
+
+...
+
+```
+91[[data.runoff.sources]]
+92source = "file"
+93path = "workspace:runoff_custom_NANCON_20000101_20021231_M.csv"
+```
+
+The flow is transient, so the heads move from one month to the next and the aquifer stores water. The aquifer has one K, one Sy and one Ss. Every cell drains at the ground, with a conductance that follows K. The first month is solved in steady state under the recharge of January 2000, so the run starts from a wet winter water table.
 
 examples/projects/04_streamflow_intermittence_in_transient/project.toml · keys link to their card
 
 ```
-85[flow]
-86param_list = ["K", "Sy", "Ss"]
+95# The heads are solved through the 36 months, with storage. The first month is
+96# solved in steady state, and [flow.sinks_sources.recharge] says under which
+97# recharge.
+98[flow]
+99flow_regime = "transient"
+100first_period_steady = true
+101param_list = ["K", "Sy", "Ss"]
 ```
 
 ...
 
 ```
-88# py1_run_and_plot.py gives Sy three values: 0.001, 0.05 and 0.3.
-89[flow.param.K.field]
-90kind = "homogeneous"
-91unit = "m/s"
-92value = 5e-5
+103# py1_run_and_plot.py gives Sy three values: 0.001, 0.05 and 0.3.
+104[flow.param.K.field]
+105kind = "homogeneous"
+106unit = "m/s"
+107value = 5e-5
 ```
 
 ...
 
 ```
-94[flow.param.Sy.field]
-95kind = "homogeneous"
-96unit = "-"
-97value = 0.05
+109[flow.param.Sy.field]
+110kind = "homogeneous"
+111unit = "-"
+112value = 0.05
 ```
 
 ...
 
 ```
-99[flow.param.Ss.field]
-100kind = "homogeneous"
-101unit = "m-1"
-102value = 1e-5
+114[flow.param.Ss.field]
+115kind = "homogeneous"
+116unit = "m-1"
+117value = 1e-5
 ```
 
 ...
 
 ```
-104# Every cell drains at the ground surface. The conductance follows K,
-105# C = K * cell area / 1 m.
-106[flow.bc.drainage]
+119# Every cell drains at the ground surface. The conductance follows K,
+120# C = K * cell area / 1 m.
+121[flow.bc.drainage]
 ```
 
 ...
 
 ```
-108# January 2000 is solved in steady state under the recharge of January, so the
-109# run starts from a wet winter water table.
-110[flow.sinks_sources.recharge]
-111first_clim = "first"
+123# January 2000 is solved in steady state under the recharge of January, so the
+124# run starts from a wet winter water table.
+125[flow.sinks_sources.recharge]
+126first_clim = "first"
 ```
 
 The last part lists the figures and the files the run writes. A figure is a variable at a time, with the layers drawn over it, or a preset. An export block says what to write and when, and the format follows the data.
@@ -592,117 +603,117 @@ The last part lists the figures and the files the run writes. A figure is a vari
 examples/projects/04_streamflow_intermittence_in_transient/project.toml · keys link to their card
 
 ```
-113# The figures land in runs/nancon_intermittence_mf6/figures/. Each one that
-114# applies and fails stops the run, so a broken figure cannot go unseen.
-115[display]
-116on_error = "raise"
+128# The figures land in runs/nancon_intermittence_mf6/figures/. Each one that
+129# applies and fails stops the run, so a broken figure cannot go unseen.
+130[display]
+131on_error = "raise"
 ```
 
 ...
 
 ```
-118[[display.figure]]
-119preset = "watershed_id_card"
+133[[display.figure]]
+134preset = "watershed_id_card"
 ```
 
 ...
 
 ```
-121[[display.figure]]
-122variable = "topography"
-123overlays = ["mesh", "outline", "network", "outlet"]
+136[[display.figure]]
+137variable = "topography"
+138overlays = ["mesh", "outline", "network", "outlet"]
 ```
 
 ...
 
 ```
-125# October 2002, the driest month of the record: the water-table depth with the
-126# seepage cells, then a section from south to north through the outlet.
-127[[display.figure]]
-128variable = "watertable_depth"
-129time = "2002-10-15"
-130overlays = ["seepage", "outline"]
-131limits = [0.0, 15.0]
-132line = [[389175.0, 6815000.0], [389175.0, 6826000.0]]
-```
-
-...
-
-```
-134[[display.figure]]
-135variable = "watertable_elevation"
-136type = "section"
-137name = "section_south_north"
-138time = "2002-10-15"
-139line = [[389175.0, 6815000.0], [389175.0, 6826000.0]]
-```
-
-...
-
-```
-141# The share of the 36 months each cell seeps.
+140# October 2002, the driest month of the record: the water-table depth with the
+141# seepage cells, then a section from south to north through the outlet.
 142[[display.figure]]
-143variable = "simulated_active_network"
-144reduce = "frequency"
-145overlays = ["outline", "network"]
+143variable = "watertable_depth"
+144time = "2002-10-15"
+145overlays = ["seepage", "outline"]
+146limits = [0.0, 15.0]
+147line = [[389175.0, 6815000.0], [389175.0, 6826000.0]]
 ```
 
 ...
 
 ```
-147# The discharge against the gauge on a log axis, the seepage share of the
-148# catchment beside the discharge, and what enters and leaves each month.
 149[[display.figure]]
-150preset = "hydrograph"
-151scale = "log"
-152name = "hydrograph_log"
+150variable = "watertable_elevation"
+151type = "section"
+152name = "section_south_north"
+153time = "2002-10-15"
+154line = [[389175.0, 6815000.0], [389175.0, 6826000.0]]
 ```
 
 ...
 
 ```
-154[[display.figure]]
-155preset = "network_expansion"
-```
-
-...
-
-```
+156# The share of the 36 months each cell seeps.
 157[[display.figure]]
-158preset = "water_budget"
+158variable = "simulated_active_network"
+159reduce = "frequency"
+160overlays = ["outline", "network"]
 ```
 
 ...
 
 ```
-163# The catchment and the mapped streams: GeoPackage.
-164[[export]]
-165variable = ["watershed", "hydrographic_network_reference"]
+162# The discharge against the gauge on a log axis, the seepage share of the
+163# catchment beside the discharge, and what enters and leaves each month.
+164[[display.figure]]
+165preset = "hydrograph"
+166scale = "log"
+167name = "hydrograph_log"
 ```
 
 ...
 
 ```
-167# The water-table depth and the seepage cells of October 2002: one GeoTIFF each.
-168[[export]]
-169variable = ["watertable_depth", "seepage_mask"]
-170time = "2002-10-15"
+169[[display.figure]]
+170preset = "network_expansion"
 ```
 
 ...
 
 ```
-172# Simulated and gauged discharge, month by month: CSV.
-173[[export]]
-174variable = ["discharge", "discharge_obs"]
+172[[display.figure]]
+173preset = "water_budget"
 ```
 
 ...
 
 ```
-176# The water budget of every month: CSV.
-177[[export]]
-178variable = "budget"
+178# The catchment and the mapped streams: GeoPackage.
+179[[export]]
+180variable = ["watershed", "hydrographic_network_reference"]
+```
+
+...
+
+```
+182# The water-table depth and the seepage cells of October 2002: one GeoTIFF each.
+183[[export]]
+184variable = ["watertable_depth", "seepage_mask"]
+185time = "2002-10-15"
+```
+
+...
+
+```
+187# Simulated and gauged discharge, month by month: CSV.
+188[[export]]
+189variable = ["discharge", "discharge_obs"]
+```
+
+...
+
+```
+191# The water budget of every month: CSV.
+192[[export]]
+193variable = "budget"
 ```
 
 ## Run the file
@@ -1431,6 +1442,129 @@ The `config.toml` of a sealed window is the request of that window alone. `hmp r
 Each run writes `profile.json`, the time and the memory of each step, solve, figure and export. `hmp show island_w2` prints the total, the start-up, the solve of each run of the plan, the three longest steps and what was reused. A run from version 2.0 has no profile, and the command says so and prints the solve time its seal holds.
 
 
+<!-- https://docs.hydromodpy.fr/dev/how-to/plan-and-score-experiments.html -->
+# Plan experiments and score them later
+
+A plan of experiments runs one model at many points of a box of parameters. This page shows how to draw the points, then how to score the stored runs again on any window, without a new solve.
+
+## Draw the points
+
+A `[sites]` project can draw its own recipes. `[sites.design]` names a method, a number of points, a seed and the parameters that move. Each point becomes a case, named `<site>-p0001`, `<site>-p0002` and so on. For `lhs` the lot is part of the name, `b1p0001`. The drawn values go to `cases.csv` of the plan.
+
+```
+# not checked: a [sites] project has no [site], so it does not load on top of example 04
+[sites]
+table = "sites.csv"
+
+[sites.recipes]
+base = "project.toml"
+
+[sites.design]
+method = "sobol"
+n = 64
+seed = 1
+recipe = "base"
+
+[sites.design.parameters.K]
+path = "flow.param.K.field.value"
+bounds = [1e-7, 1e-3]
+sampling = "log_uniform"
+
+[sites.design.parameters.Sy]
+path = "flow.param.Sy.field.value"
+bounds = [1e-4, 0.35]
+sampling = "log_uniform"
+```
+
+`sampling` is always written, because a uniform default on a parameter that spans three decades would put almost every point in the top decade. `method` is `sobol`, `lhs` or `grid`. `seed` is required for `sobol` and `lhs`, so that two expansions give the same points and the same case names. Doubling a Sobol `n` keeps the first points, and a second lot of `lhs` (`n = [60, 60]`) keeps the first one. A run that finished is not run again. `hmp check` and `hmp run --dry-run` read the design like any other plan.
+
+## Score one run
+
+A run stores its simulated and observed series. `run.score` pairs them as the seal did and gives one row per station, variable, metric and window.
+
+```
+import hydromodpy as hmp
+
+project = hmp.open("my_project")
+run = project.runs()[0]
+
+table = run.score(
+    windows={"dry": ("2016-06-01", "2016-10-31"), "all": (None, None)},
+    metrics=["nse", "kge"],
+)
+```
+
+`windows` maps a name to a start and an end, either one may be `None`. Without `windows` the run is scored on the window of its own `[metrics]`, and the numbers are those of its seal. Without `metrics` every metric of a series pair is computed. `station` picks one station. The columns include `value`, `n_samples` and `n_sim_nan`, the number of periods lost to a missing simulated value.
+
+`months` keeps the periods that fall in the given calendar months, after the pairing.
+
+```
+summer = run.score(windows={"w": ("2010-01-01", "2018-12-31")}, months=[6, 7, 8, 9])
+```
+
+A mean period counts when all its days are in the months. A metric that needs consecutive days, such as `bfi_gap`, is refused on a masked window. `nse_seasonal` needs two full cycles in what is left.
+
+## Score a set of runs
+
+`runs.score` takes the same arguments and stacks the rows of every run, with the parameters of each run as columns. `runs.timeseries` stacks the stored series themselves.
+
+```
+runs = project.runs()
+table = runs.score(windows={"w": ("2016-01-01", "2018-12-31")}, metrics=["nse"])
+series = runs.timeseries(station="J0014010", variable="discharge")
+```
+
+A run with no series at that station gives no row, with a warning.
+
+## Score the stream network
+
+`run.score_network` scores the stream network of a stored run as a calibration trial scores it, from the settings the run sealed or the defaults. The table has one row per quantity, bound and year. The numbers equal those of a trial when the run stored its fields with `[simulation.results.persistence] field_precision = "exact"`. With the default `compact` precision, a cell right at the seepage threshold can flip, so write `exact` in the plan when the network scores matter.
+
+```
+network = runs.score_network(window=("2001-01-01", "2010-12-31"))
+```
+
+The network metrics `distance_gap` and `distance_mean` are given here and not by `score`, as quantities such as `J_signed` and `D_so`.
+
+## Score a whole workspace
+
+`hmp.index` opens a workspace. Its `score` and `score_network` run the set methods on every project and add a `project` column in front.
+
+```
+workspace = hmp.index("~/hydromodpy")
+table = workspace.score(windows={"w": ("2016-01-01", "2018-12-31")}, metrics=["nse"])
+network = workspace.score_network()
+```
+
+## Score at collect
+
+`hmp campaign collect` can do the same for every run of a `[sites]` project. Each `[[sites.summary.window]]` block names a window, and the collect writes `summary/scores.parquet` with the metrics of `[sites.summary]`.
+
+```
+# not checked: part of a [sites] project
+[[sites.summary.window]]
+name = "dry-summers"
+start = "2010-01-01"
+end = "2018-12-31"
+months = [6, 7, 8, 9]
+```
+
+## Look at the plane of two parameters
+
+The figure `parameter_space` draws each run as a point on log axes, coloured by one score. `variable` names the two parameters, and a third name picks the score. It is a metric of `score`, or a quantity of `score_network`. `time` gives the window. `station` picks one station, or the bound of a network quantity scored on two bounds.
+
+```
+runs.figure("parameter_space", variable=["K", "Sy", "kge"], time=["2016-01-01", "2018-12-31"])
+runs.figure("parameter_space", variable=["K", "Sy", "J_signed"])
+```
+
+A ring marks a run whose simulated series has missing values in the window, because its score covers fewer periods. The months mask is not a figure option. Score with `months` and read the table.
+
+## Read a ridge in a calibration
+
+A calibration that runs a `lhs` or a `grid` phase writes `ridge` in the report of the phase. It takes the best fifth of the trials, at least five, and reads them in search space, each axis scaled to the width of its bounds. It gives the Spearman correlation of each pair and `axis_ratio`, the square root of the ratio of the largest to the smallest eigenvalue of their covariance. A round cloud gives a ratio near one. A narrow cloud along a diagonal gives a large ratio and a correlation near one, which says the data fix a combination of the parameters and not each one.
+
+
 <!-- https://docs.hydromodpy.fr/dev/how-to/replay-a-run.html -->
 # Replay a run
 
@@ -1603,6 +1737,16 @@ path = "workspace:regional_stream_network.shp"  # data/hydrography/regional_stre
 ```
 
 A station folder is the folder of the variable itself, `path = "workspace:."`. It holds `hydrometry_file_LOC.csv`, with the id, x, y, CRS and unit of each station, and one chronicle per station, `hydrometry_file_<id>_<start>_<end>_<step>.csv`. For hydrometry, recharge and runoff, a source without `station_ids` reads the gauge of `[site]`. The files a provider cached in the same folder carry the name of the provider, such as `hydrometry_hubeau_...`, and this source does not read them.
+
+When a folder holds two chronicles of one station, a monthly and a daily series for example, the run stops and lists them. I then name the one to read, and HydroModPy reads it with the location file of its folder.
+
+```
+[[data.recharge.sources]]
+source = "file"
+path = "workspace:recharge_file_NANCON_20000101_20021231_M.csv"
+```
+
+A named chronicle belongs to one station, the one of `station_ids` or of the gauge of `[site]`. A file whose name says another station is refused. After the id, a chronicle name holds nothing, a step such as `_D`, or the two dates and the step, so `hydrometry_file_NANCON_REA_...` is a chronicle of station `NANCON_REA` and never of `NANCON`.
 
 The name does not depend on where the project sits in the workspace, and it follows `[workspace] data_dir` when the data folder lives elsewhere, on a shared disk for example. A run writes the same form in its frozen configuration and in its manifest, so the index of the project lists the file under this name with its digest. The parameter reference gives the folder on the card of each key that accepts a workspace name.
 
@@ -3157,7 +3301,7 @@ Required sections first, then the others in the order of the code.
 `[edition]`The set of defaults the file is read with.1 user · 0 dev/expert
 `[workflow]`Workflow configuration: `workflow.mode` ('simulation', 'calibration' or 'overview'), the console verbosity and the profiler.2 user · 1 dev/expert
 `[site]`The catchment this project models: its name, label, gauge and registry URI.4 user · 0 dev/expert
-`[sites]`The catchments of a campaign and the recipes run on each of them: the plan is sites x recipes, one case <site>-<recipe> per pair.23 user · 3 dev/expert
+`[sites]`The catchments of a campaign and the recipes run on each of them: the plan is sites x recipes, one case <site>-<recipe> per pair.39 user · 3 dev/expert
 `[metrics]`Where and when a run is scored after it ends: the station (default [site] gauge) and the window.3 user · 0 dev/expert
 `[publication]`Licence, creators and attribution written into every copy hmp publish makes of a result. hmp publish --public refuses a project without a licence.3 user · 0 dev/expert
 `[domain]`Domain configuration: the depth of the aquifer ([domain.depth_model]), its layering ([domain.layers], read by every solver) and the spatial-support mode used for heterogeneous parameter mapping (`none`, `geology`, or `zones`).25 user · 4 dev/expert
@@ -3226,13 +3370,13 @@ This is a final release: a name listed here changes only under the rules of the 
 
 `Project`Setup-once, run-many interface for HydroModPy simulations.33 public members
 `Lab`Build, look at, change and solve a model in memory, one step at a time.14 public members
-`Run`Read one persisted simulation from a HydroModPy catalog.55 public members
-`RunSet`Collection view over several simulations from one catalog.15 public members
+`Run`Read one persisted simulation from a HydroModPy catalog.57 public members
+`RunSet`Collection view over several simulations from one catalog.18 public members
 `Session`One calibration session, read from its directory.19 public members
 `Catalog`Read-only view of a project index.52 public members
-`Workspace`Read-only view of a workspace: its projects and the sealed runs they hold.3 public members
+`Workspace`Read-only view of a workspace: its projects and the sealed runs they hold.5 public members
 `RunOutcome`What a finished run says, read from its directory.13 public members
-`PlanDraft`A plan before it is written: its cases, and what is wrong with them.13 public members
+`PlanDraft`A plan before it is written: its cases, and what is wrong with them.14 public members
 `OverviewResult`What an overview drew, and where it sealed it.6 public members
 `Diagnostic`One finding of a check, at one key of the document.13 public members
 `CalibrationReport`What one calibration found, with or without phases.24 public members
@@ -3379,8 +3523,8 @@ Options, written under `calibration.method_options` with `method` beside them, o
 
 | Option | Type | Default | What it sets |
 | --- | --- | --- | --- |
-| `n_samples` | int | required | Points drawn in the design. Required. |
 | `optimization` | ‘random-cd’ | ‘lloyd’ or None | not set | Post-processing passed to scipy.stats.qmc.LatinHypercube: None keeps the raw stratified draw and ‘random-cd’ spread the points further apart while still hitting every stratum exactly once; ‘lloyd’ can spread points further apart too, but is a best-effort relaxation that is not guaranteed to keep the one-point-per-stratum property. |
+| `n_samples` | int | required | Points drawn in the design. Required. |
 
 - Parameters: Any number
 - Stops: When every point of its design is solved: a budget below the design is refused. `calibration.precision` is refused.
@@ -3694,7 +3838,7 @@ A file that does not write these keys gets a different run.
 
 - `calibration.outputs.<name>.map.drawn_by``"heads"` to `"crossing"`
 
-## Added (13)
+## Added (15)
 
 - `[data]`
   - `data.curve_number`
@@ -3712,6 +3856,9 @@ A file that does not write these keys gets a different run.
   - `flow.sinks_sources.recharge.soil.snow`
 - `[recharge_estimates]`
   - `recharge_estimates`
+- `[sites]`
+  - `sites.design`
+  - `sites.summary.window`
 
 ## Changed (6)
 
@@ -7736,7 +7883,7 @@ A figure is a request, and a request holds panels.
 
 | Field | Type | Default | What it does | Accepted |
 | --- | --- | --- | --- | --- |
-| `preset` | `str or none` | `unset` | Name of a shipped preset or of one of your own presets. | `hydrograph`, `residuals`, `water_budget`, `watershed_id_card`, `network_expansion`, `calibration_landscape`, `calibration_progress`, `ensemble_band`, `flow_directions`, `lake_abacus_comparison`, `network_comparison`, `observed_network_heads`, `particle_tracks`, `recharge_estimates`, `recharge_regime`, `recharge_signals`, `recession`, `residence_time_distribution`, `root_search`, `sfr_longitudinal_profile`, `water_balance_loop` |
+| `preset` | `str or none` | `unset` | Name of a shipped preset or of one of your own presets. | `hydrograph`, `residuals`, `water_budget`, `watershed_id_card`, `network_expansion`, `calibration_landscape`, `calibration_progress`, `ensemble_band`, `flow_directions`, `lake_abacus_comparison`, `network_comparison`, `observed_network_heads`, `particle_tracks`, `recharge_estimates`, `recharge_regime`, `recharge_signals`, `parameter_space`, `recession`, `residence_time_distribution`, `root_search`, `sfr_longitudinal_profile`, `water_balance_loop` |
 | `panels` | `list[PanelRequest] or none` | `unset` | The panels, in order. | |
 | `draw` | `function or none` | `unset` | Python function that draws the figure, draw(subject, ax, theme). Never written in a file. | |
 | `name` | `str or none` | `unset` | File name of the figure, no suffix. | |
@@ -8025,6 +8172,7 @@ A special figure is a preset drawn by a function, and it takes no panel.
 | `recharge_estimates` | `run` | medium | - | `recharge_estimates` | Yearly recharge of each method of [recharge_estimates], beside the run's own. |
 | `recharge_regime` | `run` | double | - | `recharge_estimates` | The mean year of each method: rain and ETP, recharge, runoff, month by month. |
 | `recharge_signals` | `run` | double | - | `recharge_estimates` | Monthly rain and ETP, then the recharge and the runoff of each method, month by month. |
+| `parameter_space` | `runset` | single | `station`, `time`, `variable` | - | Two parameters of a run set on log axes, each run coloured by one score. |
 | `recession` | `run` | medium | `station` | `discharge`, `hydraulic_conductivity`, `specific_yield` | Recession rate against discharge on the Brutsaert-Nieber plane, at one station. |
 | `residence_time_distribution` | `run` | | - | `head` | Survival function of the particle travel times against the exponential of the turnover time. |
 | `root_search` | `session` | | - | `trials` | The distances of a root search against the parameter it searched, one point per evaluation. |
@@ -9192,11 +9340,6 @@ Connections found in the code (1)
 
 Dates bounding the samples a metric is computed on.
 
-Connections found in the code (3)
-- Same name `[metrics.window]` Dates the run is scored on, as {start, end}.
-- Same name `[calibration.protocol.window]` Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional.
-- Same name `[calibration.window]` Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored.
-
 [calibration.phases.window]
 
 `# start = ‹string›` : First date scored, ISO 8601. experimental
@@ -9382,11 +9525,6 @@ Connections found in the code (2)
 
 Dates bounding the samples a metric is computed on.
 
-Connections found in the code (3)
-- Same name `[metrics.window]` Dates the run is scored on, as {start, end}.
-- Same name `[calibration.window]` Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored.
-- Same name `[calibration.phases.window]` Dates bounding the samples this phase scores on, replacing [calibration].window. start = the first date scored leaves a spin-up out of every block alike.
-
 [calibration.protocol.window]
 
 `# start = ‹string›` : First date scored, ISO 8601. experimental
@@ -9468,12 +9606,6 @@ Dates bounding the samples a metric is computed on.
 Dates bounding the samples a metric is computed on.
 
 - `calibration.window`[table] · optional · 2 user keys
-
-Connections found in the code (3)
-- Same name `[metrics.window]` Dates the run is scored on, as {start, end}.
-- Same name `[calibration.protocol.window]` Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional.
-- Same name `[calibration.phases.window]` Dates bounding the samples this phase scores on, replacing [calibration].window. start = the first date scored leaves a spin-up out of every block alike.
-
 [calibration.window]
 
 `# start = ‹string›` : First date scored, ISO 8601. experimental
@@ -10195,7 +10327,7 @@ Connections found in the code (1)
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.etp.sources.path`
 **More**: For source = 'explore2', the local DRIAS Explore2 NetCDF to read.
 **Accepted**: path
@@ -10534,7 +10666,7 @@ Repeat the table: one `[[data.humidity.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.humidity.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -10711,7 +10843,7 @@ Repeat the table: one `[[data.hydrometry.sources]]` block per item.
 **Path**: `data.hydrometry.sources.source`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.hydrometry.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11080,7 +11212,7 @@ Repeat the table: one `[[data.intermittency.sources]]` block per item.
 **Path**: `data.intermittency.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.intermittency.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11403,7 +11535,7 @@ Repeat the table: one `[[data.lake_inflow.sources]]` block per item.
 **Path**: `data.lake_inflow.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.lake_inflow.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11504,7 +11636,7 @@ Repeat the table: one `[[data.lake_levels.sources]]` block per item.
 **Path**: `data.lake_levels.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.lake_levels.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11605,7 +11737,7 @@ Repeat the table: one `[[data.lake_outflow.sources]]` block per item.
 **Path**: `data.lake_outflow.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.lake_outflow.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11706,7 +11838,7 @@ Repeat the table: one `[[data.lake_withdrawal.sources]]` block per item.
 **Path**: `data.lake_withdrawal.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.lake_withdrawal.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -11886,7 +12018,7 @@ Repeat the table: one `[[data.oceanic.sources]]` block per item.
 **Path**: `data.oceanic.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.oceanic.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12000,7 +12132,7 @@ Repeat the table: one `[[data.piezometry.sources]]` block per item.
 **Path**: `data.piezometry.sources.col_value`
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.piezometry.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12142,7 +12274,7 @@ Connections found in the code (1)
 **Accepted**: list of "liquid" | "solid" | "total"
 **Valid range**: at least 1 item (refused outside)
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.precipitation.sources.path`
 **More**: For source = 'explore2', the local DRIAS Explore2 NetCDF to read.
 **Accepted**: path
@@ -12301,7 +12433,7 @@ Repeat the table: one `[[data.radiation.sources]]` block per item.
 **Accepted**: list of "atmospheric" | "visible"
 **Valid range**: at least 1 item (refused outside)
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.radiation.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12423,7 +12555,7 @@ Repeat the table: one `[[data.recharge.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.recharge.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12574,7 +12706,7 @@ Repeat the table: one `[[data.runoff.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.runoff.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12754,7 +12886,7 @@ Repeat the table: one `[[data.soil_moisture.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.soil_moisture.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -12938,7 +13070,7 @@ Repeat the table: one `[[data.temperature.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.temperature.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -13049,7 +13181,7 @@ Repeat the table: one `[[data.water_quality.sources]]` block per item.
 **More**: None = all parameters.
 **Accepted**: list of string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. varies by site
 **Path**: `data.water_quality.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -13171,7 +13303,7 @@ Repeat the table: one `[[data.wind.sources]]` block per item.
 **More**: Unset means undetermined.
 **Accepted**: string
 
-`# path = ‹path›` : Directory containing location file and chronicle CSVs, or a single .nc/.tif file. varies by site
+`# path = ‹path›` : Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. varies by site
 **Path**: `data.wind.sources.path`
 **Accepted**: path
 **Varies by site**: yes: in a project of many sites, bind it to a column with `sites.bind` or set it in a per-site overlay; a literal value is refused
@@ -20500,11 +20632,6 @@ The station and the window the scores of a run are computed on.
 
 The dates a run is scored on, both included.
 
-Connections found in the code (3)
-- Same name `[calibration.protocol.window]` Dates bounding the samples stage two scores on, as {start, end} in ISO 8601, either one optional.
-- Same name `[calibration.window]` Dates bounding the samples every metric is computed on: the way to leave a spin-up out, with start = the first date scored.
-- Same name `[calibration.phases.window]` Dates bounding the samples this phase scores on, replacing [calibration].window. start = the first date scored leaves a spin-up out of every block alike.
-
 [metrics.window]
 
 `start = "2001-01-01"` : First day the scores count, as an ISO 8601 date. required example value
@@ -20867,7 +20994,7 @@ The licence and the authorship written into every publication.
 
 Every user key whose unit or form the code declares, grouped by kind of quantity. Files and folders come last.
 
-Lengths, depths and distances (82) · Water depths and soil capacities (2) · Durations (17) · Conductivities and fluxes (6) · Storage (1) · Discharges (1) · Areas (2) · Concentrations (4) · Counts and indices (36) · Fractions and ratios (43) · Dates (4) · Coordinate systems (14) · Other units (46) · Other numbers (17) · Files and folders (102)
+Lengths, depths and distances (82) · Water depths and soil capacities (2) · Durations (17) · Conductivities and fluxes (6) · Storage (1) · Discharges (1) · Areas (2) · Concentrations (4) · Counts and indices (37) · Fractions and ratios (43) · Dates (4) · Coordinate systems (14) · Other units (46) · Other numbers (17) · Files and folders (102)
 
 Filter
 
@@ -21079,6 +21206,7 @@ Dimensionless whole numbers.
 | `geographic.synthetic.grid.ny` | - | 1 | Number of grid cells along y, over length_y. |
 | `observation.points.layer` | - | not set | Zero-based layer index to read. |
 | `simulation.rng_seed` | - | not set | Master RNG seed for the simulation. |
+| `sites.design.seed` | - | not set | Seed of the draw, required for sobol and lhs. |
 | `sites.run.parallel` | - | 8 | Total budget of solves that run side by side. |
 | `spinup.max_cycles` | - | 10 | Maximum spin-up cycles before the loop stops without converging. |
 | `transport.modflow6_prt.max_particles` | - | not set | Most release cells kept after the zone is selected; the kept cells are spread over the zone. |
@@ -21252,57 +21380,57 @@ The code declares no unit for these.
 | `data.dem.sources.mask_path` | | not set | Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over. |
 | `data.dem.sources.path` | | required | Path to user DEM file or directory (TIF, ASC, NC). |
 | `data.etp.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.etp.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.etp.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.geology.sources.mask_path` | | not set | Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over. |
 | `data.geology.sources.path` | | required | Path to custom geology file or directory (SHP, GPKG, TIF, CSV). |
 | `data.geology.sources.values_table_path` | | not set | Optional CSV linking geology codes to descriptions. |
 | `data.humidity.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.humidity.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.humidity.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.hydrography.mask_path` | | not set | SHP/GPKG/GeoJSON/TIF whose shape the network is clipped to and whose bounds are the box the API sources are asked over. |
 | `data.hydrography.sources.path` | | not set | Path to a vector file (SHP/GPKG/GeoJSON), raster (TIF/TIFF), or directory containing one. |
 | `data.hydrometry.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.hydrometry.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.hydrometry.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.impervious.sources.mask_path` | | not set | Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over. |
 | `data.impervious.sources.path` | | required | Path to a raster of the sealed share of each pixel, 0 to 1 (GeoTIFF, ASC). |
 | `data.infiltration_ratio.sources.mask_path` | | not set | Vector polygon file (shp, gpkg or GeoJSON) whose extent this source is requested over. |
 | `data.infiltration_ratio.sources.path` | | required | Path to a raster of the share of the soil excess that reaches the aquifer, 0 to 1 per pixel (GeoTIFF, ASC). |
 | `data.intermittency.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.intermittency.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.intermittency.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.lake_abacus.sources.path` | | required | Path to a user lake-abacus table file (CSV with stage,volume,sarea). |
 | `data.lake_bathymetry.sources.path` | | required | Path to a user lake-bathymetry raster file (GeoTIFF, ASC). |
 | `data.lake_geometry.sources.path` | | required | Path to a user lake-geometry vector file (SHP, GPKG, GeoJSON). |
 | `data.lake_inflow.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.lake_inflow.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.lake_inflow.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.lake_levels.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.lake_levels.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.lake_levels.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.lake_outflow.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.lake_outflow.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.lake_outflow.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.lake_withdrawal.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.lake_withdrawal.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.lake_withdrawal.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.layer_base.sources.path` | | required | Path to a raster of the base elevation of a layer in m (GeoTIFF, ASC). |
 | `data.oceanic.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.oceanic.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.oceanic.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.piezometry.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.piezometry.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.piezometry.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.precipitation.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.precipitation.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.precipitation.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.property_map.sources.path` | | required | Path to a single-band raster of the property, one value per pixel (GeoTIFF, ASC), in the unit of the parameter that reads it. |
 | `data.radiation.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.radiation.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.radiation.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.recharge.sources.mask_path` | | not set | SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip grid. |
-| `data.recharge.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.recharge.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.runoff.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.runoff.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.runoff.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.soil_capacity.sources.path` | | required | Path to a raster of soil available water capacity in mm (GeoTIFF, ASC). |
 | `data.soil_moisture.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.soil_moisture.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.soil_moisture.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.substratum.sources.path` | | required | Path to a user substratum raster file (GeoTIFF, ASC). |
 | `data.temperature.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.temperature.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.temperature.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `data.water_quality.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.water_quality.sources.path` | | not set | Directory containing location file and chronicle CSVs. |
+| `data.water_quality.sources.path` | | not set | Folder of chronicle CSVs and their location file, or one chronicle CSV read with the location file of its folder. |
 | `data.wind.sources.mask_path` | | not set | Optional SHP/GPKG/GeoJSON/TIF mask to spatially filter stations or clip gridded sources. |
-| `data.wind.sources.path` | | not set | Directory containing location file and chronicle CSVs, or a single .nc/.tif file. |
+| `data.wind.sources.path` | | not set | Folder of chronicle CSVs and their location file, one chronicle CSV read with the location file of its folder, or a single .nc/.tif file. |
 | `export.file` | | not set | One exact file to write; its extension gives the format. |
 | `export.folder` | | not set | A folder under the exports/ directory of the run, where the files are written with automatic names. |
 | `flow.bc.<name>.forcing.path_file` | | required | CSV file of the dated values. |
@@ -21897,7 +22025,7 @@ Connections found in the code (1)
 
 The catchments of a project and the recipes run on each of them.
 
-- `sites`[table] · optional · 23 user keys, 3 dev or expert
+- `sites`[table] · optional · 39 user keys, 3 dev or expert
 - Start a file: `hmp config template --modules sites` (download it), then `hmp check file.toml`. Minimal file
 
 Connections found in the code (1)
@@ -21962,6 +22090,101 @@ One table per name you choose: `[sites.recipes.<name>]`. The name is free text.
 **See**: flow.param.K.field.value"
 **Accepted**: table { key = any value }
 **Example**: `{ flow.param.K.field.value = 2e-05 }`
+
+## `[sites.design]`
+
+Points of an experiment plan, drawn when the plan is expanded.
+
+[sites.design]
+
+`# method = "sobol"` : Design that places the points in the box of the parameters. sobol: scrambled Sobol sequence, nested: doubling n keeps the first points; lhs: Latin hypercube, one point per stratum, grown by independent lots; grid: regular grid, its size is the product of points_per_dim.
+**Path**: `sites.design.method`
+**More**: Each point becomes a recipe: p0001, p0002 for sobol and grid, b1p0001 for the first point of the first lot of lhs.
+**Accepted**: string
+**Example**: `"sobol"`
+
+`# n = 64` : Number of points. example value
+**Path**: `sites.design.n`
+**More**: Required for sobol and lhs, refused for grid whose size is the product of options.points_per_dim. For lhs a list gives the size of each lot: [60, 60] adds a second lot of 60 points to a first one already run, and the first lot does not move. A sobol size that is not a power of two warns, its balance holds for powers of two.
+**Accepted**: integer or list of integer
+**Example**: `64`, `[60, 60]`
+
+`# seed = 1` : Seed of the draw, required for sobol and lhs. - >= 0 example value
+**Path**: `sites.design.seed`
+**More**: Without it every expansion would draw other points, give other solution keys to the same case names and run everything again.
+**Accepted**: integer
+**Valid range**: >= 0 (refused outside)
+**Unit**: -
+**Example**: `1`
+
+`# recipe = "base"` : Recipe of [sites.recipes] that the points replace, and whose file and set they start from. example value
+**Path**: `sites.design.recipe`
+**More**: Required if the project declares several recipes. The other recipes run once per site as before.
+**See**: sites.recipes
+**Accepted**: string
+**Example**: `"base"`
+
+`# options = {}` : Options of the method: optimization (random-cd or lloyd) for lhs, points_per_dim for grid.
+**Path**: `sites.design.options`
+**More**: The number of points is n, never an option.
+**Accepted**: table { key = any value }
+**Example**: `{ optimization = "random-cd" }`
+
+### `[sites.design.parameters.<name>]`
+
+User declaration for one calibrated parameter.
+
+One table per name you choose: `[sites.design.parameters.<name>]`. The name is free text.
+
+[sites.design.parameters.<name>]
+
+`# bounds = ‹list of number›` : [low, high] physical bounds, in 'units' when the file writes it, else in the unit the target declares. exactly 2 items
+**Path**: `sites.design.parameters.<name>.bounds`
+**More**: Falls back to what the field annotates when the file omits it, which most fields deliberately leave unset because a range belongs to the site.
+**Accepted**: list of number
+**Valid range**: exactly 2 items (refused outside)
+
+`# search_space = "identity"` : Space the search walks the parameter in.
+**Path**: `sites.design.parameters.<name>.search_space`
+**More**: 'log' for strictly-positive quantities spanning orders of magnitude. Unset, the target's own field decides: a hydraulic conductivity declares 'log' where it is defined, so a file states this only to depart from it.
+**Values**:
+- `"identity"` : Searches the value as written.
+- `"log"` : Searches the logarithm of the value: for a positive quantity that spans orders of magnitude.
+- `"logit"` : Searches log(x / (1 - x)): for a share strictly between 0 and 1. Both bounds must lie inside (0, 1).
+**Accepted**: "identity" | "log" | "logit"
+**Was**: `calibration.parameters.transform`
+
+`# sampling = "uniform"` : Distribution, between the bounds, that starting points, random draws and Bayesian samplers take values from.
+**Path**: `sites.design.parameters.<name>.sampling`
+**Values**:
+- `"uniform"` : Every value between the bounds is equally likely.
+- `"log_uniform"` : Every decade between the bounds is equally likely.
+- `"normal"` : A normal law centred between the bounds, with a standard deviation of a sixth of their span, cut at the bounds.
+**Accepted**: "uniform" | "log_uniform" | "normal"
+**Was**: `calibration.parameters.prior`
+
+`# path = ‹string›` : Dotted TOML path of the value to move, such as 'flow.param.K.field.value'.
+**Path**: `sites.design.parameters.<name>.path`
+**More**: Optional, and the way out rather than the way in: when omitted, the section name is resolved against the project catalogue ('hmp config targets' lists it). Write one to reach a value the catalogue does not carry, or to settle a name two targets answer to. A path written here wins without a lookup. When the catalogue carries it, the parameter inherits the field's space and draw like a named one; when it does not, nothing is inherited and the sample is written as it is drawn.
+**Accepted**: string
+
+`# target = ‹string›` : Readable alias for 'path'.
+**Path**: `sites.design.parameters.<name>.target`
+**More**: Setting both is refused.
+**Accepted**: string
+
+`# mode = "replace"` : 'replace' writes the sampled value as-is; 'scale' multiplies the base TOML value at the target path by the sample.
+**Path**: `sites.design.parameters.<name>.mode`
+**Values**:
+- `"replace"`
+- `"scale"`
+**Accepted**: "replace" | "scale"
+
+`# units = "m/s"` : Unit the bounds are written in, such as 'm/s'. example value
+**Path**: `sites.design.parameters.<name>.units`
+**More**: For a parameter the catalogue resolves, bounds in another unit of the same quantity are converted when the file loads into the unit the target is read in, and the search draws, writes and reports its samples in that unit ('hmp config targets' lists it). A unit of another quantity is refused. Unset, the unit of the target applies. With mode = 'scale' the bounds are factors without a unit, and writing one is refused. For a path outside the catalogue it is the unit the bounds are checked against the physical range in.
+**Accepted**: string
+**Example**: `"m/s"`
 
 ## `[sites.run]`
 
@@ -22048,6 +22271,37 @@ What `summary/` of a `[sites]` project tabulates and draws.
 **Path**: `sites.summary.columns`
 **Accepted**: list of string
 **Example**: `["checks.budget_pct", "checks.converged"]`
+
+### `[[sites.summary.window]]`
+
+One window the runs are scored on again after the fact, one `[[sites.summary.window]]`.
+
+Repeat the table: one `[[sites.summary.window]]` block per item.
+
+[[sites.summary.window]]
+
+`name = "dry-summers"` : Name of the window, the window_name column of summary/scores.parquet. required example value
+**Path**: `sites.summary.window.name`
+**Accepted**: string
+**Example**: `"dry-summers"`
+
+`# start = "2016-01-01"` : First day of the window, an ISO date. example value
+**Path**: `sites.summary.window.start`
+**More**: Unset, the start of each run.
+**Accepted**: string
+**Example**: `"2016-01-01"`
+
+`# end = "2018-12-31"` : Last day of the window, an ISO date. example value
+**Path**: `sites.summary.window.end`
+**More**: Unset, the end of each run.
+**Accepted**: string
+**Example**: `"2018-12-31"`
+
+`# months = [6, 7, 8, 9]` : Calendar months kept, 1 to 12. example value
+**Path**: `sites.summary.window.months`
+**More**: Unset, every month.
+**Accepted**: list of integer
+**Example**: `[6, 7, 8, 9]`
 
 ## `[[sites.export]]`
 
@@ -23990,6 +24244,7 @@ web_report, )[source]**: What an overview drew, and where it sealed it.
 | `to_dict` | method | Return the plan as JSON: its `lines`, then its grouped `warnings` and `errors`. |
 | `cases` | attribute | Signature only |
 | `config_path` | attribute | Signature only |
+| `design_hash` | attribute | Signature only |
 | `errors` | attribute | Signature only |
 | `inputs` | attribute | Signature only |
 | `project_file` | attribute | Signature only |
@@ -24011,10 +24266,12 @@ cases,
 errors=(),
 warnings=(),
 inputs=(),
-steps=(), )[source]**: A plan before it is written: its cases, and what is wrong with them.
+steps=(),
+design_hash=None, )[source]**: A plan before it is written: its cases, and what is wrong with them.
 ** to_dict()[source]**: Return the plan as JSON: its `lines`, then its grouped `warnings` and `errors`. The `lines` are those `hmp run --dry-run` prints for a `[sites]` project, so a draft without `[sites]` has none to give.
 ** cases: tuple[DraftCase, ...]**:
 ** config_path: Path | None**:
+** design_hash: str | None**:
 ** errors: tuple[PlanIssue, ...]**:
 ** inputs: tuple[Path, ...]**:
 ** property ok: bool[source]**: Whether every case validated.
@@ -24427,6 +24684,8 @@ error=None, )[source]**: One line of `published.jsonl`: where a copy went, or wh
 | `observed` | method | Return observed timeseries ingested for this simulation. |
 | `parameters` | property | Calibratable parameters persisted for this run. |
 | `recharge_forcing` | method | Input recharge rate of the model domain per stress period, in m/s. |
+| `score` | method | Score the stored series of this run again, on any window, after the fact. |
+| `score_network` | method | Score the stream-network criterion of this run again, as its trial scored it. |
 | `stations` | method | Return the sorted station ids carrying one variable, simulated by default. |
 | `time_index` | property | Datetime index aligned with the simulation's stress periods. |
 | `timeseries` | method | Return one time series, simulated unless `source` says otherwise. |
@@ -24613,6 +24872,20 @@ Examples
 **Return type:**: DataFrame
 ** property Run.parameters: DataFrame[source]**: Calibratable parameters persisted for this run. Returns a `DataFrame` indexed by `param_name` (or by the `(param_name, zone_id)` MultiIndex when a parameter is zonal) with columns `value`, `unit`, `parameterization`. Homogeneous scalars are trivially looked up via `run.parameters.loc["thickness", "value"]`.
 ** Run.recharge_forcing()[source]**: Input recharge rate of the model domain per stress period, in m/s.
+** Run.score(windows=None, metrics=None, months=None, station=None)[source]**: Score the stored series of this run again, on any window, after the fact. No model is run: the series come from `timeseries.parquet` and are paired as the seal pairs them, a simulated stamp closing its period.
+**Parameters:**:
+- windows (Mapping[str, tuple[Any, Any]] | Sequence[DateWindow] | None) – `{name: (start, end)}` with ISO dates, either bound `None` for open, or a list of `DateWindow`. `None` scores the `[metrics]` window of the seal.
+- metrics (Sequence[str] | None) – Names of the metric table. `None` means every metric a series pair can give. A network metric is refused, and so is a metric that needs consecutive days when `months` is set.
+- months (Sequence[int] | None) – Calendar months, 1 to 12, that the paired periods must fall in.
+- station (str | None) – Score only this station. `None` scores every observed station the run simulates.
+**Returns:**: pandas.DataFrame – One row per station, variable, metric and window: `sim_id`, `run`, `station`, `variable`, `metric`, `window_name`, `window_start`, `window_end`, `months`, `value`, `n_samples`, `n_sim_nan`.
+**Return type:**: DataFrame
+** Run.score_network(output=None, window=None)[source]**: Score the stream-network criterion of this run again, as its trial scored it. No model is run. The release field, the mesh, the maps and the criterion recharge come from the store, and the settings from the network output the run sealed, or the defaults of that output when it sealed none. The value is the one a calibration trial gives at the same parameters and window.
+**Parameters:**:
+- output (str | None) – The sealed network output to read. `None` reads the only one, or the defaults.
+- window (tuple[Any, Any] | Mapping[str, tuple[Any, Any]] | None) – `(start, end)` or `{name: (start, end)}`, ISO dates, either bound `None` for open. It picks the complete years of the two-bound mode. `None` reads the window the run was scored with, else every year. One state reads no window.
+**Returns:**: pandas.DataFrame – One row per quantity: `sim_id`, `run`, `output`, `mode` (`one_state` or `two_bounds`), `window_name`, `window_start`, `window_end`, `bound` (`minimal`, `maximal`, a validation map, or empty), `year` (empty for the climatological value), `quantity` (`J_signed`, `D_so`, `D_os`, `D_optim`, `r_optim_valid`, `n_years_scored`, …) and `value`.
+**Return type:**: DataFrame
 ** Run.stations(variable, *, source='simulated')[source]**: Return the sorted station ids carrying one variable, simulated by default. Lets a caller enumerate multi-station families (one `reach_id` station per SFR reach, gauge ids, …) before fetching each series with `timeseries()`. `source="observed"` lists the gauges that measure it.
 ** property Run.time_index: DatetimeIndex**: Datetime index aligned with the simulation’s stress periods. Length matches `run.n_timesteps`. Each stamp is the END of its period, as the solvers write it. The solver’s CF `/time` axis is read first; without it the stamps are rebuilt from the `period_start`, `period_end` and `time_unit` the run states about itself. A steady run without `[simulation.time]` records no step count and holds one state: its index is the one stamp the solver wrote on its axis, a clock with no calendar that starts at 1970-01-01, so every reader gets one stamp per stored state. Raises if the bounds are missing or a transient simulation has no timesteps.
 ** Run.timeseries(
@@ -24711,9 +24984,12 @@ kind='run', )[source]**: What a finished run says, read from its directory. `ide
 | `compare` | method | Compare one metric across the runs of the group, best first. |
 | `figure` | method | Draw the registered `runset` figure *name* of this set, `ensemble_band` for one. |
 | `filter` | method | Intersect with another `catalog.find(**criteria)` call. |
+| `score` | method | Score the stored series of every run again, on any window, after the fact. |
+| `score_network` | method | Score the stream-network criterion of every run again, as their trials scored it. |
 | `show` | method | Read one thing of this set: `table` or `figure`. |
 | `sort_by` | method | Return a new group ordered by the raw value of one metric. |
 | `table` | method | Return the table *name* of the set: `parameters`, `metrics` or `runs`. |
+| `timeseries` | method | Return the stored series of every run, stacked, with `sim_id` and `run`. |
 | `to_csv` | method | Write `to_dataframe()` to a CSV file. |
 | `to_dataframe` | method | Return a wide table joining metadata, parameters, and metrics. |
 | `to_xarray` | method | Return a lazy stacked `xarray.DataArray` of `variable` across sims. |
@@ -24749,6 +25025,8 @@ See also
 ** figure( name=None, *, request=None, draw=None, save=None, dpi=None, theme=None, engine=None, time=None, data=False, **options, )[source]**: Draw the registered `runset` figure name of this set, `ensemble_band` for one. The arguments are those of `hydromodpy.results.run.view.Run.figure()`. A figure of another subject refuses the set.
 **Raises:**: hydromodpy.core.exceptions.CommandUsageError – If the set was not opened by `hydromodpy.open` or a project.
 ** filter(**criteria)[source]**: Intersect with another `catalog.find(**criteria)` call. Equivalent to `catalog.find(...)` but restricted to this group’s simulations. Useful for chainable exploration in notebooks.
+** score(windows=None, metrics=None, months=None, station=None)[source]**: Score the stored series of every run again, on any window, after the fact. Each run follows `score()`, and the rows are stacked. The parameters of each run are added as columns, a name that clashes with a score column getting the prefix `param_`. A run that has no series at `station` or no seal gives no row, with a warning, and the call is refused when no run gives any.
+** score_network(output=None, window=None)[source]**: Score the stream-network criterion of every run again, as their trials scored it. Each run follows `score_network()`, and the rows are stacked with the parameters of each run as columns. The maps of runs that share mesh, maps, recharge and settings are built once. A run that holds nothing to score gives no row, with a warning, and the call is refused when no run gives any.
 ** show(what, **options)[source]**: Read one thing of this set: `table` or `figure`.
 ** sort_by(metric, *, ascending=True, mixed_windows=False)[source]**: Return a new group ordered by the raw value of one metric.
 **Parameters:**:
@@ -24758,6 +25036,7 @@ See also
 **Returns:**: RunSet – New group containing the sorted subset that has the metric.
 **Return type:**: RunSet
 ** table(name)[source]**: Return the table name of the set: `parameters`, `metrics` or `runs`. `parameters` is `parameters`, `metrics` is `metrics` and `runs` is `to_dataframe()` with every column. Any other name is refused with these three.
+** timeseries(station=None, variable=None, source=None)[source]**: Return the stored series of every run, stacked, with `sim_id` and `run`. The columns are `sim_id`, `run` (the directory name), `station_id`, `variable`, `source` (simulated or observed), `time` and `value`. Only `timeseries.parquet` of each run is read, never a field. `station`, `variable` and `source` keep only the matching rows.
 ** to_csv(path)[source]**: Write `to_dataframe()` to a CSV file.
 ** to_dataframe(*, params=None, metrics=None)[source]**: Return a wide table joining metadata, parameters, and metrics.
 **Parameters:**:
@@ -24834,7 +25113,7 @@ Examples
 ** property name: str[source]**: Name of the session directory, `<case>[_vN]`.
 ** property phases: list[PhaseDescriptor][source]**: The phases of a staged search, by rank; empty for a single search.
 ** property sites: tuple[str, ...][source]**: The sites of the calibrated cases.
-** property status: Vocabulary object at 0x789678811960>][source]**: running, completed, partial, aborted or failed.
+** property status: Vocabulary object at 0x7a37765ad8a0>][source]**: running, completed, partial, aborted or failed.
 **Type:**: Where the search stands
 ** property trials: DataFrame[source]**: Every trial of the session, one row per trial and case. The columns are `TRIAL_COLUMNS`, then one column per searched parameter, named as in `[calibration.parameters]`, with the value the trial tried, empty in a phase that did not search it. A parameter named like a column of `TRIAL_COLUMNS` stays in `parameters` alone.
 ** property windows: dict[str, PeriodWindow][source]**: The periods of the search whose best the session holds, by name.
@@ -24889,11 +25168,15 @@ Examples
 | `projects` | property | Names of the projects of the workspace, by name. |
 | `root` | property | The workspace root. |
 | `runs` | method | Return the sealed runs of every project, one row each, narrowed by each filter. |
+| `score` | method | Run `RunSet.score` on the runs of every project, with a `project` column first. |
+| `score_network` | method | Run `RunSet.score_network` on every project, with a `project` column first. |
 
 ** class Workspace(root)[source]**: Read-only view of a workspace: its projects and the sealed runs they hold. The runs are read from the `tables.parquet/simulation.parquet` row each sealed run carries (`hydromodpy.results.catalog.federation.read_workspace_runs()`), so no project index is needed. `workspace["<project>"]` opens one project as `hmp.open` does.
 **Parameters:**: root (str | Path) – The workspace root, the folder of `workspace.toml` or of `projects/`.
 **Raises:**: FileNotFoundError – If `root` holds neither `workspace.toml` nor `projects/`.
 ** runs(*, site=None, project=None)[source]**: Return the sealed runs of every project, one row each, narrowed by each filter. Columns are those of `simulation.parquet` plus `project_root`. The label is computed by a project index, so it is not a column here.
+** score(*args, **kwargs)[source]**: Run `RunSet.score` on the runs of every project, with a `project` column first. The arguments are those of `hydromodpy.results.run.group.RunSet.score()`. A project with nothing to score gives no row, with a warning.
+** score_network(*args, **kwargs)[source]**: Run `RunSet.score_network` on every project, with a `project` column first. The arguments are those of `hydromodpy.results.run.group.RunSet.score_network()`.
 ** property projects: list[str][source]**: Names of the projects of the workspace, by name.
 ** property root: Path[source]**: The workspace root.
 
@@ -27031,7 +27314,7 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-59 test files import `hydromodpy.calibration.optim.objective`, `hydromodpy.calibration.optim.parameters`, `hydromodpy.calibration.optim.optimizer`, `hydromodpy.core.scoring`. Their names say what they check.
+63 test files import `hydromodpy.calibration.optim.objective`, `hydromodpy.calibration.optim.parameters`, `hydromodpy.calibration.optim.optimizer`, `hydromodpy.core.scoring`. Their names say what they check.
 
 validation: 1
 - Twin matching stream heads modflow6.
@@ -27047,7 +27330,7 @@ ports: 3
 - Optimizer.
 - Solver.
 
-unit: 53
+unit: 57
 - Public import paths. architecture
 - Config. calibration
 - Criteria series. calibration
@@ -27061,6 +27344,7 @@ unit: 53
 - Optim adapters optuna random. calibration
 - Optim adapters scipy adapter. calibration
 - Optim cache. calibration
+- Optim design. calibration
 - Optim diagnostics. calibration
 - Optim engine stop. calibration
 - Optim method config. calibration
@@ -27091,9 +27375,12 @@ unit: 53
 - Stream defaults. core/scoring
 - Physical bounds. core/units
 - Recharge estimates. model/forcing
+- Criterion settings. results/stream
+- Run score. results/stream
 - Calibration trials. results
 - Metric views. results
 - Score. results
+- Score table. results
 - Session journal. results
 - Modflow6 evt. solver/modflow6
 - Flow to modflow adapter. solver/modflow_nwt
@@ -28453,7 +28740,7 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-28 test files import `hydromodpy.catchment.drainage.graph`, `hydromodpy.catchment.stream_network.network`, `hydromodpy.catchment.stream_network.extent`, `hydromodpy.results.derive.virtual_fields`, `hydromodpy.results.derive.views`. Their names say what they check.
+29 test files import `hydromodpy.catchment.drainage.graph`, `hydromodpy.catchment.stream_network.network`, `hydromodpy.catchment.stream_network.extent`, `hydromodpy.results.derive.virtual_fields`, `hydromodpy.results.derive.views`. Their names say what they check.
 
 validation: 1
 - Twin matching stream heads modflow6.
@@ -28462,7 +28749,7 @@ scenarios: 2
 - A sites plan and a two layer budget.
 - Transport chains.
 
-unit: 25
+unit: 26
 - Descent. catchment/drainage
 - Graph. catchment/drainage
 - Routing. catchment/drainage
@@ -28478,6 +28765,7 @@ unit: 25
 - Active network stack. results/stream
 - Cell fields. results/stream
 - Comparison. results/stream
+- Run score. results/stream
 - Cell field views. results
 - Concentration subgroup. results
 - Export outputs. results
@@ -28999,7 +29287,7 @@ simulation.time.step_value
   day').
   form       integer or number or string
   default    "1 month"
-  current    "1 month"   set by project.toml:33
+  current    "1 month"   set by project.toml:38
 ```
 
 `flow.sinks_sources.recharge.first_clim in 04_streamflow_intermittence_in_transient/project.toml`
@@ -29011,7 +29299,7 @@ flow.sinks_sources.recharge.first_clim
   form       string or number
   default    "mean"
   profile    dev
-  current    "first"   set by project.toml:111
+  current    "first"   set by project.toml:126
 ```
 
 ## Checked by
@@ -29020,7 +29308,7 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-127 test files import `hydromodpy.model.forcing`, `hydromodpy.model.forcing.etp_computed`, `hydromodpy.model.forcing.recharge_scenario`, `hydromodpy.model.soil.etp`, `hydromodpy.model.forcing.steady_periods`, `hydromodpy.model.forcing.time_forcing`, `hydromodpy.model.boundaries`, `hydromodpy.core.time`, `hydromodpy.core.time.coverage`, `hydromodpy.solver.modflow6.builders.recharge`. Their names say what they check.
+128 test files import `hydromodpy.model.forcing`, `hydromodpy.model.forcing.etp_computed`, `hydromodpy.model.forcing.recharge_scenario`, `hydromodpy.model.soil.etp`, `hydromodpy.model.forcing.steady_periods`, `hydromodpy.model.forcing.time_forcing`, `hydromodpy.model.boundaries`, `hydromodpy.core.time`, `hydromodpy.core.time.coverage`, `hydromodpy.solver.modflow6.builders.recharge`. Their names say what they check.
 
 validation: 1
 - A routed impulse matches the exponential reservoir.
@@ -29038,7 +29326,7 @@ integration: 8
 ports: 1
 - Solver.
 
-unit: 117
+unit: 118
 - Config. calibration
 - Metrics composite. calibration
 - Parameter resolution. calibration
@@ -29109,6 +29397,7 @@ unit: 117
 - Redraw comparison. results/stream
 - Export outputs. results
 - Run grid. results
+- Score table. results
 - Time alignment. results
 - Cleanup. solver/base
 - Drain conductance. solver/base
@@ -29271,7 +29560,7 @@ flow.param.K.field.value
   default    not set
   calibrate  log, sampling log_uniform
   only if    kind = "homogeneous"
-  current    5e-05   set by project.toml:92
+  current    5e-05   set by project.toml:107
 ```
 
 `flow.param.Sy.field.value in 04_streamflow_intermittence_in_transient/project.toml`
@@ -29284,7 +29573,7 @@ flow.param.Sy.field.value
   default    not set
   calibrate  log, sampling log_uniform
   only if    kind = "homogeneous"
-  current    0.05   set by project.toml:97
+  current    0.05   set by project.toml:112
 ```
 
 `flow.param.Ss.field.value in 04_streamflow_intermittence_in_transient/project.toml`
@@ -29297,7 +29586,7 @@ flow.param.Ss.field.value
   default    not set
   calibrate  log, sampling log_uniform
   only if    kind = "homogeneous"
-  current    1e-05   set by project.toml:102
+  current    1e-05   set by project.toml:117
 ```
 
 A depth factor. A property can carry a `field_vertical_profile`. The value of layer \(j\) in a column is the value of the field times \(f(d_j)\), where \(d_j\) is the depth of the middle of the layer below \(z_\mathrm{top}\). The key `depth_at` moves that point to the top or the base of the layer, or takes the ground for the first layer and the base for the others (`surface_then_base`). A thick layer reads one value, so the choice moves its K. For `kind = "exponential"`:
@@ -29396,7 +29685,7 @@ flow.flow_regime
   default    "transient"
   value      "steady"  Solves one equilibrium state, with no storage term: one stress period over the whole [simulation.time] window, whatever its step_value says, with the forcings averaged over the window.
   value      "transient"  Solves the heads through time; it starts from the state [flow.ic] gives.
-  current    default ("transient"), no file of the chain sets it
+  current    "transient"   set by project.toml:99
 ```
 
 In the code: `sto_period_settings`.
@@ -31399,7 +31688,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
  | - | 1
 - Boussinesq drying petsc.
  |
-| The inverse problem of a calibration | `hydromodpy.calibration.optim.objective` `hydromodpy.calibration.optim.parameters` `hydromodpy.calibration.optim.optimizer` `hydromodpy.core.scoring` | 53
+| The inverse problem of a calibration | `hydromodpy.calibration.optim.objective` `hydromodpy.calibration.optim.parameters` `hydromodpy.calibration.optim.optimizer` `hydromodpy.core.scoring` | 57
 - Public import paths.
 - Config.
 - Criteria series.
@@ -31413,6 +31702,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Optim adapters optuna random.
 - Optim adapters scipy adapter.
 - Optim cache.
+- Optim design.
 - Optim diagnostics.
 - Optim engine stop.
 - Optim method config.
@@ -31443,9 +31733,12 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Stream defaults.
 - Physical bounds.
 - Recharge estimates.
+- Criterion settings.
+- Run score.
 - Calibration trials.
 - Metric views.
 - Score.
+- Score table.
 - Session journal.
 - Modflow6 evt.
 - Flow to modflow adapter.
@@ -31555,7 +31848,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Observable extraction.
 - Nwt budget catchment.
  | - | - |
-| Where the water table reaches the surface | `hydromodpy.catchment.drainage.graph` `hydromodpy.catchment.stream_network.network` `hydromodpy.catchment.stream_network.extent` `hydromodpy.results.derive.virtual_fields` `hydromodpy.results.derive.views` | 25
+| Where the water table reaches the surface | `hydromodpy.catchment.drainage.graph` `hydromodpy.catchment.stream_network.network` `hydromodpy.catchment.stream_network.extent` `hydromodpy.results.derive.virtual_fields` `hydromodpy.results.derive.views` | 26
 - Descent.
 - Graph.
 - Routing.
@@ -31571,6 +31864,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Active network stack.
 - Cell fields.
 - Comparison.
+- Run score.
 - Cell field views.
 - Concentration subgroup.
 - Export outputs.
@@ -31599,7 +31893,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Sfr network.
 - Sfr period.
  | - | - |
-| Rain and evaporation: the forcing | `hydromodpy.model.forcing` `hydromodpy.model.forcing.etp_computed` `hydromodpy.model.forcing.recharge_scenario` `hydromodpy.model.soil.etp` `hydromodpy.model.forcing.steady_periods` `hydromodpy.model.forcing.time_forcing` `hydromodpy.model.boundaries` `hydromodpy.core.time` `hydromodpy.core.time.coverage` `hydromodpy.solver.modflow6.builders.recharge` | 117
+| Rain and evaporation: the forcing | `hydromodpy.model.forcing` `hydromodpy.model.forcing.etp_computed` `hydromodpy.model.forcing.recharge_scenario` `hydromodpy.model.soil.etp` `hydromodpy.model.forcing.steady_periods` `hydromodpy.model.forcing.time_forcing` `hydromodpy.model.boundaries` `hydromodpy.core.time` `hydromodpy.core.time.coverage` `hydromodpy.solver.modflow6.builders.recharge` | 118
 - Config.
 - Metrics composite.
 - Parameter resolution.
@@ -31670,6 +31964,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Redraw comparison.
 - Export outputs.
 - Run grid.
+- Score table.
 - Time alignment.
 - Cleanup.
 - Drain conductance.
@@ -32248,7 +32543,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
  | - | 1
 - Stress period substepping. (lu_boundary_step_1d)
  |
-| Time alignment of outputs and observations | `hydromodpy.core.time.period_aggregation` `hydromodpy.core.time.time_method` `hydromodpy.results.derive.time_alignment` `hydromodpy.solver.modflow_common.period_steps` | 9
+| Time alignment of outputs and observations | `hydromodpy.core.time.period_aggregation` `hydromodpy.core.time.time_method` `hydromodpy.results.derive.time_alignment` `hydromodpy.solver.modflow_common.period_steps` | 10
 - Criteria series.
 - Metrics composite.
 - Trial series capture.
@@ -32256,6 +32551,7 @@ Each row is one theory page: the modules that compute it, the unit tests of thos
 - Time method.
 - Recharge through solvers.
 - Time alignment.
+- Score table.
 - Time alignment.
 - Period steps.
  | 1
@@ -33828,12 +34124,12 @@ The tests that import the code of this page. The box is generated: a new test ap
 
 Checked by
 
-10 test files import `hydromodpy.core.time.period_aggregation`, `hydromodpy.core.time.time_method`, `hydromodpy.results.derive.time_alignment`, `hydromodpy.solver.modflow_common.period_steps`. Their names say what they check.
+11 test files import `hydromodpy.core.time.period_aggregation`, `hydromodpy.core.time.time_method`, `hydromodpy.results.derive.time_alignment`, `hydromodpy.solver.modflow_common.period_steps`. Their names say what they check.
 
 scenarios: 1
 - Runs weigh what their level keeps.
 
-unit: 9
+unit: 10
 - Criteria series. calibration
 - Metrics composite. calibration
 - Trial series capture. calibration
@@ -33841,6 +34137,7 @@ unit: 9
 - Time method. core/time
 - Recharge through solvers. model/forcing
 - Time alignment. results/derive
+- Score table. results
 - Time alignment. results
 - Period steps. solver
 
@@ -33870,7 +34167,7 @@ For every check the page gives the reference and its equations, the threshold wi
 
 The measures come from a results snapshot committed next to this page, `docs/source/theory/validation_results.json`. When the site is deployed, the results the nightly jobs uploaded for the branch, if any, replace older ones. Each case gives the date and commit of the run its numbers come from. “When the checks run” below lists the jobs, read from the workflow files, and the checks that no job runs.
 
-57 test files, 93 test functions, 38 benchmark cases. The results snapshot holds 343 test results from 7 runs (2026-10-13 to 2026-11-23): 343 pass.
+57 test files, 94 test functions, 38 benchmark cases. The results snapshot holds 345 test results from 3 runs (2026-10-13 to 2026-11-24): 345 pass.
 
 ## When the checks run
 
@@ -33896,8 +34193,8 @@ under 0.1 % of the scale 0.1 to 1 % 1 to 5 % 5 % and over ✗ beyond the thresho
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Closed-form solutions, steady state |
 | Steady Boussinesq circular-island piecewise-K case | 1.1 % | 1.1 % | 2.2 % | 4.6 % gap | 0.92 % | 0.92 % | - |
-| Steady Boussinesq divide piecewise-K case | 0.41 % | 0.39 % | 0.58 % | 0.86 % gap | < 0.01 % | < 0.01 % | - |
-| Steady Boussinesq fixed-head piecewise-K case | 0.071 % | 0.070 % | 0.085 % | 0.38 % gap | < 0.01 % | < 0.01 % | - |
+| Steady Boussinesq divide piecewise-K case | 0.41 % | 0.39 % | 0.58 % | 0.84 % gap | < 0.01 % | < 0.01 % | - |
+| Steady Boussinesq fixed-head piecewise-K case | 0.071 % | 0.070 % | 0.085 % | 0.39 % gap | < 0.01 % | < 0.01 % | - |
 | Steady Boussinesq hillslope-interception benchmark | 0.25 % | 0.25 % | 0.076 % | 0.15 % | 0.25 % | 0.27 % | - |
 | Steady sloping-substratum constant-thickness case | < 0.01 % | < 0.01 % | < 0.01 % | 0.14 % gap | < 0.01 % | < 0.01 % | - |
 | Steady sloping-substratum fixed-head case | 0.15 % | 0.15 % | 0.16 % | 0.16 % | < 0.01 % | < 0.01 % | - |
@@ -33921,14 +34218,14 @@ under 0.1 % of the scale 0.1 to 1 % 1 to 5 % 5 % and over ✗ beyond the thresho
 | Deep-aquifer Brutsaert recession benchmark | 0.57 % | 0.61 % | 0.32 % | 2.0 % gap | 0.54 % | 0.54 % | - |
 | Check the Brutsaert recession laws against a fine Dupuit solution of the same strip | n/a | n/a | n/a | n/a | n/a | n/a | pass |
 | MODFLOW 6 GWT first-order decay against its closed form | n/a | 0.27 % | n/a | n/a | n/a | n/a | - |
-| Growth of a groundwater mound under a rectangle of recharge against Hantush (1967) | 0.21 % | 0.21 % | 0.19 % | 0.26 % | 0.14 % | 0.18 % | - |
+| Growth of a groundwater mound under a rectangle of recharge against Hantush (1967) | 0.21 % | 0.21 % | 0.26 % ▲ | 0.26 % | 0.14 % | 0.18 % | - |
 | Transient unconfined pumping case against a late-time radial reference | 0.51 % | 0.51 % | 0.57 % | 1.1 % | 0.33 % | 0.56 % | - |
 | Propagation of a tide into an unconfined strip against the Ferris solution | 1.1 % | 1.1 % | 1.1 % | 1.4 % | 0.72 % | 1.1 % | - |
-| Linearized unconfined transient cases against their analytical references | 4.2 % | 4.6 % | 4.6 % | 4.6 % | 1.4 % | 4.6 % | - |
+| Linearized unconfined transient cases against their analytical references | 4.4 % | 4.7 % | 4.7 % | 4.7 % | 1.4 % | 4.7 % | - |
 | MODFLOW 6 PRT particle paths in a uniform velocity field | n/a | < 0.01 % | 0.025 % | < 0.01 % | n/a | n/a | - |
-| Stream depletion of a well pumping beside a stream held at a fixed head | 0.50 % | 0.50 % | 0.78 % | 0.39 % | 0.87 % | 0.87 % | - |
+| Stream depletion of a well pumping beside a stream held at a fixed head | 0.50 % | 0.50 % | 0.40 % ▼ | 0.39 % | 0.87 % | 0.87 % | - |
 | Time steps inside a stress period against a closed-form step response | pass | pass | n/a | n/a | pass | pass | pass |
-| The linear reservoir against the RK4 reference, played once | n/a | n/a | n/a | n/a | n/a | n/a | not measured |
+| The linear reservoir against the RK4 reference, played once | n/a | n/a | n/a | n/a | n/a | n/a | < 0.01 % |
 | MODFLOW 6 alone against a closed form |
 | Hantush-Jacob (1955) leaky-aquifer benchmark against MODFLOW 6 and MODFLOW-NWT | 0.81 % | 0.81 % | 0.61 % | 1.3 % | n/a | n/a | - |
 | Ogata-Banks (1961) 1D advection-dispersion benchmark against MODFLOW 6 GWT | n/a | 2.2 % | 2.7 % | 2.5 % | n/a | n/a | - |
@@ -33986,7 +34283,7 @@ Last measurement
 | Radial head-profile max abs error | 0.0546 m | < 0.11 m | 50% | 2.2% / 4.4% |
 | Azimuthal spread | 0.0817 m | < 0.17 m | 48% | 3.3% / 6.8% |
 | Minimum land freeboard | 0.91 m | >= 0.45 m | 49% | 36.2% / 17.9% |
-| modflow6_irregular_tri pass | Radial head-profile RMSE | 0.0541 m | < 0.35 m | 15% | 2.2% / 13.9% |
+| modflow6_irregular_tri pass | Radial head-profile RMSE | 0.054 m | < 0.35 m | 15% | 2.2% / 13.9% |
 | Radial head-profile max abs error | 0.118 m | < 0.7 m | 17% | 4.7% / 27.9% |
 | Azimuthal spread | 0.118 m | < 0.35 m | 34% | 4.7% / 13.9% |
 | Minimum land freeboard | 0.922 m | >= 0.1 m | 11% | 36.7% / 4.0% |
@@ -34002,8 +34299,12 @@ Last measurement
 | Radial head-profile max abs error | 0.0313 m | < 0.063 m | 50% | 1.2% / 2.5% |
 | Azimuthal spread | 0.0436 m | < 0.088 m | 50% | 1.7% / 3.4% |
 | Minimum land freeboard | 1.96 m | >= 0.98 m | 50% | 76.4% / 38.2% |
+| modflow6_voronoi_generated pass | Radial head-profile RMSE | 0.0614 m | < 0.123 m | 50% | 2.4% / 4.9% |
+| Radial head-profile max abs error | 0.0999 m | < 0.2 m | 50% | 4.0% / 7.9% |
+| Azimuthal spread | 0.0626 m | < 0.126 m | 50% | 2.5% / 5.0% |
+| Minimum land freeboard | 0.282 m | >= 0.14 m | 50% | 11.1% / 5.5% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.51 to 2.63 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.51 to 2.63 m.
 
 Head profile, head
 referenceNWTMF6MF6 triangles
@@ -34013,6 +34314,9 @@ referenceMF6 Voronoi
 
 Head profile, head
 referenceBoussinesqBoussinesq default
+
+Head profile, head
+referencemodflow6_voronoi_generated
 
 Head error in plan view, simulated minus reference, one scale for all panels; blank cells are sea or inactive.
 
@@ -34076,8 +34380,8 @@ Last measurement
 | modflow6_irregular_tri pass | Head-profile RMSE | 0.012 m | < 0.024 m | 50% | 0.6% / 1.2% |
 | Head-profile max abs error | 0.0171 m | < 0.035 m | 49% | 0.8% / 1.7% |
 | Cross-row head spread | 8.88e-16 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| modflow6_voronoi pass, known gap | Head-profile RMSE | 0.0175 m | < 0.0193 m | 91% | 0.9% / 0.9% |
-| Head-profile max abs error | 0.0279 m | < 0.0307 m | 91% | 1.4% / 1.5% |
+| modflow6_voronoi pass, known gap | Head-profile RMSE | 0.017 m | < 0.0193 m | 88% | 0.8% / 0.9% |
+| Head-profile max abs error | 0.0274 m | < 0.0307 m | 89% | 1.3% / 1.5% |
 | Cross-row head spread | 8.88e-16 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | boussinesq pass | Head-profile RMSE | 6.75e-05 m | < 0.00014 m | 48% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 50% | 0.0% / 0.0% |
@@ -34086,7 +34390,7 @@ Last measurement
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 0 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.04 to 2.05 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.04 to 2.05 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34145,8 +34449,8 @@ Last measurement
 | modflow6_irregular_tri pass | Head-profile RMSE | 0.00422 m | < 0.0085 m | 50% | 0.1% / 0.2% |
 | Head-profile max abs error | 0.0119 m | < 0.024 m | 50% | 0.2% / 0.5% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| modflow6_voronoi pass, known gap | Head-profile RMSE | 0.0187 m | < 0.021 m | 89% | 0.4% / 0.4% |
-| Head-profile max abs error | 0.0459 m | < 0.051 m | 90% | 0.9% / 1.0% |
+| modflow6_voronoi pass, known gap | Head-profile RMSE | 0.0193 m | < 0.021 m | 92% | 0.4% / 0.4% |
+| Head-profile max abs error | 0.0461 m | < 0.051 m | 90% | 0.9% / 1.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | boussinesq pass | Head-profile RMSE | 4.88e-05 m | < 9.8e-05 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 49% | 0.0% / 0.0% |
@@ -34155,7 +34459,7 @@ Last measurement
 | Head-profile max abs error | 0.000109 m | < 0.00022 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.94 to 5 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.94 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34232,7 +34536,7 @@ Last measurement
 | Maximum positive clearance above topography | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
 | Cross-row head spread | 1.95e-07 m | < 4e-07 m | 49% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.66 to 2.66 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.66 to 2.66 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34304,7 +34608,7 @@ Last measurement
 | Head-profile max abs error | 6.32e-07 m | < 1.3e-06 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 to 5 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34360,7 +34664,7 @@ Last measurement
 | modflow6_irregular_tri pass | Head-profile RMSE | 0.0157 m | < 0.032 m | 49% | 0.2% / 0.3% |
 | Head-profile max abs error | 0.0236 m | < 0.048 m | 49% | 0.2% / 0.5% |
 | Cross-row head spread | 1.78e-15 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| modflow6_voronoi pass | Head-profile RMSE | 0.0154 m | < 0.031 m | 50% | 0.2% / 0.3% |
+| modflow6_voronoi pass | Head-profile RMSE | 0.0154 m | < 0.0308 m | 50% | 0.2% / 0.3% |
 | Head-profile max abs error | 0.028 m | < 0.056 m | 50% | 0.3% / 0.6% |
 | Cross-row head spread | 1.78e-15 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | boussinesq pass | Head-profile RMSE | 8.47e-05 m | < 0.00017 m | 50% | 0.0% / 0.0% |
@@ -34370,7 +34674,7 @@ Last measurement
 | Head-profile max abs error | 0.000295 m | < 0.0006 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.84 to 10 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.84 to 10 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34425,8 +34729,8 @@ Last measurement
 | modflow6_irregular_tri pass | Head-profile RMSE | 0.0207 m | < 0.042 m | 49% | 0.2% / 0.4% |
 | Head-profile max abs error | 0.031 m | < 0.062 m | 50% | 0.3% / 0.6% |
 | Cross-row head spread | 1.78e-15 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| modflow6_voronoi pass | Head-profile RMSE | 0.0184 m | < 0.037 m | 50% | 0.2% / 0.4% |
-| Head-profile max abs error | 0.0292 m | < 0.059 m | 49% | 0.3% / 0.6% |
+| modflow6_voronoi pass | Head-profile RMSE | 0.0184 m | < 0.0368 m | 50% | 0.2% / 0.4% |
+| Head-profile max abs error | 0.0292 m | < 0.0585 m | 50% | 0.3% / 0.6% |
 | Cross-row head spread | 1.78e-15 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | boussinesq pass | Head-profile RMSE | 0.000117 m | < 0.00024 m | 49% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000423 m | < 0.00085 m | 50% | 0.0% / 0.0% |
@@ -34435,7 +34739,7 @@ Last measurement
 | Head-profile max abs error | 0.000423 m | < 0.00085 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 1.78e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.82 to 10 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 9.82 to 10 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34504,7 +34808,7 @@ Last measurement
 | Head-profile max abs error | 0.000489 m | < 0.00098 m | 50% | 0.0% / 0.1% |
 | Cross-row head spread | 0 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.13 to 1.17 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.13 to 1.17 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -34570,9 +34874,9 @@ Last measurement
 | Radial head-profile max abs error | 0.169 m | < 0.5 m | 34% | 6.1% / 17.9% |
 | Azimuthal spread | 0.18 m | < 0.25 m | 72% | 6.5% / 9.0% |
 | Minimum land freeboard | 0.707 m | >= 0.1 m | 14% | 25.3% / 3.6% |
-| modflow6_voronoi pass, known gap | Radial head-profile RMSE | 0.0669 m | < 0.074 m | 90% | 2.2% / 2.5% |
+| modflow6_voronoi pass, known gap | Radial head-profile RMSE | 0.067 m | < 0.074 m | 91% | 2.2% / 2.5% |
 | Radial head-profile max abs error | 0.0803 m | < 0.089 m | 90% | 2.7% / 3.0% |
-| Azimuthal spread | 9.88e-05 m | < 0.0002 m | 49% | 0.0% / 0.0% |
+| Azimuthal spread | 4.67e-06 m | < 0.0002 m | 2% | 0.0% / 0.0% |
 | Minimum land freeboard | 1.9 m | >= 1.7 m | 90% | 63.1% / 56.5% |
 | boussinesq pass | Radial head-profile RMSE | 0.0238 m | < 0.048 m | 50% | 0.8% / 1.7% |
 | Radial head-profile max abs error | 0.0325 m | < 0.066 m | 49% | 1.1% / 2.3% |
@@ -34583,7 +34887,7 @@ Last measurement
 | Azimuthal spread | 0.0547 m | < 0.11 m | 50% | 1.9% / 3.8% |
 | Minimum land freeboard | 1.9 m | >= 0.95 m | 50% | 65.9% / 32.9% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.79 to 3.01 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 2.79 to 3.01 m.
 
 Head profile, head
 referenceNWTMF6MF6 triangles
@@ -34659,9 +34963,9 @@ Last measurement
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 3.34e-05 m | < 6.7e-05 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 5.51e-05 m | < 0.00012 m | 46% | 0.0% / 0.0% |
-| Cross-row head spread | 5.84e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 6.2e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.56 to 1.57 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.56 to 1.57 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34724,9 +35028,9 @@ Last measurement
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 4.07e-05 m | < 8.2e-05 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 9.91e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
-| Cross-row head spread | 1.59e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 8.88e-16 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.92 to 5 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.92 to 5 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -34790,7 +35094,7 @@ Last measurement
 | Head-profile max abs error | 9.91e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 m.
+Measured on 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.95 m.
 
 Head profile, head
 referencerunpetsc_complementaritypetsc_partition
@@ -34830,9 +35134,9 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | Conductivity alone moves the mask but not the discharge [boussinesq_k_only] pass | Drain-outflow drift when K alone doubles | 5.84e-07 | < 1.2e-06 | 49% | |
 | Conductivity alone moves the mask but not the discharge [boussinesq_local_k_only] pass | Drain-outflow drift when K alone doubles | 0.000236 | < 0.0005 | 47% | |
-| Conductivity alone moves the mask but not the discharge [modflow6_irregular_tri_k_only] pass | Drain-outflow drift when K alone doubles | 1.08e-09 | < 3e-09 | 36% | |
-| Conductivity alone moves the mask but not the discharge [modflow6_k_only] pass | Drain-outflow drift when K alone doubles | 5.04e-07 | < 0.0001 | 1% | |
-| Conductivity alone moves the mask but not the discharge [modflow6_voronoi_k_only] pass | Drain-outflow drift when K alone doubles | 3.73e-09 | < 8e-09 | 47% | |
+| Conductivity alone moves the mask but not the discharge [modflow6_irregular_tri_k_only] pass | Drain-outflow drift when K alone doubles | 1.03e-09 | < 3e-09 | 34% | |
+| Conductivity alone moves the mask but not the discharge [modflow6_k_only] pass | Drain-outflow drift when K alone doubles | 7.95e-07 | < 0.0001 | 1% | |
+| Conductivity alone moves the mask but not the discharge [modflow6_voronoi_k_only] pass | Drain-outflow drift when K alone doubles | 3.35e-09 | < 8e-09 | 42% | |
 | Conductivity alone moves the mask but not the discharge [modflow_nwt_k_only] pass | Drain-outflow drift when K alone doubles | 1.32e-08 | < 3e-08 | 44% | |
 | Every declared scenario is exercised pass | no metric recorded; the asserts of the test decide |
 | Seepage limit matches the closed form [modflow_nwt] pass | modflow_nwt seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.6% |
@@ -34841,8 +35145,8 @@ Last measurement
 | modflow6 head-profile max abs error | 0.0082 m | < 0.02 m | 41% | 0.1% / 0.4% |
 | Seepage limit matches the closed form [modflow6_irregular_tri] pass | modflow6_irregular_tri seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.9% |
 | modflow6_irregular_tri head-profile max abs error | 0.00473 m | < 0.012 m | 39% | 0.1% / 0.2% |
-| Seepage limit matches the closed form [modflow6_voronoi] pass | modflow6_voronoi seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.7% |
-| modflow6_voronoi head-profile max abs error | 0.00862 m | < 0.025 m | 34% | 0.2% / 0.4% |
+| Seepage limit matches the closed form [modflow6_voronoi] pass | modflow6_voronoi seepage-limit position error | 0 m | < 3.34 m | 0% | 0.0% / 59.7% |
+| modflow6_voronoi head-profile max abs error | 0.00862 m | < 0.0247 m | 35% | 0.2% / 0.4% |
 | Seepage limit matches the closed form [boussinesq] pass | boussinesq seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.6% |
 | boussinesq head-profile max abs error | 0.000208 m | < 0.00042 m | 50% | 0.0% / 0.0% |
 | Seepage limit matches the closed form [boussinesq_local] pass | boussinesq_local seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.6% |
@@ -34871,12 +35175,12 @@ Last measurement
 | modflow6_scaled_down head-profile max abs error | 0.00807 m | < 0.02 m | 40% | 0.1% / 0.4% |
 | Seepage limit matches the closed form [modflow6_scaled_up] pass | modflow6_scaled_up seepage-limit position error | 0 m | < 10 m | 0% | 0.0% / 178.4% |
 | modflow6_scaled_up head-profile max abs error | 0.0082 m | < 0.02 m | 41% | 0.1% / 0.4% |
-| Seepage limit matches the closed form [modflow6_voronoi_k_only] pass | modflow6_voronoi_k_only seepage-limit position error | 1.67 m | < 3.4 m | 49% | 36.5% / 74.5% |
-| modflow6_voronoi_k_only head-profile max abs error | 0.0123 m | < 0.025 m | 49% | 0.3% / 0.5% |
-| Seepage limit matches the closed form [modflow6_voronoi_scaled_down] pass | modflow6_voronoi_scaled_down seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.7% |
-| modflow6_voronoi_scaled_down head-profile max abs error | 0.00862 m | < 0.025 m | 34% | 0.2% / 0.4% |
-| Seepage limit matches the closed form [modflow6_voronoi_scaled_up] pass | modflow6_voronoi_scaled_up seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.7% |
-| modflow6_voronoi_scaled_up head-profile max abs error | 0.00862 m | < 0.025 m | 34% | 0.2% / 0.4% |
+| Seepage limit matches the closed form [modflow6_voronoi_k_only] pass | modflow6_voronoi_k_only seepage-limit position error | 1.67 m | < 3.34 m | 50% | 36.5% / 73.2% |
+| modflow6_voronoi_k_only head-profile max abs error | 0.0123 m | < 0.0247 m | 50% | 0.3% / 0.5% |
+| Seepage limit matches the closed form [modflow6_voronoi_scaled_down] pass | modflow6_voronoi_scaled_down seepage-limit position error | 0 m | < 3.34 m | 0% | 0.0% / 59.7% |
+| modflow6_voronoi_scaled_down head-profile max abs error | 0.00862 m | < 0.0247 m | 35% | 0.2% / 0.4% |
+| Seepage limit matches the closed form [modflow6_voronoi_scaled_up] pass | modflow6_voronoi_scaled_up seepage-limit position error | 0 m | < 3.34 m | 0% | 0.0% / 59.7% |
+| modflow6_voronoi_scaled_up head-profile max abs error | 0.00862 m | < 0.0247 m | 35% | 0.2% / 0.4% |
 | Seepage limit matches the closed form [modflow_nwt_k_only] pass | modflow_nwt_k_only seepage-limit position error | 1.67 m | < 3.4 m | 49% | 36.5% / 74.4% |
 | modflow_nwt_k_only head-profile max abs error | 0.0117 m | < 0.024 m | 49% | 0.3% / 0.5% |
 | Seepage limit matches the closed form [modflow_nwt_scaled_down] pass | modflow_nwt_scaled_down seepage-limit position error | 0 m | < 3.4 m | 0% | 0.0% / 60.6% |
@@ -34887,16 +35191,16 @@ Last measurement
 | Seepage mask and head are invariant in conductivity over recharge [boussinesq_local_scaled_up] pass | boussinesq_local_scaled_up water-table difference vs the reference scenario | 3.12e-09 m | < 4e-08 m | 8% | |
 | Seepage mask and head are invariant in conductivity over recharge [boussinesq_scaled_down] pass | boussinesq_scaled_down water-table difference vs the reference scenario | 8.88e-16 m | < 1e-12 m | 0% | |
 | Seepage mask and head are invariant in conductivity over recharge [boussinesq_scaled_up] pass | boussinesq_scaled_up water-table difference vs the reference scenario | 8.88e-16 m | < 1e-12 m | 0% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_irregular_tri_scaled_down] pass | modflow6_irregular_tri_scaled_down water-table difference vs the reference scenario | 1.75e-07 m | < 4e-07 m | 44% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_irregular_tri_scaled_up] pass | modflow6_irregular_tri_scaled_up water-table difference vs the reference scenario | 8.29e-11 m | < 4e-07 m | 0% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_down] pass | modflow6_scaled_down water-table difference vs the reference scenario | 0.000134 m | < 0.002 m | 7% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_up] pass | modflow6_scaled_up water-table difference vs the reference scenario | 6.02e-07 m | < 0.002 m | 0% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_voronoi_scaled_down] pass | modflow6_voronoi_scaled_down water-table difference vs the reference scenario | 1e-07 m | < 2e-07 m | 50% | |
-| Seepage mask and head are invariant in conductivity over recharge [modflow6_voronoi_scaled_up] pass | modflow6_voronoi_scaled_up water-table difference vs the reference scenario | 3.92e-09 m | < 2e-07 m | 2% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_irregular_tri_scaled_down] pass | modflow6_irregular_tri_scaled_down water-table difference vs the reference scenario | 2.24e-07 m | < 4e-07 m | 56% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_irregular_tri_scaled_up] pass | modflow6_irregular_tri_scaled_up water-table difference vs the reference scenario | 8.97e-11 m | < 4e-07 m | 0% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_down] pass | modflow6_scaled_down water-table difference vs the reference scenario | 0.000139 m | < 0.002 m | 7% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_scaled_up] pass | modflow6_scaled_up water-table difference vs the reference scenario | 1.26e-06 m | < 0.002 m | 0% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_voronoi_scaled_down] pass | modflow6_voronoi_scaled_down water-table difference vs the reference scenario | 9.93e-08 m | < 2e-07 m | 50% | |
+| Seepage mask and head are invariant in conductivity over recharge [modflow6_voronoi_scaled_up] pass | modflow6_voronoi_scaled_up water-table difference vs the reference scenario | 4.04e-09 m | < 2e-07 m | 2% | |
 | Seepage mask and head are invariant in conductivity over recharge [modflow_nwt_scaled_down] pass | modflow_nwt_scaled_down water-table difference vs the reference scenario | 4.77e-07 m | < 1e-06 m | 48% | |
 | Seepage mask and head are invariant in conductivity over recharge [modflow_nwt_scaled_up] pass | modflow_nwt_scaled_up water-table difference vs the reference scenario | 4.77e-07 m | < 1e-06 m | 48% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.55 to 5.61 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 4.55 to 5.61 m.
 
 Water table, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq defaultboussinesq_local_scaled_downboussinesq_local_scaled_upboussinesq_scaled_downboussinesq_scaled_upmodflow6_irregular_tri_scaled_downmodflow6_irregular_tri_scaled_upmodflow6_scaled_downmodflow6_scaled_upmodflow6_voronoi_scaled_downmodflow6_voronoi_scaled_upmodflow_nwt_scaled_downmodflow_nwt_scaled_up
@@ -34967,17 +35271,17 @@ Last measurement
 | modflow6_irregular_tri pass | Head-profile RMSE | 0.0077 m | < 0.016 m | 48% | 0.6% / 1.3% |
 | Head-profile max abs error | 0.011 m | < 0.022 m | 50% | 0.9% / 1.8% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| modflow6_voronoi pass | Head-profile RMSE | 0.00448 m | < 0.009 m | 50% | 0.4% / 0.7% |
-| Head-profile max abs error | 0.0131 m | < 0.027 m | 48% | 1.1% / 2.2% |
+| modflow6_voronoi pass | Head-profile RMSE | 0.00448 m | < 0.00896 m | 50% | 0.4% / 0.7% |
+| Head-profile max abs error | 0.0131 m | < 0.0262 m | 50% | 1.1% / 2.1% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | boussinesq pass | Head-profile RMSE | 9.93e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000146 m | < 0.0003 m | 49% | 0.0% / 0.0% |
 | Cross-row head spread | 0 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | boussinesq_local pass | Head-profile RMSE | 9.93e-05 m | < 0.0002 m | 50% | 0.0% / 0.0% |
 | Head-profile max abs error | 0.000146 m | < 0.0003 m | 49% | 0.0% / 0.0% |
-| Cross-row head spread | 9.44e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 9.58e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.18 to 1.24 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.18 to 1.24 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesBoussinesqBoussinesq default
@@ -35032,11 +35336,11 @@ Last measurement
 | modflow6_voronoi pass | Distance of the observed order from 1 | 0.0312 | < 0.2 | 16% | |
 | boussinesq pass | Distance of the observed order from 2 | 0.071 | < 0.2 | 35% | |
 | boussinesq_local pass | Distance of the observed order from 2 | 0.071 | < 0.2 | 35% | |
-| modflow6_irregular_tri_no_newton pass | Distance of the observed order from 2 | 0.0356 | < 0.2 | 18% | |
+| modflow6_irregular_tri_no_newton pass | Distance of the observed order from 2 | 0.0877 | < 0.2 | 44% | |
 | modflow6_no_newton pass | Distance of the observed order from 2 | 0.051 | < 0.2 | 25% | |
 | modflow6_voronoi_no_newton pass | Distance of the observed order from 2 | 0.0741 | < 0.2 | 37% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 Head RMSE against the cell size, head rmse, log scales
 reference of each runNWTMF6MF6 Voronoi
@@ -35127,7 +35431,7 @@ Last measurement
 | Head max abs error | 1.31e-08 m | < 2e-07 m | 7% | 0.0% / 0.0% |
 | End flow relative error | 1.47e-07 | < 4e-06 | 4% | |
 
-Measured on 2026-10-26, commit `d0f510b65` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head drop across the strip in the window, 0.561 to 0.561 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head drop across the strip in the window, 0.561 to 0.561 m.
 
 Head across the strip at its middle, head
 referenceMF6
@@ -35197,7 +35501,7 @@ Last measurement
 | Head max abs error | 9.39e-09 m | < 2e-07 m | 5% | 0.0% / 0.0% |
 | End flow relative error | 3.49e-07 | < 4e-06 | 9% | |
 
-Measured on 2026-10-26, commit `d0f510b65` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head drop over the depth of the window, 0.288 to 0.288 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head drop over the depth of the window, 0.288 to 0.288 m.
 
 Head against elevation at the middle of the section, head
 referenceMF6
@@ -35264,7 +35568,7 @@ Last measurement
 | Head-profile max abs error | 4.3e-06 m | < 8.6e-06 m | 50% | 0.0% / 0.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 0.397 to 0.4 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 0.397 to 0.4 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesq
@@ -35330,7 +35634,7 @@ Last measurement
 | Head-profile max abs error | 1.25e-05 m | < 2.6e-05 m | 48% | 0.0% / 0.0% |
 | Cross-row head spread | 8.88e-16 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.99 to 2 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference, 1.99 to 2 m.
 
 Head profile, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesq
@@ -35389,7 +35693,7 @@ Last measurement
 | Recharge volume error | 0 mm | < 1e-12 mm | 0% | |
 | Error on the day 95 % of the pulse has drained | 0.0213 d | <= 1 d | 2% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the peak recharge of the closed form, 2.38 to 15.5 mm/d.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the peak recharge of the closed form, 2.38 to 15.5 mm/d.
 
 Daily recharge after a 50 mm pulse, recharge
 reference2.0
@@ -35443,7 +35747,7 @@ Last measurement
 | Interception-trajectory max abs error | 0 m | < 5 m | 0% | 0.0% / 12.5% |
 | Trajectory reversal | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
 | Maximum positive clearance above topography | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
-| Cross-row head spread | 3.74e-09 m | < 1e-08 m | 37% | 0.0% / 0.0% |
+| Cross-row head spread | 3.75e-09 m | < 1e-08 m | 37% | 0.0% / 0.0% |
 | modflow6_irregular_tri pass | Onset-time error | 10 day | < 15 day | 67% | |
 | Interception-trajectory RMSE | 4.08 m | < 8.2 m | 50% | 13.6% / 27.3% |
 | Interception-trajectory max abs error | 10 m | < 15 m | 67% | 33.3% / 50.0% |
@@ -35469,7 +35773,7 @@ Last measurement
 | Maximum positive clearance above topography | 0 m | < 1e-06 m | 0% | 0.0% / 0.0% |
 | Cross-row head spread | 7.99e-09 m | < 1e-07 m | 8% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the travel of the reference front, 30 to 40 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the travel of the reference front, 30 to 40 m.
 
 Seepage front position, front position
 referenceNWTMF6
@@ -35535,7 +35839,7 @@ Last measurement
 | Cross-row head spread | 0 m | < 1e-05 m | 0% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
 | modflow6 pass | Recession coefficient relative error | 0.0404 | < 0.05 | 81% | |
-| Recession exponent error | 0.00167 | < 0.01 | 17% | |
+| Recession exponent error | 0.00164 | < 0.01 | 16% | |
 | Late relative discharge RMSE | 0.0329 | < 0.04 | 82% | |
 | Cross-row head spread | 4.46e-06 m | < 1e-05 m | 45% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
@@ -35560,7 +35864,7 @@ Last measurement
 | Cross-row head spread | 3.33e-16 m | < 1e-06 m | 0% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 1.24e-05 to 1.42e-05 m3/s.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 1.24e-05 to 1.42e-05 m3/s.
 
 Discharge at the outlet, discharge
 reference of each runNWTMF6
@@ -35672,7 +35976,7 @@ Last measurement
 | Cross-row head spread | 5.41e-14 m | < 1e-06 m | 0% | |
 | Maximum positive discharge increment | 0 m3/s | < 1e-12 m3/s | 0% | 0.0% / 0.0% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 0.000166 to 0.000169 m3/s.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the initial discharge of the reference, 0.000166 to 0.000169 m3/s.
 
 Discharge at the outlet, discharge
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -35725,7 +36029,7 @@ Last measurement
 | Linear series matches a fine deep strip with an unrecharged outlet strip pass | no metric recorded; the asserts of the test decide |
 | Nonlinear law matches a fine dupuit strip drained on one side pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -35758,7 +36062,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | Largest relative concentration error at 3 times | 0.00265 | < 0.01 | 27% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform. Jobs.
 
@@ -35811,18 +36115,18 @@ Last measurement
 | Centre rise max abs error | 0.00478 m | < 0.0096 m | 50% | 0.6% / 1.3% |
 | Final transect RMSE | 0.0013 m | < 0.0027 m | 48% | 0.2% / 0.4% |
 | Final map max abs error | 0.00542 m | < 0.011 m | 49% | 0.7% / 1.5% |
-| Recharge mound matches hantush modflow [modflow6_irregular_tri] pass | Transect space-time RMSE | 0.00143 m | < 0.0029 m | 49% | 0.2% / 0.4% |
-| Transect space-time max abs error | 0.00473 m | < 0.0095 m | 50% | 0.6% / 1.3% |
-| Centre rise max abs error | 0.00457 m | < 0.0092 m | 50% | 0.6% / 1.2% |
-| Final transect RMSE | 0.0012 m | < 0.0024 m | 50% | 0.2% / 0.3% |
-| Final map max abs error | 0.0104 m | < 0.021 m | 49% | 1.4% / 2.8% |
-| Recharge mound matches hantush modflow [modflow6_voronoi] pass | Transect space-time RMSE | 0.00199 m | < 0.004 m | 50% | 0.3% / 0.5% |
+| Recharge mound matches hantush modflow [modflow6_irregular_tri] pass | Transect space-time RMSE | 0.00196 m | < 0.0029 m | 67% | 0.3% / 0.4% |
+| Transect space-time max abs error | 0.00531 m | < 0.0095 m | 56% | 0.7% / 1.3% |
+| Centre rise max abs error | 0.00531 m | < 0.0092 m | 58% | 0.7% / 1.2% |
+| Final transect RMSE | 0.00183 m | < 0.0024 m | 76% | 0.2% / 0.3% |
+| Final map max abs error | 0.00392 m | < 0.021 m | 19% | 0.5% / 2.8% |
+| Recharge mound matches hantush modflow [modflow6_voronoi] pass | Transect space-time RMSE | 0.00199 m | < 0.00399 m | 50% | 0.3% / 0.5% |
 | Transect space-time max abs error | 0.00525 m | < 0.0105 m | 50% | 0.7% / 1.4% |
 | Centre rise max abs error | 0.00525 m | < 0.0105 m | 50% | 0.7% / 1.4% |
-| Final transect RMSE | 0.00202 m | < 0.0041 m | 49% | 0.3% / 0.5% |
+| Final transect RMSE | 0.00202 m | < 0.00404 m | 50% | 0.3% / 0.5% |
 | Final map max abs error | 0.0045 m | < 0.009 m | 50% | 0.6% / 1.2% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.752 to 0.752 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.752 to 0.752 m.
 
 Head profile at the last output time, head
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesqBoussinesq default
@@ -35910,7 +36214,7 @@ Last measurement
 | Final-time max abs error | 0.00766 m | < 0.0154 m | 50% | 0.9% / 1.8% |
 | Azimuthal spread | 0.00217 m | < 0.00435 m | 50% | 0.2% / 0.5% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.854 to 0.871 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.854 to 0.871 m.
 
 Drawdown at 59 m from the well, drawdown
 reference of each runNWTMF6MF6 trianglesMF6 VoronoiBoussinesq defaultrun
@@ -36004,7 +36308,7 @@ Last measurement
 | Decay length relative error | 0.0592 | < 0.119 | 50% | |
 | Lag length relative error | 0.0715 | < 0.143 | 50% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.46 to 0.5 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.46 to 0.5 m.
 
 Head profile at the last output time, head
 reference of each runNWTMF6BoussinesqBoussinesq default
@@ -36106,16 +36410,16 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-boundary_piecewise] pass | Space-time RMSE | 0.00606 m | < 0.013 m | 47% | 2.0% / 4.4% |
 | Space-time max abs error | 0.0335 m | < 0.067 m | 50% | 11.2% / 22.4% |
-| Cross-row head spread | 1.12e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
+| Cross-row head spread | 1.38e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.00272 m | < 0.0056 m | 49% | 0.9% / 1.9% |
 | Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-boundary_step] pass | Space-time RMSE | 0.00136 m | < 0.0028 m | 48% | 1.4% / 2.8% |
 | Space-time max abs error | 0.0122 m | < 0.025 m | 49% | 12.2% / 25.1% |
 | Cross-row head spread | 4.34e-14 m | < 1e-07 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 9.28e-05 m | < 0.00018 m | 52% | 0.1% / 0.2% |
-| Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-recharge_periodic] pass | Space-time RMSE | 0.0059 m | < 0.01 m | 59% | 4.6% / 7.8% |
-| Space-time max abs error | 0.0137 m | < 0.028 m | 49% | 10.7% / 21.9% |
+| Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-recharge_periodic] pass | Space-time RMSE | 0.00585 m | < 0.01 m | 58% | 4.7% / 8.0% |
+| Space-time max abs error | 0.0146 m | < 0.028 m | 52% | 11.7% / 22.4% |
 | Cross-row head spread | 1.59e-15 m | < 1e-07 m | 0% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.00178 m | < 0.0034 m | 52% | 1.4% / 2.7% |
+| Final-profile RMSE | 0.000724 m | < 0.0034 m | 21% | 0.6% / 2.7% |
 | Linearized unconfined transient 1d default engine matches reference profiles [boussinesq_local-recharge_step] pass | Space-time RMSE | 0.00216 m | < 0.0044 m | 49% | 1.6% / 3.2% |
 | Space-time max abs error | 0.00995 m | < 0.015 m | 66% | 7.2% / 10.8% |
 | Cross-row head spread | 7.96e-14 m | < 1e-07 m | 0% | 0.0% / 0.0% |
@@ -36132,14 +36436,14 @@ Last measurement
 | Space-time max abs error | 0.012 m | < 0.025 m | 48% | 12.0% / 25.0% |
 | Cross-row head spread | 3.41e-06 m | < 1e-05 m | 34% | 0.0% / 0.0% |
 | Final-profile RMSE | 6.99e-05 m | < 0.00018 m | 39% | 0.1% / 0.2% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_periodic] pass | Space-time RMSE | 0.00536 m | < 0.01 m | 54% | 4.2% / 7.9% |
-| Space-time max abs error | 0.0131 m | < 0.028 m | 47% | 10.3% / 22.1% |
-| Cross-row head spread | 3.81e-06 m | < 1e-05 m | 38% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.000523 m | < 0.0034 m | 15% | 0.4% / 2.7% |
-| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step] pass | Space-time RMSE | 0.00203 m | < 0.0044 m | 46% | 1.5% / 3.2% |
-| Space-time max abs error | 0.00916 m | < 0.015 m | 61% | 6.6% / 10.8% |
-| Cross-row head spread | 2.6e-06 m | < 1e-05 m | 26% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.000647 m | < 0.0015 m | 43% | 0.5% / 1.1% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_periodic] pass | Space-time RMSE | 0.00546 m | < 0.01 m | 55% | 4.4% / 8.1% |
+| Space-time max abs error | 0.0144 m | < 0.028 m | 51% | 11.6% / 22.6% |
+| Cross-row head spread | 5.45e-06 m | < 1e-05 m | 54% | 0.0% / 0.0% |
+| Final-profile RMSE | 0.00041 m | < 0.0034 m | 12% | 0.3% / 2.7% |
+| Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step] pass | Space-time RMSE | 0.00212 m | < 0.0044 m | 48% | 1.5% / 3.2% |
+| Space-time max abs error | 0.00996 m | < 0.015 m | 66% | 7.2% / 10.8% |
+| Cross-row head spread | 0 m | < 1e-05 m | 0% | 0.0% / 0.0% |
+| Final-profile RMSE | 0.000641 m | < 0.0015 m | 43% | 0.5% / 1.1% |
 | Linearized unconfined transient 1d matches reference profiles [modflow_nwt-recharge_step_deep] pass | Space-time RMSE | 0.000259 m | < 0.00046 m | 56% | 1.9% / 3.3% |
 | Space-time max abs error | 0.00157 m | < 0.005 m | 31% | 11.3% / 36.0% |
 | Cross-row head spread | 3.74e-06 m | < 1e-05 m | 37% | 0.0% / 0.1% |
@@ -36152,10 +36456,10 @@ Last measurement
 | Space-time max abs error | 0.0123 m | < 0.025 m | 49% | 12.3% / 25.0% |
 | Cross-row head spread | 1.5e-06 m | < 1e-05 m | 15% | 0.0% / 0.0% |
 | Final-profile RMSE | 4.73e-05 m | < 0.00018 m | 26% | 0.0% / 0.2% |
-| Linearized unconfined transient 1d matches reference profiles [modflow6-recharge_periodic] pass | Space-time RMSE | 0.00586 m | < 0.01 m | 59% | 4.6% / 7.9% |
-| Space-time max abs error | 0.0136 m | < 0.028 m | 49% | 10.7% / 22.1% |
-| Cross-row head spread | 7.98e-07 m | < 1e-05 m | 8% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.00165 m | < 0.0034 m | 49% | 1.3% / 2.7% |
+| Linearized unconfined transient 1d matches reference profiles [modflow6-recharge_periodic] pass | Space-time RMSE | 0.0058 m | < 0.01 m | 58% | 4.7% / 8.1% |
+| Space-time max abs error | 0.0145 m | < 0.028 m | 52% | 11.7% / 22.6% |
+| Cross-row head spread | 4.19e-07 m | < 1e-05 m | 4% | 0.0% / 0.0% |
+| Final-profile RMSE | 0.0008 m | < 0.0034 m | 24% | 0.6% / 2.7% |
 | Linearized unconfined transient 1d matches reference profiles [modflow6-recharge_step] pass | Space-time RMSE | 0.00215 m | < 0.0044 m | 49% | 1.6% / 3.2% |
 | Space-time max abs error | 0.00996 m | < 0.015 m | 66% | 7.2% / 10.8% |
 | Cross-row head spread | 1.01e-06 m | < 1e-05 m | 10% | 0.0% / 0.0% |
@@ -36172,10 +36476,10 @@ Last measurement
 | Space-time max abs error | 0.0123 m | < 0.025 m | 49% | 12.3% / 25.1% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.000154 m | < 0.00031 m | 50% | 0.2% / 0.3% |
-| Linearized unconfined transient 1d matches reference profiles [modflow6_irregular_tri-recharge_periodic] pass | Space-time RMSE | 0.00587 m | < 0.012 m | 49% | 4.6% / 9.5% |
-| Space-time max abs error | 0.0134 m | < 0.027 m | 50% | 10.6% / 21.3% |
+| Linearized unconfined transient 1d matches reference profiles [modflow6_irregular_tri-recharge_periodic] pass | Space-time RMSE | 0.00584 m | < 0.012 m | 49% | 4.7% / 9.7% |
+| Space-time max abs error | 0.0144 m | < 0.027 m | 53% | 11.7% / 21.8% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.00178 m | < 0.0036 m | 50% | 1.4% / 2.8% |
+| Final-profile RMSE | 0.000633 m | < 0.0036 m | 18% | 0.5% / 2.9% |
 | Linearized unconfined transient 1d matches reference profiles [modflow6_irregular_tri-recharge_step] pass | Space-time RMSE | 0.00215 m | < 0.0044 m | 49% | 1.6% / 3.2% |
 | Space-time max abs error | 0.0099 m | < 0.02 m | 50% | 7.2% / 14.4% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
@@ -36192,10 +36496,10 @@ Last measurement
 | Space-time max abs error | 0.0124 m | < 0.0248 m | 50% | 12.4% / 24.8% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 9.89e-05 m | < 0.0002 m | 49% | 0.1% / 0.2% |
-| Linearized unconfined transient 1d matches reference profiles [modflow6_voronoi-recharge_periodic] pass | Space-time RMSE | 0.00606 m | < 0.012 m | 51% | 4.6% / 9.2% |
-| Space-time max abs error | 0.0141 m | < 0.028 m | 50% | 10.7% / 21.4% |
+| Linearized unconfined transient 1d matches reference profiles [modflow6_voronoi-recharge_periodic] pass | Space-time RMSE | 0.006 m | < 0.012 m | 50% | 4.7% / 9.3% |
+| Space-time max abs error | 0.0149 m | < 0.028 m | 53% | 11.6% / 21.8% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
-| Final-profile RMSE | 0.00195 m | < 0.0039 m | 50% | 1.5% / 3.0% |
+| Final-profile RMSE | 0.000565 m | < 0.0039 m | 14% | 0.4% / 3.0% |
 | Linearized unconfined transient 1d matches reference profiles [modflow6_voronoi-recharge_step] pass | Space-time RMSE | 0.00223 m | < 0.00447 m | 50% | 1.5% / 3.1% |
 | Space-time max abs error | 0.0101 m | < 0.02 m | 50% | 7.0% / 13.8% |
 | Cross-row head spread | 0 m | < 1e-09 m | 0% | 0.0% / 0.0% |
@@ -36241,7 +36545,7 @@ Last measurement
 | Cross-row head spread | 0 m | < 1e-08 m | 0% | 0.0% / 0.0% |
 | Final-profile RMSE | 0.000635 m | < 0.0013 m | 49% | 0.5% / 0.9% |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.0137 to 0.3 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the head range of the reference over space and time, 0.0137 to 0.3 m.
 
 Head profile at the last output time, head
 reference of each runmodflow_nwt-boundary_piecewisemodflow6-boundary_piecewisemodflow6_irregular_tri-boundary_piecewiseboussinesq-boundary_piecewiseboussinesq_local-boundary_piecewise
@@ -36250,7 +36554,7 @@ Head profile at the last output time, head
 reference of each runmodflow_nwt-boundary_stepmodflow6-boundary_stepmodflow6_irregular_tri-boundary_stepmodflow6_voronoi-boundary_step
 
 Head profile at the last output time, head
-reference of each runmodflow_nwt-recharge_periodicmodflow6-recharge_periodicmodflow6_irregular_tri-recharge_periodicboussinesq_local-recharge_periodic
+reference of each runmodflow_nwt-recharge_periodicmodflow6-recharge_periodicmodflow6_irregular_tri-recharge_periodicboussinesq-recharge_periodicboussinesq_local-recharge_periodic
 
 Head profile at the last output time, head
 reference of each runmodflow_nwt-recharge_stepmodflow6-recharge_stepmodflow6_irregular_tri-recharge_step
@@ -36272,9 +36576,6 @@ referencemodflow6_voronoi-recharge_step_deep
 
 Head profile at the last output time, head
 referenceboussinesq-boundary_stepboussinesq_local-boundary_steppetsc_ts_vi_obstacle-boundary_steppetsc_vi_obstacle-boundary_step
-
-Head profile at the last output time, head
-referenceboussinesq-recharge_periodic
 
 Head profile at the last output time, head
 referenceboussinesq-recharge_stepboussinesq_local-recharge_steppetsc_ts_vi_obstacle-recharge_steppetsc_vi_obstacle-recharge_step
@@ -36380,7 +36681,7 @@ Last measurement
 | modflow6_voronoi pass | Largest relative position error along the track | 2.61e-06 | < 0.01 | 0% | |
 | Largest relative transverse drift of the particle | 1.85e-05 | < 0.01 | 0% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `modflow6`: runs in Nightly / validation no PETSc, Weekly / Cross Platform. `modflow6_irregular_tri`, `modflow6_voronoi`: runs in Nightly / validation no PETSc, Weekly / Cross Platform, Tests / fast marker. Jobs.
 
@@ -36448,22 +36749,22 @@ Last measurement
 | Drawdown final-time RMSE | 0.00167 m | < 0.0034 m | 49% | 0.5% / 1.1% |
 | Drawdown final-time max abs error | 0.00355 m | < 0.0071 m | 50% | 1.2% / 2.3% |
 | Well drawdown over saturated thickness | 0.0281 | < 0.05 | 56% | |
-| Stream depletion glover balmer 2d modflow [modflow6_irregular_tri] pass | Stream depletion max abs error | 0.0137 | < 0.028 | 49% | |
-| Stream depletion final error | 0.000283 | < 0.0006 | 47% | |
-| Drawdown space-time RMSE | 0.00252 m | < 0.0051 m | 49% | 0.8% / 1.6% |
-| Drawdown space-time max abs error | 0.00586 m | < 0.012 m | 49% | 1.8% / 3.7% |
-| Drawdown final-time RMSE | 0.00271 m | < 0.0055 m | 49% | 0.8% / 1.7% |
-| Drawdown final-time max abs error | 0.00539 m | < 0.011 m | 49% | 1.7% / 3.4% |
-| Well drawdown over saturated thickness | 0.0353 | < 0.05 | 71% | |
-| Stream depletion glover balmer 2d modflow [modflow6_voronoi] pass | Stream depletion max abs error | 0.0124 | < 0.025 | 50% | |
-| Stream depletion final error | 0.000495 | < 0.001 | 50% | |
-| Drawdown space-time RMSE | 0.00119 m | < 0.0024 m | 50% | 0.4% / 0.8% |
+| Stream depletion glover balmer 2d modflow [modflow6_irregular_tri] pass | Stream depletion max abs error | 0.0138 | < 0.028 | 49% | |
+| Stream depletion final error | 6.33e-05 | < 0.0006 | 11% | |
+| Drawdown space-time RMSE | 0.00129 m | < 0.0051 m | 25% | 0.4% / 1.6% |
+| Drawdown space-time max abs error | 0.00739 m | < 0.012 m | 62% | 2.3% / 3.7% |
+| Drawdown final-time RMSE | 0.0011 m | < 0.0055 m | 20% | 0.3% / 1.7% |
+| Drawdown final-time max abs error | 0.00249 m | < 0.011 m | 23% | 0.8% / 3.4% |
+| Well drawdown over saturated thickness | 0.0351 | < 0.05 | 70% | |
+| Stream depletion glover balmer 2d modflow [modflow6_voronoi] pass | Stream depletion max abs error | 0.0124 | < 0.0248 | 50% | |
+| Stream depletion final error | 0.000495 | < 0.000991 | 50% | |
+| Drawdown space-time RMSE | 0.00119 m | < 0.00239 m | 50% | 0.4% / 0.8% |
 | Drawdown space-time max abs error | 0.00802 m | < 0.016 m | 50% | 2.6% / 5.2% |
-| Drawdown final-time RMSE | 0.000496 m | < 0.001 m | 50% | 0.2% / 0.3% |
-| Drawdown final-time max abs error | 0.000969 m | < 0.002 m | 48% | 0.3% / 0.6% |
+| Drawdown final-time RMSE | 0.000496 m | < 0.000992 m | 50% | 0.2% / 0.3% |
+| Drawdown final-time max abs error | 0.000969 m | < 0.00194 m | 50% | 0.3% / 0.6% |
 | Well drawdown over saturated thickness | 0.0357 | < 0.05 | 71% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.308 to 0.323 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.308 to 0.323 m.
 
 Drawdown at 70 m from the well, drawdown
 referenceNWTMF6
@@ -36540,7 +36841,7 @@ Last measurement
 | The boussinesq driver takes the requested substeps [boussinesq_local] pass | RMSE with 1 step over RMSE with 10 steps | 9.68 | > 4.8 | 50% | |
 | The column stays semi infinite over the period pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 Why these thresholds
 
@@ -36585,7 +36886,7 @@ File `tests/validation/analytical/transient/test_stress_period_substepping.py`. 
 
 ### The linear reservoir against the RK4 reference, played once
 
-not measured linear_reservoir
+pass linear_reservoir
 
 Not run on
 
@@ -36595,7 +36896,13 @@ No reference named. The text of the test says what it checks.
 
 Last measurement
 
-No measurement in the results snapshot: no recorded run has reached this file.
+| Variant | Metric | Measured | Threshold | Share used | Share of the signal |
+| --- | --- | --- | --- | --- | --- |
+| - pass | tau_days | 30 day | < 60 day | 50% | |
+| released depth relative gap | 9.04e-14 | < 0.0001 | 0% | |
+| stored depth relative gap | 3.84e-15 | < 0.0001 | 0% | |
+
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Weekly / Cross Platform, Tests / fast marker. Jobs.
 
@@ -36638,7 +36945,7 @@ Last measurement
 | modflow6_voronoi pass | Nash-Sutcliffe efficiency of the drawdown, 9 probes | 1 | > 0.99 | 5% | |
 | Largest relative drawdown error at a probe | 0.0131 | < 0.02 | 65% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run. The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.376 to 0.387 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.376 to 0.387 m.
 
 Schedule. `modflow_nwt`, `modflow6`: runs in Nightly / validation no PETSc, Weekly / Cross Platform. `modflow6_irregular_tri`, `modflow6_voronoi`: runs in Nightly / validation no PETSc, Weekly / Cross Platform, Tests / fast marker. Jobs.
 
@@ -36723,10 +37030,10 @@ Last measurement
 | Refined-grid largest relative concentration error | 0.00701 | < 0.01 | 70% | |
 | Refined error over production error | 0.258 | < 0.5 | 52% | |
 | Ogata banks error shrinks under refinement [modflow6_voronoi] pass | Refined-grid Nash-Sutcliffe efficiency | 1 | > 0.99 | 0% | |
-| Refined-grid largest relative concentration error | 0.00621 | < 0.01 | 62% | |
-| Refined error over production error | 0.247 | < 0.5 | 49% | |
+| Refined-grid largest relative concentration error | 0.0062 | < 0.01 | 62% | |
+| Refined error over production error | 0.246 | < 0.5 | 49% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `modflow6`, `modflow6_irregular_tri`: runs in Nightly / validation no PETSc, Weekly / Cross Platform. `modflow6_voronoi`: runs in Nightly / validation no PETSc, Weekly / Cross Platform, Tests / fast marker. Jobs.
 
@@ -36777,7 +37084,7 @@ Last measurement
 | modflow6_voronoi pass | Nash-Sutcliffe efficiency of the drawdown, 9 probes | 0.996 | > 0.996 | 90% | |
 | Largest relative drawdown error at a probe | 0.0208 | < 0.0229 | 91% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run. The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.97 to 0.981 m.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log). The last column gives the measured value and the threshold as shares of the largest drawdown of the reference, 0.97 to 0.981 m.
 
 Schedule. `modflow_nwt`, `modflow6`: runs in Nightly / validation no PETSc, Weekly / Cross Platform. `modflow6_irregular_tri`, `modflow6_voronoi`: runs in Nightly / validation no PETSc, Weekly / Cross Platform, Tests / fast marker. Jobs.
 
@@ -36845,7 +37152,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -36906,7 +37213,7 @@ Last measurement
 | modflow6_voronoi_generated pass | Head RMSE | 2.59e-08 m | < 5.2e-08 m | 50% | |
 | Head max abs error | 6.48e-08 m | < 1.3e-07 m | 50% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 Head error in plan view, simulated minus reference, one scale for all panels; blank cells are sea or inactive.
 
@@ -36961,7 +37268,7 @@ Last measurement
 | Single cell pumping activates lower obstacle pass | no metric recorded; the asserts of the test decide |
 | Steep sloping hillslope zero recharge dries then rewets pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation PETSc, Solver / PETSc smoke Linux. Jobs.
 
@@ -36996,7 +37303,7 @@ Last measurement
 | petsc_complementarity_strong pass | no metric recorded; the asserts of the test decide |
 | petsc_partition pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `petsc`, `petsc_partition`: runs in Nightly / validation PETSc, Solver / PETSc smoke Linux. `boussinesq_local`: runs in Nightly / validation no PETSc, Solver / PETSc smoke Linux. Jobs.
 
@@ -37037,7 +37344,7 @@ Last measurement
 | Worst LAK budget discrepancy, quad grid | 1.9e-06 % | <= 1 % | 0% | |
 | Lak regular grid closes its budget pass | Worst LAK budget discrepancy, quad grid | 1.9e-06 % | < 1 % | 0% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `modflow6_irregular_tri`, `modflow6_voronoi`, ``: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -37093,7 +37400,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -37130,7 +37437,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc. Jobs.
 
@@ -37166,7 +37473,7 @@ Last measurement
 | Mms diffusion transient space converges at order two pass | Distance of the observed order from 2 | 0.00802 | < 0.2 | 4% | |
 | Mms diffusion transient time converges at order one pass | Distance of the observed order from 1 | 0.018 | < 0.2 | 9% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 L2 error against grid spacing dx, l2 error, log scales
 referencerun
@@ -37216,7 +37523,7 @@ Last measurement
 | --- | --- | --- | --- | --- | --- |
 | - pass | Distance of the observed order from 2 | 0.00192 | < 0.2 | 1% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 L2 error against grid spacing h, l2 error, log scales
 referencerun
@@ -37273,7 +37580,7 @@ Last measurement
 | Groundwater 1d recovers truth [scipy_nelder_mead-60] pass | Distance of log10 T to the truth | 4.48e-05 | < 0.3 | 0% | |
 | Distance of log10 S to the truth | 0.000718 | < 0.5 | 0% | |
 
-Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-04, commit `55842c4b6` with uncommitted changes, version 2.0.0rc1, a local run.
+Measured on 2026-10-13, commit `7c78961c6` with uncommitted changes, version 2.0.0a5, a local run; 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -37304,7 +37611,7 @@ Last measurement
 | - pass | Distance of log10 a to the truth | 0.00634 | < 0.2 | 3% | |
 | Distance of b to the truth | 0.0217 | < 0.25 | 9% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -37337,7 +37644,7 @@ Last measurement
 | Two reservoir de recovers truth pass | Distance of log10 k1 to the truth | 0.237 | < 0.5 | 47% | |
 | Distance of log10 k2 to the truth | 0.143 | < 0.5 | 29% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. This file: runs in Nightly / validation no PETSc, Tests / fast marker. Jobs.
 
@@ -37390,10 +37697,10 @@ Last measurement
 | optuna: best fit, distance of K_east to the truth | 5.17e-06 | - | - | |
 | optuna: closest sample, distance of K_east to the truth | 2.52e-07 | - | - | |
 | cma_es: evaluations used | 126 | - | - | |
-| cma_es: best fit, distance of K_west to the truth | 1.94e-05 | <= 0.000125 | 16% | |
-| cma_es: best fit, distance of K_middle to the truth | 1.08e-06 | <= 7.5e-05 | 1% | |
-| cma_es: best fit, distance of K_east to the truth | 1.98e-06 | <= 7.5e-05 | 3% | |
-| cma_es: second smallest error to tolerance ratio | 0.132 | <= 2 | 7% | |
+| cma_es: best fit, distance of K_west to the truth | 2.7e-05 | <= 0.000125 | 22% | |
+| cma_es: best fit, distance of K_middle to the truth | 9.16e-07 | <= 7.5e-05 | 1% | |
+| cma_es: best fit, distance of K_east to the truth | 7.75e-07 | <= 7.5e-05 | 1% | |
+| cma_es: second smallest error to tolerance ratio | 0.0611 | <= 2 | 3% | |
 | scipy_nelder_mead: evaluations used | 42 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_west to the truth | 3.32e-07 | <= 3.75e-05 | 1% | |
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 2.87e-07 | <= 2.25e-05 | 1% | |
@@ -37422,10 +37729,10 @@ Last measurement
 | optuna: best fit, distance of K_east to the truth | 5.17e-06 | - | - | |
 | optuna: closest sample, distance of K_east to the truth | 2.52e-07 | - | - | |
 | cma_es: evaluations used | 126 | - | - | |
-| cma_es: best fit, distance of K_west to the truth | 1.94e-05 | <= 0.000125 | 16% | |
-| cma_es: best fit, distance of K_middle to the truth | 1.08e-06 | <= 7.5e-05 | 1% | |
-| cma_es: best fit, distance of K_east to the truth | 1.98e-06 | <= 7.5e-05 | 3% | |
-| cma_es: second smallest error to tolerance ratio | 0.132 | <= 2 | 7% | |
+| cma_es: best fit, distance of K_west to the truth | 2.7e-05 | <= 0.000125 | 22% | |
+| cma_es: best fit, distance of K_middle to the truth | 9.16e-07 | <= 7.5e-05 | 1% | |
+| cma_es: best fit, distance of K_east to the truth | 7.75e-07 | <= 7.5e-05 | 1% | |
+| cma_es: second smallest error to tolerance ratio | 0.0611 | <= 2 | 3% | |
 | scipy_nelder_mead: evaluations used | 42 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_west to the truth | 4.86e-06 | <= 3.75e-05 | 13% | |
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 2.48e-07 | <= 2.25e-05 | 1% | |
@@ -37454,10 +37761,10 @@ Last measurement
 | optuna: best fit, distance of K_east to the truth | 5.15e-06 | - | - | |
 | optuna: closest sample, distance of K_east to the truth | 1.52e-07 | - | - | |
 | cma_es: evaluations used | 126 | - | - | |
-| cma_es: best fit, distance of K_west to the truth | 9e-06 | <= 0.000125 | 7% | |
-| cma_es: best fit, distance of K_middle to the truth | 7.16e-07 | <= 7.5e-05 | 1% | |
-| cma_es: best fit, distance of K_east to the truth | 2.41e-06 | <= 7.5e-05 | 3% | |
-| cma_es: second smallest error to tolerance ratio | 0.161 | <= 2 | 8% | |
+| cma_es: best fit, distance of K_west to the truth | 1.11e-05 | <= 0.000125 | 9% | |
+| cma_es: best fit, distance of K_middle to the truth | 7.95e-07 | <= 7.5e-05 | 1% | |
+| cma_es: best fit, distance of K_east to the truth | 9.46e-07 | <= 7.5e-05 | 1% | |
+| cma_es: second smallest error to tolerance ratio | 0.063 | <= 2 | 3% | |
 | scipy_nelder_mead: evaluations used | 42 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_west to the truth | 6.82e-06 | <= 3.75e-05 | 18% | |
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 1.19e-07 | <= 2.25e-05 | 1% | |
@@ -37486,10 +37793,10 @@ Last measurement
 | optuna: best fit, distance of K_east to the truth | 1.17e-05 | - | - | |
 | optuna: closest sample, distance of K_east to the truth | 6e-07 | - | - | |
 | cma_es: evaluations used | 126 | - | - | |
-| cma_es: best fit, distance of K_west to the truth | 2.69e-06 | <= 0.000125 | 2% | |
-| cma_es: best fit, distance of K_middle to the truth | 8.06e-08 | <= 7.5e-05 | 0% | |
-| cma_es: best fit, distance of K_east to the truth | 8.5e-07 | <= 7.5e-05 | 1% | |
-| cma_es: second smallest error to tolerance ratio | 0.0567 | <= 2 | 3% | |
+| cma_es: best fit, distance of K_west to the truth | 3.47e-06 | <= 0.000125 | 3% | |
+| cma_es: best fit, distance of K_middle to the truth | 3.05e-07 | <= 7.5e-05 | 0% | |
+| cma_es: best fit, distance of K_east to the truth | 1.93e-06 | <= 7.5e-05 | 3% | |
+| cma_es: second smallest error to tolerance ratio | 0.129 | <= 2 | 6% | |
 | scipy_nelder_mead: evaluations used | 42 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_west to the truth | 2.29e-05 | <= 3.75e-05 | 61% | |
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 1.83e-06 | <= 2.25e-05 | 8% | |
@@ -37545,10 +37852,10 @@ Last measurement
 | optuna: best fit, distance of K_east to the truth | 8.22e-06 | - | - | |
 | optuna: closest sample, distance of K_east to the truth | 1.52e-07 | - | - | |
 | cma_es: evaluations used | 126 | - | - | |
-| cma_es: best fit, distance of K_west to the truth | 1.53e-05 | <= 0.000125 | 12% | |
-| cma_es: best fit, distance of K_middle to the truth | 1.46e-06 | <= 7.5e-05 | 2% | |
-| cma_es: best fit, distance of K_east to the truth | 2.82e-06 | <= 7.5e-05 | 4% | |
-| cma_es: second smallest error to tolerance ratio | 0.188 | <= 2 | 9% | |
+| cma_es: best fit, distance of K_west to the truth | 1.17e-05 | <= 0.000125 | 9% | |
+| cma_es: best fit, distance of K_middle to the truth | 5.71e-07 | <= 7.5e-05 | 1% | |
+| cma_es: best fit, distance of K_east to the truth | 1.48e-06 | <= 7.5e-05 | 2% | |
+| cma_es: second smallest error to tolerance ratio | 0.0989 | <= 2 | 5% | |
 | scipy_nelder_mead: evaluations used | 42 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_west to the truth | 3.18e-06 | <= 3.75e-05 | 8% | |
 | scipy_nelder_mead: best fit, distance of K_middle to the truth | 3.5e-07 | <= 2.25e-05 | 2% | |
@@ -37578,7 +37885,7 @@ Last measurement
 | Relative distance of K_middle to the truth | 0 | <= 1e-12 | 0% | |
 | Relative distance of K_east to the truth | 0 | <= 1e-12 | 0% | |
 
-Measured on 2026-11-04, commit `55842c4b6` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 NWT. Points evaluated by random_search_seed017, random_search_seed029, optuna, cma_es, scipy_nelder_mead: objective against each parameter; the truth is marked and the best point of each method is ringed.
 
@@ -37661,7 +37968,7 @@ Last measurement
 | optuna: closest sample, distance of K_global to the truth | 4.28e-07 | - | - | |
 | optuna: best fit or a sample within tolerance of the truth | 1 | > 0 | 0% | |
 | cma_es: evaluations used | 28 | - | - | |
-| cma_es: best fit, distance of K_global to the truth | 1.4e-06 | <= 2.5e-05 | 6% | |
+| cma_es: best fit, distance of K_global to the truth | 1.11e-06 | <= 2.5e-05 | 4% | |
 | scipy_nelder_mead: evaluations used | 30 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 1.41e-06 | <= 2.5e-05 | 6% | |
 | modflow6_voronoi pass | grid: evaluations used | 11 | - | - | |
@@ -37708,7 +38015,7 @@ Last measurement
 | scipy_nelder_mead: evaluations used | 30 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 9.2e-06 | <= 2.5e-05 | 37% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 NWT. Points evaluated by grid, random_search, optuna, cma_es, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -37762,7 +38069,7 @@ Last measurement
 | optuna: a sample within tolerance of the truth on every parameter | 1 | > 0 | 0% | |
 | optuna: best fit or a sample within tolerance of the truth | 1 | > 0 | 0% | |
 | cma_es: evaluations used | 28 | - | - | |
-| cma_es: best fit, distance of K_global to the truth | 7.14e-07 | <= 2e-05 | 4% | |
+| cma_es: best fit, distance of K_global to the truth | 4.37e-07 | <= 2e-05 | 2% | |
 | scipy_nelder_mead: evaluations used | 30 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 1.18e-11 | <= 2e-05 | 0% | |
 | scipy_nelder_mead: evaluations used | 20 | - | - | |
@@ -37770,7 +38077,7 @@ Last measurement
 | Calibration twin dupuit fixed head modflow6 fast grid search smoke pass | grid: evaluations used | 6 | - | - | |
 | grid: best fit, distance of K_global to the truth | 2.38e-06 | <= 2e-05 | 12% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-04, commit `55842c4b6` with uncommitted changes, version 2.0.0rc1, a local run.
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 run. Points evaluated by grid, random_search, optuna, cma_es, scipy_nelder_mead, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -37823,7 +38130,7 @@ Last measurement
 | random_search: runs within tolerance of the truth, out of 3 | 3 | > 1 | 0% | |
 | random_search: runs with a sample within tolerance, out of 3 | 3 | > 1 | 0% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Points evaluated by grid, random_search_seed007, random_search_seed011, random_search_seed019, optuna, cma_es, scipy_nelder_mead: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -37872,7 +38179,7 @@ Last measurement
 | da_mh_gp: closest sample, distance of K_global to the truth | 7.88e-08 | - | - | |
 | da_mh_gp: a sample within tolerance of the truth on every parameter | 1 | > 0 | 0% | |
 
-Measured on 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Points evaluated by random_search, optuna, cma_es, gp_mapping, da_mh_gp: objective against the parameter; the truth is marked and the best point of each method is ringed.
 
@@ -38056,7 +38363,7 @@ Last measurement
 | da_mh_gp: closest sample, distance of Sy_global to the truth | 0.0291 | - | - | |
 | methods reaching their success target, among random_search, optuna, gp_mapping, da_mh_gp | 1 | > 0 | 75% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 NWT. Points evaluated by random_search, optuna, cma_es, scipy_nelder_mead, gp_mapping, da_mh_gp: the two parameters, colored by objective; the truth is marked and the best point of each method is ringed.
 
@@ -38153,8 +38460,8 @@ Last measurement
 | optuna: best fit, distance of Sy_global to the truth | 0.0112 | <= 0.04 | 28% | |
 | optuna: closest sample, distance of Sy_global to the truth | 0.000631 | - | - | |
 | cma_es: evaluations used | 35 | - | - | |
-| cma_es: best fit, distance of K_global to the truth | 5.1e-07 | <= 1.5e-05 | 3% | |
-| cma_es: best fit, distance of Sy_global to the truth | 0.000773 | <= 0.04 | 2% | |
+| cma_es: best fit, distance of K_global to the truth | 4.27e-07 | <= 1.5e-05 | 3% | |
+| cma_es: best fit, distance of Sy_global to the truth | 0.00162 | <= 0.04 | 4% | |
 | scipy_nelder_mead: evaluations used | 12 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 2.38e-06 | <= 1.5e-05 | 16% | |
 | scipy_nelder_mead: best fit, distance of Sy_global to the truth | 0.00137 | <= 0.04 | 3% | |
@@ -38179,8 +38486,8 @@ Last measurement
 | optuna: best fit, distance of Sy_global to the truth | 0.0155 | <= 0.04 | 39% | |
 | optuna: closest sample, distance of Sy_global to the truth | 0.00245 | - | - | |
 | cma_es: evaluations used | 40 | - | - | |
-| cma_es: best fit, distance of K_global to the truth | 2.68e-07 | <= 1.5e-05 | 2% | |
-| cma_es: best fit, distance of Sy_global to the truth | 0.000504 | <= 0.04 | 1% | |
+| cma_es: best fit, distance of K_global to the truth | 1.87e-07 | <= 1.5e-05 | 1% | |
+| cma_es: best fit, distance of Sy_global to the truth | 0.00131 | <= 0.04 | 3% | |
 | scipy_nelder_mead: evaluations used | 12 | - | - | |
 | scipy_nelder_mead: best fit, distance of K_global to the truth | 2.38e-06 | <= 1.5e-05 | 16% | |
 | scipy_nelder_mead: best fit, distance of Sy_global to the truth | 0.00137 | <= 0.04 | 3% | |
@@ -38244,7 +38551,7 @@ Last measurement
 | Relative distance of K_global to the truth | 0 | <= 1e-12 | 0% | |
 | Relative distance of Sy_global to the truth | 0 | <= 1e-12 | 0% | |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-04, commit `55842c4b6` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log); 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log); 2026-11-24, commit `64b7c9b17`, version 2.0.1, the nightly CI job (job log).
 
 NWT. Points evaluated by random_search, optuna, cma_es, scipy_nelder_mead, gp_mapping, da_mh_gp: the two parameters, colored by objective; the truth is marked and the best point of each method is ringed.
 
@@ -38312,7 +38619,7 @@ Last measurement
 | The map holds the known heads and traces back to the network [modflow6_voronoi] pass | no metric recorded; the asserts of the test decide |
 | Two maps read k and leave sy within one cell pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `modflow_nwt`, `modflow6`, `modflow6_voronoi`, ``: runs in Nightly / validation no PETSc. Jobs.
 
@@ -38383,7 +38690,7 @@ Last measurement
 | The mapped network projects back onto the cells it was written from [modflow6_irregular_tri] pass | no metric recorded; the asserts of the test decide |
 | The mapped network projects back onto the cells it was written from [modflow6_voronoi] pass | no metric recorded; the asserts of the test decide |
 
-Measured on 2026-11-04, commit `11bf74bde` with uncommitted changes, version 2.0.0rc1, a local run; 2026-11-23, commit `efc377b3b`, version 2.0.0, the nightly CI job (job log).
+Measured on 2026-11-24, commit `48f648c2b`, version 2.0.1, the nightly CI job (job log).
 
 Schedule. `modflow_nwt`, `modflow6`, `modflow6_irregular_tri`, `modflow6_voronoi`: runs in Nightly / validation no PETSc. Jobs.
 
@@ -38411,8 +38718,9 @@ Test functions
 
 - The mapped network projects back onto the cells it was written from.
 - A network only bisection recovers the conductivity that made the network.
+- A stored trial scores its network as the trial did.
 
-File `tests/validation/calibration/test_twin_matching_stream_network_modflow6.py`. Markers: steady, validation.
+File `tests/validation/calibration/test_twin_matching_stream_network_modflow6.py`. Markers: mf6, steady, validation, xdist_group.
 
 ## Two solvers on one catchment
 
@@ -38472,6 +38780,21 @@ The long development notes of the alphas and of the release candidate are kept i
 The keys added, removed or changed in the TOML file between two versions are listed, from the models, in What changed in the TOML. For what a version number promises, see Versions and stability.
 
 ## Unreleased
+
+### Added
+
+- `Run.score` and `RunSet.score` score stored runs after the fact, on any window, any metric of the table but the two network distances, and an optional months mask: `runs.score(windows={"y2016": ("2016-01-01", "2016-12-31")}, metrics=["nse_log"], months=[4, 5, 6, 7, 8, 9, 10])`. The pairing is the one of the seal, so `run.score()` with no argument gives back the sealed metrics. `RunSet.timeseries` stacks the series of every run in one table.
+- `Run.score_network` and `RunSet.score_network` compute the network criterion of a stored run, with the settings it was calibrated with or the defaults. On a run stored with `[simulation.results.persistence] field_precision = "exact"` they give the numbers a calibration trial computed at the same parameters. With the default `compact` precision a cell at the seepage threshold can flip, and the size of that difference is not measured yet. A set builds the map geometry once for the runs that share it.
+- `[sites.design]` draws a plan of experiments: `method` (`sobol`, `lhs` or `grid`), `n`, `seed`, and `parameters.<name>` with `path`, `bounds` and `sampling`. Each point becomes a recipe `p0001`, `p0002`…, its drawn values are columns of `cases.csv`, and a larger Sobol `n` or a new LHS lot keeps the cases already run.
+- `hmp.index(ws).score(...)` and `.score_network(...)` score every project of a workspace. The run-set figure `parameter_space` draws two parameters on log axes, coloured by a score. `[[sites.summary.window]]` makes `hmp campaign collect` write `summary/scores.parquet`.
+- A calibration phase on a fixed plan (`lhs`, `grid`) reports the correlation and the axis ratio of its best fifth of trials, which shows a ridge between two parameters.
+- The how-to page “Plan and score experiments” walks through these entry points.
+- A station source of `source = "file"` can name one chronicle CSV, `path = "workspace:recharge_file_NANCON_20000101_20021231_M.csv"`. It is read with the location file of its folder for the one station of `station_ids` or of `[site] gauge`, and that location file is pinned with it by `hmp data lock` and checked on a frozen replay. `hmp publish --package` and the example catalog ship the row of its station.
+
+### Fixed
+
+- A folder that holds two chronicles of one station, such as `recharge_file_NANCON_..._M.csv` and `..._D.csv`, now stops the run and lists them. The loader used to read the first name in alphabetical order without a word. A chronicle of `NANCON_REA` is no longer taken for one of `NANCON`: after the id, a name holds nothing, a step, or two dates and a step.
+- A network calibration whose best trial matches the map exactly, so that `D_so = D_os = 0`, now seals that trial. The parts of the cost the trial could not define, such as `D_so_over_D_os` or `catchment_mismatch` on a domain with no delineated catchment, are written `null` in `checks.calibrated_by.components`, where the seal refused the run before.
 
 ## [v2.0.1] - 2026-11-24
 
